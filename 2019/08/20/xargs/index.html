@@ -17,19 +17,20 @@
   <meta http-equiv="window-target" content="_top">
   
   
-  <title>归档: 2018/8 | Gate</title>
-  <meta name="description" content="我总在抱怨自己没鞋子穿，直到有一天，我遇到了一个没有脚的人。">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Gate">
-<meta property="og:url" content="https://lxbwolf.github.io/archives/2018/08/index.html">
+  <title>xargs | Gate</title>
+  <meta name="description" content="xargs 是给命令传递参数的一个过滤器，也是组合多个命令的一个工具。 xargs 可以将管道或标准输入（stdin）数据转换成命令行参数，也能够从文件的输出中读取数据。 xargs 也可以将单行或多行文本输入转换为其他格式，例如多行变单行，单行变多行。 xargs 默认的命令是 echo，这意味着通过管道传递给 xargs 的输入将会包含换行和空白，不过通过 xargs 的处理，换行和空白将被空">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xargs">
+<meta property="og:url" content="https://lxbwolf.github.io/2019/08/20/xargs/index.html">
 <meta property="og:site_name" content="Gate">
-<meta property="og:description" content="我总在抱怨自己没鞋子穿，直到有一天，我遇到了一个没有脚的人。">
+<meta property="og:description" content="xargs 是给命令传递参数的一个过滤器，也是组合多个命令的一个工具。 xargs 可以将管道或标准输入（stdin）数据转换成命令行参数，也能够从文件的输出中读取数据。 xargs 也可以将单行或多行文本输入转换为其他格式，例如多行变单行，单行变多行。 xargs 默认的命令是 echo，这意味着通过管道传递给 xargs 的输入将会包含换行和空白，不过通过 xargs 的处理，换行和空白将被空">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-26T17:17:52.906Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Gate">
-<meta name="twitter:description" content="我总在抱怨自己没鞋子穿，直到有一天，我遇到了一个没有脚的人。">
+<meta name="twitter:title" content="xargs">
+<meta name="twitter:description" content="xargs 是给命令传递参数的一个过滤器，也是组合多个命令的一个工具。 xargs 可以将管道或标准输入（stdin）数据转换成命令行参数，也能够从文件的输出中读取数据。 xargs 也可以将单行或多行文本输入转换为其他格式，例如多行变单行，单行变多行。 xargs 默认的命令是 echo，这意味着通过管道传递给 xargs 的输入将会包含换行和空白，不过通过 xargs 的处理，换行和空白将被空">
   <!-- Canonical links -->
-  <link rel="canonical" href="https://lxbwolf.github.io/archives/2018/08/index.html">
+  <link rel="canonical" href="https://lxbwolf.github.io/2019/08/20/xargs/index.html">
   
     <link rel="alternate" href="/atom.xml" title="Gate" type="application/atom+xml">
   
@@ -327,98 +328,219 @@
   
   
 <main class="main" role="main">
-  	<article class="content article article-archives article-type-list" itemscope="">
-	    <header class="article-header">
-	      <h1 itemprop="title">归档: 2018/8</h1>
-	      <p class="text-muted">共 6 篇文章</p>
-	    </header>
-	    <div class="article-body">
-	      
+  <div class="content">
+  <article id="post-xargs" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
   
+    <h1 class="article-title" itemprop="name">
+      xargs
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2019/08/20/xargs/" class="article-date">
+	  <time datetime="2019-08-19T17:14:58.000Z" itemprop="datePublished">2019-08-20</time>
+	</a>
+</span>
+        
+        
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2019/08/20/xargs/#comments" class="article-comment-link">评论</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>xargs 是给命令传递参数的一个过滤器，也是组合多个命令的一个工具。</p>
+<p>xargs 可以将管道或标准输入（stdin）数据转换成命令行参数，也能够从文件的输出中读取数据。</p>
+<p>xargs 也可以将单行或多行文本输入转换为其他格式，例如多行变单行，单行变多行。</p>
+<p>xargs 默认的命令是 echo，这意味着通过管道传递给 xargs 的输入将会包含换行和空白，不过通过 xargs 的处理，换行和空白将被空格取代。</p>
+<p>xargs 是一个强有力的命令，它能够捕获一个命令的输出，然后传递给另外一个命令。</p>
+<p>之所以能用到这个命令，关键是由于很多命令不支持|管道来传递参数，而日常工作中有有这个必要，所以就有了 xargs 命令</p>
+<p>例如:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>命令格式</strong><br><code>somecommand |xargs -item command</code></p>
+<p><strong>重要参数:</strong></p>
+<ul>
+<li>-i 或者是-I，这得看linux支持了，将xargs的每项名称，一般是一行一行赋值给 {}，可以用 {} 代替。</li>
+</ul>
+<p><strong>其他参数:</strong></p>
+<ul>
+<li>-a file 从文件中读入作为sdtin</li>
+<li>-e flag ，注意有的时候可能会是-E，flag必须是一个以空格分隔的标志，当xargs分析到含有flag这个标志的时候就停止。</li>
+<li>-p 当每次执行一个argument的时候询问一次用户。</li>
+<li>-n num 后面加次数，表示命令在执行的时候一次用的argument的个数，默认是用所有的。</li>
+<li>-t 表示先打印命令，然后再执行。</li>
+<li>-r no-run-if-empty 当xargs的输入为空的时候则停止xargs，不用再去执行了。</li>
+<li>-s num 命令行的最大字符数，指的是 xargs 后面那个命令的最大命令行字符数。</li>
+<li>-L num 从标准输入一次读取 num 行送给 command 命令。</li>
+<li>-l 同 -L。</li>
+<li>-d delim 分隔符，默认的xargs分隔符是回车，argument的分隔符是空格，这里修改的是xargs的分隔符。</li>
+<li>-x exit的意思，主要是配合-s使用。。</li>
+<li>-P 修改最大的进程数，默认是1，为0时候为as many as it can ，这个例子我没有想到，应该平时都用不到的吧。</li>
+</ul>
+<h4 id="实例"><a href="#实例" class="headerlink" title="实例:"></a>实例:</h4><h5 id="1-多行变成单行"><a href="#1-多行变成单行" class="headerlink" title="1. 多行变成单行"></a>1. 多行变成单行</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h5 id="2-一次使用n个参数"><a href="#2-一次使用n个参数" class="headerlink" title="2. 一次使用n个参数"></a>2. 一次使用n个参数</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h5 id="3-d选项指定分隔符"><a href="#3-d选项指定分隔符" class="headerlink" title="3. d选项指定分隔符"></a>3. d选项指定分隔符</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>结合<code>-n</code> 选项使用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h5 id="4-I选项的使用"><a href="#4-I选项的使用" class="headerlink" title="4. I选项的使用"></a>4. I选项的使用</h5><h6 id="4-1-获取参数并替换"><a href="#4-1-获取参数并替换" class="headerlink" title="4.1 获取参数并替换{}"></a>4.1 获取参数并替换<code>{}</code></h6><p>假设一个命令为 <a href="http://sk.sh/" target="_blank" rel="noopener">sk.sh</a> 和一个保存参数的文件 arg.txt：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>arg.txt.文件内容</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><code>xargs</code> 的一个选项 <code>-I</code>，使用 <code>-I</code> 指定一个替换字符串 <code>{}</code>，这个字符串在 <code>xargs</code> 扩展时会被替换掉，当 <code>-I</code> 与 <code>xargs</code> 结合使用，每一个参数命令都会被执行一次：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h6 id="4-2-复制文件实例"><a href="#4-2-复制文件实例" class="headerlink" title="4.2 复制文件实例"></a>4.2 复制文件实例</h6><p>复制所有图片文件到 /data/images 目录下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h6 id="4-3-xargs-结合find-使用"><a href="#4-3-xargs-结合find-使用" class="headerlink" title="4.3 xargs 结合find 使用"></a>4.3 xargs 结合find 使用</h6><p>用 rm 删除太多的文件时候，可能得到一个错误信息：<code>/bin/rm Argument list too long.</code> 用 xargs 去避免这个问题：</p>
+<p><code>find . -type f -name &quot;*.log&quot; -print0 | xargs -0 rm -f</code> xargs -0 将 \0 作为定界符。</p>
+<p>统计一个源代码目录中所有 php 文件的行数： <code>find . -type f -name &quot;*.php&quot; -print0 | xargs -0 wc -l</code></p>
+<p>查找所有的 jpg 文件，并且压缩它们： <code>find . -type f -name &quot;*.jpg&quot; -print | xargs tar -czvf images.tar.gz</code></p>
+<h6 id="4-4-下载多个文件"><a href="#4-4-下载多个文件" class="headerlink" title="4.4 下载多个文件"></a>4.4 下载多个文件</h6><p>假如你有一个文件包含了很多你希望下载的 URL，你能够使用 xargs下载所有链接： <code># cat url-list.txt | xargs wget -c</code></p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxbwolf.github.io/2019/08/20/xargs/" title="xargs" target="_blank" rel="external">https://lxbwolf.github.io/2019/08/20/xargs/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/lxbwolf" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/head.jpeg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/lxbwolf" target="_blank"><span class="text-dark">Brooke Lau</span><small class="ml-1x">RD</small></a></h3>
+        <div>个人简介。</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
   
     
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
     
-      
-      
-      <section class="panel panel-default b-no">
-        <div class="panel-heading" role="tab">
-          <h3 class="panel-title">
-            <a data-toggle="collapse" href="#collapse2018" aria-expanded="true">
-              <i class="icon icon-calendar-plus text-active"></i><i class="icon icon-calendar-minus text"></i>
-              2018
-            </a>
-            <!-- <a href="/archives/2018" class="archive-year">2018</a> -->
-          </h3>
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2019/09/27/hello-hexo/" title="Hello Hexo"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2019/08/08/e5-8d-87-e7-ba-a7https/" title="升级https"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-fancy btn-donate pop-onhover bg-gradient-warning" data-toggle="modal" data-target="#donateModal"><span>赏</span></button>
+  <!-- <div class="wave-icon wave-icon-danger btn-donate" data-toggle="modal" data-target="#donateModal">
+    <div class="wave-circle"><span class="icon"><i class="icon icon-bill"></i></span></div>
+  </div> -->
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+<!-- Modal -->
+<div class="modal modal-center modal-small modal-xs-full fade" id="donateModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content donate">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <div class="modal-body">
+        <div class="donate-box">
+          <div class="donate-head">
+            <p>感谢您的支持，我会继续努力的!</p>
+          </div>
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade active in" id="alipay">
+              <div class="donate-payimg">
+                <img src="/images/donate/alipay.jpeg" alt="扫码支持" title="扫一扫" />
+              </div>
+              <p class="text-muted mv">扫码打赏，你说多少就多少</p>
+              <p class="text-grey">打开支付宝扫一扫，即可进行扫码打赏哦</p>
+            </div>
+            <div role="tabpanel" class="tab-pane fade" id="wechatpay">
+              <div class="donate-payimg">
+                <img src="/images/donate/wepay.jpeg" alt="扫码支持" title="扫一扫" />
+              </div>
+              <p class="text-muted mv">扫码打赏，你说多少就多少</p>
+              <p class="text-grey">打开微信扫一扫，即可进行扫码打赏哦</p>
+            </div>
+          </div>
+          <div class="donate-footer">
+            <ul class="nav nav-tabs nav-justified" role="tablist">
+              <li role="presentation" class="active">
+                <a href="#alipay" id="alipay-tab" role="tab" data-toggle="tab" aria-controls="alipay" aria-expanded="true"><i class="icon icon-alipay"></i> 支付宝</a>
+              </li>
+              <li role="presentation" class="">
+                <a href="#wechatpay" role="tab" id="wechatpay-tab" data-toggle="tab" aria-controls="wechatpay" aria-expanded="false"><i class="icon icon-wepay"></i> 微信支付</a>
+              </li>
+            </ul>
+          </div>
         </div>
-        <div id="collapse2018" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="heading2018">
-        <div class="panel-body">
-          <div class="collection">
-    
-    
-<a href="/2018/08/30/shell-e6-95-b0-e7-bb-84-e7-ac-94-e8-ae-b0/" class="collection-item" target="_blank" itemprop="url">
-  <time datetime="2018-08-30T14:33:15.000Z" itemprop="datePublished">2018-08-30</time>
-  <span>&nbsp;&nbsp;&nbsp;</span> Shell数组笔记
-</a>
+      </div>
+    </div>
+  </div>
+</div>
 
 
-  
-    
-    
-    
-<a href="/2018/08/30/split-e5-91-bd-e4-bb-a4/" class="collection-item" target="_blank" itemprop="url">
-  <time datetime="2018-08-30T14:23:34.000Z" itemprop="datePublished">2018-08-30</time>
-  <span>&nbsp;&nbsp;&nbsp;</span> split命令
-</a>
 
-
-  
-    
-    
-    
-<a href="/2018/08/28/mysql-e5-90-af-e5-8a-a8-e6-97-b6-no-space-left-on-device/" class="collection-item" target="_blank" itemprop="url">
-  <time datetime="2018-08-28T11:04:37.000Z" itemprop="datePublished">2018-08-28</time>
-  <span>&nbsp;&nbsp;&nbsp;</span> mysql启动时 &amp;quot;No space left on device&amp;quot;
-</a>
-
-
-  
-    
-    
-    
-<a href="/2018/08/28/linux-e5-90-8e-e5-8f-b0-e6-89-a7-e8-a1-8c-e5-91-bd-e4-bb-a4/" class="collection-item" target="_blank" itemprop="url">
-  <time datetime="2018-08-27T17:01:30.000Z" itemprop="datePublished">2018-08-28</time>
-  <span>&nbsp;&nbsp;&nbsp;</span> Linux 后台执行命令
-</a>
-
-
-  
-    
-    
-    
-<a href="/2018/08/27/go-cron-e5-ae-9a-e6-97-b6-e4-bb-bb-e5-8a-a1-e7-9a-84-e7-94-a8-e6-b3-95/" class="collection-item" target="_blank" itemprop="url">
-  <time datetime="2018-08-26T16:32:06.000Z" itemprop="datePublished">2018-08-27</time>
-  <span>&nbsp;&nbsp;&nbsp;</span> Go cron 定时任务的用法
-</a>
-
-
-  
-    
-    
-    
-<a href="/2018/08/27/golang-select-e7-9a-84-e7-94-a8-e6-b3-95/" class="collection-item" target="_blank" itemprop="url">
-  <time datetime="2018-08-26T16:27:40.000Z" itemprop="datePublished">2018-08-27</time>
-  <span>&nbsp;&nbsp;&nbsp;</span> Golang select 的用法
-</a>
-
-
-  
-  
-    </div></div></div></section>
-  
-
-	    </div>
-  	</article>
-  	 	
 </main>
 
   <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
@@ -470,6 +592,37 @@ window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 
 
 
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
 
 
 
