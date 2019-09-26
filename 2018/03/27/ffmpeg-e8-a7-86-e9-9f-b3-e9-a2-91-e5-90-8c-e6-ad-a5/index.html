@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+
+  
+  <title>ffmpeg 视音频同步 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="原文地址: https://blog.csdn.net/nonmarking/article/details/50522413 对于直播流来说, 只考虑发送端的同步问题, 原理如下: 1. 解析视音频, 讲视频流和音频流的时间戳用同样的时间基准表示 2. 比较转换后的两个时间戳, 找出较小值, 对应发送偏慢的流 3. 读取, 转码, 发送相应的流, 同时, 若该流的转码时间很快, 超前于wall">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ffmpeg 视音频同步">
+<meta property="og:url" content="http://yoursite.com/2018/03/27/ffmpeg-e8-a7-86-e9-9f-b3-e9-a2-91-e5-90-8c-e6-ad-a5/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="原文地址: https://blog.csdn.net/nonmarking/article/details/50522413 对于直播流来说, 只考虑发送端的同步问题, 原理如下: 1. 解析视音频, 讲视频流和音频流的时间戳用同样的时间基准表示 2. 比较转换后的两个时间戳, 找出较小值, 对应发送偏慢的流 3. 读取, 转码, 发送相应的流, 同时, 若该流的转码时间很快, 超前于wall">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-09-26T15:41:04.067Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ffmpeg 视音频同步">
+<meta name="twitter:description" content="原文地址: https://blog.csdn.net/nonmarking/article/details/50522413 对于直播流来说, 只考虑发送端的同步问题, 原理如下: 1. 解析视音频, 讲视频流和音频流的时间戳用同样的时间基准表示 2. 比较转换后的两个时间戳, 找出较小值, 对应发送偏慢的流 3. 读取, 转码, 发送相应的流, 同时, 若该流的转码时间很快, 超前于wall">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-ffmpeg-e8-a7-86-e9-9f-b3-e9-a2-91-e5-90-8c-e6-ad-a5" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/03/27/ffmpeg-e8-a7-86-e9-9f-b3-e9-a2-91-e5-90-8c-e6-ad-a5/" class="article-date">
+  <time datetime="2018-03-27T06:41:52.000Z" itemprop="datePublished">2018-03-27</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/A-amp-V/">A&amp;V</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      ffmpeg 视音频同步
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>原文地址: <a href="https://blog.csdn.net/nonmarking/article/details/50522413" target="_blank" rel="noopener">https://blog.csdn.net/nonmarking/article/details/50522413</a></p>
+<p>对于直播流来说, 只考虑发送端的同步问题, 原理如下: 1. 解析视音频, 讲视频流和音频流的时间戳用同样的时间基准表示 2. 比较转换后的两个时间戳, 找出较小值, 对应发送偏慢的流 3. 读取, 转码, 发送相应的流, 同时, 若该流的转码时间很快, 超前于wall clock, 则还需要进行相应的延时 4. 重复以上过程</p>
+<p>下文包括两部分, 一是音频转码部分, 二是视音频同步</p>
+<h6 id="音频转码基本流程"><a href="#音频转码基本流程" class="headerlink" title="音频转码基本流程"></a>音频转码基本流程</h6><p>首先是一些音频输入输出的基本设置</p>
+<pre><code>//Set own audio device&apos;s name
+    if (avformat_open_input(&amp;ifmt_ctx_a, device_name_a, ifmt, &amp;device_param) != 0){
+
+        printf(&quot;Couldn&apos;t open input audio stream.（无法打开输入流）\n&quot;);
+        return -1;
+    }
+……
+//input audio initialize
+    if (avformat_find_stream_info(ifmt_ctx_a, NULL) &lt; 0)
+    {
+        printf(&quot;Couldn&apos;t find audio stream information.（无法获取流信息）\n&quot;);
+        return -1;
+    }
+    audioindex = -1;
+    for (i = 0; i &lt; ifmt_ctx_a-&gt;nb_streams; i++)
+    if (ifmt_ctx_a-&gt;streams[i]-&gt;codec-&gt;codec_type == AVMEDIA_TYPE_AUDIO)
+    {
+        audioindex = i;
+        break;
+    }
+    if (audioindex == -1)
+    {
+        printf(&quot;Couldn&apos;t find a audio stream.（没有找到视频流）\n&quot;);
+        return -1;
+    }
+    if (avcodec_open2(ifmt_ctx_a-&gt;streams[audioindex]-&gt;codec, avcodec_find_decoder(ifmt_ctx_a-&gt;streams[audioindex]-&gt;codec-&gt;codec_id), NULL) &lt; 0)
+    {
+        printf(&quot;Could not open audio codec.（无法打开解码器）\n&quot;);
+        return -1;
+    }
+……
+ //output audio encoder initialize
+    pCodec_a = avcodec_find_encoder(AV_CODEC_ID_AAC);
+    if (!pCodec_a){
+        printf(&quot;Can not find output audio encoder! (没有找到合适的编码器！)\n&quot;);
+        return -1;
+    }
+    pCodecCtx_a = avcodec_alloc_context3(pCodec_a);
+    pCodecCtx_a-&gt;channels = 2;
+    pCodecCtx_a-&gt;channel_layout = av_get_default_channel_layout(2);
+    pCodecCtx_a-&gt;sample_rate = ifmt_ctx_a-&gt;streams[audioindex]-&gt;codec-&gt;sample_rate;
+    pCodecCtx_a-&gt;sample_fmt = pCodec_a-&gt;sample_fmts[0];
+    pCodecCtx_a-&gt;bit_rate = 32000;
+    pCodecCtx_a-&gt;time_base.num = 1;
+    pCodecCtx_a-&gt;time_base.den = pCodecCtx_a-&gt;sample_rate;
+    /** Allow the use of the experimental AAC encoder */
+    pCodecCtx_a-&gt;strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
+    /* Some formats want stream headers to be separate. */
+    if (ofmt_ctx-&gt;oformat-&gt;flags &amp; AVFMT_GLOBALHEADER)
+        pCodecCtx_a-&gt;flags |= CODEC_FLAG_GLOBAL_HEADER;
+    if (avcodec_open2(pCodecCtx_a, pCodec_a, NULL) &lt; 0){
+        printf(&quot;Failed to open ouput audio encoder! (编码器打开失败！)\n&quot;);
+        return -1;
+    }
+
+    //Add a new stream to output,should be called by the user before avformat_write_header() for muxing
+    audio_st = avformat_new_stream(ofmt_ctx, pCodec_a);
+    if (audio_st == NULL){
+        return -1;
+    }
+    audio_st-&gt;time_base.num = 1;
+    audio_st-&gt;time_base.den = pCodecCtx_a-&gt;sample_rate;
+    audio_st-&gt;codec = pCodecCtx_a;</code></pre><p>接下来, 考虑到输入音频的sample format 可能需要进行转换, 需要用到swresample库的功能 先做好相应的初始化</p>
+<pre><code>// Initialize the resampler to be able to convert audio sample formats
+    aud_convert_ctx = swr_alloc_set_opts(NULL,
+        av_get_default_channel_layout(pCodecCtx_a-&gt;channels),
+        pCodecCtx_a-&gt;sample_fmt,
+        pCodecCtx_a-&gt;sample_rate,
+        av_get_default_channel_layout(ifmt_ctx_a-&gt;streams[audioindex]-&gt;codec-&gt;channels),
+        ifmt_ctx_a-&gt;streams[audioindex]-&gt;codec-&gt;sample_fmt,
+        ifmt_ctx_a-&gt;streams[audioindex]-&gt;codec-&gt;sample_rate,
+        0, NULL);
+swr_init(aud_convert_ctx);</code></pre><p>此外, 参照transcode_aac.c的做法, 使用FIFO buffer存储从输入端解码得到的音频采样数据, 这些数据在后续将转换sample format并进行编码, 由此即完成了一个音频转码功.</p>
+<p>此外, 还需要另外的一个buffer来存储转换合适之后的音频数据</p>
+<pre><code>//Initialize the FIFO buffer to store audio samples to be encoded. 
+    AVAudioFifo *fifo = NULL;
+    fifo = av_audio_fifo_alloc(pCodecCtx_a-&gt;sample_fmt, pCodecCtx_a-&gt;channels, 1);
+
+    //Initialize the buffer to store converted samples to be encoded.
+    uint8_t **converted_input_samples = NULL;
+    /**
+    * Allocate as many pointers as there are audio channels.
+    * Each pointer will later point to the audio samples of the corresponding
+    * channels (although it may be NULL for interleaved formats).
+    */
+    if (!(converted_input_samples = (uint8_t**)calloc(pCodecCtx_a-&gt;channels,
+        sizeof(**converted_input_samples)))) {
+        printf(&quot;Could not allocate converted input sample pointers\n&quot;);
+        return AVERROR(ENOMEM);
+    }</code></pre><p>至此, 一些基本的初始化工作完成.</p>
+<p>音频计算pts的方法和视频类似. 即先通过sample rate算出每两个音频sample之间的时间间隔, 再通过计数当前已编码的音频sample总数(nb_samples变量的作用) 来算出当前编码音频帧的时间戳. 如果和视频的流程做类比, 大概为: framerate 相当于sample rate, framecnt相当于nb_samples.</p>
+<pre><code>//audio trancoding here
+        const int output_frame_size = pCodecCtx_a-&gt;frame_size;
+
+        /**
+        * Make sure that there is one frame worth of samples in the FIFO
+        * buffer so that the encoder can do its work.
+        * Since the decoder&apos;s and the encoder&apos;s frame size may differ, we
+        * need to FIFO buffer to store as many frames worth of input samples
+        * that they make up at least one frame worth of output samples.
+        */
+        while (av_audio_fifo_size(fifo) &lt; output_frame_size) {
+            /**
+            * Decode one frame worth of audio samples, convert it to the
+            * output sample format and put it into the FIFO buffer.
+            */
+            AVFrame *input_frame = av_frame_alloc();
+            if (!input_frame)
+            {
+                ret = AVERROR(ENOMEM);
+                return ret;
+            }           
+
+            /** Decode one frame worth of audio samples. */
+            /** Packet used for temporary storage. */
+            AVPacket input_packet;
+            av_init_packet(&amp;input_packet);
+            input_packet.data = NULL;
+            input_packet.size = 0;
+
+            /** Read one audio frame from the input file into a temporary packet. */
+            if ((ret = av_read_frame(ifmt_ctx_a, &amp;input_packet)) &lt; 0) {
+                /** If we are at the end of the file, flush the decoder below. */
+                if (ret == AVERROR_EOF)
+                {
+                    encode_audio = 0;
+                }
+                else
+                {
+                    printf(&quot;Could not read audio frame\n&quot;);
+                    return ret;
+                }                   
+            }
+
+            /**
+            * Decode the audio frame stored in the temporary packet.
+            * The input audio stream decoder is used to do this.
+            * If we are at the end of the file, pass an empty packet to the decoder
+            * to flush it.
+            */
+            if ((ret = avcodec_decode_audio4(ifmt_ctx_a-&gt;streams[audioindex]-&gt;codec, input_frame,
+                &amp;dec_got_frame_a, &amp;input_packet)) &lt; 0) {
+                printf(&quot;Could not decode audio frame\n&quot;);
+                return ret;
+            }
+            av_packet_unref(&amp;input_packet);
+            /** If there is decoded data, convert and store it */
+            if (dec_got_frame_a) {
+                /**
+                * Allocate memory for the samples of all channels in one consecutive
+                * block for convenience.
+                */
+                if ((ret = av_samples_alloc(converted_input_samples, NULL,
+                    pCodecCtx_a-&gt;channels,
+                    input_frame-&gt;nb_samples,
+                    pCodecCtx_a-&gt;sample_fmt, 0)) &lt; 0) {
+                    printf(&quot;Could not allocate converted input samples\n&quot;);
+                    av_freep(&amp;(*converted_input_samples)[0]);
+                    free(*converted_input_samples);
+                    return ret;
+                }
+
+                /**
+                * Convert the input samples to the desired output sample format.
+                * This requires a temporary storage provided by converted_input_samples.
+                */
+                /** Convert the samples using the resampler. */
+                if ((ret = swr_convert(aud_convert_ctx,
+                    converted_input_samples, input_frame-&gt;nb_samples,
+                    (const uint8_t**)input_frame-&gt;extended_data, input_frame-&gt;nb_samples)) &lt; 0) {
+                    printf(&quot;Could not convert input samples\n&quot;);
+                    return ret;
+                }
+
+                /** Add the converted input samples to the FIFO buffer for later processing. */
+                /**
+                * Make the FIFO as large as it needs to be to hold both,
+                * the old and the new samples.
+                */
+                if ((ret = av_audio_fifo_realloc(fifo, av_audio_fifo_size(fifo) + input_frame-&gt;nb_samples)) &lt; 0) {
+                    printf(&quot;Could not reallocate FIFO\n&quot;);
+                    return ret;
+                }
+
+                /** Store the new samples in the FIFO buffer. */
+                if (av_audio_fifo_write(fifo, (void **)converted_input_samples,
+                    input_frame-&gt;nb_samples) &lt; input_frame-&gt;nb_samples) {
+                    printf(&quot;Could not write data to FIFO\n&quot;);
+                    return AVERROR_EXIT;
+                }               
+            }
+        }
+
+        /**
+        * If we have enough samples for the encoder, we encode them.
+        * At the end of the file, we pass the remaining samples to
+        * the encoder.
+        */
+        if (av_audio_fifo_size(fifo) &gt;= output_frame_size)
+            /**
+            * Take one frame worth of audio samples from the FIFO buffer,
+            * encode it and write it to the output file.
+            */
+        {
+            /** Temporary storage of the output samples of the frame written to the file. */
+            AVFrame *output_frame=av_frame_alloc();
+            if (!output_frame)
+            {
+                ret = AVERROR(ENOMEM);
+                return ret;
+            }
+            /**
+            * Use the maximum number of possible samples per frame.
+            * If there is less than the maximum possible frame size in the FIFO
+            * buffer use this number. Otherwise, use the maximum possible frame size
+            */
+            const int frame_size = FFMIN(av_audio_fifo_size(fifo),
+                pCodecCtx_a-&gt;frame_size);
+
+            /** Initialize temporary storage for one output frame. */
+            /**
+            * Set the frame&apos;s parameters, especially its size and format.
+            * av_frame_get_buffer needs this to allocate memory for the
+            * audio samples of the frame.
+            * Default channel layouts based on the number of channels
+            * are assumed for simplicity.
+            */
+            output_frame-&gt;nb_samples = frame_size;
+            output_frame-&gt;channel_layout = pCodecCtx_a-&gt;channel_layout;
+            output_frame-&gt;format = pCodecCtx_a-&gt;sample_fmt;
+            output_frame-&gt;sample_rate = pCodecCtx_a-&gt;sample_rate;
+
+            /**
+            * Allocate the samples of the created frame. This call will make
+            * sure that the audio frame can hold as many samples as specified.
+            */
+            if ((ret = av_frame_get_buffer(output_frame, 0)) &lt; 0) {
+                printf(&quot;Could not allocate output frame samples\n&quot;);
+                av_frame_free(&amp;output_frame);
+                return ret;
+            }
+
+            /**
+            * Read as many samples from the FIFO buffer as required to fill the frame.
+            * The samples are stored in the frame temporarily.
+            */
+            if (av_audio_fifo_read(fifo, (void **)output_frame-&gt;data, frame_size) &lt; frame_size) {
+                printf(&quot;Could not read data from FIFO\n&quot;);
+                return AVERROR_EXIT;
+            }
+
+            /** Encode one frame worth of audio samples. */
+            /** Packet used for temporary storage. */
+            AVPacket output_packet;
+            av_init_packet(&amp;output_packet);
+            output_packet.data = NULL;
+            output_packet.size = 0;
+
+            /** Set a timestamp based on the sample rate for the container. */
+            if (output_frame) {
+                nb_samples += output_frame-&gt;nb_samples;
+            }
+
+            /**
+            * Encode the audio frame and store it in the temporary packet.
+            * The output audio stream encoder is used to do this.
+            */
+            if ((ret = avcodec_encode_audio2(pCodecCtx_a, &amp;output_packet,
+                output_frame, &amp;enc_got_frame_a)) &lt; 0) {
+                printf(&quot;Could not encode frame\n&quot;);
+                av_packet_unref(&amp;output_packet);
+                return ret;
+            }
+
+            /** Write one audio frame from the temporary packet to the output file. */
+            if (enc_got_frame_a) {
+
+                output_packet.stream_index = 1;
+
+                AVRational time_base = ofmt_ctx-&gt;streams[1]-&gt;time_base;
+                AVRational r_framerate1 = { ifmt_ctx_a-&gt;streams[audioindex]-&gt;codec-&gt;sample_rate, 1 };// { 44100, 1};  
+                int64_t calc_duration = (double)(AV_TIME_BASE)*(1 / av_q2d(r_framerate1));  //内部时间戳  
+
+                output_packet.pts = av_rescale_q(nb_samples*calc_duration, time_base_q, time_base);
+                output_packet.dts = output_packet.pts;
+                output_packet.duration = output_frame-&gt;nb_samples;
+
+                //printf(&quot;audio pts : %d\n&quot;, output_packet.pts);
+                aud_next_pts = nb_samples*calc_duration;
+
+                int64_t pts_time = av_rescale_q(output_packet.pts, time_base, time_base_q);
+                int64_t now_time = av_gettime() - start_time;
+
+                if ((pts_time &gt; now_time) &amp;&amp; ((aud_next_pts + pts_time - now_time)&lt;vid_next_pts))
+                    av_usleep(pts_time - now_time);
+
+                if ((ret = av_interleaved_write_frame(ofmt_ctx, &amp;output_packet)) &lt; 0) {
+                    printf(&quot;Could not write frame\n&quot;);
+                    av_packet_unref(&amp;output_packet);
+                    return ret;
+                }
+
+                av_packet_unref(&amp;output_packet);
+            }           
+            av_frame_free(&amp;output_frame);       
+        }     </code></pre><h6 id="视音频同步"><a href="#视音频同步" class="headerlink" title="视音频同步"></a>视音频同步</h6><p>首先定义几个变量</p>
+<pre><code>int aud_next_pts = 0;//视频流目前的pts,可以理解为目前的进度
+int vid_next_pts = 0;//音频流目前的pts
+int encode_video = 1, encode_audio = 1;//是否要编码视频、音频</code></pre><p>则相应的视音频同步方法如下: 1. 确定视频, 音频二者中至少有一个是需要进行转码的 2. 比较两个流的进度, 使用av_compare_ts函数, 注意：此时的vid_next_pts和aud_next_pts的time base都是ffmpeg内部基准，即<code>AVRational time_base_q = { 1, AV_TIME_BASE };</code> 3. 对进度落后的流进行转码, 并相应地对进度进行更新. 对于视频，有 vid_next_pts=framecnt_calc_duration;，对于音频，有 aud_next_pts = nb_samples_calc_duration;这里framecnt和nb_samples都相当于计数器，而calc_duration是对应流每两个frame或sample之间的时间间隔，也是以ffmpeg内部时间基准为单位的 4. 若转码进度很快完成, 则不能急于写入输出流, 而是需要先进行延时, 但是也要保证延时后的时间不会超过另一个流的进度</p>
+<p>综上, 流程如下:</p>
+<pre><code> //start decode and encode
+    int64_t start_time = av_gettime();
+    while (encode_video || encode_audio)
+    {
+        if (encode_video &amp;&amp;
+            (!encode_audio || av_compare_ts(vid_next_pts, time_base_q,
+            aud_next_pts, time_base_q) &lt;= 0))
+        {
+              进行视频转码；
+              转码完成后；
+              vid_next_pts=framecnt*calc_duration; //general timebase
+
+                        //Delay
+                        int64_t pts_time = av_rescale_q(enc_pkt.pts, time_base, time_base_q);
+                        int64_t now_time = av_gettime() - start_time;                       
+                        if ((pts_time &gt; now_time) &amp;&amp; ((vid_next_pts + pts_time - now_time)&lt;aud_next_pts))
+                            av_usleep(pts_time - now_time);
+              写入流；
+}
+else
+{
+              进行音频转码；
+              转码完成后；
+          aud_next_pts = nb_samples*calc_duration;
+
+                int64_t pts_time = av_rescale_q(output_packet.pts, time_base, time_base_q);
+                int64_t now_time = av_gettime() - start_time;
+                if ((pts_time &gt; now_time) &amp;&amp; ((aud_next_pts + pts_time - now_time)&lt;vid_next_pts))
+                    av_usleep(pts_time - now_time);
+              写入流；
+}</code></pre><p>至此, 视音频同步完成. 最后再完成一些flush_encoder的工作即可.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/03/27/ffmpeg-e8-a7-86-e9-9f-b3-e9-a2-91-e5-90-8c-e6-ad-a5/" data-id="ck10vao090059zxz2mj8j1tnq" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2018/03/28/centos7-e5-8d-87-e7-ba-a7gcc-e5-92-8cgdb/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          CentOS7升级gcc 和gdb
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2018/03/27/ffmpeg-e6-8e-a8-e6-b5-81-e6-8a-a5-e9-94-99/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">ffmpeg 推流报错</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/">En</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/JSON/">JSON</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DB/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Rasp/">Rasp</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nginx/">nginx</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/架构/">架构</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/mysql/" style="font-size: 10px;">mysql</a> <a href="/tags/nginx/" style="font-size: 20px;">nginx</a> <a href="/tags/架构/" style="font-size: 10px;">架构</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">July 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">June 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">November 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">September 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">January 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">September 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">November 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">October 2016</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2019/09/26/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/08/e5-8d-87-e7-ba-a7https/">升级https</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/23/docker-e6-8c-82-e8-bd-bd-e7-9b-ae-e5-bd-95-e5-a4-b1-e8-b4-a5-e6-9d-83-e9-99-90-e6-8b-92-e7-bb-9d/">docker挂载目录失败/权限拒绝</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/02/mac-iterm2-e7-99-bb-e9-99-86centos-e6-8f-90-e7-a4-bawarning-setlocale-lc-ctype-cannot-change-locale-utf-8-no-such-file-or-directory/">Mac iTerm2登陆CentOS提示warning: setlocale: LC_CTYPE: cannot change locale (UTF-8): No such file or directory</a>
+          </li>
+        
+          <li>
+            <a href="/2019/06/12/e5-8d-87-e7-ba-a7-e5-88-b0php7-1-e4-b9-8b-e5-90-8ewordpress-e7-bd-91-e7-ab-99-e5-87-ba-e7-8e-b0error-establishing-a-database-connection-e7-9a-84-e8-a7-a3-e5-86-b3-e6-96-b9-e6-b3-95/">升级到php7.1之后wordpress 网站出现Error establishing a database connection的解决方法</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2019 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

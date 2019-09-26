@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+
+  
+  <title>Go 发送邮件 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="需要引入 smtp包 mail.go package main  import (     &amp;quot;bytes&amp;quot;     &amp;quot;encoding/base64&amp;quot;     &amp;quot;fmt&amp;quot;     &amp;quot;io/ioutil&amp;quot;     &amp;quot;net/smtp&amp;quot;     &amp;quot;strings&amp;quot; )  const">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go 发送邮件">
+<meta property="og:url" content="http://yoursite.com/2018/09/01/go-e5-8f-91-e9-80-81-e9-82-ae-e4-bb-b6/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="需要引入 smtp包 mail.go package main  import (     &amp;quot;bytes&amp;quot;     &amp;quot;encoding/base64&amp;quot;     &amp;quot;fmt&amp;quot;     &amp;quot;io/ioutil&amp;quot;     &amp;quot;net/smtp&amp;quot;     &amp;quot;strings&amp;quot; )  const">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-09-26T15:41:04.069Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Go 发送邮件">
+<meta name="twitter:description" content="需要引入 smtp包 mail.go package main  import (     &amp;quot;bytes&amp;quot;     &amp;quot;encoding/base64&amp;quot;     &amp;quot;fmt&amp;quot;     &amp;quot;io/ioutil&amp;quot;     &amp;quot;net/smtp&amp;quot;     &amp;quot;strings&amp;quot; )  const">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-go-e5-8f-91-e9-80-81-e9-82-ae-e4-bb-b6" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/09/01/go-e5-8f-91-e9-80-81-e9-82-ae-e4-bb-b6/" class="article-date">
+  <time datetime="2018-09-01T14:26:49.000Z" itemprop="datePublished">2018-09-01</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Golang/">Golang</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Go 发送邮件
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>需要引入 smtp包 mail.go</p>
+<pre><code>package main
+
+import (
+    &quot;bytes&quot;
+    &quot;encoding/base64&quot;
+    &quot;fmt&quot;
+    &quot;io/ioutil&quot;
+    &quot;net/smtp&quot;
+    &quot;strings&quot;
+)
+
+const const_smtp_server = &quot;server-ip:port&quot;
+
+//const const_email_content_type = &quot;Content-Type: text/plain; charset=UTF-8&quot;
+const const_email_content_type = &quot;Content-Type: text/html; charset=UTF-8&quot;
+const const_boundary = &quot;THIS_IS_THE_BOUNDARY_FOR_EMAIL_BY_LXB&quot;
+
+func SendEmail(sender string, receivers []string, subject string, content string, attach_files []string) error {
+
+    var buf bytes.Buffer
+    buf.WriteString(&quot;To: &quot;)
+    buf.WriteString(strings.Join(receivers, &quot;,&quot;))
+    buf.WriteString(&quot;\r\nFrom: &quot;)
+    //nickname := strings.Split(sender,&quot;@&quot;)[0]
+    //buf.WriteString(nickname)
+    buf.WriteString(&quot;&lt;&quot;)
+    buf.WriteString(sender)
+    buf.WriteString(&quot;&gt;&quot;)
+    buf.WriteString(&quot;\r\nSubject: &quot;)
+    buf.WriteString(subject)
+    buf.WriteString(&quot;\r\nContent-Type: multipart/mixed; boundary=&quot;)
+    buf.WriteString(const_boundary)
+    buf.WriteString(&quot;\r\n--&quot;)
+    buf.WriteString(const_boundary)
+    buf.WriteString(&quot;\r\n&quot;)
+    buf.WriteString(const_email_content_type)
+    buf.WriteString(&quot;\r\n\r\n&quot;)
+    buf.WriteString(content)
+    buf.WriteString(&quot;\r\n\r\n--&quot;)
+    buf.WriteString(const_boundary)
+    buf.WriteString(&quot;\r\n&quot;)
+
+    for _, filepath := range attach_files {
+        // 第一个附件
+        filedepts := strings.Split(filepath, &quot;/&quot;)
+        filename := filedepts[len(filedepts)-1]
+        buf.WriteString(&quot;Content-Type: application/octet-stream\r\n&quot;)
+        buf.WriteString(&quot;Content-Description: 附件\r\n&quot;)
+        buf.WriteString(&quot;Content-Transfer-Encoding: base64\r\n&quot;)
+        buf.WriteString(&quot;Content-Disposition: attachment; filename=\&quot;&quot; + filename + &quot;\&quot;\r\n\r\n&quot;)
+        //读取并编码文件内容
+        attaData, err := ioutil.ReadFile(filepath)
+        if err != nil {
+            print(err)
+            return err
+        }
+        b := make([]byte, base64.StdEncoding.EncodedLen(len(attaData)))
+        base64.StdEncoding.Encode(b, attaData)
+        buf.Write(b)
+        buf.WriteString(fmt.Sprintf(&quot;\r\n--%s\r\n&quot;, const_boundary))
+    }
+
+    fmt.Println(buf.String())
+    err := smtp.SendMail(const_smtp_server, nil, sender, receivers, buf.Bytes())
+
+    fmt.Println(&quot;send mail err:&quot;, err)
+    return err
+}</code></pre><p>main.go</p>
+<pre><code>package main
+
+import (
+    //&quot;flag&quot;
+    //&quot;fmt&quot;
+    &quot;os&quot;
+)
+
+func main() {
+
+    //var task string
+
+    //flag.StringVar(&amp;task, &quot;t&quot;, &quot;&quot;, &quot;task id&quot;)
+    //flag.Parse()
+
+    //if task == &quot;&quot; {
+    //  fmt.Println(&quot;task is required.&quot;)
+    //  flag.Usage()
+    //  os.Exit(2)
+    //}
+
+    testStr := os.Args[1]
+
+    cont := &quot;&lt;html&gt;&lt;body&gt;&lt;p align=\&quot;center\&quot;&gt;表: 1&lt;/p&gt;&lt;table align=\&quot;center\&quot; border=\&quot;1\&quot; cellpadding=\&quot;10\&quot;&gt;&lt;tr&gt;&lt;td&gt;任务ID&lt;/td&gt;&lt;td&gt;列1&lt;/td&gt;&lt;td&gt;列2&lt;/td&gt;&lt;td&gt;列3&lt;/td&gt;&lt;/tr&gt; &lt;tr&gt;&lt;td&gt;&quot; + testStr + &quot;&lt;/td&gt;&lt;td&gt;&quot; + testStr + &quot;&lt;/td&gt;&lt;td&gt;&quot; + testStr + &quot;&lt;/td&gt;&lt;td&gt;&quot; + testStr + &quot;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;&quot;
+
+    sender := &quot;&quot;
+    rcvs := []string{}
+    sbj := &quot;test email&quot;
+    //  cont := &quot;This is content&quot;
+    file := []string{}
+
+    SendEmail(sender, rcvs, sbj, cont, file)
+
+}</code></pre>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/09/01/go-e5-8f-91-e9-80-81-e9-82-ae-e4-bb-b6/" data-id="ck10vanxd001lzxz2ndvxg446" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2018/10/17/e6-a0-91-e8-8e-93-e6-b4-be3b-e5-ae-89-e8-a3-85-e7-b3-bb-e7-bb-9f/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          树莓派3B+ 安装系统
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2018/08/30/shell-e6-95-b0-e7-bb-84-e7-ac-94-e8-ae-b0/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Shell数组笔记</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/">En</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/JSON/">JSON</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DB/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Rasp/">Rasp</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nginx/">nginx</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/架构/">架构</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/mysql/" style="font-size: 10px;">mysql</a> <a href="/tags/nginx/" style="font-size: 20px;">nginx</a> <a href="/tags/架构/" style="font-size: 10px;">架构</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">July 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">June 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">November 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">September 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">January 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">September 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">November 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">October 2016</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2019/09/26/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/08/e5-8d-87-e7-ba-a7https/">升级https</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/23/docker-e6-8c-82-e8-bd-bd-e7-9b-ae-e5-bd-95-e5-a4-b1-e8-b4-a5-e6-9d-83-e9-99-90-e6-8b-92-e7-bb-9d/">docker挂载目录失败/权限拒绝</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/02/mac-iterm2-e7-99-bb-e9-99-86centos-e6-8f-90-e7-a4-bawarning-setlocale-lc-ctype-cannot-change-locale-utf-8-no-such-file-or-directory/">Mac iTerm2登陆CentOS提示warning: setlocale: LC_CTYPE: cannot change locale (UTF-8): No such file or directory</a>
+          </li>
+        
+          <li>
+            <a href="/2019/06/12/e5-8d-87-e7-ba-a7-e5-88-b0php7-1-e4-b9-8b-e5-90-8ewordpress-e7-bd-91-e7-ab-99-e5-87-ba-e7-8e-b0error-establishing-a-database-connection-e7-9a-84-e8-a7-a3-e5-86-b3-e6-96-b9-e6-b3-95/">升级到php7.1之后wordpress 网站出现Error establishing a database connection的解决方法</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2019 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

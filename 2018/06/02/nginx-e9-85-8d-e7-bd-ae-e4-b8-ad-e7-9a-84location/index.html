@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+
+  
+  <title>nginx配置中的location | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="语法location [=|~|~*|^~] /uri/ {...} 上下文: server 此命令随URL 不同而接受不同的结构. 可以配置使用常规字符串和正则表达式. 若使用正则表达式, 则必须使用~*前缀(选择不区分大小写的匹配) 或~前缀(区分大小写的匹配)  = 表示uri 以某个常规字符串开头, 理解为匹配url 路径即可. nginx 不对url 做编码, 因此请求为/static/">
+<meta name="keywords" content="nginx">
+<meta property="og:type" content="article">
+<meta property="og:title" content="nginx配置中的location">
+<meta property="og:url" content="http://yoursite.com/2018/06/02/nginx-e9-85-8d-e7-bd-ae-e4-b8-ad-e7-9a-84location/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="语法location [=|~|~*|^~] /uri/ {...} 上下文: server 此命令随URL 不同而接受不同的结构. 可以配置使用常规字符串和正则表达式. 若使用正则表达式, 则必须使用~*前缀(选择不区分大小写的匹配) 或~前缀(区分大小写的匹配)  = 表示uri 以某个常规字符串开头, 理解为匹配url 路径即可. nginx 不对url 做编码, 因此请求为/static/">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-09-26T15:41:04.068Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="nginx配置中的location">
+<meta name="twitter:description" content="语法location [=|~|~*|^~] /uri/ {...} 上下文: server 此命令随URL 不同而接受不同的结构. 可以配置使用常规字符串和正则表达式. 若使用正则表达式, 则必须使用~*前缀(选择不区分大小写的匹配) 或~前缀(区分大小写的匹配)  = 表示uri 以某个常规字符串开头, 理解为匹配url 路径即可. nginx 不对url 做编码, 因此请求为/static/">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-nginx-e9-85-8d-e7-bd-ae-e4-b8-ad-e7-9a-84location" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/06/02/nginx-e9-85-8d-e7-bd-ae-e4-b8-ad-e7-9a-84location/" class="article-date">
+  <time datetime="2018-06-02T14:30:30.000Z" itemprop="datePublished">2018-06-02</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Web/">Web</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      nginx配置中的location
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>语法</strong><br><code>location [=|~|~*|^~] /uri/ {...}</code> 上下文: <code>server</code> 此命令随URL 不同而接受不同的结构. 可以配置使用常规字符串和正则表达式. 若使用正则表达式, 则必须使用<code>~*</code>前缀(选择不区分大小写的匹配) 或<code>~</code>前缀(区分大小写的匹配)</p>
+<ol>
+<li><code>=</code> 表示<code>uri</code> 以某个常规字符串开头, 理解为匹配url 路径即可. nginx 不对url 做编码, 因此请求为<code>/static/%20%/aa</code> 可以被规则<code>^~ /static/ /aa</code> (有空格) 匹配到.</li>
+<li><code>~</code> 表示区分大小写的正则匹配</li>
+<li><code>~*</code> 表示不区分大小写的正则匹配</li>
+<li><code>!~</code> 和 <code>!~*</code> 分别为区分大小写不匹配 和 不区分大小写不匹配 的正则</li>
+<li><code>/</code> 通用匹配, 任何请求都会匹配到</li>
+</ol>
+<p>多个<code>location</code> 配置的情况下, 匹配顺序为: 先匹配<code>=</code>, 其次匹配<code>^~</code>, 再匹配按文件中顺序的正则匹配, 最后匹配<code>/</code>. 当有匹配成功的时候, 停止匹配, 按当前匹配规则处理请求. <strong>例1:</strong></p>
+<pre><code>location = / {
+    # 规则A
+}
+
+location = /login {
+    # 规则B
+}
+
+location ^~ /static {
+    # 规则C
+}
+
+location ~ \.(gif|jpg|png|js|css)$ {
+    # 规则D
+}
+
+location ~* \.png$ {
+    # 规则E
+}
+
+location !~ \.xhtml$ {
+    # 规则F
+}
+
+location !~* \.xhtml$ {
+    # 规则G
+}
+
+location / {
+    # 规则H
+}</code></pre><p>产生效果如下: 1. 访问<code>/</code> 根目录, 如<code>http://localhost/</code> 将匹配规则A 2. 访问<code>http://localhost/login</code> 将匹配规则B; <code>http://localhost/register</code> 将匹配规则H 3. 访问<code>http://localhost/static/a.html</code> 将匹配规则C 4. 访问<code>http://localhost/a.png</code> 讲匹配规则D 和规则E, 但规则D 顺序优先, 规则E 不起作用 5. 访问<code>http://localhost/static/c.png</code> 优先匹配到规则C 6. 访问<code>http://localhost/a.PNG</code> 将匹配规则E 7. 访问<code>http://localhost/a.xhtml</code> 不会匹配到规则F 和规则G, <code>http://localhost/a.XHTML</code> 不会匹配到规则G 8. 访问<code>http://localhost/category/id/1111</code> 匹配到规则H, 因为以上规则都不匹配, 这个时候应该是nginx 转发给后端应用服务器, 如FastCGI(php), tomcat(jsp), nginx 作为反向代理服务器存在. 所以实际使用中, 通常有至少三个匹配规则定义, 如下:</p>
+<pre><code># 第一个必选规则 直接匹配网站根, 通过域名访问网站首页比较频繁, 使用这个会加速处理; 这里直接转发给后端应用服务器了, 也可以是一个静态首页
+location = / {
+    proxy_pass http://tomcat:8080/index
+}
+
+# 第二个必选规则 处理静态文件请求, 这是nginx 作为http 服务器的强项. 有如下两种配置模式, 目录匹配或后缀匹配, 任选其一或搭配使用
+location ^~ /static/ {
+    root /webroot/static/;
+}
+location ~* \.(gif|jpg|jpeg|png|css|js|ico)$ {
+    root /webroot/res/;
+}
+
+# 第三个必选规则 通用规则, 用来转发动态请求到后端应用服务器. 非静态文件请求就默认是动态请求. 
+location / {
+    proxy_pass http://tomcat:8080/
+}</code></pre>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/06/02/nginx-e9-85-8d-e7-bd-ae-e4-b8-ad-e7-9a-84location/" data-id="ck10vany3002kzxz2cl46oc85" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/nginx/">nginx</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2018/06/02/nginx-e9-85-8d-e7-bd-ae-e4-b8-ad-e7-9a-84rewrite/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          nginx 配置中的rewrite
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2018/06/01/nginx-e5-af-bb-e6-89-beindex-e5-8e-9f-e7-90-86/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">nginx 寻找index 原理</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/">En</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/JSON/">JSON</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DB/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Rasp/">Rasp</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nginx/">nginx</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/架构/">架构</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/mysql/" style="font-size: 10px;">mysql</a> <a href="/tags/nginx/" style="font-size: 20px;">nginx</a> <a href="/tags/架构/" style="font-size: 10px;">架构</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">July 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">June 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">November 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">September 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">January 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">September 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">November 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">October 2016</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2019/09/26/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/08/e5-8d-87-e7-ba-a7https/">升级https</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/23/docker-e6-8c-82-e8-bd-bd-e7-9b-ae-e5-bd-95-e5-a4-b1-e8-b4-a5-e6-9d-83-e9-99-90-e6-8b-92-e7-bb-9d/">docker挂载目录失败/权限拒绝</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/02/mac-iterm2-e7-99-bb-e9-99-86centos-e6-8f-90-e7-a4-bawarning-setlocale-lc-ctype-cannot-change-locale-utf-8-no-such-file-or-directory/">Mac iTerm2登陆CentOS提示warning: setlocale: LC_CTYPE: cannot change locale (UTF-8): No such file or directory</a>
+          </li>
+        
+          <li>
+            <a href="/2019/06/12/e5-8d-87-e7-ba-a7-e5-88-b0php7-1-e4-b9-8b-e5-90-8ewordpress-e7-bd-91-e7-ab-99-e5-87-ba-e7-8e-b0error-establishing-a-database-connection-e7-9a-84-e8-a7-a3-e5-86-b3-e6-96-b9-e6-b3-95/">升级到php7.1之后wordpress 网站出现Error establishing a database connection的解决方法</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2019 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

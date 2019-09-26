@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+
+  
+  <title>升级https | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="环境 CentOS nginx获取证书HTTPS 证书分三类：1. DV 域名验证证书 2. OV 组织机构验证证书 3. EV 增强的组织机构验证证书。每类证书的审核要求不同，在浏览器地址栏也会有区分，对于个人网站而言，使用免费的 DV 证书就足够了。 我使用了大名鼎鼎的 Let’s Encrypt 来生成证书。 1. 安装 certbotcertbot 是 Let’s Encrypt 提供的一">
+<meta property="og:type" content="article">
+<meta property="og:title" content="升级https">
+<meta property="og:url" content="http://yoursite.com/2019/08/08/e5-8d-87-e7-ba-a7https/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="环境 CentOS nginx获取证书HTTPS 证书分三类：1. DV 域名验证证书 2. OV 组织机构验证证书 3. EV 增强的组织机构验证证书。每类证书的审核要求不同，在浏览器地址栏也会有区分，对于个人网站而言，使用免费的 DV 证书就足够了。 我使用了大名鼎鼎的 Let’s Encrypt 来生成证书。 1. 安装 certbotcertbot 是 Let’s Encrypt 提供的一">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-09-26T15:41:04.070Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="升级https">
+<meta name="twitter:description" content="环境 CentOS nginx获取证书HTTPS 证书分三类：1. DV 域名验证证书 2. OV 组织机构验证证书 3. EV 增强的组织机构验证证书。每类证书的审核要求不同，在浏览器地址栏也会有区分，对于个人网站而言，使用免费的 DV 证书就足够了。 我使用了大名鼎鼎的 Let’s Encrypt 来生成证书。 1. 安装 certbotcertbot 是 Let’s Encrypt 提供的一">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-e5-8d-87-e7-ba-a7https" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/08/08/e5-8d-87-e7-ba-a7https/" class="article-date">
+  <time datetime="2019-08-07T18:53:34.000Z" itemprop="datePublished">2019-08-08</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Web/">Web</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      升级https
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><em>环境</em></p>
+<pre><code>CentOS
+nginx</code></pre><h3 id="获取证书"><a href="#获取证书" class="headerlink" title="获取证书"></a>获取证书</h3><p>HTTPS 证书分三类：1. DV 域名验证证书 2. OV 组织机构验证证书 3. EV 增强的组织机构验证证书。每类证书的审核要求不同，在浏览器地址栏也会有区分，对于个人网站而言，使用免费的 DV 证书就足够了。 我使用了大名鼎鼎的 Let’s Encrypt 来生成证书。</p>
+<h4 id="1-安装-certbot"><a href="#1-安装-certbot" class="headerlink" title="1. 安装 certbot"></a>1. 安装 certbot</h4><p>certbot 是 Let’s Encrypt 提供的一套自动化工具。</p>
+<pre><code>yum install epel-release
+yum install certbot</code></pre><h4 id="2-生成证书"><a href="#2-生成证书" class="headerlink" title="2. 生成证书"></a>2. 生成证书</h4><p>这里采用 webroot 作为 Let’s Encrypt 的认证方式。</p>
+<pre><code>certbot certonly -a webroot --webroot-path=/your/project/path -d example.com -d www.example.com</code></pre><p>webroot-path就是项目根路径，使用 -d 可以添加多个域名。这时证书就已经生成成功了，默认保存在 /etc/letsencrypt/live/example.com/ 下。证书文件包括：</p>
+<ul>
+<li>cert.pem: 服务端证书</li>
+<li>chain.pem: 浏览器需要的所有证书但不包括服务端证书，比如根证书和中间证书</li>
+<li>fullchain.pem: 包括了cert.pem和chain.pem的内容</li>
+<li>privkey.pem: 证书私钥</li>
+</ul>
+<h4 id="3-生成迪菲-赫尔曼密钥交换组（-Strong-Diffie-Hellman-Group）"><a href="#3-生成迪菲-赫尔曼密钥交换组（-Strong-Diffie-Hellman-Group）" class="headerlink" title="3. 生成迪菲-赫尔曼密钥交换组（ Strong Diffie-Hellman Group）"></a>3. 生成迪菲-赫尔曼密钥交换组（ Strong Diffie-Hellman Group）</h4><p>为了进一步提高安全性，也可以生成一个 Strong Diffie-Hellman Group。</p>
+<pre><code>openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048</code></pre><h3 id="配置nginx"><a href="#配置nginx" class="headerlink" title="配置nginx"></a>配置nginx</h3><p>编辑 Nginx 配置文件，如果你不知道配置文件在哪，可以用 locate /nginx.conf 命令查找。添加以下内容，具体参数以你的实际情况为准。</p>
+<pre><code>server {
+        listen 443 ssl;
+        # 启用http2
+        # 需要安装 Nginx Http2 Module
+        # listen 443 http2 ssl;
+        server_name my_server_name;
+        #证书文件
+        ssl_certificate /etc/letsencrypt/live/my_server_name/fullchain.pem;
+        #私钥文件
+        ssl_certificate_key /etc/letsencrypt/live/my_server_name/privkey.pem;
+
+        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+        # 优先采取服务器算法
+        ssl_prefer_server_ciphers on;
+        # 定义算法
+        ssl_ciphers &amp;quot;EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH&amp;quot;;
+        ssl_ecdh_curve secp384r1;
+        ssl_session_cache shared:SSL:10m;
+        ssl_session_tickets off;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        resolver 8.8.8.8 8.8.4.4 valid=300s;
+        resolver_timeout 5s;
+
+        add_header Strict-Transport-Security &amp;quot;max-age=63072000; includeSubdomains&amp;quot;;
+        add_header X-Frame-Options DENY;
+        add_header X-Content-Type-Options nosniff;
+        # 使用DH文件
+        ssl_dhparam /etc/ssl/certs/dhparam.pem;
+
+        location ~ /.well-known {
+            allow all;
+        }
+
+        location ~ \.php$ {
+            root           my_root;
+            fastcgi_pass   my_host:my_port;
+            fastcgi_index  index.php;
+            fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+            include        fastcgi_params;
+        }
+
+        root my_root;
+        index index.html index.php;
+
+        location / {
+            root my_root;
+            autoindex on;
+            index index.html index.php;
+            client_max_body_size 1024m;
+        }
+}</code></pre><p>其中的几项配置: <code>ssl_stapling on;</code> 开启 OCSP Stapling，使服务端主动获取 OCSP 查询结果并随着证书一起发送给客户端，从而让客户端跳过自己去验证的过程，提高 TLS 握手效率。 <code>add_header Strict-Transport-Security &amp;quot;max-age=63072000; includeSubdomains&amp;quot;;</code> 启用 HSTS 策略，强制浏览器使用 HTTPS 连接，max-age设置单位时间内強制使用 HTTPS 连接；includeSubDomains 可选，设置所有子域同时生效。浏览器在获取该响应头后，在 max-age 的时间内，如果遇到 HTTP 连接，就会通过 307 跳转強制使用 HTTPS 进行连接 <code>add_header X-Frame-Options DENY;</code> 添加 X-Frame-Options 响应头，可以禁止网站被嵌入到 iframe 中，减少点击劫持 (clickjacking)攻击。 <code>add_header X-Content-Type-Options nosniff;</code> 添加 X-Content-Type-Options 响应头，防止 MIME 类型嗅探攻击 测试nginx.conf 是否有语法错误 <code>nginx -t</code> 重启nginx <code>nginx -s reload</code></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/08/08/e5-8d-87-e7-ba-a7https/" data-id="ck10vanwq000dzxz27srffb2i" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/09/26/hello-world/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Hello World
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/07/23/docker-e6-8c-82-e8-bd-bd-e7-9b-ae-e5-bd-95-e5-a4-b1-e8-b4-a5-e6-9d-83-e9-99-90-e6-8b-92-e7-bb-9d/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">docker挂载目录失败/权限拒绝</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/">En</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/JSON/">JSON</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DB/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Rasp/">Rasp</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nginx/">nginx</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/架构/">架构</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/mysql/" style="font-size: 10px;">mysql</a> <a href="/tags/nginx/" style="font-size: 20px;">nginx</a> <a href="/tags/架构/" style="font-size: 10px;">架构</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">July 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">June 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">November 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">September 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">January 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">September 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">November 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">October 2016</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2019/09/26/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/08/e5-8d-87-e7-ba-a7https/">升级https</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/23/docker-e6-8c-82-e8-bd-bd-e7-9b-ae-e5-bd-95-e5-a4-b1-e8-b4-a5-e6-9d-83-e9-99-90-e6-8b-92-e7-bb-9d/">docker挂载目录失败/权限拒绝</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/02/mac-iterm2-e7-99-bb-e9-99-86centos-e6-8f-90-e7-a4-bawarning-setlocale-lc-ctype-cannot-change-locale-utf-8-no-such-file-or-directory/">Mac iTerm2登陆CentOS提示warning: setlocale: LC_CTYPE: cannot change locale (UTF-8): No such file or directory</a>
+          </li>
+        
+          <li>
+            <a href="/2019/06/12/e5-8d-87-e7-ba-a7-e5-88-b0php7-1-e4-b9-8b-e5-90-8ewordpress-e7-bd-91-e7-ab-99-e5-87-ba-e7-8e-b0error-establishing-a-database-connection-e7-9a-84-e8-a7-a3-e5-86-b3-e6-96-b9-e6-b3-95/">升级到php7.1之后wordpress 网站出现Error establishing a database connection的解决方法</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2019 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

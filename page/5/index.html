@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+
+  
+  <title>Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://yoursite.com/page/5/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:locale" content="en">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hexo">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-ffmpeg-e6-8e-a8-e6-b5-81-e6-8a-a5-e9-94-99" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/03/27/ffmpeg-e6-8e-a8-e6-b5-81-e6-8a-a5-e9-94-99/" class="article-date">
+  <time datetime="2018-03-27T06:39:47.000Z" itemprop="datePublished">2018-03-27</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/A-amp-V/">A&amp;V</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/03/27/ffmpeg-e6-8e-a8-e6-b5-81-e6-8a-a5-e9-94-99/">ffmpeg 推流报错</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在使用dshow设备推流时，经常会报出real time buffer too full dropping frames的错误信息，其原因在<a href="https://trac.ffmpeg.org/wiki/DirectShow" target="_blank" rel="noopener">这篇文章</a>里有写到，可以通过添加rtbufsize参数来解决，码率越高对应的rtbufsize就需要越高，但过高的rtbufsize会带来视频的延时，若要保持同步，可能就需要对音频人为增加一定的延时。而根据我的测试，即使不添加rtbufszie参数，虽然会报出错误信息，但并不影响直播流的观看或录制，而且可以保持同步。这就是一个trade off的问题了。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/03/27/ffmpeg-e6-8e-a8-e6-b5-81-e6-8a-a5-e9-94-99/" data-id="ck10vanx8001dzxz2oszr5k9t" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-protocol-buffer" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/03/21/protocol-buffer/" class="article-date">
+  <time datetime="2018-03-21T09:47:31.000Z" itemprop="datePublished">2018-03-21</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Web/">Web</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/03/21/protocol-buffer/">protocol buffer</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h5 id="Developer-Guide"><a href="#Developer-Guide" class="headerlink" title="Developer Guide"></a>Developer Guide</h5><p><code>.proto</code> 文件</p>
+<pre><code>message Person {
+  required string name = 1;
+  required int32 id = 2;
+  optional string email = 3;
+
+  enum PhoneType {
+    MOBILE = 0;
+    HOME = 1;
+    WORK = 2;
+  }
+
+  message PhoneNumber {
+    required string number = 1;
+    optional PhoneType type = 2 [default = HOME];
+  }
+
+  repeated PhoneNumber phone = 4;
+}</code></pre><p>Once you’ve defined your messages, you run the protocol buffer compiler for your application’s language on your .proto file to generate data access classes. These provide simple accessors for each field (like name() and set_name()) as well as methods to serialize/parse the whole structure to/from raw bytes</p>
+<p>You can add new fields to your message formats without breaking backwards-compatibility; old binaries simply ignore the new field when parsing. So if you have a communications protocol that uses protocol buffers as its data format, you can extend your protocol without having to worry about breaking existing code.</p>
+<h5 id="Language-Guide"><a href="#Language-Guide" class="headerlink" title="Language Guide"></a>Language Guide</h5><h6 id="Defining-A-Message-Type"><a href="#Defining-A-Message-Type" class="headerlink" title="Defining A Message Type"></a>Defining A Message Type</h6><pre><code>syntax = &quot;proto3&quot;; // First non-empty; first non-comment line
+
+message SearchRequest {
+  string query = 1; // unique numbered tag
+  int32 page_number = 2;
+  int32 result_per_page = 3;
+}</code></pre><h6 id="Specifying-Field-Types"><a href="#Specifying-Field-Types" class="headerlink" title="Specifying Field Types"></a>Specifying Field Types</h6><h6 id="Assigning-Tags"><a href="#Assigning-Tags" class="headerlink" title="Assigning Tags"></a>Assigning Tags</h6><p>1-15 one byte 16-2047 two bytes you should reserve the tags 1 through 15 for very frequently occurring message elements. Remember to leave some room for frequently occurring elements that might be added in the future.</p>
+<p>range: 1 to 536,870,911 You also cannot use the numbers 19000 through 19999 (FieldDescriptor::kFirstReservedNumber through FieldDescriptor::kLastReservedNumber)</p>
+<h6 id="Specifying-Field-Rules"><a href="#Specifying-Field-Rules" class="headerlink" title="Specifying Field Rules"></a>Specifying Field Rules</h6><ul>
+<li>singular zero or one of this field</li>
+<li>repeated any number of times</li>
+</ul>
+<h6 id="Adding-More-Message-Types"><a href="#Adding-More-Message-Types" class="headerlink" title="Adding More Message Types"></a>Adding More Message Types</h6><h6 id="Reserved-Fields"><a href="#Reserved-Fields" class="headerlink" title="Reserved Fields"></a>Reserved Fields</h6><pre><code>message Foo {
+  reserved 2, 15, 9 to 11;
+  reserved &quot;foo&quot;, &quot;bar&quot;;
+}</code></pre><p>Note that you can’t mix field names and tag numbers in the same reserved statement.</p>
+<h6 id="What’s-Generated-From-Your-proto"><a href="#What’s-Generated-From-Your-proto" class="headerlink" title="What’s Generated From Your .proto?"></a>What’s Generated From Your .proto?</h6><h6 id="Default-Values"><a href="#Default-Values" class="headerlink" title="Default Values"></a>Default Values</h6><p>sigular: - string - byte - bool - numeric type - enum - message field</p>
+<p>repeated: - repeated filed</p>
+<h6 id="Enumerations"><a href="#Enumerations" class="headerlink" title="Enumerations"></a>Enumerations</h6><pre><code>message SearchRequest {
+  string query = 1;
+  int32 page_number = 2;
+  int32 result_per_page = 3;
+  enum Corpus {
+    UNIVERSAL = 0;
+    WEB = 1;
+    IMAGES = 2;
+    LOCAL = 3;
+    NEWS = 4;
+    PRODUCTS = 5;
+    VIDEO = 6;
+  }
+  Corpus corpus = 4;
+}</code></pre><p>You can define aliases by assigning the same value to different enum constants</p>
+<pre><code>enum EnumAllowingAlias {
+  option allow_alias = true;
+  UNKNOWN = 0;
+  STARTED = 1;
+  RUNNING = 1;
+}
+
+enum EnumNotAllowingAlias {
+  UNKNOWN = 0;
+  STARTED = 1;
+  // RUNNING = 1;  // Uncommenting this line will cause a compile error inside Google and a warning message outside.
+}</code></pre><h6 id="Reserved-Values"><a href="#Reserved-Values" class="headerlink" title="Reserved Values"></a>Reserved Values</h6><pre><code>enum Foo {
+  reserved 2, 15, 9 to 11, 40 to max;
+  reserved &quot;FOO&quot;, &quot;BAR&quot;;
+}</code></pre><p>Note that you can’t mix field names and numeric values in the same reserved statement.</p>
+<h6 id="Using-Other-Message-Types"><a href="#Using-Other-Message-Types" class="headerlink" title="Using Other Message Types"></a>Using Other Message Types</h6><p>Define a message in the same <code>.proto</code> file.</p>
+<pre><code>message SearchResponse {
+  repeated Result results = 1;
+}
+
+message Result {
+  string url = 1;
+  string title = 2;
+  repeated string snippets = 3;
+}</code></pre><h6 id="Importing-Definitions"><a href="#Importing-Definitions" class="headerlink" title="Importing Definitions"></a>Importing Definitions</h6><p>By default you can only use definitions from directly imported .proto files. <code>import &quot;myproject/other_protos.proto&quot;;</code></p>
+<pre><code>// new.proto
+// All definitions are moved here
+======================================================
+// old.proto
+// This is the proto that all clients are importing.
+import public &quot;new.proto&quot;;
+import &quot;other.proto&quot;;
+======================================================
+// client.proto
+import &quot;old.proto&quot;;
+// You use definitions from old.proto and new.proto, but not other.proto</code></pre><p>The protocol compiler searches for imported files in a set of directories specified on the protocol compiler command line using the -I/–proto_path flag. If no flag was given, it looks in the directory in which the compiler was invoked. In general you should set the –proto_path flag to the root of your project and use fully qualified names for all imports.</p>
+<h6 id="Using-proto2-Message-Types"><a href="#Using-proto2-Message-Types" class="headerlink" title="Using proto2 Message Types"></a>Using proto2 Message Types</h6><p>It’s possible to import proto2 message types and use them in your proto3 messages, and vice versa. However, proto2 enums cannot be used directly in proto3 syntax (it’s okay if an imported proto2 message uses them).</p>
+<h6 id="Nested-Types"><a href="#Nested-Types" class="headerlink" title="Nested Types"></a>Nested Types</h6><pre><code>message SearchResponse {
+  message Result {
+    string url = 1;
+    string title = 2;
+    repeated string snippets = 3;
+  }
+  repeated Result results = 1;
+}</code></pre><p>If you want to reuse this message type outside its parent message type, you refer to it as <code>Parent.Type</code>:</p>
+<pre><code>message SomeOtherMessage {
+  SearchResponse.Result result = 1;
+}</code></pre><p>You can nest messages as deeply as you like</p>
+<pre><code>message Outer {                  // Level 0
+  message MiddleAA {  // Level 1
+    message Inner {   // Level 2
+      int64 ival = 1;
+      bool  booly = 2;
+    }
+  }
+  message MiddleBB {  // Level 1
+    message Inner {   // Level 2
+      int32 ival = 1;
+      bool  booly = 2;
+    }
+  }
+}</code></pre><h6 id="Updating-A-Message-Type"><a href="#Updating-A-Message-Type" class="headerlink" title="Updating A Message Type"></a>Updating A Message Type</h6><ul>
+<li>Don’t change the numeric tags for any existing fields</li>
+<li>If you add new fields, any messages serialized by code using your “old” message format can still be parsed by your new generated code</li>
+<li>Fields can be removed, as long as the tag number is not used again in your updated message type<ul>
+<li>You may want to rename the field instead, perhaps adding the prefix “OBSOLETE_”, or make the tag reserved, so that future users of your .proto can’t accidentally reuse the number.</li>
+</ul>
+</li>
+<li>Compatibility<ul>
+<li>int32, uint32, int64, uint64, and bool are all compatible</li>
+<li>sint32 and sint64 are compatible with each other but are not compatible with the other integer types</li>
+<li>string and bytes are compatible as long as the bytes are valid UTF-8</li>
+<li>Embedded messages are compatible with bytes if the bytes contain an encoded version of the message</li>
+<li>fixed32 is compatible with sfixed32, and fixed64 with sfixed64</li>
+<li>enum is compatible with int32, uint32, int64, and uint64 in terms of wire format (note that values will be truncated if they don’t fit)</li>
+</ul>
+</li>
+<li>Moving any fields into an existing oneof is not safe</li>
+</ul>
+<h6 id="Any"><a href="#Any" class="headerlink" title="Any"></a>Any</h6><pre><code>import &quot;google/protobuf/any.proto&quot;;
+
+message ErrorStatus {
+  string message = 1;
+  repeated google.protobuf.Any details = 2;
+}</code></pre><h6 id="Oneof"><a href="#Oneof" class="headerlink" title="Oneof"></a>Oneof</h6><p>You can add fields of any type, but cannot use <code>repeated</code> fields</p>
+<p>Features: - Setting a oneof field will automatically clear all other members of the oneof - If the parser encounters multiple members of the same oneof on the wire, only the last member seen is used in the parsed message - If you’re using C++, make sure your code doesn’t cause memory crashes - Again in C++, if you Swap() two messages with oneofs, each message will end up with the other’s oneof case</p>
+<h6 id="Maps"><a href="#Maps" class="headerlink" title="Maps"></a>Maps</h6><p><code>map&lt;key_type, value_type&gt; map_field = N</code> The <code>key_type</code> can be any integral or string type. The <code>value_type</code> can be any type except another map.</p>
+<ul>
+<li>Map fields cannot be <code>repeated</code></li>
+<li>Wire format ordering and map iteration ordering of map values is undefined</li>
+<li>When generating text format for a <code>.proto</code>, maps are sorted by key</li>
+<li>When parsing from the wire or when merging, if there are duplicate map keys the last key seen is used. When parsing a map from text format, parsing may fail if there are duplicate keys</li>
+</ul>
+<p>backwords compatibility:</p>
+<pre><code>message MapFieldEntry {
+  key_type key = 1;
+  value_type value = 2;
+}
+
+repeated MapFieldEntry map_field = N;</code></pre><h6 id="Packages"><a href="#Packages" class="headerlink" title="Packages"></a>Packages</h6><h6 id="JSON-Mapping"><a href="#JSON-Mapping" class="headerlink" title="JSON Mapping"></a>JSON Mapping</h6>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/03/21/protocol-buffer/" data-id="ck10vany5002nzxz2n2xhms17" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-qt-e7-9a-84-pro-e6-96-87-e4-bb-b6" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/03/21/qt-e7-9a-84-pro-e6-96-87-e4-bb-b6/" class="article-date">
+  <time datetime="2018-03-21T01:49:25.000Z" itemprop="datePublished">2018-03-21</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Qt/">Qt</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/03/21/qt-e7-9a-84-pro-e6-96-87-e4-bb-b6/">qt 的 pro 文件</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h4 id="注释"><a href="#注释" class="headerlink" title="注释"></a>注释</h4><p>使用<code>#</code> 进行行注释</p>
+<h4 id="模板"><a href="#模板" class="headerlink" title="模板"></a>模板</h4><p><code>TEMPLATE = app</code> 告诉<code>qmake</code>为这个应用程序生成哪种<code>makefile</code>. - app 默认值. 生成app的makefile - lib 生成一个库的makefile - vcapp 生成一个应用程序的<code>VisualStudio</code>项目文件 - vclib 生成一个库的<code>VisualStudio</code> 项目文件 - subdirs 生成<code>makefile</code>文件编译<code>subdirs</code>指定的子文件夹</p>
+<h4 id="应用程序目录"><a href="#应用程序目录" class="headerlink" title="应用程序目录"></a>应用程序目录</h4><p>指定生成的应用程序放置的目录 <code>DESTDIR += ../bin</code></p>
+<h4 id="配置信息"><a href="#配置信息" class="headerlink" title="配置信息"></a>配置信息</h4><p><code>COFNIG</code> 用来告诉<code>qmake</code> 关于应用程序的配置信息 <code>CONFIG += qt warn_on release</code></p>
+<h4 id="ui目录"><a href="#ui目录" class="headerlink" title="ui目录"></a>ui目录</h4><p>指定uic命令将<code>.ui</code>文件转化成的<code>ui_*.h</code>文件的存放目录 <code>UI_DIR += forms</code></p>
+<h4 id="rcc目录"><a href="#rcc目录" class="headerlink" title="rcc目录"></a>rcc目录</h4><p>指定rcc命令将<code>.qrc</code>文件转换成的<code>qrc_*.h</code>文件的存放目录 <code>RCC_DIR += ../tmp</code></p>
+<h4 id="moc目录"><a href="#moc目录" class="headerlink" title="moc目录"></a>moc目录</h4><p>指定moc命令将<strong>含Q_OBJECT的头文件转换成标准<code>.h</code>文件的存放目录</strong> <code>MOC_DIR += ../tmp</code></p>
+<h4 id="目标文件目录"><a href="#目标文件目录" class="headerlink" title="目标文件目录"></a>目标文件目录</h4><p>指定目标文件(obj)的存放目录 <code>OBJECTS_DIR += ../tmp</code></p>
+<h4 id="依赖相关路径"><a href="#依赖相关路径" class="headerlink" title="依赖相关路径"></a>依赖相关路径</h4><p>程序编译时依赖的相关路径 <code>DEPENDPATH += . forms include qrc sources</code></p>
+<h4 id="头文件包含路径"><a href="#头文件包含路径" class="headerlink" title="头文件包含路径"></a>头文件包含路径</h4><p><code>INCLUDEPATH += .</code></p>
+<h4 id="qmake时产生的信息"><a href="#qmake时产生的信息" class="headerlink" title="qmake时产生的信息"></a>qmake时产生的信息</h4><p><code>message($$(PATH))</code></p>
+<h4 id="源文件编码方式"><a href="#源文件编码方式" class="headerlink" title="源文件编码方式"></a>源文件编码方式</h4><p><code>CODECFORSRC = GBK</code></p>
+<h4 id="工程中包含的头文件"><a href="#工程中包含的头文件" class="headerlink" title="工程中包含的头文件"></a>工程中包含的头文件</h4><p><code>HEADERS += include/aa.h</code></p>
+<h4 id="工程中包含的-ui文件"><a href="#工程中包含的-ui文件" class="headerlink" title="工程中包含的.ui文件"></a>工程中包含的<code>.ui</code>文件</h4><p><code>FORMS += forms/aa.ui</code></p>
+<h4 id="工程中包含的源文件"><a href="#工程中包含的源文件" class="headerlink" title="工程中包含的源文件"></a>工程中包含的源文件</h4><p><code>SOURCES += sources/main.cpp sources/aa.cpp</code></p>
+<h4 id="工程中包含的资源文件"><a href="#工程中包含的资源文件" class="headerlink" title="工程中包含的资源文件"></a>工程中包含的资源文件</h4><pre><code>RESOURCES += qrc/aa.qrc
+LIBS += -LfolderPath
+Release: LIBS += -LfolderReleasePath
+Debug: LIBS += -LfolderDebugPath
+DEFINES += XX_XX_XXX // 定义编译选项, 在.h文件中就可以用 #ifdefine XX_XX_XXX
+RC_FIELS = xxx.icns</code></pre><h4 id="平台相关性处理"><a href="#平台相关性处理" class="headerlink" title="平台相关性处理"></a>平台相关性处理</h4><p>根据qmake所运行的平台来使用相应的作用域来进行处理.</p>
+<p>为Windows平台添加的依赖平台的文件示例:</p>
+<pre><code>win32{
+SOURCES += hello_win.cpp
+}</code></pre><h4 id="生成Makefile"><a href="#生成Makefile" class="headerlink" title="生成Makefile"></a>生成Makefile</h4><p><code>qmake -oMakefile hello.pro</code></p>
+<p>对于VisualStudio用户, qmake也可以生成<code>.dsp</code>文件 <code>qmake -tvcapp -o hello.dsp hello.pro</code></p>
+<h6 id="pro文件实例"><a href="#pro文件实例" class="headerlink" title="pro文件实例"></a>pro文件实例</h6><pre><code>TEMPLATE = app #模块配置
+LANGUAGE = C++ #C++语言
+
+CONFIG += qt warn_on debug release
+
+#引入的lib文件,用于引入动态链接库
+LIBS += qaxcontainer.lib
+
+#头文件包含路径
+INCLUDEPATH += ../../qtcompnent/qtchklisten/inc ../../qtcompnent/qtclearfile/inc ../../validator/inc/validerrcode ../../qtcompnent/qtdir/inc ../inc ../../utillib/inc/xmlapi ../../utillib/inc/util ../../xercesc ../../qtcompnent/qteditor/inc ../../qtcompnent/qtfunreview/inc ../../qtcompnent/qttable/inc ../../qtcompnent/qtversion/inc ../../qtcompnent/qtini/inc ../../icdtool/icdservices/inc ../../icdtool/dataset/inc ../../icdtool/doi/inc ../../icdtool/reportcontrol/inc ../../icdtool/GSEconctrol/inc ../../icdtool/inputs/inc ../../icdtool/SMVconctrol/inc ../../icdtool/logcontrol/inc ../../scdpreview/inc/scdpreviewtoollib ../../scdpreview/form ../../icdtool/sclcontrol/inc ../../icdtool/log/inc ../../icdtool/settingcontrol/inc ../../qtcompnent/qteditor/inc ../../qtcompnent/qttreeview/inc ../../qtcompnent/qttabwidget/inc ../../communication/inc ../../qtcompnent/qtabout/inc ../iedmanage/inc ../ldmanage/inc ../foriecrun/inc ../../qtcompnent/validset/inc
+
+#工程中包含的头文件
+HEADERS += ../inc/exportstable.h /
+../inc/maintabwidget.h /
+../inc/outputtab.h /
+../inc/strutil.h /
+../inc/treeeditview.h /
+../inc/MainForm.h /
+../inc/recenfileini.h /
+../inc/ExportCIDFunction.h
+
+#工程中包含的源文件
+SOURCES += ../src/main.cpp /
+../src/exportstable.cpp /
+../src/maintabwidget.cpp /
+../src/outputtab.cpp /
+../src/treeeditview.cpp /
+../src/MainForm.cpp /
+../src/recenfileini.cpp /
+../src/ExportCIDFunction.cpp
+
+#工程中包含的.ui设计文件
+FORMS = ../form/scdmainform.ui /
+../form/exportiedform.ui /
+../form/Exportsedform.ui /
+../form/Importsedform.ui /
+../form/formiminputs.ui
+
+#图像文件
+
+IMAGES = images/substation.png /
+images/communication.png /
+images/autocom.png /
+images/reportcfg.png /
+images/comcfg.png /
+images/filetrans.png /
+images/review.png /
+images/setting.png
+
+#工程中包含的资源文件
+RESOURCES = Scintilla.qrc
+
+#CONFIG -= release
+CONFIG -= debug
+
+
+RC_FILE = scdtool.rc
+
+
+BINLIB = ../../bin ../../xercesc/lib
+
+UI_HEADERS_DIR = ../inc # .ui文件转会为**.h 存放的目录
+UI_SOURCES_DIR = ../src # .ui文件转会为**.cpp 存放的目录
+QMAKE_LIBDIR = $${BINLIB}
+
+release {
+TARGET = scdtool #指定生成的应用程序名
+OBJECTS_DIR = ../../obj/scdtool/release #指定目标文件(obj)的存放目录
+}
+debug {
+TARGET = scdtool_d #指定生成的应用程序名
+OBJECTS_DIR = ../../obj/scdtool/debug #指定目标文件(obj)的存放目录
+}
+
+MOC_DIR = $${OBJECTS_DIR}
+DESTDIR = ../../bin #指定生成的应用程序放置的目录</code></pre><p>补充: <a href="https://www.cnblogs.com/Braveliu/p/5107550.html" target="_blank" rel="noopener">cnblogs</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/03/21/qt-e7-9a-84-pro-e6-96-87-e4-bb-b6/" data-id="ck10vanya002xzxz2fl7p1pky" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-e5-9f-ba-e4-ba-8effmpeg-e7-9a-84-e6-91-84-e5-83-8f-e5-a4-b4-e7-9b-b4-e6-92-ad-e6-8e-a8-e6-b5-81" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/01/13/e5-9f-ba-e4-ba-8effmpeg-e7-9a-84-e6-91-84-e5-83-8f-e5-a4-b4-e7-9b-b4-e6-92-ad-e6-8e-a8-e6-b5-81/" class="article-date">
+  <time datetime="2018-01-13T12:50:43.000Z" itemprop="datePublished">2018-01-13</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/A-amp-V/">A&amp;V</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/01/13/e5-9f-ba-e4-ba-8effmpeg-e7-9a-84-e6-91-84-e5-83-8f-e5-a4-b4-e7-9b-b4-e6-92-ad-e6-8e-a8-e6-b5-81/">基于FFmpeg的摄像头直播(推流)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>原文地址: <a href="http://blog.csdn.net/wh8_2011/article/details/73506154" target="_blank" rel="noopener">http://blog.csdn.net/wh8_2011/article/details/73506154</a></p>
+<p>本文实现: 读取PC摄像头视频数据并以RTMP协议发送为直播流. 示例包含 1. FFmpeg的libavdevice的使用 2. 视频编码, 解码, 推流的基本流程</p>
+<p>要使用libavdevice的相关函数, 首先需要注册相关组件 <code>avdevice_register_all()</code></p>
+<p>列出电脑中可用的DShow设备</p>
+<pre><code>AVFormatContext *pFmtCtx = avformat_alloc_context();  
+    AVDeviceInfoList *device_info = NULL;  
+    AVDictionary* options = NULL;  
+    av_dict_set(&amp;options, &quot;list_devices&quot;, &quot;true&quot;, 0);  
+    AVInputFormat *iformat = av_find_input_format(&quot;dshow&quot;);  
+    printf(&quot;Device Info=============\n&quot;);  
+    avformat_open_input(&amp;pFmtCtx, &quot;video=dummy&quot;, iformat, &amp;options);  
+    printf(&quot;========================\n&quot;); </code></pre><p>也可以直接使用FFmpeg的工具 <code>ffmpeg -list_devices true -f dshow -i dummy</code></p>
+<p>PS: avdevice有一个avdevice_list_devices函数可以枚举系统的采集设备, 包括设备名和设备描述, 可以让用户选择要使用的设备, 但是不支持DShow设备.</p>
+<p>像打开普通文件一样将上面的具体设备名作为输入打开, 并进行相应的初始化设置</p>
+<pre><code>av_register_all();  
+    //Register Device  
+    avdevice_register_all();  
+    avformat_network_init();  
+
+    //Show Dshow Device    
+    show_dshow_device();  
+
+    printf(&quot;\nChoose capture device: &quot;);  
+    if (gets(capture_name) == 0)  
+    {  
+        printf(&quot;Error in gets()\n&quot;);  
+        return -1;  
+    }  
+    sprintf(device_name, &quot;video=%s&quot;, capture_name);  
+
+    ifmt=av_find_input_format(&quot;dshow&quot;);  
+
+    //Set own video device&apos;s name  
+    if (avformat_open_input(&amp;ifmt_ctx, device_name, ifmt, NULL) != 0){  
+        printf(&quot;Couldn&apos;t open input stream.（无法打开输入流）\n&quot;);  
+        return -1;  
+    }  
+    //input initialize  
+    if (avformat_find_stream_info(ifmt_ctx, NULL)&lt;0)  
+    {  
+        printf(&quot;Couldn&apos;t find stream information.（无法获取流信息）\n&quot;);  
+        return -1;  
+    }  
+    videoindex = -1;  
+    for (i = 0; i&lt;ifmt_ctx-&gt;nb_streams; i++)  
+        if (ifmt_ctx-&gt;streams[i]-&gt;codec-&gt;codec_type == AVMEDIA_TYPE_VIDEO)  
+        {  
+            videoindex = i;  
+            break;  
+        }  
+    if (videoindex == -1)  
+    {  
+        printf(&quot;Couldn&apos;t find a video stream.（没有找到视频流）\n&quot;);  
+        return -1;  
+    }  
+    if (avcodec_open2(ifmt_ctx-&gt;streams[videoindex]-&gt;codec, avcodec_find_decoder(ifmt_ctx-&gt;streams[videoindex]-&gt;codec-&gt;codec_id), NULL)&lt;0)  
+    {  
+        printf(&quot;Could not open codec.（无法打开解码器）\n&quot;);  
+        return -1;  
+    }</code></pre><p>输入设备初始化后, 需要对输出做相应的初始化. FFmpeg将网络协议和文件同等看待, 同时因为使用RTMP协议进行传输, 因此制定输出为flv格式, 编码器使用H.264</p>
+<pre><code>//output initialize  
+    avformat_alloc_output_context2(&amp;ofmt_ctx, NULL, &quot;flv&quot;, out_path);  
+    //output encoder initialize  
+    pCodec = avcodec_find_encoder(AV_CODEC_ID_H264);  
+    if (!pCodec){  
+        printf(&quot;Can not find encoder! (没有找到合适的编码器！)\n&quot;);  
+        return -1;  
+    }  
+    pCodecCtx=avcodec_alloc_context3(pCodec);  
+    pCodecCtx-&gt;pix_fmt = PIX_FMT_YUV420P;  
+    pCodecCtx-&gt;width = ifmt_ctx-&gt;streams[videoindex]-&gt;codec-&gt;width;  
+    pCodecCtx-&gt;height = ifmt_ctx-&gt;streams[videoindex]-&gt;codec-&gt;height;  
+    pCodecCtx-&gt;time_base.num = 1;  
+    pCodecCtx-&gt;time_base.den = 25;  
+    pCodecCtx-&gt;bit_rate = 400000;  
+    pCodecCtx-&gt;gop_size = 250;  
+    /* Some formats,for example,flv, want stream headers to be separate. */  
+    if (ofmt_ctx-&gt;oformat-&gt;flags &amp; AVFMT_GLOBALHEADER)  
+        pCodecCtx-&gt;flags |= CODEC_FLAG_GLOBAL_HEADER;  
+
+    //H264 codec param  
+    //pCodecCtx-&gt;me_range = 16;  
+    //pCodecCtx-&gt;max_qdiff = 4;  
+    //pCodecCtx-&gt;qcompress = 0.6;  
+    pCodecCtx-&gt;qmin = 10;  
+    pCodecCtx-&gt;qmax = 51;  
+    //Optional Param  
+    pCodecCtx-&gt;max_b_frames = 3;  
+    // Set H264 preset and tune  
+    AVDictionary *param = 0;  
+    av_dict_set(&amp;param, &quot;preset&quot;, &quot;fast&quot;, 0);  
+    av_dict_set(&amp;param, &quot;tune&quot;, &quot;zerolatency&quot;, 0);  
+
+    if (avcodec_open2(pCodecCtx, pCodec,&amp;param) &lt; 0){  
+        printf(&quot;Failed to open encoder! (编码器打开失败！)\n&quot;);  
+        return -1;  
+    }  
+
+    //Add a new stream to output,should be called by the user before avformat_write_header() for muxing  
+    video_st = avformat_new_stream(ofmt_ctx, pCodec);  
+    if (video_st == NULL){  
+        return -1;  
+    }  
+    video_st-&gt;time_base.num = 1;  
+    video_st-&gt;time_base.den = 25;  
+    video_st-&gt;codec = pCodecCtx;  
+
+    //Open output URL,set before avformat_write_header() for muxing  
+    if (avio_open(&amp;ofmt_ctx-&gt;pb,out_path, AVIO_FLAG_READ_WRITE) &lt; 0){  
+    printf(&quot;Failed to open output file! (输出文件打开失败！)\n&quot;);  
+    return -1;  
+    }  
+
+    //Show some Information  
+    av_dump_format(ofmt_ctx, 0, out_path, 1);  
+
+    //Write File Header  
+    avformat_write_header(ofmt_ctx,NULL); </code></pre><p>完成输入和输出的初始化后, 就可以正式开始解码和编码并推流的流程了. 需要注意的是, 摄像头数据往往是RGB格式的, 需要将其转换为YUV420P格式, 才能推流, 因此要先做如下的准备工作</p>
+<pre><code>//prepare before decode and encode  
+    dec_pkt = (AVPacket *)av_malloc(sizeof(AVPacket));  
+    //enc_pkt = (AVPacket *)av_malloc(sizeof(AVPacket));  
+    //camera data has a pix fmt of RGB,convert it to YUV420  
+    img_convert_ctx = sws_getContext(ifmt_ctx-&gt;streams[videoindex]-&gt;codec-&gt;width, ifmt_ctx-&gt;streams[videoindex]-&gt;codec-&gt;height,   
+        ifmt_ctx-&gt;streams[videoindex]-&gt;codec-&gt;pix_fmt, pCodecCtx-&gt;width, pCodecCtx-&gt;height, PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);  
+    pFrameYUV = avcodec_alloc_frame();  
+    uint8_t *out_buffer = (uint8_t *)av_malloc(avpicture_get_size(PIX_FMT_YUV420P, pCodecCtx-&gt;width, pCodecCtx-&gt;height));  
+    avpicture_fill((AVPicture *)pFrameYUV, out_buffer, PIX_FMT_YUV420P, pCodecCtx-&gt;width, pCodecCtx-&gt;height);  </code></pre><p>现在, 就可以正式开始解码, 编码 和推流了</p>
+<pre><code>//start decode and encode  
+    int64_t start_time=av_gettime();  
+    while (av_read_frame(ifmt_ctx, dec_pkt) &gt;= 0){     
+        if (exit_thread)  
+            break;  
+        av_log(NULL, AV_LOG_DEBUG, &quot;Going to reencode the frame\n&quot;);  
+        pframe = av_frame_alloc();  
+        if (!pframe) {  
+            ret = AVERROR(ENOMEM);  
+            return -1;  
+        }  
+        //av_packet_rescale_ts(dec_pkt, ifmt_ctx-&gt;streams[dec_pkt-&gt;stream_index]-&gt;time_base,  
+        //  ifmt_ctx-&gt;streams[dec_pkt-&gt;stream_index]-&gt;codec-&gt;time_base);  
+        ret = avcodec_decode_video2(ifmt_ctx-&gt;streams[dec_pkt-&gt;stream_index]-&gt;codec, pframe,  
+            &amp;dec_got_frame, dec_pkt);  
+        if (ret &lt; 0) {  
+            av_frame_free(&amp;pframe);  
+            av_log(NULL, AV_LOG_ERROR, &quot;Decoding failed\n&quot;);  
+            break;  
+        }  
+        if (dec_got_frame){  
+            sws_scale(img_convert_ctx, (const uint8_t* const*)pframe-&gt;data, pframe-&gt;linesize, 0, pCodecCtx-&gt;height, pFrameYUV-&gt;data, pFrameYUV-&gt;linesize);     
+
+            enc_pkt.data = NULL;  
+            enc_pkt.size = 0;  
+            av_init_packet(&amp;enc_pkt);  
+            ret = avcodec_encode_video2(pCodecCtx, &amp;enc_pkt, pFrameYUV, &amp;enc_got_frame);  
+            av_frame_free(&amp;pframe);  
+            if (enc_got_frame == 1){  
+                //printf(&quot;Succeed to encode frame: %5d\tsize:%5d\n&quot;, framecnt, enc_pkt.size);  
+                framecnt++;   
+                enc_pkt.stream_index = video_st-&gt;index;  
+
+                //Write PTS  
+                AVRational time_base = ofmt_ctx-&gt;streams[videoindex]-&gt;time_base;//{ 1, 1000 };  
+                AVRational r_framerate1 = ifmt_ctx-&gt;streams[videoindex]-&gt;r_frame_rate;// { 50, 2 };  
+                AVRational time_base_q = { 1, AV_TIME_BASE };  
+                //Duration between 2 frames (us)  
+                int64_t calc_duration = (double)(AV_TIME_BASE)*(1 / av_q2d(r_framerate1));  //内部时间戳  
+                //Parameters  
+                //enc_pkt.pts = (double)(framecnt*calc_duration)*(double)(av_q2d(time_base_q)) / (double)(av_q2d(time_base));  
+                enc_pkt.pts = av_rescale_q(framecnt*calc_duration, time_base_q, time_base);  
+                enc_pkt.dts = enc_pkt.pts;  
+                enc_pkt.duration = av_rescale_q(calc_duration, time_base_q, time_base); //(double)(calc_duration)*(double)(av_q2d(time_base_q)) / (double)(av_q2d(time_base));  
+                enc_pkt.pos = -1;  
+
+                //Delay  
+                int64_t pts_time = av_rescale_q(enc_pkt.dts, time_base, time_base_q);  
+                int64_t now_time = av_gettime() - start_time;  
+                if (pts_time &gt; now_time)  
+                    av_usleep(pts_time - now_time);  
+
+                ret = av_interleaved_write_frame(ofmt_ctx, &amp;enc_pkt);  
+                av_free_packet(&amp;enc_pkt);  
+            }  
+        }  
+        else {  
+            av_frame_free(&amp;pframe);  
+        }  
+        av_free_packet(dec_pkt);  
+    }  </code></pre><p>解码比较简单, 编码部分需要自己计算PTS, DTS, 比较复杂 这里通过帧率计算PTS和DTS, 首先通过帧率计算两帧之间的时间间隔, 但是要换算</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/01/13/e5-9f-ba-e4-ba-8effmpeg-e7-9a-84-e6-91-84-e5-83-8f-e5-a4-b4-e7-9b-b4-e6-92-ad-e6-8e-a8-e6-b5-81/" data-id="ck10vanzq004qzxz22zv2c1eu" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-e5-9f-ba-e4-ba-8effmpeg-e7-9a-84-e6-8e-a8-e9-80-81-e6-96-87-e4-bb-b6-e5-88-b0rtmp-e6-9c-8d-e5-8a-a1-e5-99-a8" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/01/13/e5-9f-ba-e4-ba-8effmpeg-e7-9a-84-e6-8e-a8-e9-80-81-e6-96-87-e4-bb-b6-e5-88-b0rtmp-e6-9c-8d-e5-8a-a1-e5-99-a8/" class="article-date">
+  <time datetime="2018-01-13T03:51:28.000Z" itemprop="datePublished">2018-01-13</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/A-amp-V/">A&amp;V</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/01/13/e5-9f-ba-e4-ba-8effmpeg-e7-9a-84-e6-8e-a8-e9-80-81-e6-96-87-e4-bb-b6-e5-88-b0rtmp-e6-9c-8d-e5-8a-a1-e5-99-a8/">基于FFmpeg的推送文件到RTMP服务器</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>原文地址: <a href="http://blog.csdn.net/leixiaohua1020/article/details/39803457" target="_blank" rel="noopener">http://blog.csdn.net/leixiaohua1020/article/details/39803457</a></p>
+<p>将本地的MOV/AVI/MKV/MP4/FLV等格式的媒体文件， 通过流媒体协议(RTMP, HTTP, UDP, TCP, RTP等)以直播流的形式推送出去.</p>
+<p>在这个推流器的基础上, 可以进行以下几种方式的修改, 实现各式各样的推流器. 例如: * 将输入文件改为网络流URL, 可以显示转流器 * 将输入文件改为回调函数(内存读取)的形式, 可以推送内存中的视频数据 * 将输入文件改为系统设备(通过libavdevice), 同时加上编码的功能, 可以实现实时推流器(现场直播)</p>
+<h3 id="需要注意的地方"><a href="#需要注意的地方" class="headerlink" title="需要注意的地方"></a>需要注意的地方</h3><h4 id="封装格式"><a href="#封装格式" class="headerlink" title="封装格式"></a>封装格式</h4><p>RTMP采用的封装格式FLV, 因此在指定输出流媒体的时候需要制定其封装格式为”flv”. 同理, 其他流媒体协议也需要指定其封装格式. 例如采用UDP推送流媒体的时候, 可以指定其封装格式为”mpegts”.</p>
+<h4 id="延时"><a href="#延时" class="headerlink" title="延时"></a>延时</h4><p>发送流媒体的数据的时候需要延时. 否则, FFmpeg处理数据速度很快, 瞬间就能把所有的数据发送出去, 流媒体服务器是承受不了的. 因此需要按照视频实际的帧率发送数据. 本文的推流器在视频帧与帧之间采用av_usleep()函数休眠的方式来延迟发送. 这样就可以按照视频的帧率发送数据了, 代码如下</p>
+<pre><code>//…  
+int64_t start_time=av_gettime();  
+while (1) {  
+//…  
+    //Important:Delay  
+    if(pkt.stream_index==videoindex){  
+        AVRational time_base=ifmt_ctx-&gt;streams[videoindex]-&gt;time_base;  
+        AVRational time_base_q={1,AV_TIME_BASE};  
+        int64_t pts_time = av_rescale_q(pkt.dts, time_base, time_base_q);  
+        int64_t now_time = av_gettime() - start_time;  
+        if (pts_time &gt; now_time)  
+            av_usleep(pts_time - now_time);  
+    }  
+//…  
+}  
+//… </code></pre><h4 id="PTS-DTS问题"><a href="#PTS-DTS问题" class="headerlink" title="PTS/DTS问题"></a>PTS/DTS问题</h4><p>没有封装格式的裸流(例如H.264裸流)是不包含PTS, DTS这些参数的. 在发送这种数据的时候, 需要自己计算并写入AVPacket的PTS, DTS, duration等参数.</p>
+<pre><code>//FIX：No PTS (Example: Raw H.264)  
+//Simple Write PTS  
+if(pkt.pts==AV_NOPTS_VALUE){  
+    //Write PTS  
+    AVRational time_base1=ifmt_ctx-&gt;streams[videoindex]-&gt;time_base;  
+    //Duration between 2 frames (us)  
+    int64_t calc_duration=(double)AV_TIME_BASE/av_q2d(ifmt_ctx-&gt;streams[videoindex]-&gt;r_frame_rate);  
+    //Parameters  
+    pkt.pts=(double)(frame_index*calc_duration)/(double)(av_q2d(time_base1)*AV_TIME_BASE);  
+    pkt.dts=pkt.pts;  
+    pkt.duration=(double)calc_duration/(double)(av_q2d(time_base1)*AV_TIME_BASE);  
+} </code></pre><h4 id="sequence"><a href="#sequence" class="headerlink" title="sequence"></a>sequence</h4><p><img src="http://img.blog.csdn.net/20180113202019583?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbHhid29sZg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述"></p>
+<p>代码</p>
+<pre><code>/** 
+ * 最简单的基于FFmpeg的推流器（推送RTMP） 
+ * Simplest FFmpeg Streamer (Send RTMP) 
+ *  
+ * 雷霄骅 Lei Xiaohua 
+ * leixiaohua1020@126.com 
+ * 中国传媒大学/数字电视技术 
+ * Communication University of China / Digital TV Technology 
+ * http://blog.csdn.net/leixiaohua1020 
+ *  
+ * 本例子实现了推送本地视频至流媒体服务器（以RTMP为例）。 
+ * 是使用FFmpeg进行流媒体推送最简单的教程。 
+ * 
+ * This example stream local media files to streaming media  
+ * server (Use RTMP as example).  
+ * It&apos;s the simplest FFmpeg streamer. 
+ *  
+ */  
+
+#include &lt;stdio.h&gt;  
+
+#define __STDC_CONSTANT_MACROS  
+
+#ifdef _WIN32  
+//Windows  
+extern &quot;C&quot;  
+{  
+#include &quot;libavformat/avformat.h&quot;  
+#include &quot;libavutil/mathematics.h&quot;  
+#include &quot;libavutil/time.h&quot;  
+};  
+#else  
+//Linux...  
+#ifdef __cplusplus  
+extern &quot;C&quot;  
+{  
+#endif  
+#include &lt;libavformat/avformat.h&gt;  
+#include &lt;libavutil/mathematics.h&gt;  
+#include &lt;libavutil/time.h&gt;  
+#ifdef __cplusplus  
+};  
+#endif  
+#endif  
+
+int main(int argc, char* argv[])  
+{  
+    AVOutputFormat *ofmt = NULL;  
+    //输入对应一个AVFormatContext，输出对应一个AVFormatContext  
+    //（Input AVFormatContext and Output AVFormatContext）  
+    AVFormatContext *ifmt_ctx = NULL, *ofmt_ctx = NULL;  
+    AVPacket pkt;  
+    const char *in_filename, *out_filename;  
+    int ret, i;  
+    int videoindex=-1;  
+    int frame_index=0;  
+    int64_t start_time=0;  
+    //in_filename  = &quot;cuc_ieschool.mov&quot;;  
+    //in_filename  = &quot;cuc_ieschool.mkv&quot;;  
+    //in_filename  = &quot;cuc_ieschool.ts&quot;;  
+    //in_filename  = &quot;cuc_ieschool.mp4&quot;;  
+    //in_filename  = &quot;cuc_ieschool.h264&quot;;  
+    in_filename  = &quot;cuc_ieschool.flv&quot;;//输入URL（Input file URL）  
+    //in_filename  = &quot;shanghai03_p.h264&quot;;  
+
+    out_filename = &quot;rtmp://localhost/publishlive/livestream&quot;;//输出 URL（Output URL）[RTMP]  
+    //out_filename = &quot;rtp://233.233.233.233:6666&quot;;//输出 URL（Output URL）[UDP]  
+
+    av_register_all();  
+    //Network  
+    avformat_network_init();  
+    //输入（Input）  
+    if ((ret = avformat_open_input(&amp;ifmt_ctx, in_filename, 0, 0)) &lt; 0) {  
+        printf( &quot;Could not open input file.&quot;);  
+        goto end;  
+    }  
+    if ((ret = avformat_find_stream_info(ifmt_ctx, 0)) &lt; 0) {  
+        printf( &quot;Failed to retrieve input stream information&quot;);  
+        goto end;  
+    }  
+
+    for(i=0; i&lt;ifmt_ctx-&gt;nb_streams; i++)   
+        if(ifmt_ctx-&gt;streams[i]-&gt;codec-&gt;codec_type==AVMEDIA_TYPE_VIDEO){  
+            videoindex=i;  
+            break;  
+        }  
+
+    av_dump_format(ifmt_ctx, 0, in_filename, 0);  
+
+    //输出（Output）  
+
+    avformat_alloc_output_context2(&amp;ofmt_ctx, NULL, &quot;flv&quot;, out_filename); //RTMP  
+    //avformat_alloc_output_context2(&amp;ofmt_ctx, NULL, &quot;mpegts&quot;, out_filename);//UDP  
+
+    if (!ofmt_ctx) {  
+        printf( &quot;Could not create output context\n&quot;);  
+        ret = AVERROR_UNKNOWN;  
+        goto end;  
+    }  
+    ofmt = ofmt_ctx-&gt;oformat;  
+    for (i = 0; i &lt; ifmt_ctx-&gt;nb_streams; i++) {  
+        //根据输入流创建输出流（Create output AVStream according to input AVStream）  
+        AVStream *in_stream = ifmt_ctx-&gt;streams[i];  
+        AVStream *out_stream = avformat_new_stream(ofmt_ctx, in_stream-&gt;codec-&gt;codec);  
+        if (!out_stream) {  
+            printf( &quot;Failed allocating output stream\n&quot;);  
+            ret = AVERROR_UNKNOWN;  
+            goto end;  
+        }  
+        //复制AVCodecContext的设置（Copy the settings of AVCodecContext）  
+        ret = avcodec_copy_context(out_stream-&gt;codec, in_stream-&gt;codec);  
+        if (ret &lt; 0) {  
+            printf( &quot;Failed to copy context from input to output stream codec context\n&quot;);  
+            goto end;  
+        }  
+        out_stream-&gt;codec-&gt;codec_tag = 0;  
+        if (ofmt_ctx-&gt;oformat-&gt;flags &amp; AVFMT_GLOBALHEADER)  
+            out_stream-&gt;codec-&gt;flags |= CODEC_FLAG_GLOBAL_HEADER;  
+    }  
+    //Dump Format------------------  
+    av_dump_format(ofmt_ctx, 0, out_filename, 1);  
+    //打开输出URL（Open output URL）  
+    if (!(ofmt-&gt;flags &amp; AVFMT_NOFILE)) {  
+        ret = avio_open(&amp;ofmt_ctx-&gt;pb, out_filename, AVIO_FLAG_WRITE);  
+        if (ret &lt; 0) {  
+            printf( &quot;Could not open output URL &apos;%s&apos;&quot;, out_filename);  
+            goto end;  
+        }  
+    }  
+    //写文件头（Write file header）  
+    ret = avformat_write_header(ofmt_ctx, NULL);  
+    if (ret &lt; 0) {  
+        printf( &quot;Error occurred when opening output URL\n&quot;);  
+        goto end;  
+    }  
+
+    start_time=av_gettime();  
+    while (1) {  
+        AVStream *in_stream, *out_stream;  
+        //获取一个AVPacket（Get an AVPacket）  
+        ret = av_read_frame(ifmt_ctx, &amp;pkt);  
+        if (ret &lt; 0)  
+            break;  
+        //FIX：No PTS (Example: Raw H.264)  
+        //Simple Write PTS  
+        if(pkt.pts==AV_NOPTS_VALUE){  
+            //Write PTS  
+            AVRational time_base1=ifmt_ctx-&gt;streams[videoindex]-&gt;time_base;  
+            //Duration between 2 frames (us)  
+            int64_t calc_duration=(double)AV_TIME_BASE/av_q2d(ifmt_ctx-&gt;streams[videoindex]-&gt;r_frame_rate);  
+            //Parameters  
+            pkt.pts=(double)(frame_index*calc_duration)/(double)(av_q2d(time_base1)*AV_TIME_BASE);  
+            pkt.dts=pkt.pts;  
+            pkt.duration=(double)calc_duration/(double)(av_q2d(time_base1)*AV_TIME_BASE);  
+        }  
+        //Important:Delay  
+        if(pkt.stream_index==videoindex){  
+            AVRational time_base=ifmt_ctx-&gt;streams[videoindex]-&gt;time_base;  
+            AVRational time_base_q={1,AV_TIME_BASE};  
+            int64_t pts_time = av_rescale_q(pkt.dts, time_base, time_base_q);  
+            int64_t now_time = av_gettime() - start_time;  
+            if (pts_time &gt; now_time)  
+                av_usleep(pts_time - now_time);  
+
+        }  
+
+        in_stream  = ifmt_ctx-&gt;streams[pkt.stream_index];  
+        out_stream = ofmt_ctx-&gt;streams[pkt.stream_index];  
+        /* copy packet */  
+        //转换PTS/DTS（Convert PTS/DTS）  
+        pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream-&gt;time_base, out_stream-&gt;time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));  
+        pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream-&gt;time_base, out_stream-&gt;time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));  
+        pkt.duration = av_rescale_q(pkt.duration, in_stream-&gt;time_base, out_stream-&gt;time_base);  
+        pkt.pos = -1;  
+        //Print to Screen  
+        if(pkt.stream_index==videoindex){  
+            printf(&quot;Send %8d video frames to output URL\n&quot;,frame_index);  
+            frame_index++;  
+        }  
+        //ret = av_write_frame(ofmt_ctx, &amp;pkt);  
+        ret = av_interleaved_write_frame(ofmt_ctx, &amp;pkt);  
+
+        if (ret &lt; 0) {  
+            printf( &quot;Error muxing packet\n&quot;);  
+            break;  
+        }  
+
+        av_free_packet(&amp;pkt);  
+
+    }  
+    //写文件尾（Write file trailer）  
+    av_write_trailer(ofmt_ctx);  
+end:  
+    avformat_close_input(&amp;ifmt_ctx);  
+    /* close output */  
+    if (ofmt_ctx &amp;&amp; !(ofmt-&gt;flags &amp; AVFMT_NOFILE))  
+        avio_close(ofmt_ctx-&gt;pb);  
+    avformat_free_context(ofmt_ctx);  
+    if (ret &lt; 0 &amp;&amp; ret != AVERROR_EOF) {  
+        printf( &quot;Error occurred.\n&quot;);  
+        return -1;  
+    }  
+    return 0;  
+}</code></pre>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/01/13/e5-9f-ba-e4-ba-8effmpeg-e7-9a-84-e6-8e-a8-e9-80-81-e6-96-87-e4-bb-b6-e5-88-b0rtmp-e6-9c-8d-e5-8a-a1-e5-99-a8/" data-id="ck10vanzp004pzxz2xbkqbv8n" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-ffmpeg-e6-8e-a8-e6-b5-81-e5-b7-a5-e5-85-b7" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/01/12/ffmpeg-e6-8e-a8-e6-b5-81-e5-b7-a5-e5-85-b7/" class="article-date">
+  <time datetime="2018-01-12T11:52:44.000Z" itemprop="datePublished">2018-01-12</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/A-amp-V/">A&amp;V</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/01/12/ffmpeg-e6-8e-a8-e6-b5-81-e5-b7-a5-e5-85-b7/">ffmpeg 推流工具</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>SRR测试网址 <code>http://www.ossrs.net/srs.release/trunk/research/players/srs_player.html</code> 获取 <code>git clone https://github.com/ossrs/srs.git</code></p>
+<p>configure make <code>cd srs/trunk</code> <code>./configure &amp;&amp; make</code></p>
+<p>开启服务器 <code>./objs/srs -c conf/srs.conf</code></p>
+<p>列出设备 <code>./ffmpeg.exe -list_devices true -f dshow -i dummy</code> ffmpeg采集摄像头推流 <code>ffmpeg.exe -f dshow -i video=&quot;EasyCamera&quot; -q 4 -s 640*480 -aspect 4:3 -r 10 -vcodec flv -ar 22050 -ab 64k -ac 1 -acodec libmp3lame -threads 4 -f flv rtmp://192.168.1.102/RTMP/RtmpVideo</code></p>
+<p>ffmpeg采集摄像头和麦克风推流 <code>ffmpeg -f dshow -i video=&quot;USB2.0 PC CAMERA&quot; -f dshow -i audio=&quot;麦克风 (2- USB2.0 MIC)&quot; -b:a 600k -ab 128k -f flv rtmp://192.168.1.102/RTMP/RtmpVideo</code></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/01/12/ffmpeg-e6-8e-a8-e6-b5-81-e5-b7-a5-e5-85-b7/" data-id="ck10vanx7001bzxz2tvrswe83" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-e5-91-bd-e4-bb-a4-e7-bb-84-e5-92-8c-e4-bb-a3-e7-a0-81-e5-9d-97" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/10/02/e5-91-bd-e4-bb-a4-e7-bb-84-e5-92-8c-e4-bb-a3-e7-a0-81-e5-9d-97/" class="article-date">
+  <time datetime="2017-10-02T03:54:01.000Z" itemprop="datePublished">2017-10-02</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Shell/">Shell</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/10/02/e5-91-bd-e4-bb-a4-e7-bb-84-e5-92-8c-e4-bb-a3-e7-a0-81-e5-9d-97/">命令组和代码块</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="命令组-和-代码块"><a href="#命令组-和-代码块" class="headerlink" title="命令组 和 代码块"></a>命令组 和 代码块</h1><p>() 命令组. 如 <code>(a=hello,echo $a)</code> 在()中的命令列表, 将作为一个子Shell来运行 在()中的变量, 由于是在子Shell总运行的, 因此对脚本剩下的部分是不可见的</p>
+<p>如</p>
+<pre><code>a=123
+(a=321;)
+echo &quot;a=$a&quot; # a=123
+# 在()中的a变量, 更像是一个局部变量</code></pre><p>{} 代码块, 又称内部组. 这个结构创建了一个匿名的函数, 与函数不同的是, 在{}中声明的变量, 对于脚本剩余的代码是可见的, 如</p>
+<pre><code>{
+    local a;
+    a=123;
+}
+# bash中的local申请的变量只能用在函数中
+
+
+a=123;
+{a=321;}
+echo &quot;a=$a&quot; # a=321</code></pre><p>()也可用作初始化数组 array=(element1,element2,element3)</p>
+<p>{xxx,yyy,zzz} 大括号扩展, 例</p>
+<pre><code>cat {file1,file2,file3} &gt; combined_file
+# 把file1 file2 file3连接在一起, 重定向到combined_file
+
+
+cp file1.{txt,bak}
+# 把file1.txt 复制到file1.bak</code></pre><p>一个命令会对大括号中以逗号分隔的文件列表起作用, file globbing会对大括号中的文件名作扩展</p>
+<pre><code># 大括号中不允许有空白, 除非这个空白是有意义的
+echo {file1,file2}\ :{\ A,&quot; B&quot;,&apos; C&apos;}
+# file1 : A file1 : B file1 : C file2 : A file2 : B file2 : C</code></pre>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2017/10/02/e5-91-bd-e4-bb-a4-e7-bb-84-e5-92-8c-e4-bb-a3-e7-a0-81-e5-9d-97/" data-id="ck10vanws000fzxz2v201pjuy" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-java-log" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/09/18/java-log/" class="article-date">
+  <time datetime="2017-09-18T04:00:10.000Z" itemprop="datePublished">2017-09-18</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Java/">Java</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/09/18/java-log/">Java Log</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Log.d(TAG,new Exception().getStackTrace()[0].getMethodName()); //函数名 Log.d(TAG, Thread.currentThread().getStackTrace()[2].getMethodName()); //函数名 Log.d(TAG, “”+Thread.currentThread().getStackTrace()[2].getLineNumber()); //行号 Log.d(TAG, Thread.currentThread().getStackTrace()[2].getFileName()); //文件名 //文件名+行号 Log.d(TAG, “[“+Thread.currentThread().getStackTrace()[2].getFileName()+”,”+Thread.currentThread().getStackTrace()[2].getLineNumber()+”]“);</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2017/09/18/java-log/" data-id="ck10vanxg001szxz2l746cten" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-shell-e4-b8-ad-e7-9a-84-e5-86-92-e5-8f-b7" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/09/07/shell-e4-b8-ad-e7-9a-84-e5-86-92-e5-8f-b7/" class="article-date">
+  <time datetime="2017-09-07T09:55:50.000Z" itemprop="datePublished">2017-09-07</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Shell/">Shell</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/09/07/shell-e4-b8-ad-e7-9a-84-e5-86-92-e5-8f-b7/">Shell 中的冒号</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>冒号(:) 是一个空命令. 作用与true相同. “:”是一个bash内建命令, 返回值为0, 即与true相同. 例:</p>
+<pre><code>:
+echo $?  # 0</code></pre><p>死循环</p>
+<pre><code>while :
+do
+    list_1
+    list_2
+done</code></pre><p>if/then 中的占位符</p>
+<pre><code>if list
+then : # 什么都不做, 引出分支
+else
+    take-some-action
+fi</code></pre><p>在一个2元命令中, 提供一个占位符, 表明后面的表达式, 不是一个命令, 如</p>
+<pre><code>:$((n=$n+1)</code></pre><p>如果没有:, bash会尝试把”$((n=$n+1))” 解释成一个命令</p>
+<p>使用”参数替换” 来评估字符串变量</p>
+<pre><code>:${HOSTNAME?}${USER?}${MAIL?}
+# 如果一个或多个环境变量没有设置, 则打印错误信息</code></pre><p>在和&gt;(重定向符号)结合使用时, 把一个文件截断到0长度, 不修改它的权限. 如果文件不存在, 则创建它</p>
+<pre><code>: &gt; data.xxx # 文件&quot;data.xxx&quot; 被清空
+# 与 cat /dev/null &gt; data.xxx 作用相同, 但是不会产生一个新的进程, 因为:是一个内建命令.</code></pre><p>只适用于普通文件, 不适用于管道, 符号链接, 和其他特殊文件.</p>
+<p>也可以用作注释, :与#不同的是, :不会关闭剩余行的错误检查.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2017/09/07/shell-e4-b8-ad-e7-9a-84-e5-86-92-e5-8f-b7/" data-id="ck10vanye0036zxz2kuhnve4u" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-shell-e7-bc-96-e7-a8-8b-e4-b8-adselect-e7-94-a8-e6-b3-95" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/09/05/shell-e7-bc-96-e7-a8-8b-e4-b8-adselect-e7-94-a8-e6-b3-95/" class="article-date">
+  <time datetime="2017-09-05T08:02:11.000Z" itemprop="datePublished">2017-09-05</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Shell/">Shell</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/09/05/shell-e7-bc-96-e7-a8-8b-e4-b8-adselect-e7-94-a8-e6-b3-95/">Shell编程中select用法</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>select提供了一个构建交互式菜单程序的方式, 语法结构: <code>select name [ in word ] ; do list ; done</code></p>
+<p>例:</p>
+<pre><code>#!/bin/bash
+select i in a b c d
+do
+    echo $i
+done</code></pre><p>执行结果</p>
+<pre><code>$ ./select.sh 
+1) a
+2) b
+3) c
+4) d
+#? </code></pre><p>选择索引</p>
+<pre><code>$ ./select.sh 
+1) a
+2) b
+3) c
+4) d
+#? 1
+a
+#? 2
+b
+#? 3
+c
+#? 4
+d
+#? 6
+
+#? 
+1) a
+2) b
+3) c
+4) d
+#? 
+1) a
+2) b
+3) c
+4) d
+#? </code></pre><p>如果输入的不是菜单描述的范围就会echo一个空行，如果直接输入回车，就会再显示一遍菜单本身。当然我们会发现这样一个菜单程序似乎没有什么意义，实际程序中，select大多数情况是跟case配合使用的。</p>
+<pre><code>#!/bin/bash
+select i in a b c d
+do
+    case $i in 
+        a)
+            echo &quot;Your choice is a&quot;
+        ;;
+        b)
+            echo &quot;Your choice is b&quot;
+        ;;
+        c)
+            echo &quot;Your choice is c&quot;
+        ;;
+        d)
+            echo &quot;Your choice is d&quot;
+        ;;
+        *)
+            echo &quot;Wrong choice! exit!&quot;
+        ;;
+    esac
+done</code></pre><p>执行结果</p>
+<pre><code>$ ./select.sh 
+1) a
+2) b
+3) c
+4) d
+#? 1
+Your choice is a
+#? 2
+Your choice is b
+#? 3
+Your choice is c
+#? 4
+Your choice is d
+#? 5
+Wrong choice! exit!</code></pre>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2017/09/05/shell-e7-bc-96-e7-a8-8b-e4-b8-adselect-e7-94-a8-e6-b3-95/" data-id="ck10vanyj003bzxz2rlctrm14" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+
+
+  <nav id="page-nav">
+    
+    <a class="extend prev" rel="prev" href="/page/4/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><a class="page-number" href="/page/7/">7</a><a class="page-number" href="/page/8/">8</a><a class="extend next" rel="next" href="/page/6/">Next &raquo;</a>
+  </nav>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/">En</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/JSON/">JSON</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DB/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Rasp/">Rasp</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nginx/">nginx</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/架构/">架构</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/mysql/" style="font-size: 10px;">mysql</a> <a href="/tags/nginx/" style="font-size: 20px;">nginx</a> <a href="/tags/架构/" style="font-size: 10px;">架构</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">July 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">June 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">November 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">September 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">January 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">September 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">November 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">October 2016</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2019/09/26/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/08/e5-8d-87-e7-ba-a7https/">升级https</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/23/docker-e6-8c-82-e8-bd-bd-e7-9b-ae-e5-bd-95-e5-a4-b1-e8-b4-a5-e6-9d-83-e9-99-90-e6-8b-92-e7-bb-9d/">docker挂载目录失败/权限拒绝</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/02/mac-iterm2-e7-99-bb-e9-99-86centos-e6-8f-90-e7-a4-bawarning-setlocale-lc-ctype-cannot-change-locale-utf-8-no-such-file-or-directory/">Mac iTerm2登陆CentOS提示warning: setlocale: LC_CTYPE: cannot change locale (UTF-8): No such file or directory</a>
+          </li>
+        
+          <li>
+            <a href="/2019/06/12/e5-8d-87-e7-ba-a7-e5-88-b0php7-1-e4-b9-8b-e5-90-8ewordpress-e7-bd-91-e7-ab-99-e5-87-ba-e7-8e-b0error-establishing-a-database-connection-e7-9a-84-e8-a7-a3-e5-86-b3-e6-96-b9-e6-b3-95/">升级到php7.1之后wordpress 网站出现Error establishing a database connection的解决方法</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2019 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

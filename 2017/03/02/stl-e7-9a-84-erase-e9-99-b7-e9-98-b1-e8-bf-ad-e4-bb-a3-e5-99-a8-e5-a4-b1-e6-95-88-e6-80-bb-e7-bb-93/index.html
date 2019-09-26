@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+
+  
+  <title>STL 的 erase( ) 陷阱-迭代器失效总结 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="STL中的容器按存储方式分为两类，一类是按以数组形式存储的容器（如：vector 、deque)；另一类是以不连续的节点形式存储的容器（如：list、set、map）。在使用erase方法来删除元素时，需要注意一些问题。 1.list,set,map容器在使用 list、set 或 map遍历删除某些元素时可以这样使用： 1.1 正确写法 1 std::list&amp;lt;int&amp;gt; list;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="STL 的 erase( ) 陷阱-迭代器失效总结">
+<meta property="og:url" content="http://yoursite.com/2017/03/02/stl-e7-9a-84-erase-e9-99-b7-e9-98-b1-e8-bf-ad-e4-bb-a3-e5-99-a8-e5-a4-b1-e6-95-88-e6-80-bb-e7-bb-93/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="STL中的容器按存储方式分为两类，一类是按以数组形式存储的容器（如：vector 、deque)；另一类是以不连续的节点形式存储的容器（如：list、set、map）。在使用erase方法来删除元素时，需要注意一些问题。 1.list,set,map容器在使用 list、set 或 map遍历删除某些元素时可以这样使用： 1.1 正确写法 1 std::list&amp;lt;int&amp;gt; list;">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-09-26T15:41:04.066Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="STL 的 erase( ) 陷阱-迭代器失效总结">
+<meta name="twitter:description" content="STL中的容器按存储方式分为两类，一类是按以数组形式存储的容器（如：vector 、deque)；另一类是以不连续的节点形式存储的容器（如：list、set、map）。在使用erase方法来删除元素时，需要注意一些问题。 1.list,set,map容器在使用 list、set 或 map遍历删除某些元素时可以这样使用： 1.1 正确写法 1 std::list&amp;lt;int&amp;gt; list;">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-stl-e7-9a-84-erase-e9-99-b7-e9-98-b1-e8-bf-ad-e4-bb-a3-e5-99-a8-e5-a4-b1-e6-95-88-e6-80-bb-e7-bb-93" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/03/02/stl-e7-9a-84-erase-e9-99-b7-e9-98-b1-e8-bf-ad-e4-bb-a3-e5-99-a8-e5-a4-b1-e6-95-88-e6-80-bb-e7-bb-93/" class="article-date">
+  <time datetime="2017-03-02T15:10:19.000Z" itemprop="datePublished">2017-03-02</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/C/">C++</a>►<a class="article-category-link" href="/categories/C/En/">En</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      STL 的 erase( ) 陷阱-迭代器失效总结
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>STL中的容器按存储方式分为两类，一类是按以数组形式存储的容器（如：vector 、deque)；另一类是以不连续的节点形式存储的容器（如：list、set、map）。在使用erase方法来删除元素时，需要注意一些问题。</p>
+<h4 id="1-list-set-map容器"><a href="#1-list-set-map容器" class="headerlink" title="1.list,set,map容器"></a><strong>1.list,set,map容器</strong></h4><p>在使用 list、set 或 map遍历删除某些元素时可以这样使用：</p>
+<p><strong><del>1.1 正确写法 1</del></strong></p>
+<pre><code>std::list&lt;int&gt; list;
+std::list&lt;int&gt;::iterator it_list;
+for (it_list = list.begin(); it_list != list.end();)
+{
+if (willDelete(*it_list))
+{
+it_list = list.erase(it_list);
+}
+else
+{
+++it_list;
+}
+}</code></pre><p><strong>Note:</strong> 以上方法仅适用于standard sequence container, 因为对于standard associative container, erase()的返回类型为void. (查阅Effective STL Item 9)以下为原文:</p>
+<pre><code>This works wonderfully, but only for the standard sequence containers. Due to reasoning one might question, erase()&apos;s return type for the standard associative containers is void. For those containers, you have to use the postincrement-the-iterator-you-pass-to-erase technique.</code></pre><p><strong>1.2 正确写法2</strong> 查阅原版Effctive STL Item 9, 证实, 下面这种写法不能用于标准序列容器, 而适用于标准关联容器, 而List也可以使用这种方法.</p>
+<pre><code>std::list&lt;int&gt; list;
+std::list&lt;int&gt;::iterator it_list;
+for (it_list = list.begin(); it_list != list.end();)
+{
+if (willDelete(*it_list))
+{
+list.erase(it_list++); // 必须使用后缀自增, 不能使用前缀自增
+}
+else
+{
+++it_list;
+}
+}
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">    </span><br><span class="line">    **1.3 错误写法 1**</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">std::list&lt; int&gt; List; std::list&lt; int&gt;::iterator itList; for( itList = List.begin(); itList != List.end(); itList++) &#123; if( WillDelete( *itList) ) &#123; List.erase( itList); &#125; &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    **1.4 错误写法 2**</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">std::list&lt; int&gt; List; std::list&lt; int&gt;::iterator itList; for( itList = List.begin(); itList != List.end(); ) &#123; if( WillDelete( *itList) ) &#123; itList = List.erase( ++itList); &#125; else itList++; &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    **1.5 分析**</span><br><span class="line">    </span><br><span class="line">    正确方法1: 通过erase()方法的返回值来获取下一个元素的位置;</span><br><span class="line">    正确方法2: 在调用erase()方法之前先使用&quot;++&quot; 来获取下一个元素的位置;</span><br><span class="line">    错误使用方法1: 在调用erase()方法之后使用&quot;++&quot; 来获取下一个元素的位置, 由于在调用erase()方法之后, 该元素的位置已经被删除, 如果再根据这个旧的位置来获取下一个位置, 则会出现异常;</span><br><span class="line">    错误使用方法2: 同上</span><br><span class="line">    </span><br><span class="line">    ####**2. vector,deque 容器**</span><br><span class="line">    在使用 vector、deque遍历删除元素时，也可以通过erase的返回值来获取下一个元素的位置：</span><br><span class="line">    </span><br><span class="line">    **2.1 正确写法:**</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">std::vector vec; std::vector::iterator it\_vec; for (it\_vec = vec.begin(); it\_vec != vec.end();) &#123; if (willDelete(*it\_vec)) &#123; it\_vec = vec.erase(it\_vec); &#125; else &#123; ++it_vec; &#125; &#125;</span><br></pre></td></tr></table></figure></code></pre><p><strong>2.2 注意</strong></p>
+<p>vector, deque 不能像上面的”正确方法2” 的办法来遍历删除. 原因请参考Effective STL条款9。摘录到下面： 1) 对于关联容器(如map, set, multimap, multiset)，删除当前的iterator，仅仅会使当前的iterator失效，只要在erase时，递增当前iterator即可。这是因为map之类的容器，使用了红黑树来实现，插入、删除一个结点不会对其他结点造成影响。</p>
+<pre><code>for (iter = cont.begin(); it != cont.end();)
+{
+(*iter)-&amp;gt;doSomething();
+if (shouldDelete(*iter))
+cont.erase(iter++);
+else
+++iter;
+}</code></pre><p>因为iter传给erase方法的是一个副本，iter++会指向下一个元素。</p>
+<p>2) 对于序列式容器(如vector, deque)，删除当前的iterator会使后面所有元素的iterator都失效。这是因为vetor, deque使用了连续分配的内存，删除一个元素导致后面所有的元素会向前移动一个位置。还好erase()方法可以返回下一个有效的iterator。</p>
+<pre><code>for (iter = cont.begin(); iter != cont.end();)
+{
+(*it)-&amp;gt;doSomething();
+if (shouldDelete(*iter))
+iter = cont.erase(iter);
+else
+++iter;
+}</code></pre><p>3)对于list来说，它使用了不连续分配的内存，并且它的erase()方法也会返回下一个有效的iterator，因此上面两种方法都可以使用。</p>
+<h4 id="3-其他"><a href="#3-其他" class="headerlink" title="3. 其他"></a><strong>3. 其他</strong></h4><p><strong>set</strong> 键和值相等。 键唯一。 元素默认按升序排列。 如果迭代器所指向的元素被删除，则该迭代器失效。其它任何增加、删除元素的操作都不会使迭代器失效</p>
+<p><strong>map</strong> 键唯一。 元素默认按键的升序排列。 如果迭代器所指向的元素被删除，则该迭代器失效。其它任何增加、删除元素的操作都不会使迭代器失效。</p>
+<p><a href="http://mp.weixin.qq.com/s/qonNrKKZLladvIwvurQCTA" target="_blank" rel="noopener">作成参考地址</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2017/03/02/stl-e7-9a-84-erase-e9-99-b7-e9-98-b1-e8-bf-ad-e4-bb-a3-e5-99-a8-e5-a4-b1-e6-95-88-e6-80-bb-e7-bb-93/" data-id="ck10vanyn003gzxz2r6q8qnga" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2017/03/09/e8-af-91effective-stl-9/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          [译]Effective STL 9
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/02/23/e7-94-a8gdb-e8-b0-83-e8-af-95-e7-a8-8b-e5-ba-8f/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">用GDB调试程序</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/">En</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/JSON/">JSON</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DB/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/Linux/">Linux</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Rasp/">Rasp</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nginx/">nginx</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/架构/">架构</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/mysql/" style="font-size: 10px;">mysql</a> <a href="/tags/nginx/" style="font-size: 20px;">nginx</a> <a href="/tags/架构/" style="font-size: 10px;">架构</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">July 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">June 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">November 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">September 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">January 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">September 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">November 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">October 2016</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2019/09/26/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/08/e5-8d-87-e7-ba-a7https/">升级https</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/23/docker-e6-8c-82-e8-bd-bd-e7-9b-ae-e5-bd-95-e5-a4-b1-e8-b4-a5-e6-9d-83-e9-99-90-e6-8b-92-e7-bb-9d/">docker挂载目录失败/权限拒绝</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/02/mac-iterm2-e7-99-bb-e9-99-86centos-e6-8f-90-e7-a4-bawarning-setlocale-lc-ctype-cannot-change-locale-utf-8-no-such-file-or-directory/">Mac iTerm2登陆CentOS提示warning: setlocale: LC_CTYPE: cannot change locale (UTF-8): No such file or directory</a>
+          </li>
+        
+          <li>
+            <a href="/2019/06/12/e5-8d-87-e7-ba-a7-e5-88-b0php7-1-e4-b9-8b-e5-90-8ewordpress-e7-bd-91-e7-ab-99-e5-87-ba-e7-8e-b0error-establishing-a-database-connection-e7-9a-84-e8-a7-a3-e5-86-b3-e6-96-b9-e6-b3-95/">升级到php7.1之后wordpress 网站出现Error establishing a database connection的解决方法</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2019 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>
