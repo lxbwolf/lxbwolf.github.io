@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+  
+  <title>用GDB调试程序 | Gate</title>
+  <meta name="description" content="使用GDB一般来说GDB主要调试的是C/C++的程序。要调试C/C++的程序，首先在编译时，我们必须要把调试信息加到可执行文件中。使用编译器（cc/gcc/g++）的 -g 参数可以做到这一点。如： $gcc -g -Wall hello.c -o hello $g++ -g -Wall hello.cpp -o hello如果没有-g，你将看不见程序的函数名、变量名，所代替的全是运行时的内存地址">
+<meta property="og:type" content="article">
+<meta property="og:title" content="用GDB调试程序">
+<meta property="og:url" content="https://lxbwolf.github.io/2017/02/23/e7-94-a8gdb-e8-b0-83-e8-af-95-e7-a8-8b-e5-ba-8f/index.html">
+<meta property="og:site_name" content="Gate">
+<meta property="og:description" content="使用GDB一般来说GDB主要调试的是C/C++的程序。要调试C/C++的程序，首先在编译时，我们必须要把调试信息加到可执行文件中。使用编译器（cc/gcc/g++）的 -g 参数可以做到这一点。如： $gcc -g -Wall hello.c -o hello $g++ -g -Wall hello.cpp -o hello如果没有-g，你将看不见程序的函数名、变量名，所代替的全是运行时的内存地址">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-26T15:41:04.066Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="用GDB调试程序">
+<meta name="twitter:description" content="使用GDB一般来说GDB主要调试的是C/C++的程序。要调试C/C++的程序，首先在编译时，我们必须要把调试信息加到可执行文件中。使用编译器（cc/gcc/g++）的 -g 参数可以做到这一点。如： $gcc -g -Wall hello.c -o hello $g++ -g -Wall hello.cpp -o hello如果没有-g，你将看不见程序的函数名、变量名，所代替的全是运行时的内存地址">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://lxbwolf.github.io/2017/02/23/e7-94-a8gdb-e8-b0-83-e8-af-95-e7-a8-8b-e5-ba-8f/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Gate" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+</head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/head.jpeg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Brooke Lau</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">RD</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">项目</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-books">
+          <a href="/books">
+            
+            <i class="icon icon-book-fill"></i>
+            
+            <span class="menu-title">书单</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="https://twitter.com/lxbwolf" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><span class="category-list-count">19</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/">En</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/JSON/">JSON</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/Linux/">Linux</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">4</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DB/Linux/">Linux</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><span class="category-list-count">4</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/Linux/">Linux</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Rasp/">Rasp</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">11</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget-body">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nginx/">nginx</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/架构/">架构</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/mysql/" style="font-size: 13px;">mysql</a> <a href="/tags/nginx/" style="font-size: 14px;">nginx</a> <a href="/tags/架构/" style="font-size: 13px;">架构</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">二月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">五月 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">三月 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">四月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/2019/09/27/github-博客绑定域名/" class="title">github 博客绑定域名</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-09-26T16:54:15.000Z" itemprop="datePublished">2019-09-27</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2019/09/27/hello-hexo/" class="title">Hello Hexo</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-09-26T16:14:22.211Z" itemprop="datePublished">2019-09-27</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Shell/">Shell</a>
+              </p>
+              <p class="item-title">
+                <a href="/2019/08/20/xargs/" class="title">xargs</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-08-19T17:14:58.000Z" itemprop="datePublished">2019-08-20</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/2019/08/08/e5-8d-87-e7-ba-a7https/" class="title">升级https</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-08-07T18:53:34.000Z" itemprop="datePublished">2019-08-08</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Docker/">Docker</a>
+              </p>
+              <p class="item-title">
+                <a href="/2019/07/23/docker-e6-8c-82-e8-bd-bd-e7-9b-ae-e5-bd-95-e5-a4-b1-e8-b4-a5-e6-9d-83-e9-99-90-e6-8b-92-e7-bb-9d/" class="title">docker挂载目录失败/权限拒绝</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-07-23T09:32:38.000Z" itemprop="datePublished">2019-07-23</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-e7-94-a8gdb-e8-b0-83-e8-af-95-e7-a8-8b-e5-ba-8f" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      用GDB调试程序
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2017/02/23/e7-94-a8gdb-e8-b0-83-e8-af-95-e7-a8-8b-e5-ba-8f/" class="article-date">
+	  <time datetime="2017-02-23T11:12:02.000Z" itemprop="datePublished">2017-02-23</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/C/">C++</a>
+  </span>
+
+        
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2017/02/23/e7-94-a8gdb-e8-b0-83-e8-af-95-e7-a8-8b-e5-ba-8f/#comments" class="article-comment-link">评论</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h3 id="使用GDB"><a href="#使用GDB" class="headerlink" title="使用GDB"></a>使用GDB</h3><p>一般来说GDB主要调试的是C/C++的程序。要调试C/C++的程序，首先在编译时，我们必须要把调试信息加到可执行文件中。使用编译器（cc/gcc/g++）的 -g 参数可以做到这一点。如：</p>
+<pre><code>$gcc -g -Wall hello.c -o hello
+$g++ -g -Wall hello.cpp -o hello</code></pre><p>如果没有-g，你将看不见程序的函数名、变量名，所代替的全是运行时的内存地址。当你用-g把调试信息加入之后，并成功编译目标代码以后，让我们来看看如何用gdb来调试他。 启动GDB的方法有以下几种： <code>gdb &lt;program&gt;</code> program也就是你的执行文件，一般在当前目录下。 <code>gdb &lt;program&gt; core</code> 用gdb同时调试一个运行程序和core文件，core是程序非法执行后core dump后产生的文件。 <code>gdb &lt;program&gt; &lt;pid&gt;</code> 如果你的程序是一个服务程序，那么你可以指定这个服务程序运行时的进程ID。gdb会自动attach上去，并调试他。program应该在PATH环境变量中搜索得到。 以上三种都是进入gdb环境和加载被调试程序同时进行的。也可以先进入gdb环境，在加载被调试程序，方法如下：</p>
+<pre><code>*在终端输入：gdb
+*在gdb环境中：file &lt;program&gt;
+这两步等价于：gdb &lt;program&gt;</code></pre><p>GDB启动时，可以加上一些GDB的启动开关，详细的开关可以用gdb -help查看。我在下面只例举一些比较常用的参数：</p>
+<pre><code>-symbols &lt;file&gt;
+-s &lt;file&gt;
+从指定文件中读取符号表。
+-se file
+从指定文件中读取符号表信息，并把他用在可执行文件中。
+-core &lt;file&gt;
+-c &lt;file&gt;
+调试时core dump的core文件。
+-directory &lt;directory&gt;
+-d &lt;directory&gt;
+加入一个源文件的搜索路径。默认搜索路径是环境变量中PATH所定义的路径。
+```&lt;/directory&gt;&lt;/directory&gt;&lt;/file&gt;&lt;/file&gt;&lt;/file&gt;&lt;/file&gt;&lt;/program&gt;&lt;/program&gt;&lt;/pid&gt;&lt;/program&gt;&lt;/program&gt;&lt;/program&gt;
+
+###GDB的命令概貌
+
+启动gdb后，你就被带入gdb的调试环境中，就可以使用gdb的命令开始调试程序了，gdb的命令可以使用help命令来查看，如下所示：
+```bash
+$ gdb
+GNU gdb 6.7.1-debian
+Copyright (C) 2007 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later &lt;http: gnu.org=&quot;&quot; licenses=&quot;&quot; gpl.html=&quot;&quot;&gt;
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type &quot;show copying&quot;
+and &quot;show warranty&quot; for details.
+This GDB was configured as &quot;i486-linux-gnu&quot;.
+(gdb) help
+List of classes of commands:&lt;/http:&gt;
+
+aliases -- Aliases of other commands
+breakpoints -- Making program stop at certain points
+data -- Examining data
+files -- Specifying and examining files
+internals -- Maintenance commands
+obscure -- Obscure features
+running -- Running the program
+stack -- Examining the stack
+status -- Status inquiries
+support -- Support facilities
+tracepoints -- Tracing of program execution without stopping the program
+user-defined -- User-defined commands
+
+Type &quot;help&quot; followed by a class name for a list of commands in that class.
+Type &quot;help all&quot; for the list of all commands.
+Type &quot;help&quot; followed by command name for full documentation.
+Type &quot;apropos word&quot; to search for commands related to &quot;word&quot;.
+Command name abbreviations are allowed if unambiguous.
+(gdb)</code></pre><p>gdb 的命令很多，gdb把之分成许多个种类。help命令只是例出gdb的命令种类，如果要看种类中的命令，可以使用<code>help &lt;class&gt;</code>命令，如：help breakpoints，查看设置断点的所有命令。也可以直接<code>help &lt;command&gt;&lt;/command&gt;</code>来查看命令的帮助。 gdb中，输入命令时，可以不用打全命令，只用打命令的前几个字符就可以了，当然，命令的前几个字符应该要标志着一个唯一的命令，在Linux下，你可以敲击两次TAB键来补齐命令的全称，如果有重复的，那么gdb会把其列出来。</p>
+<p><strong>示例一</strong>：在进入函数func时，设置一个断点。可以敲入break func，或是直接就是b func</p>
+<pre><code>(gdb) b func
+Breakpoint 1 at 0x804837a: file tst.c, line 5.</code></pre><p><strong>示例二</strong>：敲入b按两次TAB键，你会看到所有b打头的命令：</p>
+<pre><code>(gdb) b
+backtrace break bt
+(gdb)</code></pre><p><strong>示例三</strong>：只记得函数的前缀，可以这样：</p>
+<pre><code>(gdb) b make_ &amp;lt;按TAB键&amp;gt;
+（再按下一次TAB键，你会看到:）
+make_a_section_from_file make_environ
+make_abs_section make_function_type
+make_blockvector make_pointer_type
+make_cleanup make_reference_type
+make_command make_symbol_completion_list
+(gdb) b make_
+GDB把所有make开头的函数全部列出来给你查看。</code></pre><p><strong>示例四</strong>：调试C++的程序时，有可以函数名一样。如：</p>
+<pre><code>(gdb) b &apos;bubble( M-?
+bubble(double,double) bubble(int,int)
+(gdb) b &apos;bubble(</code></pre><p>你可以查看到C++中的所有的重载函数及参数。（注：M-?和“按两次TAB键”是一个意思） 要退出gdb时，只用发quit或命令简称q就行了</p>
+<h3 id="GDB中运行UNIX的shell程序"><a href="#GDB中运行UNIX的shell程序" class="headerlink" title="GDB中运行UNIX的shell程序"></a>GDB中运行UNIX的shell程序</h3><p>在gdb环境中，你可以执行UNIX的shell的命令，使用gdb的shell命令来完成： <code>shell &lt;command string=&quot;&quot;&gt;&lt;/command&gt;</code> 调用UNIX的shell来执行<code>&lt;command string=&quot;&quot;&gt;&lt;/command&gt;</code>，环境变量SHELL中定义的UNIX的shell将会被用来执行<code>&lt;command string=&quot;&quot;&gt;&lt;/command&gt;</code>，如果SHELL没有定义，那就使用UNIX的标准<code>shell：/bin/sh</code>。（在Windows中使用Command.com或cmd.exe） 还有一个gdb命令是make： <code>make &lt;make-args&gt;</code> 可以在gdb中执行make命令来重新build自己的程序。这个命令等价于<code>shell make &lt;make-args&gt;</code>。</p>
+<h3 id="在GDB中运行程序"><a href="#在GDB中运行程序" class="headerlink" title="在GDB中运行程序"></a>在GDB中运行程序</h3><p>当以<code>gdb &lt;program&gt;</code>方式启动gdb后，gdb会在PATH路径和当前目录中搜索<code>&lt;program&gt;</code>的源文件。如要确认gdb是否读到源文件，可使用l或list命令，看看gdb是否能列出源代码。 在gdb中，运行程序使用r或是run命令。程序的运行，你有可能需要设置下面四方面的事。 <strong>1、程序运行参数。</strong> set args 可指定运行时参数。（如：set args 10 20 30 40 50） show args 命令可以查看设置好的运行参数。 <strong>2、运行环境。</strong> `path</p>
+<p><code>可设定程序的运行路径。 show paths 查看程序的运行路径。 set environment varname [=value] 设置环境变量。如：set env USER=hchen show environment [varname] 查看环境变量。 **3、工作目录。**</code>cd</p>
+<p>` 相当于shell的cd命令。 pwd 显示当前的所在目录。 <strong>4、程序的输入输出。</strong> info terminal 显示你程序用到的终端的模式。 使用重定向控制程序输出。如：run &gt; outfile tty命令可以指写输入输出的终端设备。如：tty /dev/ttyb</p>
+<h3 id="调试已运行的程序"><a href="#调试已运行的程序" class="headerlink" title="调试已运行的程序"></a>调试已运行的程序</h3><p>两种方法： 1. 在UNIX下用ps查看正在运行的程序的PID（进程ID），然后用<code>gdb &lt;program&gt; PID</code>格式挂接正在运行的程序。 2. 先用<code>gdb &lt;program&gt;</code>关联上源代码，并进行gdb，在gdb中用attach命令来挂接进程的PID。并用detach来取消挂接的进程。</p>
+<h3 id="暂停-恢复程序运行"><a href="#暂停-恢复程序运行" class="headerlink" title="暂停/恢复程序运行"></a>暂停/恢复程序运行</h3><p>调试程序中，暂停程序运行是必须的，GDB可以方便地暂停程序的运行。你可以设置程序的在哪行停住，在什么条件下停住，在收到什么信号时停往等等。以便于你查看运行时的变量，以及运行时的流程。 当进程被gdb停住时，你可以使用<code>info program</code> 来查看程序的是否在运行，进程号，被暂停的原因。 在gdb中，我们可以有以下几种暂停方式：断点（BreakPoint）、观察点（Watch Point）、捕捉点（Catch Point）、信号（Signals）、线程停止（Thread Stops）。如果要恢复程序运行，可以使用c或是 continue命令。</p>
+<p><strong>下面为重要的使用步骤, 只摘抄了部分必要的信息, 如设置断点, 查看栈信息, 其余操作, 可以在<a href="http://wiki.ubuntu.org.cn/%E7%94%A8GDB%E8%B0%83%E8%AF%95%E7%A8%8B%E5%BA%8F" target="_blank" rel="noopener">wiki.ubuntu</a>查看</strong></p>
+<p><strong>设置断点（Break Points）</strong> 我们用break命令来设置断点。下面有几点设置断点的方法： <code>break &lt;function&gt;</code> 在进入指定函数时停住。C++中可以使用<code>class::function</code>或<code>function(type,type)</code>格式来指定函数名。 <code>break &lt;linenum&gt;</code> 在指定行号停住。 <code>break +offset</code> <code>break -offset</code> 在当前行号的前面或后面的offset行停住。offiset为自然数。 <code>break filename：linenum</code> 在源文件filename的linenum行处停住。 <code>break filename：function</code> 在源文件filename的function函数的入口处停住。 <code>break *address</code> 在程序运行的内存地址处停住。 <code>break</code> break命令没有参数时，表示在下一条指令处停住。 <code>break ... if &lt;condition&gt;</code> …可以是上述的参数，condition表示条件，在条件成立时停住。比如在循环体中，可以设置<code>break if i==100</code>，表示当i为100时停住程序。 查看断点时，可使用info命令，如下所示：（注：n表示断点号） <code>info breakpoints [n]</code> <code>info break [n]</code></p>
+<p><strong>维护停止点</strong> 上面说了如何设置程序的停止点，GDB中的停止点也就是上述的三类。在GDB中，如果你觉得已定义好的停止点没有用了，你可以使用<code>delete</code>、<code>clear</code>、<code>disable</code>、<code>enable</code>这几个命令来进行维护。 <code>clear</code> 清除所有的已定义的停止点。 <code>clear &lt;function&gt;</code> <code>clear &lt;filename：function&gt;</code> 清除所有设置在函数上的停止点。 <code>clear &lt;linenum&gt;</code> <code>clear &lt;filename：linenum&gt;</code> 清除所有设置在指定行上的停止点。 <code>delete [breakpoints] [range...]</code> 删除指定的断点，breakpoints为断点号。如果不指定断点号，则表示删除所有的断点。range 表示断点号的范围（如：3-7）。其简写命令为d。&lt;/filename：linenum&gt;&lt;/filename：function&gt;</p>
+<p>比删除更好的一种方法是disable停止点，disable了的停止点，GDB不会删除，当你还需要时，enable即可，就好像回收站一样。 <code>disable [breakpoints] [range...]</code> disable所指定的停止点，breakpoints为停止点号。如果什么都不指定，表示disable所有的停止点。简写命令是dis. <code>enable [breakpoints] [range...]</code> enable所指定的停止点，breakpoints为停止点号。 <code>enable [breakpoints] once range...</code> enable所指定的停止点一次，当程序停止后，该停止点马上被GDB自动disable。 <code>enable [breakpoints] delete range...</code> enable所指定的停止点一次，当程序停止后，该停止点马上被GDB自动删除。</p>
+<p><strong>恢复程序运行和单步调试</strong> 当程序被停住了，你可以用continue命令恢复程序的运行直到程序结束，或下一个断点到来。也可以使用step或next命令单步跟踪程序。 <code>continue [ignore-count]</code> <code>c [ignore-count]</code> <code>fg [ignore-count]</code> 恢复程序运行，直到程序结束，或是下一个断点到来。ignore-count表示忽略其后的断点次数。continue，c，fg三个命令都是一样的意思。 <code>step &lt;count&gt;</code> 单步跟踪，如果有函数调用，他会进入该函数。进入函数的前提是，此函数被编译有debug信息。很像VC等工具中的step in。后面可以加count也可以不加，不加表示一条条地执行，加表示执行后面的count条指令，然后再停住。 <code>next &lt;count&gt;</code> 同样单步跟踪，如果有函数调用，他不会进入该函数。很像VC等工具中的step over。后面可以加count也可以不加，不加表示一条条地执行，加表示执行后面的count条指令，然后再停住。 <code>set step-mode</code> <code>set step-mode on</code> 打开step-mode模式，于是，在进行单步跟踪时，程序不会因为没有debug信息而不停住。这个参数很有利于查看机器码。 <code>set step-mode off</code> 关闭step-mode模式。 <code>finish</code> 运行程序，直到当前函数完成返回。并打印函数返回时的堆栈地址和返回值及参数值等信息。 <code>until 或 u</code> 当你厌倦了在一个循环体内单步跟踪时，这个命令可以运行程序直到退出循环体。 <code>stepi 或 si</code> <code>nexti 或 ni</code> 单步跟踪一条机器指令！一条程序代码有可能由数条机器指令完成，stepi和nexti可以单步执行机器指令。与之一样有相同功能的命令是<code>“display/i $pc”</code> ，当运行完这个命令后，单步跟踪会在打出程序代码的同时打出机器指令（也就是汇编代码）</p>
+<p><strong>查看栈信息</strong> 当程序被停住了，你需要做的第一件事就是查看程序是在哪里停住的。当你的程序调用了一个函数，函数的地址，函数参数，函数内的局部变量都会被压入“栈”（Stack）中。你可以用GDB命令来查看当前的栈中的信息。 下面是一些查看函数调用栈信息的GDB命令： <code>backtrace</code> <code>bt</code> 打印当前的函数调用栈的所有信息。如：</p>
+<pre><code>(gdb) bt
+#0  func (n=250) at tst.c:6
+#1  0x08048524 in main (argc=1, argv=0xbffff674) at tst.c:30
+#2  0x400409ed in __libc_start_main () from /lib/libc.so.6</code></pre><p>从上可以看出函数的调用栈信息：<code>__libc_start_main --&amp;gt; main() --&amp;gt; func()</code></p>
+<p><code>backtrace &lt;n&gt;</code> <code>bt &lt;n&gt;</code> n是一个正整数，表示只打印栈顶上n层的栈信息。 <code>backtrace &amp;lt;-n&amp;gt;</code> <code>bt &amp;lt;-n&amp;gt;</code> -n表一个负整数，表示只打印栈底下n层的栈信息。 如果你要查看某一层的信息，你需要切换当前栈，一般来说，程序停止时，最顶层的栈就是当前栈，如果你要查看栈下面层的详细信息，首先要做的是切换当前栈。 <code>frame &lt;n&gt;</code> <code>f &lt;n&gt;</code> n是一个从0开始的整数，是栈中的层编号。比如：frame 0，表示栈顶，frame 1，表示栈的第二层。 <code>up &lt;n&gt;</code> 表示向栈的上面移动n层，可以不打n，表示向上移动一层。 <code>down &lt;n&gt;</code> 表示向栈的下面移动n层，可以不打n，表示向下移动一层。</p>
+<p>上面的命令，都会打印出移动到的栈层的信息。如果你不想让其打出信息。你可以使用这三个命令： <code>select-frame &lt;n&gt;</code> 对应于 frame 命令。 <code>up-silently &lt;n&gt;</code>对应于 up 命令。 <code>down-silently &lt;n&gt;</code> 对应于 down 命令。 查看当前栈层的信息，你可以用以下GDB命令： <code>frame</code> 或 <code>f</code> 会打印出这些信息：栈的层编号，当前的函数名，函数参数值，函数所在文件及行号，函数执行到的语句。 <code>info frame</code> <code>info f</code> 这个命令会打印出更为详细的当前栈层的信息，只不过，大多数都是运行时的内存地址。比如：函数地址，调用函数的地址，被调用函数的地址，目前的函数是由什么样的程序语言写成的、函数参数地址及值、局部变量的地址等等。如： <code>bash (gdb) info f Stack level 0, frame at 0xbffff5d4: eip = 0x804845d in func (tst.c:6); saved eip 0x8048524 called by frame at 0xbffff60c source language c. Arglist at 0xbffff5d4, args: n=250 Locals at 0xbffff5d4, Previous frame&#39;s sp is 0x0 Saved registers: ebp at 0xbffff5d4, eip at 0xbffff5d8</code></p>
+<p><code>info args</code> 打印出当前函数的参数名及其值。 <code>info locals</code> 打印出当前函数中所有局部变量及其值。 <code>info catch</code> 打印出当前的函数中的异常处理信息。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxbwolf.github.io/2017/02/23/e7-94-a8gdb-e8-b0-83-e8-af-95-e7-a8-8b-e5-ba-8f/" title="用GDB调试程序" target="_blank" rel="external">https://lxbwolf.github.io/2017/02/23/e7-94-a8gdb-e8-b0-83-e8-af-95-e7-a8-8b-e5-ba-8f/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/lxbwolf" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/head.jpeg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/lxbwolf" target="_blank"><span class="text-dark">Brooke Lau</span><small class="ml-1x">RD</small></a></h3>
+        <div>个人简介。</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2017/03/02/stl-e7-9a-84-erase-e9-99-b7-e9-98-b1-e8-bf-ad-e4-bb-a3-e5-99-a8-e5-a4-b1-e6-95-88-e6-80-bb-e7-bb-93/" title="STL 的 erase( ) 陷阱-迭代器失效总结"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2017/02/09/e7-bc-96-e8-af-91-e5-99-a8-e5-b7-a5-e4-bd-9c-e8-bf-87-e7-a8-8b/" title="编译器工作过程"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-fancy btn-donate pop-onhover bg-gradient-warning" data-toggle="modal" data-target="#donateModal"><span>赏</span></button>
+  <!-- <div class="wave-icon wave-icon-danger btn-donate" data-toggle="modal" data-target="#donateModal">
+    <div class="wave-circle"><span class="icon"><i class="icon icon-bill"></i></span></div>
+  </div> -->
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+<!-- Modal -->
+<div class="modal modal-center modal-small modal-xs-full fade" id="donateModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content donate">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <div class="modal-body">
+        <div class="donate-box">
+          <div class="donate-head">
+            <p>感谢您的支持，我会继续努力的!</p>
+          </div>
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade active in" id="alipay">
+              <div class="donate-payimg">
+                <img src="/images/donate/alipay.jpeg" alt="扫码支持" title="扫一扫" />
+              </div>
+              <p class="text-muted mv">扫码打赏，你说多少就多少</p>
+              <p class="text-grey">打开支付宝扫一扫，即可进行扫码打赏哦</p>
+            </div>
+            <div role="tabpanel" class="tab-pane fade" id="wechatpay">
+              <div class="donate-payimg">
+                <img src="/images/donate/wepay.jpeg" alt="扫码支持" title="扫一扫" />
+              </div>
+              <p class="text-muted mv">扫码打赏，你说多少就多少</p>
+              <p class="text-grey">打开微信扫一扫，即可进行扫码打赏哦</p>
+            </div>
+          </div>
+          <div class="donate-footer">
+            <ul class="nav nav-tabs nav-justified" role="tablist">
+              <li role="presentation" class="active">
+                <a href="#alipay" id="alipay-tab" role="tab" data-toggle="tab" aria-controls="alipay" aria-expanded="true"><i class="icon icon-alipay"></i> 支付宝</a>
+              </li>
+              <li role="presentation" class="">
+                <a href="#wechatpay" role="tab" id="wechatpay-tab" data-toggle="tab" aria-controls="wechatpay" aria-expanded="false"><i class="icon icon-wepay"></i> 微信支付</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="https://twitter.com/lxbwolf" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> lxbwolf </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

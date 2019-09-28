@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+  
+  <title>树莓派3B+ 安装系统 | Gate</title>
+  <meta name="description" content="安装步骤: 官网下载系统 -- 刷入TF卡 -- 设置开启显示器和SSH -- 通电 -- 进入系统 1. 进入官方网站下载系统镜像官方系统 raspbian地址 https://www.raspberrypi.org/downloads/ 2. Windows系统下的安装2.1 下载SD格式化工具SDFormatter 地址 https://www.sdcard.org/downloads/fo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="树莓派3B+ 安装系统">
+<meta property="og:url" content="https://lxbwolf.github.io/2018/10/17/e6-a0-91-e8-8e-93-e6-b4-be3b-e5-ae-89-e8-a3-85-e7-b3-bb-e7-bb-9f/index.html">
+<meta property="og:site_name" content="Gate">
+<meta property="og:description" content="安装步骤: 官网下载系统 -- 刷入TF卡 -- 设置开启显示器和SSH -- 通电 -- 进入系统 1. 进入官方网站下载系统镜像官方系统 raspbian地址 https://www.raspberrypi.org/downloads/ 2. Windows系统下的安装2.1 下载SD格式化工具SDFormatter 地址 https://www.sdcard.org/downloads/fo">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-26T15:41:04.069Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="树莓派3B+ 安装系统">
+<meta name="twitter:description" content="安装步骤: 官网下载系统 -- 刷入TF卡 -- 设置开启显示器和SSH -- 通电 -- 进入系统 1. 进入官方网站下载系统镜像官方系统 raspbian地址 https://www.raspberrypi.org/downloads/ 2. Windows系统下的安装2.1 下载SD格式化工具SDFormatter 地址 https://www.sdcard.org/downloads/fo">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://lxbwolf.github.io/2018/10/17/e6-a0-91-e8-8e-93-e6-b4-be3b-e5-ae-89-e8-a3-85-e7-b3-bb-e7-bb-9f/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Gate" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+</head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/head.jpeg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Brooke Lau</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">RD</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">项目</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-books">
+          <a href="/books">
+            
+            <i class="icon icon-book-fill"></i>
+            
+            <span class="menu-title">书单</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="https://twitter.com/lxbwolf" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><span class="category-list-count">19</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/">En</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/JSON/">JSON</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/Linux/">Linux</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">4</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DB/Linux/">Linux</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><span class="category-list-count">4</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/Linux/">Linux</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Rasp/">Rasp</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">11</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget-body">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nginx/">nginx</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/架构/">架构</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/mysql/" style="font-size: 13px;">mysql</a> <a href="/tags/nginx/" style="font-size: 14px;">nginx</a> <a href="/tags/架构/" style="font-size: 13px;">架构</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">二月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">五月 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">三月 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">四月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/2019/09/27/github-博客绑定域名/" class="title">github 博客绑定域名</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-09-26T16:54:15.000Z" itemprop="datePublished">2019-09-27</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2019/09/27/hello-hexo/" class="title">Hello Hexo</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-09-26T16:14:22.211Z" itemprop="datePublished">2019-09-27</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Shell/">Shell</a>
+              </p>
+              <p class="item-title">
+                <a href="/2019/08/20/xargs/" class="title">xargs</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-08-19T17:14:58.000Z" itemprop="datePublished">2019-08-20</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/2019/08/08/e5-8d-87-e7-ba-a7https/" class="title">升级https</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-08-07T18:53:34.000Z" itemprop="datePublished">2019-08-08</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Docker/">Docker</a>
+              </p>
+              <p class="item-title">
+                <a href="/2019/07/23/docker-e6-8c-82-e8-bd-bd-e7-9b-ae-e5-bd-95-e5-a4-b1-e8-b4-a5-e6-9d-83-e9-99-90-e6-8b-92-e7-bb-9d/" class="title">docker挂载目录失败/权限拒绝</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-07-23T09:32:38.000Z" itemprop="datePublished">2019-07-23</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-e6-a0-91-e8-8e-93-e6-b4-be3b-e5-ae-89-e8-a3-85-e7-b3-bb-e7-bb-9f" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      树莓派3B+ 安装系统
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2018/10/17/e6-a0-91-e8-8e-93-e6-b4-be3b-e5-ae-89-e8-a3-85-e7-b3-bb-e7-bb-9f/" class="article-date">
+	  <time datetime="2018-10-17T14:11:38.000Z" itemprop="datePublished">2018-10-17</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Rasp/">Rasp</a>
+  </span>
+
+        
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2018/10/17/e6-a0-91-e8-8e-93-e6-b4-be3b-e5-ae-89-e8-a3-85-e7-b3-bb-e7-bb-9f/#comments" class="article-comment-link">评论</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>安装步骤: <code>官网下载系统 -- 刷入TF卡 -- 设置开启显示器和SSH -- 通电 -- 进入系统</code></p>
+<h3 id="1-进入官方网站下载系统镜像"><a href="#1-进入官方网站下载系统镜像" class="headerlink" title="1. 进入官方网站下载系统镜像"></a>1. 进入官方网站下载系统镜像</h3><p>官方系统 raspbian地址 <a href="https://www.raspberrypi.org/downloads/" target="_blank" rel="noopener">https://www.raspberrypi.org/downloads/</a></p>
+<h3 id="2-Windows系统下的安装"><a href="#2-Windows系统下的安装" class="headerlink" title="2. Windows系统下的安装"></a>2. Windows系统下的安装</h3><h4 id="2-1-下载SD格式化工具"><a href="#2-1-下载SD格式化工具" class="headerlink" title="2.1 下载SD格式化工具"></a>2.1 下载SD格式化工具</h4><p>SDFormatter 地址 <a href="https://www.sdcard.org/downloads/formatter\_4/eula\_windows/" target="_blank" rel="noopener">https://www.sdcard.org/downloads/formatter\_4/eula\_windows/</a></p>
+<p>安装后直接用默认选项 格式化SD卡</p>
+<h4 id="2-2-下载写镜像工具"><a href="#2-2-下载写镜像工具" class="headerlink" title="2.2 下载写镜像工具"></a>2.2 下载写镜像工具</h4><p>Win32 DiskImager 地址 <a href="http://sourceforge.net/projects/win32diskimager/" target="_blank" rel="noopener">http://sourceforge.net/projects/win32diskimager/</a></p>
+<h3 id="3-MAC系统下的安装"><a href="#3-MAC系统下的安装" class="headerlink" title="3. MAC系统下的安装"></a>3. MAC系统下的安装</h3><h4 id="3-1-查看当前已挂载的卷"><a href="#3-1-查看当前已挂载的卷" class="headerlink" title="3.1 查看当前已挂载的卷"></a>3.1 查看当前已挂载的卷</h4><pre><code>[liuxb@liuxb-mac]$ df -h
+Filesystem      Size   Used  Avail Capacity iused      ifree %iused  Mounted on
+/dev/disk1     112Gi   81Gi   30Gi    73% 1014786 4293952493    0%   /
+devfs          188Ki  188Ki    0Bi   100%     654          0  100%   /dev
+map -hosts       0Bi    0Bi    0Bi   100%       0          0  100%   /net
+map auto_home    0Bi    0Bi    0Bi   100%       0          0  100%   /home
+/dev/disk2s3    92Gi   51Gi   41Gi    56%  336662   42525054    1%   /Volumes/系统
+/dev/disk2s4    20Gi   15Gi  4.4Gi    78%   92859    4579733    2%   /Volumes/数据
+/dev/disk3s1    29Gi  2.3Mi   29Gi     1%  107876    8373436    2%   /Volumes/未命名</code></pre><p><code>对比Size和Name可以找到SD卡的分区在系统里对应的设备文件（这里是/dev/disk3s1），如果你有多个分区，可能还会有disk3s2之类的</code></p>
+<h4 id="3-2-使用diskutil-unmount将分区卸载"><a href="#3-2-使用diskutil-unmount将分区卸载" class="headerlink" title="3.2 使用diskutil unmount将分区卸载"></a>3.2 使用diskutil unmount将分区卸载</h4><pre><code>[liuxb@liuxb-mac]$ diskutil unmount /dev/disk3s1
+Volume 未命名 on disk3s1 unmounted</code></pre><h4 id="3-3-先对下载的zip压缩包进行解压，然后使用dd命令将系统镜像写入，需要特别特别注意disk后的数字，不能搞错"><a href="#3-3-先对下载的zip压缩包进行解压，然后使用dd命令将系统镜像写入，需要特别特别注意disk后的数字，不能搞错" class="headerlink" title="3.3 先对下载的zip压缩包进行解压，然后使用dd命令将系统镜像写入，需要特别特别注意disk后的数字，不能搞错"></a>3.3 先对下载的zip压缩包进行解压，然后使用dd命令将系统镜像写入，需要特别特别注意disk后的数字，不能搞错</h4><p>说明：/dev/disk3s1是分区，/dev/disk3是块设备，/dev/rdisk3是原始字符设备</p>
+<pre><code>[liuxb@liuxb-mac]$ unzip 2017-09-07-raspbian-stretch.zip
+[liuxb@liuxb-mac]$ sudo dd bs=16m if=2017-09-07-raspbian-stretch.img of=/dev/rdisk3
+_
+输入用户密码</code></pre><p>经过几分钟的等待，出现下面的提示，说明TF卡刷好了：</p>
+<pre><code>1172+1 records in
+1172+1 records out
+4916019200 bytes transferred in 127.253638 secs (9691442 bytes/sec)</code></pre><h3 id="4-开启SSH"><a href="#4-开启SSH" class="headerlink" title="4. 开启SSH"></a>4. 开启SSH</h3><p>在TF卡分区里创建一个名为”ssh”的不带后缀的空文件</p>
+<h3 id="5-开启强制HDMI输出"><a href="#5-开启强制HDMI输出" class="headerlink" title="5. 开启强制HDMI输出"></a>5. 开启强制HDMI输出</h3><p>在TF卡分区，打开config.txt文件(开机后位置： /boot/config.txt)，修改如下：</p>
+<pre><code>hdmi_safe=1
+config_hdmi_boost=4
+hdmi_ignore_edid=0xa5000080
+hdmi_group=2
+hdmi_mode=82</code></pre><p>参数介绍:</p>
+<p>项</p>
+<p>解释</p>
+<p>hdmi_safe=1</p>
+<p>安全启动HDMI</p>
+<p>config_hdmi_boost=4</p>
+<p>开启热插拔</p>
+<p>hdmi_group=1</p>
+<p>CEA电视显示器</p>
+<p>hdmi_group=2</p>
+<p>DMT电脑显示器</p>
+<p>hdmi_ignore_edid=0xa5000080</p>
+<p>忽略自动探测的分辨率</p>
+<p>输出分辨率：</p>
+<p>hdmi_mode=4</p>
+<p>640x480 60Hz</p>
+<p>hdmi_mode=9</p>
+<p>800x600 60Hz</p>
+<p>hdmi_mode=16</p>
+<p>1024x768 60Hz</p>
+<p>hdmi_mode=82</p>
+<p>1080p 60Hz</p>
+<h3 id="6-设置无线WI-FI连接：（假设没有网线，而且没能连接显示器）"><a href="#6-设置无线WI-FI连接：（假设没有网线，而且没能连接显示器）" class="headerlink" title="6.设置无线WI-FI连接：（假设没有网线，而且没能连接显示器）"></a>6.设置无线WI-FI连接：（假设没有网线，而且没能连接显示器）</h3><p>在TF卡的boot分区，创建wpa_supplicant.conf文件，加入如下内容：</p>
+<pre><code>country=CN
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+network={
+ssid=&quot;lxb-wifi&quot;
+psk=&quot;123456789&quot;
+priority=1
+}</code></pre><p>在树莓派通电后会自动添加到<code>/etc/wpa_supplicant/wpa_supplicant.conf</code>文件里面，进行自动连接。</p>
+<pre><code>// 详细介绍：
+#ssid:网络的ssid
+#psk:密码
+#priority:连接优先级，数字越大优先级越高（不可以是负数）
+#scan_ssid:连接隐藏WiFi时需要指定该值为1
+
+// 如果WiFi 没有密码
+network={
+ssid=&quot;无线网络名称（ssid）&quot;
+key_mgmt=NONE
+}
+// 如果WiFi 使用WEP加密
+
+network={
+ssid=&quot;无线网络名称（ssid）&quot;
+key_mgmt=NONE
+wep_key0=&quot;wifi密码&quot;
+}
+// 如果你的 WiFi 使用WPA/WPA2加密
+
+network={
+ssid=&quot;无线网络名称（ssid）&quot;
+key_mgmt=WPA-PSK
+psk=&quot;wifi密码&quot;
+}</code></pre><p>以上设置完成后, TF卡可以插入树莓派了, 通电. 默认登录账号:<code>pi</code> 密码: <code>raspberry</code></p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxbwolf.github.io/2018/10/17/e6-a0-91-e8-8e-93-e6-b4-be3b-e5-ae-89-e8-a3-85-e7-b3-bb-e7-bb-9f/" title="树莓派3B+ 安装系统" target="_blank" rel="external">https://lxbwolf.github.io/2018/10/17/e6-a0-91-e8-8e-93-e6-b4-be3b-e5-ae-89-e8-a3-85-e7-b3-bb-e7-bb-9f/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/lxbwolf" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/head.jpeg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/lxbwolf" target="_blank"><span class="text-dark">Brooke Lau</span><small class="ml-1x">RD</small></a></h3>
+        <div>个人简介。</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2018/10/18/e6-a0-91-e8-8e-93-e6-b4-be-e5-9f-ba-e7-a1-80-e7-8e-af-e5-a2-83/" title="树莓派基础环境"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2018/09/01/go-e5-8f-91-e9-80-81-e9-82-ae-e4-bb-b6/" title="Go 发送邮件"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-fancy btn-donate pop-onhover bg-gradient-warning" data-toggle="modal" data-target="#donateModal"><span>赏</span></button>
+  <!-- <div class="wave-icon wave-icon-danger btn-donate" data-toggle="modal" data-target="#donateModal">
+    <div class="wave-circle"><span class="icon"><i class="icon icon-bill"></i></span></div>
+  </div> -->
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+<!-- Modal -->
+<div class="modal modal-center modal-small modal-xs-full fade" id="donateModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content donate">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <div class="modal-body">
+        <div class="donate-box">
+          <div class="donate-head">
+            <p>感谢您的支持，我会继续努力的!</p>
+          </div>
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade active in" id="alipay">
+              <div class="donate-payimg">
+                <img src="/images/donate/alipay.jpeg" alt="扫码支持" title="扫一扫" />
+              </div>
+              <p class="text-muted mv">扫码打赏，你说多少就多少</p>
+              <p class="text-grey">打开支付宝扫一扫，即可进行扫码打赏哦</p>
+            </div>
+            <div role="tabpanel" class="tab-pane fade" id="wechatpay">
+              <div class="donate-payimg">
+                <img src="/images/donate/wepay.jpeg" alt="扫码支持" title="扫一扫" />
+              </div>
+              <p class="text-muted mv">扫码打赏，你说多少就多少</p>
+              <p class="text-grey">打开微信扫一扫，即可进行扫码打赏哦</p>
+            </div>
+          </div>
+          <div class="donate-footer">
+            <ul class="nav nav-tabs nav-justified" role="tablist">
+              <li role="presentation" class="active">
+                <a href="#alipay" id="alipay-tab" role="tab" data-toggle="tab" aria-controls="alipay" aria-expanded="true"><i class="icon icon-alipay"></i> 支付宝</a>
+              </li>
+              <li role="presentation" class="">
+                <a href="#wechatpay" role="tab" id="wechatpay-tab" data-toggle="tab" aria-controls="wechatpay" aria-expanded="false"><i class="icon icon-wepay"></i> 微信支付</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="https://twitter.com/lxbwolf" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> lxbwolf </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>
