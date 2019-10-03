@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+  
+  <title>Gerrit + apache 安装 | Gate</title>
+  <meta name="description" content="使用gerrit自带的数据库h2, 验证方式为HTTP, SMTP 服务器未配置 git 安装可直接从yum 源安装 gerrit 安装先添加gerrit 用户. gerrit 从2.10开始, 换成了新版界面. 几乎国内所有的镜像都会下载失败, 需要翻墙下载. 下载完成后, 初始化命令为: java -jar gerrrit-war init -d /home/gerrit/repository">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Gerrit + apache 安装">
+<meta property="og:url" content="https://lxbwolf.github.io/2eb2e06d/index.html">
+<meta property="og:site_name" content="Gate">
+<meta property="og:description" content="使用gerrit自带的数据库h2, 验证方式为HTTP, SMTP 服务器未配置 git 安装可直接从yum 源安装 gerrit 安装先添加gerrit 用户. gerrit 从2.10开始, 换成了新版界面. 几乎国内所有的镜像都会下载失败, 需要翻墙下载. 下载完成后, 初始化命令为: java -jar gerrrit-war init -d /home/gerrit/repository">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-26T15:41:04.067Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Gerrit + apache 安装">
+<meta name="twitter:description" content="使用gerrit自带的数据库h2, 验证方式为HTTP, SMTP 服务器未配置 git 安装可直接从yum 源安装 gerrit 安装先添加gerrit 用户. gerrit 从2.10开始, 换成了新版界面. 几乎国内所有的镜像都会下载失败, 需要翻墙下载. 下载完成后, 初始化命令为: java -jar gerrrit-war init -d /home/gerrit/repository">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://lxbwolf.github.io/2eb2e06d/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Gate" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+</head>
+
+
+<body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/head.jpeg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Brooke Lau</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">RD</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="https://twitter.com/lxbwolf" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><span class="category-list-count">19</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/">En</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/JSON/">JSON</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/Linux/">Linux</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">4</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DB/Linux/">Linux</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><span class="category-list-count">4</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/Linux/">Linux</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Rasp/">Rasp</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/samba/">samba</a><span class="category-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/linux/" style="font-size: 13px;">linux</a> <a href="/tags/nginx/" style="font-size: 14px;">nginx</a> <a href="/tags/架构/" style="font-size: 13px;">架构</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">二月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">五月 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">三月 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">四月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/e9fbcad9/" class="title">github 博客绑定域名</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-09-26T16:54:15.000Z" itemprop="datePublished">2019-09-27</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/a1751c09/" class="title">Hello Hexo</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-09-26T16:14:22.211Z" itemprop="datePublished">2019-09-27</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Shell/">Shell</a>
+              </p>
+              <p class="item-title">
+                <a href="/38dfadad/" class="title">xargs</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-08-19T17:14:58.000Z" itemprop="datePublished">2019-08-20</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/ddf7de45/" class="title">升级https</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-08-07T18:53:34.000Z" itemprop="datePublished">2019-08-08</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Docker/">Docker</a>
+              </p>
+              <p class="item-title">
+                <a href="/498654c2/" class="title">docker挂载目录失败/权限拒绝</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-07-23T09:32:38.000Z" itemprop="datePublished">2019-07-23</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-gerrit-apache-e5-ae-89-e8-a3-85" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Gerrit + apache 安装
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2eb2e06d/" class="article-date">
+	  <time datetime="2018-05-02T15:56:55.000Z" itemprop="datePublished">2018-05-02</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Web/">Web</a>
+  </span>
+
+        
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2eb2e06d/#comments" class="article-comment-link">评论</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>使用gerrit自带的数据库h2, 验证方式为HTTP, SMTP 服务器未配置</p>
+<h6 id="git-安装"><a href="#git-安装" class="headerlink" title="git 安装"></a>git 安装</h6><p>可直接从yum 源安装</p>
+<h6 id="gerrit-安装"><a href="#gerrit-安装" class="headerlink" title="gerrit 安装"></a>gerrit 安装</h6><p>先添加gerrit 用户. gerrit 从2.10开始, 换成了新版界面. 几乎国内所有的镜像都会下载失败, 需要翻墙下载. 下载完成后, 初始化命令为: <code>java -jar gerrrit-war init -d /home/gerrit/repository</code></p>
+<p>初始化启动时, “Authentication method” 设为”http” ,其他默认 “Listen on port [8080]“ 可用默认, 如端口被占用, 初始化后也可在配置文件修改</p>
+<h6 id="apache-安装"><a href="#apache-安装" class="headerlink" title="apache 安装"></a>apache 安装</h6><p>直接从yum源安装 apache名字为httpd, 服务名也是httpd. 服务启动后, 默认以apache用户运行. 如需访问其他用户的文件, 如<code>/home/gerrit/repository/htpasswd</code>, 需要确保apache 用户有足够的权限</p>
+<h6 id="配置-apache"><a href="#配置-apache" class="headerlink" title="配置 apache"></a>配置 apache</h6><p>修改 apache 的conf 文件, 一般路径为<code>/etc/httpd/conf/httpd.conf</code> windows 下的配置文件路径为 <code>INSTALL_DIR/conf/httpd.conf</code></p>
+<p>去掉下面几行的注释</p>
+<pre><code>LoadModule proxy_module modules/mod_proxy.so
+LoadModule proxy_connect_module modules/mod_proxy_connect.so
+LoadModule proxy_http_module modules/mod_proxy_http.so
+LoadModule proxy_ftp_module modules/mod_proxy_ftp.so
+LoadModule negotiation_module modules/mod_negotiation.so</code></pre><p>在最后追加下面配置</p>
+<pre><code>&lt;VirtualHost *:8080&gt;  
+  ServerName v3server
+  ProxyRequests Off  
+  ProxyVia Off  
+  ProxyPreserveHost On  
+
+
+  &lt;Proxy *:8080&gt;  
+        Order deny,allow  
+        Allow from all  
+  &lt;/Proxy&gt;  
+
+
+    &lt;Location /login/&gt;
+      AuthType Basic
+      AuthName &quot;Gerrit Code Review&quot;
+      Require valid-user
+     AuthUserFile D:/git/htpasswd
+    &lt;/Location&gt;
+
+
+  ProxyPass / http://10.14.132.179:9080/
+  ProxyPassReverse / http://10.14.132.179:9080/
+&lt;/VirtualHost&gt;</code></pre><p>如端口被占用, 修改conf文件的”Listen 8080” 字段, 换成其他的端口 查看某个端口是否被占用 : <code>netstat -lnp | grep 8080</code> <code>ProxyPass</code> 和 <code>proxyPassReverse</code> 的端口需与gerrit的conf文件里端口一致</p>
+<h6 id="配置-gerrit"><a href="#配置-gerrit" class="headerlink" title="配置 gerrit"></a>配置 gerrit</h6><p>修改<code>GERRIT_DIR/etc/gerrit.config</code> 文件</p>
+<pre><code>[gerrit]
+basePath = git
+canonicalWebUrl = http://10.14.132.179:9080/
+[database]
+type = H2
+database = db/ReviewDB
+[auth]
+type = HTTP
+logoutUrl = http://aa:aa@10.14.132.179:8080/
+[sendemail]
+smtpServer = smtp.163.com
+smtpUser = useremail@163.com
+  smtpPass = userpass
+  from = useremail@163.com
+[container]
+user = admin
+javaHome = C:\\Program Files\\Java\\jdk1.6.0_27\\jre
+[sshd]
+listenAddress = *:29418
+[httpd]
+listenUrl = http://10.14.132.179:9080/
+[cache]
+directory = cache</code></pre><p>需要修改的内容: - canonicalWebUrl - auth/type</p>
+<p>需要注意: canonicalWebUrl 和 listenAddress 不是8080. apache 的端口和 gerrit 的端口是不同的, 用户访问地址为 apache 的地址</p>
+<h6 id="启动-gerrit"><a href="#启动-gerrit" class="headerlink" title="启动 gerrit"></a>启动 gerrit</h6><p><code>GERRIT_DIR/bin/gerrit.sh start</code></p>
+<h6 id="启动-apache"><a href="#启动-apache" class="headerlink" title="启动 apache"></a>启动 apache</h6><p><code>service httpd start</code></p>
+<h6 id="添加账号和密码"><a href="#添加账号和密码" class="headerlink" title="添加账号和密码"></a>添加账号和密码</h6><p><code>htpasswd -cm /home/gerrit/repository/htpasswd USER_NAME</code></p>
+<ul>
+<li>htpasswd 为apache 的命令工具</li>
+<li>参数c 意为新建文件, 即 <code>/home/gerrit/repository/htpasswd</code> 文件不存在时, 新建名为htpasswd的文件</li>
+<li>参数m 为使用md5 加密</li>
+<li>当htpasswd文件存在时, 可以使用<code>htpasswd -m /PATH_TO_HTPASSWD USER_NAME</code> 添加账号</li>
+<li>保存账号密码信息的文件(htpasswd), 名字为自定义的, 但需要与apache 的conf 配置文件里 <code>AuthUserFile</code> 一致</li>
+</ul>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxbwolf.github.io/2eb2e06d/" title="Gerrit + apache 安装" target="_blank" rel="external">https://lxbwolf.github.io/2eb2e06d/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/lxbwolf" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/head.jpeg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/lxbwolf" target="_blank"><span class="text-dark">Brooke Lau</span><small class="ml-1x">RD</small></a></h3>
+        <div>个人简介。</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/7e8574d1/" title="qt 程序打包"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/924904f6/" title="Qt 工程的几种文件"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="https://twitter.com/lxbwolf" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> lxbwolf </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

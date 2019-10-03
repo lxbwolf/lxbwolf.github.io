@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+  
+  <title>nginx 配置中的rewrite | Gate</title>
+  <meta name="description" content="语法 rewrite regex replacement flag flag有如下: - last - break 中止 rewrite, 不再继续匹配 - redirect 返回临时重定向的 HTTP 状态302 - permanet 返回永久重定向的 HTTP 状态301 last 和 break 的不同:break 是终止当前location 的 rewrite 检测, 且不再进行 loca">
+<meta property="og:type" content="article">
+<meta property="og:title" content="nginx 配置中的rewrite">
+<meta property="og:url" content="https://lxbwolf.github.io/389c639/index.html">
+<meta property="og:site_name" content="Gate">
+<meta property="og:description" content="语法 rewrite regex replacement flag flag有如下: - last - break 中止 rewrite, 不再继续匹配 - redirect 返回临时重定向的 HTTP 状态302 - permanet 返回永久重定向的 HTTP 状态301 last 和 break 的不同:break 是终止当前location 的 rewrite 检测, 且不再进行 loca">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-26T15:41:04.068Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="nginx 配置中的rewrite">
+<meta name="twitter:description" content="语法 rewrite regex replacement flag flag有如下: - last - break 中止 rewrite, 不再继续匹配 - redirect 返回临时重定向的 HTTP 状态302 - permanet 返回永久重定向的 HTTP 状态301 last 和 break 的不同:break 是终止当前location 的 rewrite 检测, 且不再进行 loca">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://lxbwolf.github.io/389c639/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Gate" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+</head>
+
+
+<body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/head.jpeg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Brooke Lau</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">RD</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="https://twitter.com/lxbwolf" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><span class="category-list-count">19</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/">En</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/JSON/">JSON</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/Linux/">Linux</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">4</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DB/Linux/">Linux</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><span class="category-list-count">4</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/Linux/">Linux</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Rasp/">Rasp</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/samba/">samba</a><span class="category-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/linux/" style="font-size: 13px;">linux</a> <a href="/tags/nginx/" style="font-size: 14px;">nginx</a> <a href="/tags/架构/" style="font-size: 13px;">架构</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">二月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">五月 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">三月 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">四月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/e9fbcad9/" class="title">github 博客绑定域名</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-09-26T16:54:15.000Z" itemprop="datePublished">2019-09-27</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/a1751c09/" class="title">Hello Hexo</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-09-26T16:14:22.211Z" itemprop="datePublished">2019-09-27</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Shell/">Shell</a>
+              </p>
+              <p class="item-title">
+                <a href="/38dfadad/" class="title">xargs</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-08-19T17:14:58.000Z" itemprop="datePublished">2019-08-20</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/ddf7de45/" class="title">升级https</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-08-07T18:53:34.000Z" itemprop="datePublished">2019-08-08</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Docker/">Docker</a>
+              </p>
+              <p class="item-title">
+                <a href="/498654c2/" class="title">docker挂载目录失败/权限拒绝</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-07-23T09:32:38.000Z" itemprop="datePublished">2019-07-23</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-nginx-e9-85-8d-e7-bd-ae-e4-b8-ad-e7-9a-84rewrite" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      nginx 配置中的rewrite
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/389c639/" class="article-date">
+	  <time datetime="2018-06-02T14:35:47.000Z" itemprop="datePublished">2018-06-02</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Web/">Web</a>
+  </span>
+
+        
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/389c639/#comments" class="article-comment-link">评论</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p><strong>语法</strong> <code>rewrite regex replacement flag</code> flag有如下: - last - break 中止 rewrite, 不再继续匹配 - redirect 返回临时重定向的 HTTP 状态302 - permanet 返回永久重定向的 HTTP 状态301 last 和 break 的不同:<br>break 是终止当前location 的 rewrite 检测, 且不再进行 location 匹配;<br>last是终止当前location的rewrite检测,但会继续重试location匹配并处理区块中的rewrite规则</p>
+<ol>
+<li><p>下面是可以用来判断的表达式: <code>-f</code> 和<code>!-f</code> 判断是否存在文件 <code>-d</code> 和<code>!-d</code> 判断是否存在目录 <code>-e</code> 和<code>!-e</code> 判断是否存在文件或目录 <code>-x</code> 和<code>!-x</code> 判断文件是否可执行</p>
+</li>
+<li><p>下面是可以用作判断的全局变量</p>
+<ul>
+<li>$args 等于请求行中的参数</li>
+<li>$content_length 请求头中的<code>Content-length</code> 字段</li>
+<li>$content_type 请求头中的<code>Content-Type</code> 字段</li>
+<li>$document_root 当前请求在<code>root</code> 指令中指定的值</li>
+<li>$host 请求主机头字段, 否则为服务器名称</li>
+<li>$http_user_agent 客户端<code>agent</code> 信息</li>
+<li>$http_cookie 客户端<code>cookie</code> 信息</li>
+<li>$limit_rate 这个变量可以限制连接速率</li>
+<li>$request_body_file 客户端请求主题信息的临时文件名</li>
+<li>$request_method #客户端请求的动作，通常为GET或POST。</li>
+<li>$remote_addr #客户端的IP地址。</li>
+<li>$remote_port #客户端的端口。</li>
+<li>$remote_user #已经经过Auth Basic Module验证的用户名。</li>
+<li>$request_filename #当前请求的文件路径，由root或alias指令与URI请求生成。</li>
+<li><code>$query_string</code> #与$args相同。</li>
+<li>$scheme #HTTP方法（如http，https）。</li>
+<li>$server_protocol #请求使用的协议，通常是HTTP/1.0或HTTP/1.1。</li>
+<li>$server_addr #服务器地址，在完成一次系统调用后可以确定这个值。</li>
+<li>$server_name #服务器名称。</li>
+<li>$server_port #请求到达服务器的端口号。</li>
+<li>$request_uri #包含请求参数的原始URI，不包含主机名，如：”/foo/bar.php?arg=baz”。</li>
+<li><code>$uri</code> 不带请求参数的当前URI，$uri不包含主机名，如”/foo/bar.html”。</li>
+<li><code>$document_uri</code> #与<code>$uri</code>相同</li>
+</ul>
+</li>
+</ol>
+<p>例:</p>
+<pre><code>http://localhost:88/test1/test2/test.php
+
+$host: localhost
+$server_post: 88
+$request_uri: http://localhost:88/test1/test2/test.php
+$document_uri: /test1/test2/test.php
+$document_root: /usr/share/nginx/html (在nginx.conf里配置的)
+$request_filename: /usr/share/nginx/html/test1/test2/test.php (在nginx.conf里配置的)</code></pre><p><strong>详例:</strong><br><em>多目录转成参数</em><br><code>abc.domain.com/sort/2</code> =&gt; <code>abc.domain.com/index.php?act=sort&amp;name=abc&amp;id=2</code></p>
+<pre><code>if ($host ~* (.*)\.domain\.com) {
+    set $sub_name $1;
+    rewrite ^/sort\/(\d+)\/?$ /index.php?act=sort&amp;cid=$sub_name&amp;id=$1 last;
+}</code></pre><p><em>目录对换</em><br><code>/123456/xxxx</code> =&gt; <code>/xxxx?id=123456</code></p>
+<pre><code>rewrite ^/(\d+)\/(.+)/ /$2?id=$1 last;
+// rewrite ^/\/(\d+)\/(\w+)\/? /$2?id=$1 last;</code></pre><p><em>如果使用IE浏览器, 则重定向到/nginx-ie 目录下</em></p>
+<pre><code>if ($http_user_agent ~ MSIE) {
+    rewrite ^(.*)$ /nginx-ie/$1 break;
+}</code></pre><p>*目录自动加 / *</p>
+<pre><code>1.     if (-d $request_filename){
+2.     rewrite ^/(.*)([^/])$ http://$host/$1$2/ permanent;
+3.     }</code></pre><p><em>禁止htaccess</em></p>
+<pre><code>1.     location ~/\.ht {
+2.              deny all;
+3.          }</code></pre><p><em>禁止多个目录</em></p>
+<pre><code>1.     location ~ ^/(cron|templates)/ {
+2.              deny all;
+3.     break;
+4.          }</code></pre><p><em>禁止以/data开头的文件</em></p>
+<pre><code>可以禁止/data/下多级目录下.log.txt等请求;
+1.     location ~ ^/data {
+2.              deny all;
+3.          }</code></pre><p><em>禁止单个目录</em></p>
+<pre><code>不能禁止.log.txt能请求
+1.     location /searchword/cron/ {
+2.              deny all;
+3.          }</code></pre><p><em>禁止单个文件</em></p>
+<pre><code>1.     location ~ /data/sql/data.sql {
+2.              deny all;
+3.          }</code></pre><p><em>给favicon.ico和robots.txt设置过期时间;</em><br>这里为favicon.ico为99 天,robots.txt为7天并不记录404错误日志</p>
+<pre><code>1.     location ~(favicon.ico) {
+2.                      log_not_found off;
+3.     expires 99d;
+4.     break;
+5.          }
+6.      
+7.          location ~(robots.txt) {
+8.                      log_not_found off;
+9.     expires 7d;
+10. break;
+11.      }</code></pre><p><em>设定某个文件的过期时间;这里为600秒，并不记录访问日志</em></p>
+<pre><code>1.     location ^~ /html/scripts/loadhead_1.js {
+2.                      access_log   off;
+3.                      root /opt/lampp/htdocs/web;
+4.     expires 600;
+5.     break;
+6.            }</code></pre><p><em>文件反盗链并设置过期时间</em><br>这里的return 412 为自定义的http状态码，默认为403，方便找出正确的盗链的请求<br>“rewrite ^/ <a href="http://leech.c1gstudio.com/leech.gif;”显示一张防盗链图片" target="_blank" rel="noopener">http://leech.c1gstudio.com/leech.gif;”显示一张防盗链图片</a><br>“access_log off;”不记录访问日志，减轻压力<br>“expires 3d”所有文件3天的浏览器缓存</p>
+<pre><code>1.     location ~* ^.+\.(jpg|jpeg|gif|png|swf|rar|zip|css|js)$ {
+2.     valid_referers none blocked *.c1gstudio.com *.c1gstudio.net localhost 208.97.167.194;
+3.     if ($invalid_referer) {
+4.         rewrite ^/ http://leech.c1gstudio.com/leech.gif;
+5.         return 412;
+6.         break;
+7.     }
+8.                      access_log   off;
+9.                      root /opt/lampp/htdocs/web;
+10. expires 3d;
+11. break;
+12.      }</code></pre><p><em>只充许固定ip访问网站，并加上密码</em></p>
+<pre><code>1.     root  /opt/htdocs/www;
+2.     allow   208.97.167.194;
+3.     allow   222.33.1.2;
+4.     allow   231.152.49.4;
+5.     deny    all;
+6.     auth_basic &quot;C1G_ADMIN&quot;;
+7.     auth_basic_user_file htpasswd;</code></pre><p><em>将多级目录下的文件转成一个文件，增强seo效果</em><br><code>/job-123-456-789.html</code> 指向 <code>/job/123/456/789.html</code></p>
+<pre><code>1.     rewrite ^/job-([0-9]+)-([0-9]+)-([0-9]+)\.html$ /job/$1/$2/jobshow_$3.html last;</code></pre><p><em>将根目录下某个文件夹指向2级目录</em><br>如<code>/shanghaijob/</code> 指向 <code>/area/shanghai/</code> 如果你将last改成permanent，那么浏览器地址栏显是 <code>/location/shanghai/</code></p>
+<pre><code>1.     rewrite ^/([0-9a-z]+)job/(.*)$ /area/$1/$2 last;</code></pre><p>上面例子有个问题是访问/shanghai 时将不会匹配</p>
+<pre><code>1.     rewrite ^/([0-9a-z]+)job$ /area/$1/ last;
+2.     rewrite ^/([0-9a-z]+)job/(.*)$ /area/$1/$2 last;</code></pre><p>这样/shanghai 也可以访问了，但页面中的相对链接无法使用， 如<code>./list_1.html</code>真实地址是<code>/area /shanghia/list_1.html</code>会变成<code>/list_1.html</code>,导至无法访问。<br>那我加上自动跳转也是不行咯 <code>(-d $request_filename)</code>它有个条件是必需为真实目录，而我的rewrite不是的，所以没有效果</p>
+<pre><code>1.     if (-d $request_filename){
+2.     rewrite ^/(.*)([^/])$ http://$host/$1$2/ permanent;
+3.     }</code></pre><p>知道原因后就好办了，让我手动跳转吧</p>
+<pre><code>1.     rewrite ^/([0-9a-z]+)job$ /$1job/ permanent;
+2.     rewrite ^/([0-9a-z]+)job/(.*)$ /area/$1/$2 last;</code></pre><p><em>文件和目录不存在的时候重定向：</em></p>
+<pre><code>1.     if (!-e $request_filename) {
+2.     proxy_pass http://127.0.0.1;
+3.     }</code></pre><p><em>域名跳转</em></p>
+<pre><code>1.     server
+2.          {
+3.                  listen       80;
+4.                  server_name  jump.c1gstudio.com;
+5.                  index index.html index.htm index.php;
+6.                  root  /opt/lampp/htdocs/www;
+7.                  rewrite ^/ http://www.c1gstudio.com/;
+8.                  access_log  off;
+9.          }</code></pre><p><em>多域名转向</em></p>
+<pre><code>1.     server_name  www.c1gstudio.com www.c1gstudio.net;
+2.                  index index.html index.htm index.php;
+3.                  root  /opt/lampp/htdocs;
+4.     if ($host ~ &quot;c1gstudio\.net&quot;) {
+5.     rewrite ^(.*) http://www.c1gstudio.com$1 permanent;
+6.     }</code></pre><p><em>三级域名跳转</em></p>
+<pre><code>1.     if ($http_host ~* &quot;^(.*)\.i\.c1gstudio\.com$&quot;) {
+2.     rewrite ^(.*) http://top.yingjiesheng.com$1;
+3.     break;
+4.     }</code></pre><p><em>域名镜向</em></p>
+<pre><code>1.     server
+2.          {
+3.                  listen       80;
+4.                  server_name  mirror.c1gstudio.com;
+5.                  index index.html index.htm index.php;
+6.                  root  /opt/lampp/htdocs/www;
+7.                  rewrite ^/(.*) http://www.c1gstudio.com/$1 last;
+8.                  access_log  off;
+9.          }</code></pre>
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxbwolf.github.io/389c639/" title="nginx 配置中的rewrite" target="_blank" rel="external">https://lxbwolf.github.io/389c639/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/lxbwolf" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/head.jpeg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/lxbwolf" target="_blank"><span class="text-dark">Brooke Lau</span><small class="ml-1x">RD</small></a></h3>
+        <div>个人简介。</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/8f5b70d0/" title="Linux 安装samba"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/a209000e/" title="nginx配置中的location"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="https://twitter.com/lxbwolf" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> lxbwolf </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>
