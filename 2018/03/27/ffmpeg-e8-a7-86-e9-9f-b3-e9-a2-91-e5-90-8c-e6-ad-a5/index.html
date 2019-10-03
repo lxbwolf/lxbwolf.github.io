@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+  
+  <title>ffmpeg 视音频同步 | Gate</title>
+  <meta name="description" content="原文地址: https://blog.csdn.net/nonmarking/article/details/50522413 对于直播流来说, 只考虑发送端的同步问题, 原理如下: 1. 解析视音频, 讲视频流和音频流的时间戳用同样的时间基准表示 2. 比较转换后的两个时间戳, 找出较小值, 对应发送偏慢的流 3. 读取, 转码, 发送相应的流, 同时, 若该流的转码时间很快, 超前于wall">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ffmpeg 视音频同步">
+<meta property="og:url" content="https://lxbwolf.github.io/2018/03/27/ffmpeg-e8-a7-86-e9-9f-b3-e9-a2-91-e5-90-8c-e6-ad-a5/index.html">
+<meta property="og:site_name" content="Gate">
+<meta property="og:description" content="原文地址: https://blog.csdn.net/nonmarking/article/details/50522413 对于直播流来说, 只考虑发送端的同步问题, 原理如下: 1. 解析视音频, 讲视频流和音频流的时间戳用同样的时间基准表示 2. 比较转换后的两个时间戳, 找出较小值, 对应发送偏慢的流 3. 读取, 转码, 发送相应的流, 同时, 若该流的转码时间很快, 超前于wall">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-26T15:41:04.067Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ffmpeg 视音频同步">
+<meta name="twitter:description" content="原文地址: https://blog.csdn.net/nonmarking/article/details/50522413 对于直播流来说, 只考虑发送端的同步问题, 原理如下: 1. 解析视音频, 讲视频流和音频流的时间戳用同样的时间基准表示 2. 比较转换后的两个时间戳, 找出较小值, 对应发送偏慢的流 3. 读取, 转码, 发送相应的流, 同时, 若该流的转码时间很快, 超前于wall">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://lxbwolf.github.io/2018/03/27/ffmpeg-e8-a7-86-e9-9f-b3-e9-a2-91-e5-90-8c-e6-ad-a5/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Gate" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+</head>
+
+
+<body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/head.jpeg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Brooke Lau</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">RD</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="https://twitter.com/lxbwolf" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><span class="category-list-count">19</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/">En</a><span class="category-list-count">9</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/C/En/JSON/">JSON</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/Linux/">Linux</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">4</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DB/Linux/">Linux</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><span class="category-list-count">4</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/Linux/">Linux</a><span class="category-list-count">1</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java/">Java</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Rasp/">Rasp</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">11</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/mysql/" style="font-size: 13px;">mysql</a> <a href="/tags/nginx/" style="font-size: 14px;">nginx</a> <a href="/tags/架构/" style="font-size: 13px;">架构</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">二月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">五月 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">三月 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">四月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/2019/09/27/github-博客绑定域名/" class="title">github 博客绑定域名</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-09-26T16:54:15.000Z" itemprop="datePublished">2019-09-27</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2019/09/27/hello-hexo/" class="title">Hello Hexo</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-09-26T16:14:22.211Z" itemprop="datePublished">2019-09-27</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Shell/">Shell</a>
+              </p>
+              <p class="item-title">
+                <a href="/2019/08/20/xargs/" class="title">xargs</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-08-19T17:14:58.000Z" itemprop="datePublished">2019-08-20</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/2019/08/08/e5-8d-87-e7-ba-a7https/" class="title">升级https</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-08-07T18:53:34.000Z" itemprop="datePublished">2019-08-08</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Docker/">Docker</a>
+              </p>
+              <p class="item-title">
+                <a href="/2019/07/23/docker-e6-8c-82-e8-bd-bd-e7-9b-ae-e5-bd-95-e5-a4-b1-e8-b4-a5-e6-9d-83-e9-99-90-e6-8b-92-e7-bb-9d/" class="title">docker挂载目录失败/权限拒绝</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-07-23T09:32:38.000Z" itemprop="datePublished">2019-07-23</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-ffmpeg-e8-a7-86-e9-9f-b3-e9-a2-91-e5-90-8c-e6-ad-a5" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      ffmpeg 视音频同步
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2018/03/27/ffmpeg-e8-a7-86-e9-9f-b3-e9-a2-91-e5-90-8c-e6-ad-a5/" class="article-date">
+	  <time datetime="2018-03-27T06:41:52.000Z" itemprop="datePublished">2018-03-27</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/A-amp-V/">A&amp;V</a>
+  </span>
+
+        
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2018/03/27/ffmpeg-e8-a7-86-e9-9f-b3-e9-a2-91-e5-90-8c-e6-ad-a5/#comments" class="article-comment-link">评论</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>原文地址: <a href="https://blog.csdn.net/nonmarking/article/details/50522413" target="_blank" rel="noopener">https://blog.csdn.net/nonmarking/article/details/50522413</a></p>
+<p>对于直播流来说, 只考虑发送端的同步问题, 原理如下: 1. 解析视音频, 讲视频流和音频流的时间戳用同样的时间基准表示 2. 比较转换后的两个时间戳, 找出较小值, 对应发送偏慢的流 3. 读取, 转码, 发送相应的流, 同时, 若该流的转码时间很快, 超前于wall clock, 则还需要进行相应的延时 4. 重复以上过程</p>
+<p>下文包括两部分, 一是音频转码部分, 二是视音频同步</p>
+<h6 id="音频转码基本流程"><a href="#音频转码基本流程" class="headerlink" title="音频转码基本流程"></a>音频转码基本流程</h6><p>首先是一些音频输入输出的基本设置</p>
+<pre><code>//Set own audio device&apos;s name
+    if (avformat_open_input(&amp;ifmt_ctx_a, device_name_a, ifmt, &amp;device_param) != 0){
+
+        printf(&quot;Couldn&apos;t open input audio stream.（无法打开输入流）\n&quot;);
+        return -1;
+    }
+……
+//input audio initialize
+    if (avformat_find_stream_info(ifmt_ctx_a, NULL) &lt; 0)
+    {
+        printf(&quot;Couldn&apos;t find audio stream information.（无法获取流信息）\n&quot;);
+        return -1;
+    }
+    audioindex = -1;
+    for (i = 0; i &lt; ifmt_ctx_a-&gt;nb_streams; i++)
+    if (ifmt_ctx_a-&gt;streams[i]-&gt;codec-&gt;codec_type == AVMEDIA_TYPE_AUDIO)
+    {
+        audioindex = i;
+        break;
+    }
+    if (audioindex == -1)
+    {
+        printf(&quot;Couldn&apos;t find a audio stream.（没有找到视频流）\n&quot;);
+        return -1;
+    }
+    if (avcodec_open2(ifmt_ctx_a-&gt;streams[audioindex]-&gt;codec, avcodec_find_decoder(ifmt_ctx_a-&gt;streams[audioindex]-&gt;codec-&gt;codec_id), NULL) &lt; 0)
+    {
+        printf(&quot;Could not open audio codec.（无法打开解码器）\n&quot;);
+        return -1;
+    }
+……
+ //output audio encoder initialize
+    pCodec_a = avcodec_find_encoder(AV_CODEC_ID_AAC);
+    if (!pCodec_a){
+        printf(&quot;Can not find output audio encoder! (没有找到合适的编码器！)\n&quot;);
+        return -1;
+    }
+    pCodecCtx_a = avcodec_alloc_context3(pCodec_a);
+    pCodecCtx_a-&gt;channels = 2;
+    pCodecCtx_a-&gt;channel_layout = av_get_default_channel_layout(2);
+    pCodecCtx_a-&gt;sample_rate = ifmt_ctx_a-&gt;streams[audioindex]-&gt;codec-&gt;sample_rate;
+    pCodecCtx_a-&gt;sample_fmt = pCodec_a-&gt;sample_fmts[0];
+    pCodecCtx_a-&gt;bit_rate = 32000;
+    pCodecCtx_a-&gt;time_base.num = 1;
+    pCodecCtx_a-&gt;time_base.den = pCodecCtx_a-&gt;sample_rate;
+    /** Allow the use of the experimental AAC encoder */
+    pCodecCtx_a-&gt;strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
+    /* Some formats want stream headers to be separate. */
+    if (ofmt_ctx-&gt;oformat-&gt;flags &amp; AVFMT_GLOBALHEADER)
+        pCodecCtx_a-&gt;flags |= CODEC_FLAG_GLOBAL_HEADER;
+    if (avcodec_open2(pCodecCtx_a, pCodec_a, NULL) &lt; 0){
+        printf(&quot;Failed to open ouput audio encoder! (编码器打开失败！)\n&quot;);
+        return -1;
+    }
+
+    //Add a new stream to output,should be called by the user before avformat_write_header() for muxing
+    audio_st = avformat_new_stream(ofmt_ctx, pCodec_a);
+    if (audio_st == NULL){
+        return -1;
+    }
+    audio_st-&gt;time_base.num = 1;
+    audio_st-&gt;time_base.den = pCodecCtx_a-&gt;sample_rate;
+    audio_st-&gt;codec = pCodecCtx_a;</code></pre><p>接下来, 考虑到输入音频的sample format 可能需要进行转换, 需要用到swresample库的功能 先做好相应的初始化</p>
+<pre><code>// Initialize the resampler to be able to convert audio sample formats
+    aud_convert_ctx = swr_alloc_set_opts(NULL,
+        av_get_default_channel_layout(pCodecCtx_a-&gt;channels),
+        pCodecCtx_a-&gt;sample_fmt,
+        pCodecCtx_a-&gt;sample_rate,
+        av_get_default_channel_layout(ifmt_ctx_a-&gt;streams[audioindex]-&gt;codec-&gt;channels),
+        ifmt_ctx_a-&gt;streams[audioindex]-&gt;codec-&gt;sample_fmt,
+        ifmt_ctx_a-&gt;streams[audioindex]-&gt;codec-&gt;sample_rate,
+        0, NULL);
+swr_init(aud_convert_ctx);</code></pre><p>此外, 参照transcode_aac.c的做法, 使用FIFO buffer存储从输入端解码得到的音频采样数据, 这些数据在后续将转换sample format并进行编码, 由此即完成了一个音频转码功.</p>
+<p>此外, 还需要另外的一个buffer来存储转换合适之后的音频数据</p>
+<pre><code>//Initialize the FIFO buffer to store audio samples to be encoded. 
+    AVAudioFifo *fifo = NULL;
+    fifo = av_audio_fifo_alloc(pCodecCtx_a-&gt;sample_fmt, pCodecCtx_a-&gt;channels, 1);
+
+    //Initialize the buffer to store converted samples to be encoded.
+    uint8_t **converted_input_samples = NULL;
+    /**
+    * Allocate as many pointers as there are audio channels.
+    * Each pointer will later point to the audio samples of the corresponding
+    * channels (although it may be NULL for interleaved formats).
+    */
+    if (!(converted_input_samples = (uint8_t**)calloc(pCodecCtx_a-&gt;channels,
+        sizeof(**converted_input_samples)))) {
+        printf(&quot;Could not allocate converted input sample pointers\n&quot;);
+        return AVERROR(ENOMEM);
+    }</code></pre><p>至此, 一些基本的初始化工作完成.</p>
+<p>音频计算pts的方法和视频类似. 即先通过sample rate算出每两个音频sample之间的时间间隔, 再通过计数当前已编码的音频sample总数(nb_samples变量的作用) 来算出当前编码音频帧的时间戳. 如果和视频的流程做类比, 大概为: framerate 相当于sample rate, framecnt相当于nb_samples.</p>
+<pre><code>//audio trancoding here
+        const int output_frame_size = pCodecCtx_a-&gt;frame_size;
+
+        /**
+        * Make sure that there is one frame worth of samples in the FIFO
+        * buffer so that the encoder can do its work.
+        * Since the decoder&apos;s and the encoder&apos;s frame size may differ, we
+        * need to FIFO buffer to store as many frames worth of input samples
+        * that they make up at least one frame worth of output samples.
+        */
+        while (av_audio_fifo_size(fifo) &lt; output_frame_size) {
+            /**
+            * Decode one frame worth of audio samples, convert it to the
+            * output sample format and put it into the FIFO buffer.
+            */
+            AVFrame *input_frame = av_frame_alloc();
+            if (!input_frame)
+            {
+                ret = AVERROR(ENOMEM);
+                return ret;
+            }           
+
+            /** Decode one frame worth of audio samples. */
+            /** Packet used for temporary storage. */
+            AVPacket input_packet;
+            av_init_packet(&amp;input_packet);
+            input_packet.data = NULL;
+            input_packet.size = 0;
+
+            /** Read one audio frame from the input file into a temporary packet. */
+            if ((ret = av_read_frame(ifmt_ctx_a, &amp;input_packet)) &lt; 0) {
+                /** If we are at the end of the file, flush the decoder below. */
+                if (ret == AVERROR_EOF)
+                {
+                    encode_audio = 0;
+                }
+                else
+                {
+                    printf(&quot;Could not read audio frame\n&quot;);
+                    return ret;
+                }                   
+            }
+
+            /**
+            * Decode the audio frame stored in the temporary packet.
+            * The input audio stream decoder is used to do this.
+            * If we are at the end of the file, pass an empty packet to the decoder
+            * to flush it.
+            */
+            if ((ret = avcodec_decode_audio4(ifmt_ctx_a-&gt;streams[audioindex]-&gt;codec, input_frame,
+                &amp;dec_got_frame_a, &amp;input_packet)) &lt; 0) {
+                printf(&quot;Could not decode audio frame\n&quot;);
+                return ret;
+            }
+            av_packet_unref(&amp;input_packet);
+            /** If there is decoded data, convert and store it */
+            if (dec_got_frame_a) {
+                /**
+                * Allocate memory for the samples of all channels in one consecutive
+                * block for convenience.
+                */
+                if ((ret = av_samples_alloc(converted_input_samples, NULL,
+                    pCodecCtx_a-&gt;channels,
+                    input_frame-&gt;nb_samples,
+                    pCodecCtx_a-&gt;sample_fmt, 0)) &lt; 0) {
+                    printf(&quot;Could not allocate converted input samples\n&quot;);
+                    av_freep(&amp;(*converted_input_samples)[0]);
+                    free(*converted_input_samples);
+                    return ret;
+                }
+
+                /**
+                * Convert the input samples to the desired output sample format.
+                * This requires a temporary storage provided by converted_input_samples.
+                */
+                /** Convert the samples using the resampler. */
+                if ((ret = swr_convert(aud_convert_ctx,
+                    converted_input_samples, input_frame-&gt;nb_samples,
+                    (const uint8_t**)input_frame-&gt;extended_data, input_frame-&gt;nb_samples)) &lt; 0) {
+                    printf(&quot;Could not convert input samples\n&quot;);
+                    return ret;
+                }
+
+                /** Add the converted input samples to the FIFO buffer for later processing. */
+                /**
+                * Make the FIFO as large as it needs to be to hold both,
+                * the old and the new samples.
+                */
+                if ((ret = av_audio_fifo_realloc(fifo, av_audio_fifo_size(fifo) + input_frame-&gt;nb_samples)) &lt; 0) {
+                    printf(&quot;Could not reallocate FIFO\n&quot;);
+                    return ret;
+                }
+
+                /** Store the new samples in the FIFO buffer. */
+                if (av_audio_fifo_write(fifo, (void **)converted_input_samples,
+                    input_frame-&gt;nb_samples) &lt; input_frame-&gt;nb_samples) {
+                    printf(&quot;Could not write data to FIFO\n&quot;);
+                    return AVERROR_EXIT;
+                }               
+            }
+        }
+
+        /**
+        * If we have enough samples for the encoder, we encode them.
+        * At the end of the file, we pass the remaining samples to
+        * the encoder.
+        */
+        if (av_audio_fifo_size(fifo) &gt;= output_frame_size)
+            /**
+            * Take one frame worth of audio samples from the FIFO buffer,
+            * encode it and write it to the output file.
+            */
+        {
+            /** Temporary storage of the output samples of the frame written to the file. */
+            AVFrame *output_frame=av_frame_alloc();
+            if (!output_frame)
+            {
+                ret = AVERROR(ENOMEM);
+                return ret;
+            }
+            /**
+            * Use the maximum number of possible samples per frame.
+            * If there is less than the maximum possible frame size in the FIFO
+            * buffer use this number. Otherwise, use the maximum possible frame size
+            */
+            const int frame_size = FFMIN(av_audio_fifo_size(fifo),
+                pCodecCtx_a-&gt;frame_size);
+
+            /** Initialize temporary storage for one output frame. */
+            /**
+            * Set the frame&apos;s parameters, especially its size and format.
+            * av_frame_get_buffer needs this to allocate memory for the
+            * audio samples of the frame.
+            * Default channel layouts based on the number of channels
+            * are assumed for simplicity.
+            */
+            output_frame-&gt;nb_samples = frame_size;
+            output_frame-&gt;channel_layout = pCodecCtx_a-&gt;channel_layout;
+            output_frame-&gt;format = pCodecCtx_a-&gt;sample_fmt;
+            output_frame-&gt;sample_rate = pCodecCtx_a-&gt;sample_rate;
+
+            /**
+            * Allocate the samples of the created frame. This call will make
+            * sure that the audio frame can hold as many samples as specified.
+            */
+            if ((ret = av_frame_get_buffer(output_frame, 0)) &lt; 0) {
+                printf(&quot;Could not allocate output frame samples\n&quot;);
+                av_frame_free(&amp;output_frame);
+                return ret;
+            }
+
+            /**
+            * Read as many samples from the FIFO buffer as required to fill the frame.
+            * The samples are stored in the frame temporarily.
+            */
+            if (av_audio_fifo_read(fifo, (void **)output_frame-&gt;data, frame_size) &lt; frame_size) {
+                printf(&quot;Could not read data from FIFO\n&quot;);
+                return AVERROR_EXIT;
+            }
+
+            /** Encode one frame worth of audio samples. */
+            /** Packet used for temporary storage. */
+            AVPacket output_packet;
+            av_init_packet(&amp;output_packet);
+            output_packet.data = NULL;
+            output_packet.size = 0;
+
+            /** Set a timestamp based on the sample rate for the container. */
+            if (output_frame) {
+                nb_samples += output_frame-&gt;nb_samples;
+            }
+
+            /**
+            * Encode the audio frame and store it in the temporary packet.
+            * The output audio stream encoder is used to do this.
+            */
+            if ((ret = avcodec_encode_audio2(pCodecCtx_a, &amp;output_packet,
+                output_frame, &amp;enc_got_frame_a)) &lt; 0) {
+                printf(&quot;Could not encode frame\n&quot;);
+                av_packet_unref(&amp;output_packet);
+                return ret;
+            }
+
+            /** Write one audio frame from the temporary packet to the output file. */
+            if (enc_got_frame_a) {
+
+                output_packet.stream_index = 1;
+
+                AVRational time_base = ofmt_ctx-&gt;streams[1]-&gt;time_base;
+                AVRational r_framerate1 = { ifmt_ctx_a-&gt;streams[audioindex]-&gt;codec-&gt;sample_rate, 1 };// { 44100, 1};  
+                int64_t calc_duration = (double)(AV_TIME_BASE)*(1 / av_q2d(r_framerate1));  //内部时间戳  
+
+                output_packet.pts = av_rescale_q(nb_samples*calc_duration, time_base_q, time_base);
+                output_packet.dts = output_packet.pts;
+                output_packet.duration = output_frame-&gt;nb_samples;
+
+                //printf(&quot;audio pts : %d\n&quot;, output_packet.pts);
+                aud_next_pts = nb_samples*calc_duration;
+
+                int64_t pts_time = av_rescale_q(output_packet.pts, time_base, time_base_q);
+                int64_t now_time = av_gettime() - start_time;
+
+                if ((pts_time &gt; now_time) &amp;&amp; ((aud_next_pts + pts_time - now_time)&lt;vid_next_pts))
+                    av_usleep(pts_time - now_time);
+
+                if ((ret = av_interleaved_write_frame(ofmt_ctx, &amp;output_packet)) &lt; 0) {
+                    printf(&quot;Could not write frame\n&quot;);
+                    av_packet_unref(&amp;output_packet);
+                    return ret;
+                }
+
+                av_packet_unref(&amp;output_packet);
+            }           
+            av_frame_free(&amp;output_frame);       
+        }     </code></pre><h6 id="视音频同步"><a href="#视音频同步" class="headerlink" title="视音频同步"></a>视音频同步</h6><p>首先定义几个变量</p>
+<pre><code>int aud_next_pts = 0;//视频流目前的pts,可以理解为目前的进度
+int vid_next_pts = 0;//音频流目前的pts
+int encode_video = 1, encode_audio = 1;//是否要编码视频、音频</code></pre><p>则相应的视音频同步方法如下: 1. 确定视频, 音频二者中至少有一个是需要进行转码的 2. 比较两个流的进度, 使用av_compare_ts函数, 注意：此时的vid_next_pts和aud_next_pts的time base都是ffmpeg内部基准，即<code>AVRational time_base_q = { 1, AV_TIME_BASE };</code> 3. 对进度落后的流进行转码, 并相应地对进度进行更新. 对于视频，有 vid_next_pts=framecnt_calc_duration;，对于音频，有 aud_next_pts = nb_samples_calc_duration;这里framecnt和nb_samples都相当于计数器，而calc_duration是对应流每两个frame或sample之间的时间间隔，也是以ffmpeg内部时间基准为单位的 4. 若转码进度很快完成, 则不能急于写入输出流, 而是需要先进行延时, 但是也要保证延时后的时间不会超过另一个流的进度</p>
+<p>综上, 流程如下:</p>
+<pre><code> //start decode and encode
+    int64_t start_time = av_gettime();
+    while (encode_video || encode_audio)
+    {
+        if (encode_video &amp;&amp;
+            (!encode_audio || av_compare_ts(vid_next_pts, time_base_q,
+            aud_next_pts, time_base_q) &lt;= 0))
+        {
+              进行视频转码；
+              转码完成后；
+              vid_next_pts=framecnt*calc_duration; //general timebase
+
+                        //Delay
+                        int64_t pts_time = av_rescale_q(enc_pkt.pts, time_base, time_base_q);
+                        int64_t now_time = av_gettime() - start_time;                       
+                        if ((pts_time &gt; now_time) &amp;&amp; ((vid_next_pts + pts_time - now_time)&lt;aud_next_pts))
+                            av_usleep(pts_time - now_time);
+              写入流；
+}
+else
+{
+              进行音频转码；
+              转码完成后；
+          aud_next_pts = nb_samples*calc_duration;
+
+                int64_t pts_time = av_rescale_q(output_packet.pts, time_base, time_base_q);
+                int64_t now_time = av_gettime() - start_time;
+                if ((pts_time &gt; now_time) &amp;&amp; ((aud_next_pts + pts_time - now_time)&lt;vid_next_pts))
+                    av_usleep(pts_time - now_time);
+              写入流；
+}</code></pre><p>至此, 视音频同步完成. 最后再完成一些flush_encoder的工作即可.</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxbwolf.github.io/2018/03/27/ffmpeg-e8-a7-86-e9-9f-b3-e9-a2-91-e5-90-8c-e6-ad-a5/" title="ffmpeg 视音频同步" target="_blank" rel="external">https://lxbwolf.github.io/2018/03/27/ffmpeg-e8-a7-86-e9-9f-b3-e9-a2-91-e5-90-8c-e6-ad-a5/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/lxbwolf" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/head.jpeg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/lxbwolf" target="_blank"><span class="text-dark">Brooke Lau</span><small class="ml-1x">RD</small></a></h3>
+        <div>个人简介。</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2018/03/28/centos7-e5-8d-87-e7-ba-a7gcc-e5-92-8cgdb/" title="CentOS7升级gcc 和gdb"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2018/03/27/ffmpeg-e6-8e-a8-e6-b5-81-e6-8a-a5-e9-94-99/" title="ffmpeg 推流报错"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="https://twitter.com/lxbwolf" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> lxbwolf </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>
