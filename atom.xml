@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://lxbwolf.github.io/"/>
-  <updated>2019-10-04T11:25:07.539Z</updated>
+  <updated>2019-10-09T16:36:59.584Z</updated>
   <id>https://lxbwolf.github.io/</id>
   
   <author>
@@ -15,6 +15,61 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>CentOS释放被占用端口</title>
+    <link href="https://lxbwolf.github.io/2d1cc7f9/"/>
+    <id>https://lxbwolf.github.io/2d1cc7f9/</id>
+    <published>2019-10-09T16:36:59.000Z</published>
+    <updated>2019-10-09T16:36:59.584Z</updated>
+    
+    <content type="html"><![CDATA[<p><strong>场景:</strong><br>在前面的某些操作中, 启动某进程时, 监听8080 和 443 端口, 后进程关闭, 这两个端口却一直处于占用状态, 导致后面再起进程想监听这两个端口时, 启动报错</p><p>1.输入netstat -tln,查看系统当前所有被占用端口,主要是为了查看你的端口是否真正的被占用着,搭建可以看到我的9001,和9002端口都已经被占用了,所以我需要释放这两个端口</p><p><img src="/images/listen-port.png" alt="listen-port"></p><p>2.根据端口查询进程,输入lsof -i :9001,切记不要忘了添加冒号,如下图,就可以看到当前被占用的端口的进程<br>的进程编号</p><p><img src="/images/lsof-port.png" alt></p><ol start="3"><li>kill 掉PID</li><li>再<code>netstat -tln</code> 确认下, 然后就可以起进程了 </li></ol>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;&lt;strong&gt;场景:&lt;/strong&gt;&lt;br&gt;在前面的某些操作中, 启动某进程时, 监听8080 和 443 端口, 后进程关闭, 这两个端口却一直处于占用状态, 导致后面再起进程想监听这两个端口时, 启动报错&lt;/p&gt;
+&lt;p&gt;1.输入netstat -tln,查看系统当前
+      
+    
+    </summary>
+    
+    
+      <category term="Linux" scheme="https://lxbwolf.github.io/categories/Linux/"/>
+    
+    
+      <category term="进程" scheme="https://lxbwolf.github.io/tags/%E8%BF%9B%E7%A8%8B/"/>
+    
+      <category term="端口" scheme="https://lxbwolf.github.io/tags/%E7%AB%AF%E5%8F%A3/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>网易云音乐破版权</title>
+    <link href="https://lxbwolf.github.io/c6996379/"/>
+    <id>https://lxbwolf.github.io/c6996379/</id>
+    <published>2019-10-08T10:07:13.000Z</published>
+    <updated>2019-10-09T17:13:04.841Z</updated>
+    
+    <content type="html"><![CDATA[<p>源码地址: <a href="https://github.com/lxbwolf/UnblockNeteaseMusic" target="_blank" rel="noopener">https://github.com/lxbwolf/UnblockNeteaseMusic</a></p><p><strong>原理:</strong><br>使用其它音乐平台的歌曲替换网易云音乐无版权歌曲。<br>目前备用的平台有：网易云旧链 、QQ 、 虾米 、 百度 、酷狗 、酷我 、咕咪 、JOOX 音源替换变灰歌曲链接 (默认仅启用前四)。</p><p>1、打开网易云音乐客户端的时候，客户端不再直接访问网易云服务器而是访问UnblockNeteaseMusic服务。</p><p>2、UnblockNeteaseMusic收到客户端的请求后，透传给网易云音乐的服务器，并再拿到相关的数据后进行检查，如果发现其中的歌曲没有版权，那么去其它平台查询此歌曲的相关信息。</p><p>3、将查到的数据返回给网易云客户端。</p><p>4、至此完成网易云音乐的解锁。</p><p>整个流程要解决两个重要的问题。</p><p><strong>核心工作:</strong><br>1、将UnblockNeteaseMusic部署到服务器。可以是本地服务器也可以是云服务器。</p><p>2、为网易云客户端设置代理，以达到访问UnblockNeteaseMusic项目的目的。</p><p><strong>部署服务部分</strong></p><ol><li>安装node.js </li><li><code>git clone https://github.com/lxbwolf/UnblockNeteaseMusic.git</code></li><li>在<code>UnblockNeteaseMusic</code> 目录下, 执行<code>npx @nondanee/unblockneteasemusic(官方)</code> 或者 用docker 启动<code>docker run nondanee/unblockneteasemusic &amp;&amp; docker-compose up</code>, 还有另一种方式:<br>在<code>UnblockNeteaseMusic</code> 目录下, 执行<br><code>node app.js -p 8080:443 -f 59.111.160.195</code><br>其中<code>59.111.160.195</code> 这个地址是通过<br><code>ping music.163.com</code> 测出来的</li></ol><p>配置参数</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">$ unblockneteasemusic -h</span><br><span class="line">usage: unblockneteasemusic [-v] [-p port] [-a address] [-u url] [-f host]</span><br><span class="line">                           [-o source [source ...]] [-t token] [-e url] [-s]</span><br><span class="line">                           [-h]</span><br><span class="line"></span><br><span class="line">optional arguments:</span><br><span class="line">  -v, --version                   output the version number</span><br><span class="line">  -p port, --port port            specify server port</span><br><span class="line">  -a address, --address address   specify server host</span><br><span class="line">  -u url, --proxy-url url         request through upstream proxy</span><br><span class="line">  -f host, --force-host host      force the netease server ip</span><br><span class="line">  -o source [source ...], --match-order source [source ...]</span><br><span class="line">                                  set priority of sources</span><br><span class="line">  -t token, --token token         set up proxy authentication</span><br><span class="line">  -e url, --endpoint url          replace virtual endpoint with public host</span><br><span class="line">  -s, --strict                    enable proxy limitation</span><br><span class="line">  -h, --help                      output usage information</span><br></pre></td></tr></table></figure><p><strong>客户端配置</strong></p><p>源码中的<code>README</code> 有详细说明</p><table><thead><tr><th>平台</th><th>基础设置</th></tr></thead><tbody><tr><td>Windows</td><td>设置 &gt; 工具 &gt; 自定义代理 (客户端内)</td></tr><tr><td>UWP</td><td>Windows 设置 &gt; 网络和 Internet &gt; 代理</td></tr><tr><td>Linux</td><td>系统设置 &gt; 网络 &gt; 网络代理</td></tr><tr><td>macOS</td><td>系统偏好设置 &gt; 网络 &gt; 高级 &gt; 代理</td></tr><tr><td>Android</td><td>WLAN &gt; 修改网络 &gt; 高级选项 &gt; 代理</td></tr><tr><td>iOS</td><td>无线局域网 &gt; HTTP 代理 &gt; 配置代理</td></tr></tbody></table><p><strong>Android 手机详细配置:</strong></p><p>设置 &gt; WLAN &gt; 修改网络 &gt; 高级选项 &gt; 代理</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">IP: 106.13.86.198</span><br><span class="line">Port: 8080</span><br></pre></td></tr></table></figure><p><img src="/images/modify-network-android.png" alt></p><p><img src="/images/ip-port-163-android.png" alt></p><p>破解前效果<br><img src="/images/pojieqian-163.png" alt></p><p>破解后效果<br><img src="/images/pojiehou-163.png" alt><br><img src="/images/tingge-163.png" alt></p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;源码地址: &lt;a href=&quot;https://github.com/lxbwolf/UnblockNeteaseMusic&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;https://github.com/lxbwolf/UnblockNeteaseMu
+      
+    
+    </summary>
+    
+    
+      <category term="Tools" scheme="https://lxbwolf.github.io/categories/Tools/"/>
+    
+    
+      <category term="破解" scheme="https://lxbwolf.github.io/tags/%E7%A0%B4%E8%A7%A3/"/>
+    
+  </entry>
   
   <entry>
     <title>Go闭包技术</title>
@@ -476,56 +531,6 @@ nginx&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;获取证书&quot;&gt;&lt;a href=&
     
     
       <category term="thunder" scheme="https://lxbwolf.github.io/tags/thunder/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>树莓派基础环境</title>
-    <link href="https://lxbwolf.github.io/5976aace/"/>
-    <id>https://lxbwolf.github.io/5976aace/</id>
-    <published>2018-10-18T14:24:19.000Z</published>
-    <updated>2019-10-03T07:57:15.293Z</updated>
-    
-    <content type="html"><![CDATA[<h3 id="修改软件源"><a href="#修改软件源" class="headerlink" title="修改软件源"></a>修改软件源</h3><pre><code>sudo -secho -e &quot;deb http://mirrors.ustc.edu.cn/raspbian/raspbian/ stretch main contrib non-free rpi \n deb-src http://mirrors.ustc.edu.cn/raspbian/raspbian/ stretch main contrib non-free rpi&quot; &amp;gt; /etc/apt/sources.listecho -e &quot;deb http://mirrors.ustc.edu.cn/archive.raspberrypi.org/ stretch main ui&quot; &amp;gt; /etc/apt/sources.list.d/raspi.listexitsudo apt update &amp;amp;&amp;amp; sudo apt -y upgrade</code></pre><h3 id="中文输入法"><a href="#中文输入法" class="headerlink" title="中文输入法"></a>中文输入法</h3><pre><code>sudo apt-get install -y ttf-wqy-zenheisudo apt-get install -y scim-pinyin</code></pre><h3 id="看门狗-防止树莓派死机的监控"><a href="#看门狗-防止树莓派死机的监控" class="headerlink" title="看门狗(防止树莓派死机的监控)"></a>看门狗(防止树莓派死机的监控)</h3><p>当利用树莓派来做一些需要长期待机的应用时，如下载机、云储存、家庭影院等应用，我们往往会遇到的一个问题就是树莓派会因为过热而死机，需要我们重新启动树莓派，然后再次开启树莓派上的应用。这会给我们的日常操作带来许多麻烦。 Watchdog（看门狗）就能让树莓派永不死机。</p><pre><code>//树莓派自带看门狗模块，我们需要添加进去就好。sudo modprobe bcm2708_wdogecho -e &quot;\nbcm2708_wdog&quot; &amp;gt; sudo tee -a /etc/modules// 安装看门狗软件sudo apt-get install -y chkconfig watchdog// 配置sudo vim /etc/watchdog.conf// 去掉&quot;watchdog-device=/dev/watchdog&quot;这一行的#注释// 其它配置参考如下:# 用于设定CPU温度重启条件temperature-device = /sys/class/thermal/thermal_zone0/temp# 最大温度为100度，超过立即重启max-temperature = 100000# 1分钟最多进程为24个，超过即重启max-load-15=12# 5分钟最多进程为18个，超过即重启max-load-15=12# 15分钟最多进程为12个，超过即重启max-load-15=12// 完成配置后，启动看门狗sudo /etc/init.d/watchdog start// 设置为开机自启chkconfig watchdog on</code></pre><h3 id="Screen-让树莓派永不失联"><a href="#Screen-让树莓派永不失联" class="headerlink" title="Screen(让树莓派永不失联)"></a>Screen(让树莓派永不失联)</h3><p>利用SSH（Serare Shell，安全外壳协议）来远程控制树莓派应该是我们最常用的 操作树莓派的方式，但在用SSH连接时，我们常常会遇到连接突然断开的问题。连 接一旦断开，原米我们进行的操作也就中断了，若再使用，就得从头再来了。相信你肯定因为电脑待机而中断树莓派的任务而苦恼过。 Screen来让树莓派永不失联的方法。此方法下，就算连接断开了，当我们重新连接后依旧进行原来的操作，而不需要从头再来。</p><pre><code>// 直接安装Screensudo apt-get install -y screen// 开启一个后台view（后台的终端，不会因为断开连接而终止）screen -S 终端名// 然后就可以继续你的操作了</code></pre>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h3 id=&quot;修改软件源&quot;&gt;&lt;a href=&quot;#修改软件源&quot; class=&quot;headerlink&quot; title=&quot;修改软件源&quot;&gt;&lt;/a&gt;修改软件源&lt;/h3&gt;&lt;pre&gt;&lt;code&gt;sudo -s
-echo -e &amp;quot;deb http://mirrors.ustc.edu.
-      
-    
-    </summary>
-    
-    
-      <category term="Rasp" scheme="https://lxbwolf.github.io/categories/Rasp/"/>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>树莓派3B+ 安装系统</title>
-    <link href="https://lxbwolf.github.io/cfbe6b0a/"/>
-    <id>https://lxbwolf.github.io/cfbe6b0a/</id>
-    <published>2018-10-17T14:11:38.000Z</published>
-    <updated>2019-10-03T07:57:15.296Z</updated>
-    
-    <content type="html"><![CDATA[<p>安装步骤: <code>官网下载系统 -- 刷入TF卡 -- 设置开启显示器和SSH -- 通电 -- 进入系统</code></p><h3 id="1-进入官方网站下载系统镜像"><a href="#1-进入官方网站下载系统镜像" class="headerlink" title="1. 进入官方网站下载系统镜像"></a>1. 进入官方网站下载系统镜像</h3><p>官方系统 raspbian地址 <a href="https://www.raspberrypi.org/downloads/" target="_blank" rel="noopener">https://www.raspberrypi.org/downloads/</a></p><h3 id="2-Windows系统下的安装"><a href="#2-Windows系统下的安装" class="headerlink" title="2. Windows系统下的安装"></a>2. Windows系统下的安装</h3><h4 id="2-1-下载SD格式化工具"><a href="#2-1-下载SD格式化工具" class="headerlink" title="2.1 下载SD格式化工具"></a>2.1 下载SD格式化工具</h4><p>SDFormatter 地址 <a href="https://www.sdcard.org/downloads/formatter\_4/eula\_windows/" target="_blank" rel="noopener">https://www.sdcard.org/downloads/formatter\_4/eula\_windows/</a></p><p>安装后直接用默认选项 格式化SD卡</p><h4 id="2-2-下载写镜像工具"><a href="#2-2-下载写镜像工具" class="headerlink" title="2.2 下载写镜像工具"></a>2.2 下载写镜像工具</h4><p>Win32 DiskImager 地址 <a href="http://sourceforge.net/projects/win32diskimager/" target="_blank" rel="noopener">http://sourceforge.net/projects/win32diskimager/</a></p><h3 id="3-MAC系统下的安装"><a href="#3-MAC系统下的安装" class="headerlink" title="3. MAC系统下的安装"></a>3. MAC系统下的安装</h3><h4 id="3-1-查看当前已挂载的卷"><a href="#3-1-查看当前已挂载的卷" class="headerlink" title="3.1 查看当前已挂载的卷"></a>3.1 查看当前已挂载的卷</h4><pre><code>[liuxb@liuxb-mac]$ df -hFilesystem      Size   Used  Avail Capacity iused      ifree %iused  Mounted on/dev/disk1     112Gi   81Gi   30Gi    73% 1014786 4293952493    0%   /devfs          188Ki  188Ki    0Bi   100%     654          0  100%   /devmap -hosts       0Bi    0Bi    0Bi   100%       0          0  100%   /netmap auto_home    0Bi    0Bi    0Bi   100%       0          0  100%   /home/dev/disk2s3    92Gi   51Gi   41Gi    56%  336662   42525054    1%   /Volumes/系统/dev/disk2s4    20Gi   15Gi  4.4Gi    78%   92859    4579733    2%   /Volumes/数据/dev/disk3s1    29Gi  2.3Mi   29Gi     1%  107876    8373436    2%   /Volumes/未命名</code></pre><p><code>对比Size和Name可以找到SD卡的分区在系统里对应的设备文件（这里是/dev/disk3s1），如果你有多个分区，可能还会有disk3s2之类的</code></p><h4 id="3-2-使用diskutil-unmount将分区卸载"><a href="#3-2-使用diskutil-unmount将分区卸载" class="headerlink" title="3.2 使用diskutil unmount将分区卸载"></a>3.2 使用diskutil unmount将分区卸载</h4><pre><code>[liuxb@liuxb-mac]$ diskutil unmount /dev/disk3s1Volume 未命名 on disk3s1 unmounted</code></pre><h4 id="3-3-先对下载的zip压缩包进行解压，然后使用dd命令将系统镜像写入，需要特别特别注意disk后的数字，不能搞错"><a href="#3-3-先对下载的zip压缩包进行解压，然后使用dd命令将系统镜像写入，需要特别特别注意disk后的数字，不能搞错" class="headerlink" title="3.3 先对下载的zip压缩包进行解压，然后使用dd命令将系统镜像写入，需要特别特别注意disk后的数字，不能搞错"></a>3.3 先对下载的zip压缩包进行解压，然后使用dd命令将系统镜像写入，需要特别特别注意disk后的数字，不能搞错</h4><p>说明：/dev/disk3s1是分区，/dev/disk3是块设备，/dev/rdisk3是原始字符设备</p><pre><code>[liuxb@liuxb-mac]$ unzip 2017-09-07-raspbian-stretch.zip[liuxb@liuxb-mac]$ sudo dd bs=16m if=2017-09-07-raspbian-stretch.img of=/dev/rdisk3_输入用户密码</code></pre><p>经过几分钟的等待，出现下面的提示，说明TF卡刷好了：</p><pre><code>1172+1 records in1172+1 records out4916019200 bytes transferred in 127.253638 secs (9691442 bytes/sec)</code></pre><h3 id="4-开启SSH"><a href="#4-开启SSH" class="headerlink" title="4. 开启SSH"></a>4. 开启SSH</h3><p>在TF卡分区里创建一个名为”ssh”的不带后缀的空文件</p><h3 id="5-开启强制HDMI输出"><a href="#5-开启强制HDMI输出" class="headerlink" title="5. 开启强制HDMI输出"></a>5. 开启强制HDMI输出</h3><p>在TF卡分区，打开config.txt文件(开机后位置： /boot/config.txt)，修改如下：</p><pre><code>hdmi_safe=1config_hdmi_boost=4hdmi_ignore_edid=0xa5000080hdmi_group=2hdmi_mode=82</code></pre><p>参数介绍:</p><p>项</p><p>解释</p><p>hdmi_safe=1</p><p>安全启动HDMI</p><p>config_hdmi_boost=4</p><p>开启热插拔</p><p>hdmi_group=1</p><p>CEA电视显示器</p><p>hdmi_group=2</p><p>DMT电脑显示器</p><p>hdmi_ignore_edid=0xa5000080</p><p>忽略自动探测的分辨率</p><p>输出分辨率：</p><p>hdmi_mode=4</p><p>640x480 60Hz</p><p>hdmi_mode=9</p><p>800x600 60Hz</p><p>hdmi_mode=16</p><p>1024x768 60Hz</p><p>hdmi_mode=82</p><p>1080p 60Hz</p><h3 id="6-设置无线WI-FI连接：（假设没有网线，而且没能连接显示器）"><a href="#6-设置无线WI-FI连接：（假设没有网线，而且没能连接显示器）" class="headerlink" title="6.设置无线WI-FI连接：（假设没有网线，而且没能连接显示器）"></a>6.设置无线WI-FI连接：（假设没有网线，而且没能连接显示器）</h3><p>在TF卡的boot分区，创建wpa_supplicant.conf文件，加入如下内容：</p><pre><code>country=CNctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdevupdate_config=1network={ssid=&quot;lxb-wifi&quot;psk=&quot;123456789&quot;priority=1}</code></pre><p>在树莓派通电后会自动添加到<code>/etc/wpa_supplicant/wpa_supplicant.conf</code>文件里面，进行自动连接。</p><pre><code>// 详细介绍：#ssid:网络的ssid#psk:密码#priority:连接优先级，数字越大优先级越高（不可以是负数）#scan_ssid:连接隐藏WiFi时需要指定该值为1// 如果WiFi 没有密码network={ssid=&quot;无线网络名称（ssid）&quot;key_mgmt=NONE}// 如果WiFi 使用WEP加密network={ssid=&quot;无线网络名称（ssid）&quot;key_mgmt=NONEwep_key0=&quot;wifi密码&quot;}// 如果你的 WiFi 使用WPA/WPA2加密network={ssid=&quot;无线网络名称（ssid）&quot;key_mgmt=WPA-PSKpsk=&quot;wifi密码&quot;}</code></pre><p>以上设置完成后, TF卡可以插入树莓派了, 通电. 默认登录账号:<code>pi</code> 密码: <code>raspberry</code></p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;安装步骤: &lt;code&gt;官网下载系统 -- 刷入TF卡 -- 设置开启显示器和SSH -- 通电 -- 进入系统&lt;/code&gt;&lt;/p&gt;
-&lt;h3 id=&quot;1-进入官方网站下载系统镜像&quot;&gt;&lt;a href=&quot;#1-进入官方网站下载系统镜像&quot; class=&quot;headerlink&quot; 
-      
-    
-    </summary>
-    
-    
-      <category term="Rasp" scheme="https://lxbwolf.github.io/categories/Rasp/"/>
-    
     
   </entry>
   
