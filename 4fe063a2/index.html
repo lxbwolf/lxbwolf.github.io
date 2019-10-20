@@ -17,19 +17,21 @@
   <meta http-equiv="window-target" content="_top">
   
   
-  <title>归档: 2018/5 | Gate</title>
-  <meta name="description" content="我总在抱怨自己没鞋子穿，直到有一天，我遇到了一个没有脚的人。">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Gate">
-<meta property="og:url" content="https://lxb.wiki/archives/2018/05/index.html">
+  <title>Golang编译器漏洞和标准库设计失误 | Gate</title>
+  <meta name="description" content="字节切片（byte slice）相关的编译器漏洞和标准库设计失误 假如一个类型MyByte定义如下，如何将一个[]MyByte切片值和一个[]byte切片值互相转换为对方的类型？ 123456789101112package maintype MyByte bytevar (  x = []byte&amp;#123;1, 2, 3&amp;#125;  y = []MyByte&amp;#123;1, 2, 3&amp;#12">
+<meta name="keywords" content="编译器,go">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Golang编译器漏洞和标准库设计失误">
+<meta property="og:url" content="https://lxb.wiki/4fe063a2/index.html">
 <meta property="og:site_name" content="Gate">
-<meta property="og:description" content="我总在抱怨自己没鞋子穿，直到有一天，我遇到了一个没有脚的人。">
+<meta property="og:description" content="字节切片（byte slice）相关的编译器漏洞和标准库设计失误 假如一个类型MyByte定义如下，如何将一个[]MyByte切片值和一个[]byte切片值互相转换为对方的类型？ 123456789101112package maintype MyByte bytevar (  x = []byte&amp;#123;1, 2, 3&amp;#125;  y = []MyByte&amp;#123;1, 2, 3&amp;#12">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-20T03:36:25.808Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Gate">
-<meta name="twitter:description" content="我总在抱怨自己没鞋子穿，直到有一天，我遇到了一个没有脚的人。">
+<meta name="twitter:title" content="Golang编译器漏洞和标准库设计失误">
+<meta name="twitter:description" content="字节切片（byte slice）相关的编译器漏洞和标准库设计失误 假如一个类型MyByte定义如下，如何将一个[]MyByte切片值和一个[]byte切片值互相转换为对方的类型？ 123456789101112package maintype MyByte bytevar (  x = []byte&amp;#123;1, 2, 3&amp;#125;  y = []MyByte&amp;#123;1, 2, 3&amp;#12">
   <!-- Canonical links -->
-  <link rel="canonical" href="https://lxb.wiki/archives/2018/05/index.html">
+  <link rel="canonical" href="https://lxb.wiki/4fe063a2/index.html">
   
   
     <link rel="icon" href="/favicon.png" type="image/x-icon">
@@ -285,78 +287,130 @@
   
   
 <main class="main" role="main">
-  	<article class="content article article-archives article-type-list" itemscope="">
-	    <header class="article-header">
-	      <h1 itemprop="title">归档: 2018/5</h1>
-	      <p class="text-muted">共 4 篇文章</p>
-	    </header>
-	    <div class="article-body">
-	      
-  
-  
+  <div class="content">
+  <article id="post-Golang编译器漏洞和标准库设计失误" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
     
-    
+    <div class="article-header">
       
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Golang编译器漏洞和标准库设计失误
+    </h1>
+  
+
       
-      <section class="panel panel-default b-no">
-        <div class="panel-heading" role="tab">
-          <h3 class="panel-title">
-            <a data-toggle="collapse" href="#collapse2018" aria-expanded="true">
-              <i class="icon icon-calendar-plus text-active"></i><i class="icon icon-calendar-minus text"></i>
-              2018
-            </a>
-            <!-- <a href="/archives/2018" class="archive-year">2018</a> -->
-          </h3>
-        </div>
-        <div id="collapse2018" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="heading2018">
-        <div class="panel-body">
-          <div class="collection">
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/4fe063a2/" class="article-date">
+	  <time datetime="2019-10-20T03:29:37.000Z" itemprop="datePublished">2019-10-20</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Golang/">Golang</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/go/">go</a>, <a class="article-tag-link" href="/tags/编译器/">编译器</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/4fe063a2/#comments" class="article-comment-link">评论</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>字节切片（byte slice）相关的编译器漏洞和标准库设计失误</p>
+<p>假如一个类型MyByte定义如下，如何将一个[]MyByte切片值和一个[]byte切片值互相转换为对方的类型？</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">type MyByte byte</span><br><span class="line">var (</span><br><span class="line">  x = []byte&#123;1, 2, 3&#125;</span><br><span class="line">  y = []MyByte&#123;1, 2, 3&#125;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">  x = []byte(y) // error: 非法的转换</span><br><span class="line">  y = []MyByte(x) // error: 非法的转换</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如上例所示，在Go中，这两个类型的值之间的类型转换是非法的。因为Go规定两个切片只有在它们的类型的底层类型（underlying type）相同的情况下才能转换到对方的类型。而一个非定义类型（undefined type）的底层类型为此非定义类型本身。类型[]MyByte和[]byte均为非定义类型，所以它们的底层类型不同，从而它们的值也就不能转换到对方的类型。</p>
+<p>难道真没有办法实现它们之间的转换了？有，而且有好几种。第一种方法是使用类型非安全指针来实现双向转换，另外两种方法只能实现单向转换。另外的这两种方法要么利用了编译器的漏洞，要么利用了reflect标准库包的设计失误。</p>
+<p><strong>使用类型非安全指针的实现。</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import &quot;unsafe&quot;</span><br><span class="line"></span><br><span class="line">type MyByte byte</span><br><span class="line">var (</span><br><span class="line">  x = []byte&#123;1, 2, 3&#125;</span><br><span class="line">  y = []MyByte&#123;1, 2, 3&#125;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">  p := unsafe.Pointer(&amp;y)</span><br><span class="line">  x = *(*[]byte)(p)</span><br><span class="line">  x[0] = 99</span><br><span class="line">  println(y[0]) // 99</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在使用类型非安全指针的实现中，转换结果和原切片共享底层元素。</p>
+<p><strong>利用标准编译器的bug</strong></p>
+<p>我们可以将一个[]byte切片值转换为string, 再把string转换为类型[]MyByte。转换结果和原切片不共享底层元素。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">type MyByte byte</span><br><span class="line">var (</span><br><span class="line">  x = []byte&#123;1, 2, 3&#125;</span><br><span class="line">  y = []MyByte&#123;1, 2, 3&#125;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">  // 下一行利用了编译器漏洞</span><br><span class="line">  y = []MyByte(string(x))</span><br><span class="line">  y[0] = 99</span><br><span class="line">  println(x[0]) // 1</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Go白皮书提到一个字节切片可以转换为一个字符串，反之亦然。但是什么是字节切片类型呢？底层类型为[]byte的切片类型还是元素类型的底层类型为byte的切片类型？如果字节切片类型定义为<strong>元素类型的底层类型为byte的切片类型</strong>，则[]MyByte和[]byte都可称为字节切片类型。如果字节切片类型定义为<strong>底层类型为[]byte的切片类型</strong>，则只有[]byte可以被称为字节切片类型。我们认为标准编译器采纳了<strong>底层类型为[]byte的切片类型才称为字节切片</strong>这一定义，因为下面这个程序使用标准编译器是编译不过的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">type MyByte byte</span><br><span class="line">var (</span><br><span class="line">  x = []byte&#123;1, 2, 3&#125;</span><br><span class="line">  y = []MyByte&#123;1, 2, 3&#125;</span><br><span class="line">)</span><br><span class="line">func main() &#123;</span><br><span class="line">  _ = string(y) // error: 非法转换</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是，标准编译器（v1.12）却认为转换[]MyByte(“abc”)是合法的。这显然是一个漏洞。</p>
+<p>对于码点切片（rune slice）和字符串之间的转换，同样的情况也存在。</p>
+<p>对于gccgo编译器来说，此漏洞是对称的，因而更严重。此更严重的漏洞使得上述两种类型的值之间的转换是双向有效的。比如，下面这段代码使用gccgo（v8.0）编译是没问题的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">type MyByte byte</span><br><span class="line">var (</span><br><span class="line">  x = []byte&#123;1, 2, 3&#125;</span><br><span class="line">  y = []MyByte&#123;1, 2, 3&#125;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">  // 下一行利用了编译器漏洞</span><br><span class="line">  y = []MyByte(string(x))</span><br><span class="line">  y[0] = 99</span><br><span class="line">  println(x[0]) // 1</span><br><span class="line">  </span><br><span class="line">  // 下一行利用了编译器漏洞</span><br><span class="line">  x = []byte(string(y))</span><br><span class="line">  x[0] = 127</span><br><span class="line">  println(y[0]) // 99</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>事实上，gccgo编译器在内置copy和append函数的实现中也存在着同样的漏洞。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">type MyByte byte</span><br><span class="line">var (</span><br><span class="line">  x = []byte&#123;1, 2, 3&#125;</span><br><span class="line">  y = []MyByte&#123;1, 2, 3&#125;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">  // 下一行利用了编译器漏洞</span><br><span class="line">  copy(y, string(x))</span><br><span class="line">  y[0] = 99</span><br><span class="line">  println(x[0]) // 1</span><br><span class="line">  </span><br><span class="line">  </span><br><span class="line">  // 下一行利用了编译器漏洞</span><br><span class="line">  y = append([]MyByte(nil), string(x)...)</span><br><span class="line">  y[0] = 99</span><br><span class="line">  println(x[0]) // 1</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第三种方法利用了<code>reflect</code>标准库包的设计失误。此失误导致将<code>[]MyByte</code>值单向转换为类型<code>[]byte</code>是可行的，虽然这违反了Go类型系统确定的规则。使用第三种方法得到的结果切片和原切片共享底层元素。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import &quot;reflect&quot;</span><br><span class="line"></span><br><span class="line">type MyByte byte</span><br><span class="line">var (</span><br><span class="line">  x = []byte&#123;1, 2, 3&#125;</span><br><span class="line">  y = []MyByte&#123;1, 2, 3&#125;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">  v := reflect.ValueOf(y)</span><br><span class="line">  x = v.Bytes()</span><br><span class="line">  x[0] = 99</span><br><span class="line">  println(y[0]) // 99</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
     
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/4fe063a2/" title="Golang编译器漏洞和标准库设计失误" target="_blank" rel="external">https://lxb.wiki/4fe063a2/</a>
+    </li>
     
-<a href="/4e7c79/" class="collection-item" target="_blank" itemprop="url">
-  <time datetime="2018-05-30T15:11:26.000Z" itemprop="datePublished">2018-05-30</time>
-  <span>&nbsp;&nbsp;&nbsp;</span> HTTP协议笔记
-</a>
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+  </section>
 
 
   
-    
-    
-    
-<a href="/c57f4e3b/" class="collection-item" target="_blank" itemprop="url">
-  <time datetime="2018-05-22T03:12:38.000Z" itemprop="datePublished">2018-05-22</time>
-  <span>&nbsp;&nbsp;&nbsp;</span> qt 同步方式发送post 请求
-</a>
+</div>
 
-
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
   
+  <ul class="pager pull-left">
     
     
-    
-<a href="/7e8574d1/" class="collection-item" target="_blank" itemprop="url">
-  <time datetime="2018-05-03T15:03:09.000Z" itemprop="datePublished">2018-05-03</time>
-  <span>&nbsp;&nbsp;&nbsp;</span> qt 程序打包
-</a>
-
-
-  
+    <li class="next">
+      <a href="/7db296fb/" title="分布式锁高并发优化"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
     
     
-    
-<a href="/2eb2e06d/" class="collection-item" target="_blank" itemprop="url">
-  <time datetime="2018-05-02T15:56:55.000Z" itemprop="datePublished">2018-05-02</time>
-  <span>&nbsp;&nbsp;&nbsp;</span> Gerrit + apache 安装
-</a>
-
-
+  </ul>
   
   
-    </div></div></div></section>
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
   
 
-	    </div>
-  	</article>
-  	 	
+
 </main>
 
   <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
@@ -409,6 +463,12 @@ window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 
 
 
+   
+
+
+
+
+   
 
 
 
