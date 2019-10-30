@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://lxb.wiki/"/>
-  <updated>2019-10-28T15:09:12.123Z</updated>
+  <updated>2019-10-30T16:33:22.774Z</updated>
   <id>https://lxb.wiki/</id>
   
   <author>
@@ -15,6 +15,34 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>环形链表142</title>
+    <link href="https://lxb.wiki/fb68a62c/"/>
+    <id>https://lxb.wiki/fb68a62c/</id>
+    <published>2019-10-30T16:09:51.000Z</published>
+    <updated>2019-10-30T16:33:22.774Z</updated>
+    
+    <content type="html"><![CDATA[<p>给定一个链表，返回链表开始入环的第一个节点。 如果链表无环，则返回 null。</p><p>为了表示给定链表中的环，我们使用整数 pos 来表示链表尾连接到链表中的位置（索引从 0 开始）。 如果 pos 是 -1，则在该链表中没有环。</p><p><strong>说明：</strong>不允许修改给定的链表。</p><p>解题关键是理解 <code>非环部分的长度</code>与<code>相遇点到环起点那部分环的长度</code> 是相等的 这个数学关系</p><p>假设非环部分长度为<code>x</code>, 从环起点到相遇点的长度为<code>y</code> , 环的长度为<code>c</code></p><p>慢指针(slow)走过的长度可以表示为``ds = x + n1 * c + y<code>, 快指针(fast) 的速度是慢指针的两倍, 意味着 快指针走过的长度为</code>df = 2(x + n1 * c + y)`</p><p>还有一个约束是, fast 走过的路程一定比slow走的路程多出环长度的整数倍(记为<code>n2 * c</code>)</p><p>所以 </p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">df - ds = n2 * c</span><br><span class="line">2(x + n1 * c + y) - (x + n1 * c + y) = n2 * c</span><br><span class="line">x + n1 * c + y = n2 * c</span><br></pre></td></tr></table></figure><p>解读下第三步的等式: 非环部分的长度 + 环起点到相遇点之间的长度 就是环的整数倍</p><p>意味着, 当以环的起点为原点时, 已经走过y(即前面<code>从环起点到相遇点的长度</code>)的前提下, 如果再走x , 就刚好走了很多圈(<code>n2 * c</code>). *”很多圈” 的意思, 就是从原点再到原点, 终点的位置和起点的位置重合.* </p><p>怎么才能再走x呢? 让一个指针从<code>head</code> 开始走, 另一个指针从相遇点开始走, 等这两个指针相遇, 就是走了x. 如果不能理解为何相遇恰好就在上面说的<strong>原点</strong>处, 应该反复琢磨斜体”很多圈”那句话</p><p>code</p><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">detectCycle</span><span class="params">(head *ListNode)</span> *<span class="title">ListNode</span></span> &#123;</span><br><span class="line">fast, slow := head, head</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> fast != <span class="literal">nil</span> &amp;&amp; fast.Next != <span class="literal">nil</span> &amp;&amp; fast.Next.Next != <span class="literal">nil</span> &#123;</span><br><span class="line">slow = slow.Next</span><br><span class="line">fast = fast.Next.Next</span><br><span class="line"><span class="keyword">if</span> fast == slow &#123;</span><br><span class="line">fast = head</span><br><span class="line"><span class="keyword">for</span> fast != slow &#123;</span><br><span class="line">fast = fast.Next</span><br><span class="line">slow = slow.Next</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> fast</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;给定一个链表，返回链表开始入环的第一个节点。 如果链表无环，则返回 null。&lt;/p&gt;
+&lt;p&gt;为了表示给定链表中的环，我们使用整数 pos 来表示链表尾连接到链表中的位置（索引从 0 开始）。 如果 pos 是 -1，则在该链表中没有环。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;说明
+      
+    
+    </summary>
+    
+    
+      <category term="Algorithm" scheme="https://lxb.wiki/categories/Algorithm/"/>
+    
+    
+      <category term="链表" scheme="https://lxb.wiki/tags/%E9%93%BE%E8%A1%A8/"/>
+    
+  </entry>
   
   <entry>
     <title>如果使用Github搜索</title>
@@ -50,7 +78,7 @@
     <link href="https://lxb.wiki/6a0b412d/"/>
     <id>https://lxb.wiki/6a0b412d/</id>
     <published>2019-10-23T14:50:21.000Z</published>
-    <updated>2019-10-23T15:02:19.551Z</updated>
+    <updated>2019-10-30T16:10:24.866Z</updated>
     
     <content type="html"><![CDATA[<p>leetcode-26</p><p>给定一个排序数组，你需要在原地删除重复出现的元素，使得每个元素只出现一次，返回移除后数组的新长度。</p><p>不要使用额外的数组空间，你必须在原地修改输入数组并在使用 O(1) 额外空间的条件下完成。</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">给定数组 nums = [1,1,2], </span><br><span class="line"></span><br><span class="line">函数应该返回新的长度 2, 并且原数组 nums 的前两个元素被修改为 1, 2。 </span><br><span class="line"></span><br><span class="line">你不需要考虑数组中超出新长度后面的元素。</span><br><span class="line"></span><br><span class="line">给定 nums = [0,0,1,1,1,2,2,3,3,4],</span><br><span class="line"></span><br><span class="line">函数应该返回新的长度 5, 并且原数组 nums 的前五个元素被修改为 0, 1, 2, 3, 4。</span><br><span class="line"></span><br><span class="line">你不需要考虑数组中超出新长度后面的元素。</span><br></pre></td></tr></table></figure><p>理解题意:</p><pre><code>1. 当给定数组为空时, 返回0 2. 不能引入其他数组空间, 即不能再使用一个新的数组来存放结果 3. 最终结果不重复, 整体思路是把数组后面的几个元素挪到前面去, 用后面的元素覆盖掉前面重复了的元素, 保持数组的长度始终不变. 数组中超出新长度(去重后的长度) 后的元素无视</code></pre><p>用快慢指针的思路解答:</p><ol><li>给定两个游标 left和right</li><li>当给定数组的下标为left和right的值相等时,  就不管</li><li>当不相等时, 做一个操作: 把当前right的值赋给left的下一个坐标</li></ol><p>code:</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">func removeDuplicates(nums []int) int &#123;</span><br><span class="line">    //如果是空切片，那就返回0</span><br><span class="line">    if len(nums) == 0 &#123;</span><br><span class="line">        return 0</span><br><span class="line">    &#125;</span><br><span class="line">    //用两个标记来比较相邻位置的值</span><br><span class="line">    //当一样的话，那就不管继续</span><br><span class="line">    //当不一样的时候，就把right指向的值赋值给left下一位</span><br><span class="line">    left, right := 0, 1</span><br><span class="line">    for ; right &lt; len(nums); right++ &#123;</span><br><span class="line">        if nums[left] == nums[right] &#123;</span><br><span class="line">            continue</span><br><span class="line">        &#125;</span><br><span class="line">        left++</span><br><span class="line">        nums[left] = nums[right]</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Println(nums[:left+1])</span><br><span class="line">    return left + 1</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
     
@@ -67,7 +95,7 @@
     </summary>
     
     
-      <category term="Golang" scheme="https://lxb.wiki/categories/Golang/"/>
+      <category term="Algorithm" scheme="https://lxb.wiki/categories/Algorithm/"/>
     
     
       <category term="算法" scheme="https://lxb.wiki/tags/%E7%AE%97%E6%B3%95/"/>
@@ -522,31 +550,6 @@ nginx&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;获取证书&quot;&gt;&lt;a href=&
     
     
       <category term="mysql" scheme="https://lxb.wiki/tags/mysql/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>跑道问题</title>
-    <link href="https://lxb.wiki/81be14b5/"/>
-    <id>https://lxb.wiki/81be14b5/</id>
-    <published>2019-03-12T15:20:56.000Z</published>
-    <updated>2019-10-03T07:57:15.303Z</updated>
-    
-    <content type="html"><![CDATA[<p>25个人，每5个人一个跑道，最少经过几次比赛，得到前三名</p><p><strong>初步思路</strong>: 第一步, 每5人一组, 全跑完后, 每组的后两名一定不在最终要的”前三名” 结果内, 所以每组可以排除2人, 剩下25-2_5=15人. 共经过5次比赛 第二步, 剩下的15人, 每5人一组, 跑完后, 每组淘汰2人, 剩下 15-2_3=9人. 经过3次比赛 第三步, 剩下的9个人分两组, A组5人B组4人, 跑完后, A组淘汰2人, B组淘汰1人, 剩下 9-2-1=6人. 经过2次比赛 第四步, 剩下的6人分两组, C组5人D组1人, A组跑完后, 淘汰2人, B组1人不需要跑, 剩下 6-2=4人. 经过1次比赛 第五步, 剩下的4个人, 跑一次, 得出前三名. 经过1次比赛 共经过 5+3+2+1+1=12次</p><p>在第一步中, 5组全跑完后, 每组的第一名再跑一次, 按速度快慢分别标为A1 B1 C1 D1 E1. 则A1 为25人中的第一名. 经过5+1=6次比赛 在第6次比赛中, 落后的两名D1 和E1, 可以被排除, 进而整个D组和E组都可以排除. C1不可能是第二名. 第二名可能的人员有A2 B1, 第三名可能的人员有 B1 A3 B2 A2 C1. 第二名的集合是第三名集合的子集. 第三名所有可能的5个人跑一次, 得出第二名和第三名.经过1次比赛 共经过7次比赛</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;25个人，每5个人一个跑道，最少经过几次比赛，得到前三名&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;初步思路&lt;/strong&gt;: 第一步, 每5人一组, 全跑完后, 每组的后两名一定不在最终要的”前三名” 结果内, 所以每组可以排除2人, 剩下25-2_5=15人. 共经过5次比赛 第
-      
-    
-    </summary>
-    
-    
-      <category term="Algorithm" scheme="https://lxb.wiki/categories/Algorithm/"/>
-    
     
   </entry>
   
