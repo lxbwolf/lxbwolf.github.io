@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://lxb.wiki/"/>
-  <updated>2019-11-03T13:48:01.705Z</updated>
+  <updated>2019-11-06T16:00:13.168Z</updated>
   <id>https://lxb.wiki/</id>
   
   <author>
@@ -15,6 +15,34 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>合并区间56</title>
+    <link href="https://lxb.wiki/a2b71d73/"/>
+    <id>https://lxb.wiki/a2b71d73/</id>
+    <published>2019-11-06T15:31:03.000Z</published>
+    <updated>2019-11-06T16:00:13.168Z</updated>
+    
+    <content type="html"><![CDATA[<p>给出一个区间的集合，请合并所有重叠的区间。</p><p>示例 1:</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">输入: [[1,3],[2,6],[8,10],[15,18]]</span><br><span class="line">输出: [[1,6],[8,10],[15,18]]</span><br><span class="line">解释: 区间 [1,3] 和 [2,6] 重叠, 将它们合并为 [1,6].</span><br></pre></td></tr></table></figure><p>示例 2:</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">输入: [[1,4],[4,5]]</span><br><span class="line">输出: [[1,5]]</span><br><span class="line">解释: 区间 [1,4] 和 [4,5] 可被视为重叠区间。</span><br></pre></td></tr></table></figure><p>思路: </p><ol start="0"><li>怎么判断重叠: 两区间的最小的右边界 大于或等于 两区间最大的左边界. 如<code>[1,5]</code>和<code>[2,8]</code></li><li>入参是切片的切片(intervals), 拿<code>intervals[0]</code>与它后面的所有区间对比, 从<code>intervals[1]</code>开始, 如果有与之重叠的区间, 就把合并后的新区间赋给<code>intervals[0]</code>, 并删除参与合并的那个旧区间</li><li><code>intervals[0]</code>完成后, 拿``intervals[1]<code>与它后边的所有区间对比, 从</code>intervals[2]<code>开始, 如果有与之重叠的区间, 就把合并后的新区间赋给</code>intervals[1]`, 并删除参与合并的那个就区间</li><li>拿<code>intervals[i]</code> 与它后边的所有区间对比, 从<code>intervals[i+1]</code> 开始, 如果有与之重叠的区间intervals[j]   , 就把合并后的新区间赋给 <code>intervals[i]</code> , 并删除参与合并的intervals[j]</li><li>如果第3步出现了有重叠的区间<code>intervals[j]</code>, 那么合并后<code>i</code>  的值变了, 就有可能由原来 在<code>i</code> 到<code>j</code> 之间没有重叠的区间 变成 有重叠的区间, 所以需要从头(<code>i+1</code>) 再遍历一次, 直到再也没有重叠的区间</li><li>重复, 一直到切片末尾</li></ol><p>code</p><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">min</span><span class="params">(x, y <span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line"><span class="keyword">if</span> x &lt; y &#123;</span><br><span class="line"><span class="keyword">return</span> x</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> y</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(x, y <span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line"><span class="keyword">if</span> x &gt; y &#123;</span><br><span class="line"><span class="keyword">return</span> x</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> y</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">merge</span><span class="params">(intervals [][]<span class="keyword">int</span>)</span> [][]<span class="title">int</span></span> &#123;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(intervals); &#123;</span><br><span class="line">merged := <span class="literal">false</span></span><br><span class="line"><span class="keyword">for</span> j := i + <span class="number">1</span>; j &lt; <span class="built_in">len</span>(intervals); j++ &#123;</span><br><span class="line">x, y := intervals[i], intervals[j]</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> min(x[<span class="number">1</span>], y[<span class="number">1</span>]) &gt;= max(x[<span class="number">0</span>], y[<span class="number">0</span>]) &#123;</span><br><span class="line">merged = <span class="literal">true</span></span><br><span class="line"><span class="comment">//重新赋值</span></span><br><span class="line">intervals[i][<span class="number">0</span>], intervals[i][<span class="number">1</span>] = min(x[<span class="number">0</span>], y[<span class="number">0</span>]), max(x[<span class="number">1</span>], y[<span class="number">1</span>])</span><br><span class="line"></span><br><span class="line"><span class="comment">//删除j</span></span><br><span class="line">intervals[j] = intervals[<span class="built_in">len</span>(intervals) - <span class="number">1</span>]</span><br><span class="line">intervals = intervals[:<span class="built_in">len</span>(intervals) - <span class="number">1</span>]</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> merged &#123;</span><br><span class="line"><span class="keyword">continue</span></span><br><span class="line">&#125;</span><br><span class="line">i++</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> intervals</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;给出一个区间的集合，请合并所有重叠的区间。&lt;/p&gt;
+&lt;p&gt;示例 1:&lt;/p&gt;
+&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;
+      
+    
+    </summary>
+    
+    
+      <category term="Golang" scheme="https://lxb.wiki/categories/Golang/"/>
+    
+    
+      <category term="go" scheme="https://lxb.wiki/tags/go/"/>
+    
+  </entry>
   
   <entry>
     <title>Golang的反射</title>
@@ -521,32 +549,6 @@ nginx&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;获取证书&quot;&gt;&lt;a href=&
     
     
       <category term="idalloc" scheme="https://lxb.wiki/tags/idalloc/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>mysqldump: Got error: 1044: Access denied for user</title>
-    <link href="https://lxb.wiki/a333bc04/"/>
-    <id>https://lxb.wiki/a333bc04/</id>
-    <published>2019-04-27T03:24:27.000Z</published>
-    <updated>2019-10-03T16:57:23.397Z</updated>
-    
-    <content type="html"><![CDATA[<p><code>mysqldump -u username -p dbname &gt; dbname.sql</code> mysqldump: Got error: 1044: Access denied for user XXX to database XXX when using LOCK TABLES 解决方法: <code>mysqldump -u dbuser -ppass db --skip-lock-tables &gt; db.sql</code></p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;&lt;code&gt;mysqldump -u username -p dbname &amp;gt; dbname.sql&lt;/code&gt; mysqldump: Got error: 1044: Access denied for user XXX to database XXX when 
-      
-    
-    </summary>
-    
-    
-      <category term="DB" scheme="https://lxb.wiki/categories/DB/"/>
-    
-    
-      <category term="mysql" scheme="https://lxb.wiki/tags/mysql/"/>
     
   </entry>
   
