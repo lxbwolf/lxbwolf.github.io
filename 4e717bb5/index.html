@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+  
+  <title>协程，操作系统线程和 CPU 管理 | Gate</title>
+  <meta name="description" content="ℹ️ 本文运行环境为 Go 1.13 对于一个程序来说，从内存和性能角度讲创建一个 OS 线程或切换线程花费巨大。Go 志在极尽所能地充分利用内核资源。从第一天开始，它就是为并发而生的。 M, P, G 编排为了解决这个问题，Go 有它自己的在线程间调度协程的调度器。这个调度器定义了三个主要概念，如源码中解释的这样： 12345The main concepts are:G - goroutin">
+<meta name="keywords" content="go">
+<meta property="og:type" content="article">
+<meta property="og:title" content="协程，操作系统线程和 CPU 管理">
+<meta property="og:url" content="https://lxb.wiki/4e717bb5/index.html">
+<meta property="og:site_name" content="Gate">
+<meta property="og:description" content="ℹ️ 本文运行环境为 Go 1.13 对于一个程序来说，从内存和性能角度讲创建一个 OS 线程或切换线程花费巨大。Go 志在极尽所能地充分利用内核资源。从第一天开始，它就是为并发而生的。 M, P, G 编排为了解决这个问题，Go 有它自己的在线程间调度协程的调度器。这个调度器定义了三个主要概念，如源码中解释的这样： 12345The main concepts are:G - goroutin">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/00.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/01.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/02.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/03.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/04.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/05.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/06.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/07.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/08.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/09.png">
+<meta property="og:updated_time" content="2019-12-12T15:01:36.111Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="协程，操作系统线程和 CPU 管理">
+<meta name="twitter:description" content="ℹ️ 本文运行环境为 Go 1.13 对于一个程序来说，从内存和性能角度讲创建一个 OS 线程或切换线程花费巨大。Go 志在极尽所能地充分利用内核资源。从第一天开始，它就是为并发而生的。 M, P, G 编排为了解决这个问题，Go 有它自己的在线程间调度协程的调度器。这个调度器定义了三个主要概念，如源码中解释的这样： 12345The main concepts are:G - goroutin">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/00.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://lxb.wiki/4e717bb5/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+</head>
+
+
+<body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/head.jpeg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Liu Xiaobin</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="https://twitter.com/lxbwolf" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="mailto:lxb@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/En/">En</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/JSON/">JSON</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Rasp/">Rasp</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Gerrit/" style="font-size: 13px;">Gerrit</a> <a href="/tags/STL/" style="font-size: 13.75px;">STL</a> <a href="/tags/cron/" style="font-size: 13px;">cron</a> <a href="/tags/gdb/" style="font-size: 13px;">gdb</a> <a href="/tags/github/" style="font-size: 13px;">github</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm2/" style="font-size: 13px;">iTerm2</a> <a href="/tags/idalloc/" style="font-size: 13px;">idalloc</a> <a href="/tags/ls/" style="font-size: 13px;">ls</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mysql/" style="font-size: 13.5px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.5px;">nginx</a> <a href="/tags/redis/" style="font-size: 13.25px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/torrent/" style="font-size: 13px;">torrent</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/优化/" style="font-size: 13px;">优化</a> <a href="/tags/分布式/" style="font-size: 13px;">分布式</a> <a href="/tags/博客/" style="font-size: 13px;">博客</a> <a href="/tags/架构/" style="font-size: 13px;">架构</a> <a href="/tags/破解/" style="font-size: 13px;">破解</a> <a href="/tags/端口/" style="font-size: 13px;">端口</a> <a href="/tags/算法/" style="font-size: 13px;">算法</a> <a href="/tags/编译器/" style="font-size: 13.25px;">编译器</a> <a href="/tags/进程/" style="font-size: 13px;">进程</a> <a href="/tags/邮件/" style="font-size: 13.25px;">邮件</a> <a href="/tags/链表/" style="font-size: 13px;">链表</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">十二月 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">十一月 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">二月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">五月 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">三月 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">四月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Golang/">Golang</a>
+              </p>
+              <p class="item-title">
+                <a href="/c9399f4/" class="title">微服务中的熔断器和重试</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-12-12T15:02:17.000Z" itemprop="datePublished">2019-12-12</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Golang/">Golang</a>
+              </p>
+              <p class="item-title">
+                <a href="/4e717bb5/" class="title">协程，操作系统线程和 CPU 管理</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-12-12T15:01:35.000Z" itemprop="datePublished">2019-12-12</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/2d9f52fc/" class="title">Symbol Names of Keyboard</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-12-07T02:22:50.000Z" itemprop="datePublished">2019-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Golang/">Golang</a>
+              </p>
+              <p class="item-title">
+                <a href="/e2c91def/" class="title">go匿名函数和闭包</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-11-17T06:38:20.000Z" itemprop="datePublished">2019-11-17</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Golang/">Golang</a>
+              </p>
+              <p class="item-title">
+                <a href="/a2b71d73/" class="title">合并区间56</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-11-06T15:31:03.000Z" itemprop="datePublished">2019-11-06</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-协程，操作系统线程和-CPU-管理" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      协程，操作系统线程和 CPU 管理
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/4e717bb5/" class="article-date">
+	  <time datetime="2019-12-12T15:01:35.000Z" itemprop="datePublished">2019-12-12</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Golang/">Golang</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/go/">go</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/4e717bb5/#comments" class="article-comment-link">评论</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/00.png" alt="Illustration created for “A Journey With Go”, made from the original Go Gopher, created by Renee French."></p>
+<p>ℹ️ <em>本文运行环境为 Go 1.13</em></p>
+<p>对于一个程序来说，从内存和性能角度讲创建一个 OS 线程或切换线程花费巨大。Go 志在极尽所能地充分利用内核资源。从第一天开始，它就是为并发而生的。</p>
+<h2 id="M-P-G-编排"><a href="#M-P-G-编排" class="headerlink" title="M, P, G 编排"></a>M, P, G 编排</h2><p>为了解决这个问题，Go 有它自己的在线程间调度协程的调度器。这个调度器定义了三个主要概念，如源码中解释的这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">The main concepts are:</span><br><span class="line">G - goroutine.</span><br><span class="line">M - worker thread, or machine.</span><br><span class="line">P - processor, a resource that is required to execute Go code.</span><br><span class="line">    M must have an associated P to execute Go code[...].</span><br></pre></td></tr></table></figure>
+
+<p><code>P</code>, <code>M</code>, <code>G</code> 模型图解：</p>
+<p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/01.png" alt="P, M, G diagram"></p>
+<p>每个协程（<code>G</code>）运行在与一个逻辑 CPU（<code>P</code>）相关联的 OS 线程（<code>M</code>）上。我们一起通过一个简单的示例来看 Go 是怎么管理他们的：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line">   wg.Add(<span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      <span class="built_in">println</span>(<span class="string">`hello`</span>)</span><br><span class="line">      wg.Done()</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      <span class="built_in">println</span>(<span class="string">`world`</span>)</span><br><span class="line">      wg.Done()</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先，Go 根据机器逻辑 CPU 的个数来创建不同的 <code>P</code>，并且把它们保存在一个空闲 <code>P</code> 的 list 里。</p>
+<p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/02.png" alt="P initialization"></p>
+<p>然后，为了更好地工作新创建的已经准备好的协程会唤醒一个 <code>P</code>。这个 <code>P</code> 通过与之相关联的 OS 线程来创建一个 <code>M</code>：</p>
+<p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/03.png" alt="OS thread creation"></p>
+<p>然而，像 <code>P</code> 那样，系统调用返回的甚至被 gc 强行停止的空闲的 <code>M</code> — 比如没有协程在等待运行 — 也会被加到一个空闲 list：</p>
+<p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/04.png" alt="M and P idle list"></p>
+<p>在程序启动阶段，Go 就已经创建了一些 OS 线程并与 <code>M</code> 想关联了。在我们的例子中，打印 <code>hello</code> 的第一个协程会使用主协程，第二个会从这个空闲 list 中获取一个 <code>M</code> 和 <code>P</code>：</p>
+<p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/05.png" alt="M and P pulled from the idle list"></p>
+<p>现在我们已经掌握了协程和线程管理的基本要义，来一起看看什么情形下 Go 会用比 <code>P</code> 多的 <code>M</code>，在系统调用时怎么管理协程。</p>
+<h2 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h2><p>Go 会优化系统调用 — 无论阻塞与否 — 通过运行时封装他们。封装的那一层会把 <code>P</code> 和线程 <code>M</code> 分离，并且可以让另一个线程在它上面运行。我们拿文件读取举例：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   buf := <span class="built_in">make</span>([]<span class="keyword">byte</span>, <span class="number">0</span>, <span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">   fd, _ := os.Open(<span class="string">"number.txt"</span>)</span><br><span class="line">   fd.Read(buf)</span><br><span class="line">   fd.Close()</span><br><span class="line"></span><br><span class="line">   <span class="built_in">println</span>(<span class="keyword">string</span>(buf)) <span class="comment">// 42</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>文件读取的流程如下：</p>
+<p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/06.png" alt="Syscall handoffs P"></p>
+<p><code>P0</code> 现在在空闲 list 中，有可能被唤醒。当系统调用 exit 时，Go 会遵守下面的规则，直到有一个命中了。</p>
+<ul>
+<li>尝试去捕获相同的 <code>P</code>，在我们的例子中就是 <code>P0</code>，然后 resume 执行过程</li>
+<li>尝试从空闲 list 中捕获一个 <code>P</code>，然后 resume 执行过程</li>
+<li>把协程放到全局队列里，把与之相关联的 <code>M</code> 放回空闲 list 去</li>
+</ul>
+<p>然而，在像 http 请求等 non-blocking I/O 情形下，Go 在资源没有准备好时也会处理请求。在这种情形下，第一个系统调用 — 遵循上述流程图 — 由于资源还没有准备好所以不会成功，（这样就）迫使 Go 使用 network poller 并使协程停驻。请看示例：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   http.Get(<span class="string">`https://httpstat.us/200`</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当第一个系统调用完成且显式地声明了资源还没有准备好，协程会在 network poller 通知它资源准备就绪之前一直处于停驻状态。在这种情形下，线程 <code>M</code> 不会阻塞：</p>
+<p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/07.png" alt="Network poller waiting for the resource"></p>
+<p>在 Go 调度器在等待信息时协程会再次运行。调度器在获取到等待的信息后会询问 network poller 是否有协程在等待被运行。</p>
+<p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/08.png" alt></p>
+<p>如果多个协程都准备好了，只有一个会被运行，其他的会被加到全局的可运行队列中，以备后续的调度。</p>
+<h2 id="OS-线程方面的限制"><a href="#OS-线程方面的限制" class="headerlink" title="OS 线程方面的限制"></a>OS 线程方面的限制</h2><p>在系统调用中，Go 不会限制可阻塞的 OS 线程数，源码中有解释：</p>
+<blockquote>
+<p><em>The GOMAXPROCS variable limits the number of operating system threads that can execute user-level Go code simultaneously. There is no limit to the number of threads that can be blocked in system calls on behalf of Go code; those do not count against the GOMAXPROCS limit. This package’s GOMAXPROCS function queries and changes the limit.</em></p>
+</blockquote>
+<p>译注：<strong>GOMAXPROCS</strong> 变量表示可同时运行用户级 Go 代码的操作系统线程的最大数量。系统调用中可被阻塞的最大线程数并没有限制；可被阻塞的线程数对 <strong>GOMAXPROCS</strong> 没有影响。这个包的 <strong><em>GOMAXPROCS</em></strong> 函数查询和修改这个最大数限制。</p>
+<p>对这种情形举例：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">100</span> ;i++  &#123;</span><br><span class="line">      wg.Add(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         http.Get(<span class="string">`https://httpstat.us/200?sleep=10000`</span>)</span><br><span class="line"></span><br><span class="line">         wg.Done()</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>利用追踪工具得到的线程数如下：</p>
+<p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/go-goroutines-os-thread-and-cpu-management/09.png" alt></p>
+<p>由于 Go 优化了线程使用，所以当协程阻塞时，它仍可复用，这就解释了为什么图中的数跟示例代码循环中的数不一致。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/4e717bb5/" title="协程，操作系统线程和 CPU 管理" target="_blank" rel="external">https://lxb.wiki/4e717bb5/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/c9399f4/" title="微服务中的熔断器和重试"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2d9f52fc/" title="Symbol Names of Keyboard"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="https://twitter.com/lxbwolf" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="mailto:lxb@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> lxbwolf </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+
+</body>
+</html>
