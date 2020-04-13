@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://lxb.wiki/"/>
-  <updated>2019-12-12T15:07:33.468Z</updated>
+  <updated>2020-04-13T16:13:29.569Z</updated>
   <id>https://lxb.wiki/</id>
   
   <author>
@@ -15,6 +15,60 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Go 字符串中的潜在问题</title>
+    <link href="https://lxb.wiki/10e5e8ba/"/>
+    <id>https://lxb.wiki/10e5e8ba/</id>
+    <published>2020-01-16T16:12:58.000Z</published>
+    <updated>2020-04-13T16:13:29.569Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="Go-字符串中的潜在问题"><a href="#Go-字符串中的潜在问题" class="headerlink" title="Go 字符串中的潜在问题"></a>Go 字符串中的潜在问题</h1><p>在我之前的文章 <a href="https://utcc.utoronto.ca/~cks/space/blog/programming/GoThingsILike" target="_blank" rel="noopener">Go 中我喜欢的东西</a>中提到过，我喜欢的 <a href="https://golang.org/" target="_blank" rel="noopener">Go</a> 的东西其中之一就是它的字符串（通常还有切片）。从一个 Python 开发者的角度看，它们之所以伟大，是因为创建它们时开销很少，因为它们通常不需要复制。在 Python 中，任何时候操作字符串都需要复制一部分或全部字符串，而 <a href="https://utcc.utoronto.ca/~cks/space/blog/python/StringSpeedSurprises" target="_blank" rel="noopener">这很容易对性能造成影响</a>。想要写高性能的 Python 代码需要谨慎考虑复制的问题。在 Go 中，几乎所有的字符串操作都是不复制的，仅仅是从原字符串取一个子集（例如去除字符串首尾的空白字符），因此你可以更自由地操作字符串。这个机制可以非常直接地解决你的问题，并且非常高效。</p><p>（当然，不是所有的字符串操作都不复制。例如，把一个字符串转换成大写需要复制，尽管 Go 中的实现已经足够智能，在不需要改变原字符串时 — 例如由于它已经是一个全大写的字符串 — 可以规避掉复制。）</p><p>但是这个优势也带来了潜在的坏处，那些没有开销的子字符串使原来的整个字符串一直存在于内存中。Go 中的字符串（和切片）操作之所以内存开销很少，是因为它们只是底层存储（字符串或切片底层的数组的真实数据）的一些部分的引用；创建一个字符串做的操作就是创建了一个新的引用。但是 Go（目前）不会对字符串数据或数组进行部分的垃圾回收，所以即使它一个很小的 bit 被其它元素引用，整个对象也会一直保持在内存中。换句话说，一个单字符的字符串（目前）足够让一个巨大的字符串不被 GC 回收。</p><p>当然，不会有很多人遇到这个问题。为了遇到它，你需要处理一个非常庞大的原字符串，或造成大量的内存消耗（或者两者都做），在这个基础上，你必须创建那些不持久的字符串的持久的小子字符串（好吧，你是多么希望它是非持久的）。很多使用场景不会复现这个问题；要么你的原字符串不够大，要么你的子集获取了大部分原字符串（例如你把原字符串进行了分词处理），要么子字符串生命周期不够长。简而言之，如果你是一个普通的 Go 开发者，你可以忽略这个问题。处理长字符串并且长时间维持原字符串的很小部分的人才会关注这个问题。</p><p>（我之所以关注到这个问题，是因为一次我花了大量精力用尽可能少的内存写 Python 程序，尽管它是从一个大的配置文件解析结果然后分块储存。这让我联想到了一些其他的事，如字符串的生命周期、限制字符串只复制一次，等等。然后我用 Go 语言写了一个解析器，这让我由重新考虑了一下这些问题，我意识到由于我的解析器截取出和维持的 bit 一直存在于内存中，从输入文件解析出的庞大字符串也会一直存在与内存中。）</p><p>顺便说一下，我认为这是 Go 做了权衡之后的正确结果。大部分使用字符串的开发者不会遇到这个问题，而且截取子字符串开销很小对于开发者来说用处很大。这种低开销的截取操作也减轻了 GC 的负担；当代码使用大量的子字符串截取（像 Python 中那样）时，你只需要处理固定长度的字符串引用就可以了，而不是需要处理长度变化的字符串。</p><p>当你的代码遇到这个问题时，当然有明显的解决方法：创建一个函数，通过把字符串转换成 <code>[]byte</code> 来 ”最小化“ 字符串，然后返回。这种方法生成了一个最小化的字符串，内存开销是理论上最完美实现的只复制一次，而 Go 现在很容易就可以实现。</p><h2 id="附加问题：strings-ToUpper-等怎样规避没有必要的复制"><a href="#附加问题：strings-ToUpper-等怎样规避没有必要的复制" class="headerlink" title="附加问题：strings.ToUpper() 等怎样规避没有必要的复制"></a>附加问题：<code>strings.ToUpper()</code> 等怎样规避没有必要的复制</h2><p>所有的主动转换函数像 <code>ToUpper()</code> 和 <code>ToTitle()</code> 是用 <code>strings.Map()</code> 和 <a href="http://golang.org/pkg/unicode/" target="_blank" rel="noopener">unicode 包</a> 中的函数实现的。<code>Map()</code> 足够智能，在映射的函数返回一个与已存在的 <code>rune</code> 不同的结果之前不会创建新的字符串。因此，你代码中所有类似的直接使用 <code>Map()</code> 的地方都不会有内存开销。</p><hr><p>via: <a href="https://utcc.utoronto.ca/~cks/space/blog/programming/GoStringsMemoryHolding" target="_blank" rel="noopener">https://utcc.utoronto.ca/~cks/space/blog/programming/GoStringsMemoryHolding</a></p><p>作者：<a href="https://utcc.utoronto.ca/~cks/space/People/ChrisSiebenmann" target="_blank" rel="noopener">Chris Siebenmann</a><br>译者：<a href="https://github.com/lxbwolf" target="_blank" rel="noopener">lxbwolf</a><br>校对：<a href="https://github.com/校对者ID" target="_blank" rel="noopener">校对者ID</a></p><p>本文由 <a href="https://github.com/studygolang/GCTT" target="_blank" rel="noopener">GCTT</a> 原创编译，<a href="https://studygolang.com/" target="_blank" rel="noopener">Go 中文网</a> 荣誉推出</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;Go-字符串中的潜在问题&quot;&gt;&lt;a href=&quot;#Go-字符串中的潜在问题&quot; class=&quot;headerlink&quot; title=&quot;Go 字符串中的潜在问题&quot;&gt;&lt;/a&gt;Go 字符串中的潜在问题&lt;/h1&gt;&lt;p&gt;在我之前的文章 &lt;a href=&quot;https://utcc.
+      
+    
+    </summary>
+    
+    
+      <category term="Golang" scheme="https://lxb.wiki/categories/Golang/"/>
+    
+    
+      <category term="go" scheme="https://lxb.wiki/tags/go/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Go GC 怎么标记内存</title>
+    <link href="https://lxb.wiki/b3baee92/"/>
+    <id>https://lxb.wiki/b3baee92/</id>
+    <published>2020-01-13T16:06:31.000Z</published>
+    <updated>2020-04-13T16:17:25.143Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="Go-GC-怎么标记内存？"><a href="#Go-GC-怎么标记内存？" class="headerlink" title="Go GC 怎么标记内存？"></a>Go GC 怎么标记内存？</h1><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/00.png" alt="Illustration created for “A Journey With Go”, made from the original Go Gopher, created by Renee French"></p><p>ℹ️ 本文基于 <em>Go 1.13</em>。关于内存管理的概念的讨论在我的文章 <a href="https://medium.com/a-journey-with-go/go-memory-management-and-allocation-a7396d430f44" target="_blank" rel="noopener">Go 中的内存管理和分配</a> 中有详细的解释。</p><p>Go GC 的作用是回收不再使用的内存。实现的算法是并发的三色标记和清除回收法。本中文，我们研究三色标记法，以及各个颜色的不同用处。</p><p>你可以在 Ken Fox 的 <a href="https://spin.atomicobject.com/2014/09/03/visualizing-garbage-collection-algorithms/" target="_blank" rel="noopener">解读垃圾回收算法</a> 中了解更多关于不同垃圾回收机制的信息。</p><h2 id="标记阶段"><a href="#标记阶段" class="headerlink" title="标记阶段"></a>标记阶段</h2><p>这个阶段浏览内存来了解哪些块儿是在被我们的代码使用和哪些块儿应该被回收。</p><p>然而，因为 GC 和我们的 Go 程序并行，GC 扫描期间内存中某些对象的状态可能被改变，所以需要一个检测这种可能的变化的方法。为了解决这个潜在的问题，实现了 <a href="https://en.wikipedia.org/wiki/Write_barrier" target="_blank" rel="noopener">写屏障</a> 算法，GC 可以追踪到任何的指针修改。使写屏障生效的唯一条件是短暂终止程序，又名 “Stop the World”。</p><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/01.png" alt></p><p>在进程启动时，Go 也在每个 processor 起了一个标记 worker 来辅助标记内存。</p><p>然后，当 root 被加入到处理队列中后，标记阶段就开始遍历和用颜色标记内存。</p><p>为了了解在标记阶段的每一步，我们来看一个简单的程序示例：</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> struct1 <span class="keyword">struct</span> &#123;</span><br><span class="line">a, b <span class="keyword">int64</span></span><br><span class="line">c, d <span class="keyword">float64</span></span><br><span class="line">e *struct2</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> struct2 <span class="keyword">struct</span> &#123;</span><br><span class="line">f, g <span class="keyword">int64</span></span><br><span class="line">h, i <span class="keyword">float64</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">s1 := allocStruct1()</span><br><span class="line">s2 := allocStruct2()</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">()</span></span> &#123;</span><br><span class="line">_ = allocStruct2()</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line">runtime.GC()</span><br><span class="line"></span><br><span class="line">fmt.Printf(<span class="string">"s1 = %X, s2 = %X\n"</span>, &amp;s1, &amp;s2)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//go:noinline</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">allocStruct1</span><span class="params">()</span> *<span class="title">struct1</span></span> &#123;</span><br><span class="line"><span class="keyword">return</span> &amp;struct1&#123;</span><br><span class="line">e: allocStruct2(),</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//go:noinline</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">allocStruct2</span><span class="params">()</span> *<span class="title">struct2</span></span> &#123;</span><br><span class="line"><span class="keyword">return</span> &amp;struct2&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p><code>struct2</code> 不包含指针，因此它被储存在一个专门存放不被其他对象引用的对象的 span 中。</p><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/02.png" alt="不包含指针的结构体储存在专有的 span 中"></p><p>这减少了 GC 的工作，因为标记内存时不需要扫描这个 span。</p><p>分配工作结束后，我们的程序强迫 GC 重复前面的步骤。下面是流程图：</p><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/03.png" alt="扫描内存"></p><p>GC 从栈开始，递归地顺着指针找指针指向的对象，遍历内存。扫描到被标记为 <code>no scan</code> 的 span 时，停止扫描。然而，这个工作是在多个协程中完成的，每个指针被加入到一个 work pool 中的队列。然后，后台运行的标记 worker 从这个 work pool 中拿到前面出列的 work，扫描这个对象然后把在这个对象里找到的指针加入到队列。</p><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/04.png" alt="garbage collector work pool"></p><h2 id="颜色标记"><a href="#颜色标记" class="headerlink" title="颜色标记"></a>颜色标记</h2><p>worker 需要一种记录哪些内存需要扫描的方法。GC 使用一种 <a href="https://en.wikipedia.org/wiki/Tracing_garbage_collection#Tri-color_marking" target="_blank" rel="noopener">三色标记算法</a>，工作流程如下：</p><ul><li>开始时，所有对象都被认为是<strong>白色</strong></li><li>root 对象（栈，堆，全局变量）被标记为<strong>灰色</strong></li></ul><p>这个初始步骤完成后，GC 会：</p><ul><li>选择一个<strong>灰色</strong>的对象，标记为<strong>黑色</strong></li><li>追踪这个对象的所有指针，把所有引用的对象标记为<strong>灰色</strong></li></ul><p>然后，GC 重复以上两步，直到没有对象可被标记。在这一时刻，对象非黑即白，没有灰色。白色的对象表示没有其他对象引用，可以被回收。</p><p>下面是前面例子的图示：</p><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/05.png" alt></p><p>初始状态下，所有的对象被认为是白色的。然后，遍历到的且被其他对象引用的对象，被标记为灰色。如果一个对象在被标记为 <code>no scan</code> 的 span 中，因为它不需要被扫描，所以可以标记为黑色。</p><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/06.png" alt></p><p>现在灰色的对象被加入到扫描队列并被标记为黑色：</p><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/07.png" alt></p><p>对加入到扫描队列的所有对象重复做相同的操作，直到没有对象需要被处理：</p><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/08.png" alt></p><p>处理结束时，黑色对象表示内存中在使用的对象，白色对象是要被回收的对象。我们可以看到，由于 <code>struct2</code> 的实例是在一个匿名函数中创建的且不再存在于栈上，因此它是白色的且可以被回收。</p><p>归功于每一个 span 中的名为 <code>gcmarkBits</code> 的 bitmap 属性，三色被原生地实现了，bitmap 对 scan 中相应的 bit 设为 1 来追踪 scan。</p><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/09.png" alt></p><p>我们可以看到，黑色和灰色表示的意义相同。处理的不同之处在于，标记为灰色时是把对象加入到扫描队列，而标记为黑色时，不再扫描。</p><p>GC 最终 STW，清除每一次写屏障对 work pool 做的改变，继续后续的标记。</p><p><em>你可以在我的文章 <a href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-watch-your-application-dbef99be2c35" target="_blank" rel="noopener">Go GC 怎样监控你的应用</a> 中找到关于并发处理和 GC 的标记阶段更详细的描述</em>。</p><h2 id="runtime-分析器"><a href="#runtime-分析器" class="headerlink" title="runtime 分析器"></a>runtime 分析器</h2><p>Go 提供的工具使我们可以对每一步进行可视化，观察 GC 在我们的程序中的影响。开启 tracing 运行我们的代码，可以看到前面所有步骤的一个概览。下面是追踪结果：</p><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/10.png" alt="traces of the garbage collector"></p><p>标记 worker 的生命周期也可以在追踪结果中以协程等级可视化。下面是在启动之前先在后台等待标记内存的 goroutine #33 的例子。</p><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/11.png" alt="marking worker"></p><hr><p>via: <a href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976" target="_blank" rel="noopener">https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976</a></p><p>作者：<a href="https://medium.com/@blanchon.vincent" target="_blank" rel="noopener">Vincent Blanchon</a> 译者：<a href="https://github.com/lxbwolf" target="_blank" rel="noopener">lxbwolf</a> 校对：<a href="https://github.com/校对者ID" target="_blank" rel="noopener">校对者ID</a></p><p>本文由 <a href="https://github.com/studygolang/GCTT" target="_blank" rel="noopener">GCTT</a> 原创编译，<a href="https://studygolang.com/" target="_blank" rel="noopener">Go 中文网</a> 荣誉推出</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;Go-GC-怎么标记内存？&quot;&gt;&lt;a href=&quot;#Go-GC-怎么标记内存？&quot; class=&quot;headerlink&quot; title=&quot;Go GC 怎么标记内存？&quot;&gt;&lt;/a&gt;Go GC 怎么标记内存？&lt;/h1&gt;&lt;p&gt;&lt;img src=&quot;https://raw.gith
+      
+    
+    </summary>
+    
+    
+      <category term="Golang" scheme="https://lxb.wiki/categories/Golang/"/>
+    
+    
+      <category term="go" scheme="https://lxb.wiki/tags/go/"/>
+    
+      <category term="gc" scheme="https://lxb.wiki/tags/gc/"/>
+    
+  </entry>
   
   <entry>
     <title>微服务中的熔断器和重试</title>
@@ -500,57 +554,6 @@ nginx&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;获取证书&quot;&gt;&lt;a href=&
     
     
       <category term="https" scheme="https://lxb.wiki/tags/https/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>docker挂载目录失败/权限拒绝</title>
-    <link href="https://lxb.wiki/498654c2/"/>
-    <id>https://lxb.wiki/498654c2/</id>
-    <published>2019-07-23T09:32:38.000Z</published>
-    <updated>2019-10-03T07:57:15.287Z</updated>
-    
-    <content type="html"><![CDATA[<p>把宿主机的一个目录挂载到容器中的一个目录，当访问容器中的这个目录时，出现如下问题：<br> <code>ls: cannot open directory .: Permission denied</code><br>无法访问目录，权限拒绝。<br>该问题通常在centos7下出现。或者一个容器启动成功后，里面的服务无法成功访问，这是因为centos7中的安全模块selinux把权限禁掉了，一般的解决方案有以下两种：<br>（1）临时关闭selinux<br>直接在centos服务器上执行以下命令即可。执行完成以后建议重新<code>docker run</code>。 <code>setenforce 0</code><br>（2）给容器加权限<br>在<code>docker run</code>时给该容器加权限，加上以下参数即可：<br> <code>--privileged=true</code><br> 一般都推荐使用这种方式。<br> 按上述方法修改后, 如果执行下面命令失败<br> <code>docker run --name rookie-nginx-test -d -p 8082:80 -v ~/nginx/www:/usr/share/nginx/html -v ~/nginx/conf/nginx.conf:/etc/nginx/nginx.conf -v ~/nginx/logs:/var/log/nginx -v ~/nginx/conf/conf.d:/etc/nginx/conf.d --link php7-fpm:php nginx</code><br>则是因为<code>~/nginx/www/</code> 目录下没有index 文件导致. 手动创建<code>index.php</code> 文件解决</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;把宿主机的一个目录挂载到容器中的一个目录，当访问容器中的这个目录时，出现如下问题：&lt;br&gt; &lt;code&gt;ls: cannot open directory .: Permission denied&lt;/code&gt;&lt;br&gt;无法访问目录，权限拒绝。&lt;br&gt;该问题通常在centos
-      
-    
-    </summary>
-    
-    
-      <category term="Docker" scheme="https://lxb.wiki/categories/Docker/"/>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>Mac iTerm2登陆CentOS提示warning: setlocale: LC_CTYPE: cannot change locale (UTF-8): No such file or directory</title>
-    <link href="https://lxb.wiki/784beb8f/"/>
-    <id>https://lxb.wiki/784beb8f/</id>
-    <published>2019-07-02T03:48:53.000Z</published>
-    <updated>2019-10-03T16:55:28.088Z</updated>
-    
-    <content type="html"><![CDATA[<p>【报错原因】：没有utf-8这个语系（没添加语言_国名前缀），LC_ALL又没设定值。 <strong>服务端解决方法：</strong> 在远程系统上， <code>/etc/environment</code>加入以下两行，重新登陆即可。</p><pre><code>LANG=en_US.utf-8LC_ALL=en_US.utf-8</code></pre><p><strong>Mac终端解决方法：</strong> 编辑<code>~/.bashrc</code>或者<code>~/.zshrc</code>文件，添加</p><pre><code>export LC_ALL=en_US.UTF-8  export LANG=en_US.UTF-8</code></pre>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;【报错原因】：没有utf-8这个语系（没添加语言_国名前缀），LC_ALL又没设定值。 &lt;strong&gt;服务端解决方法：&lt;/strong&gt; 在远程系统上， &lt;code&gt;/etc/environment&lt;/code&gt;加入以下两行，重新登陆即可。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;
-      
-    
-    </summary>
-    
-    
-      <category term="Tools" scheme="https://lxb.wiki/categories/Tools/"/>
-    
-    
-      <category term="iTerm2" scheme="https://lxb.wiki/tags/iTerm2/"/>
     
   </entry>
   
