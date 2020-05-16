@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://lxb.wiki/"/>
-  <updated>2020-05-05T11:39:31.603Z</updated>
+  <updated>2020-05-16T07:31:16.920Z</updated>
   <id>https://lxb.wiki/</id>
   
   <author>
@@ -15,6 +15,32 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Go：异步抢占</title>
+    <link href="https://lxb.wiki/5698ca18/"/>
+    <id>https://lxb.wiki/5698ca18/</id>
+    <published>2020-05-05T07:24:46.000Z</published>
+    <updated>2020-05-16T07:31:16.920Z</updated>
+    
+    <content type="html"><![CDATA[<p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20200501-Go-Asynchronous-Preemption/00.png" alt="Illustration created for “A Journey With Go”, made from the original Go Gopher, created by Renee French"></p><p>ℹ️ 本文基于 Go 1.14。</p><p>抢占是调度器的重要部分，基于抢占调度器可以在各个协程中分配运行的时间。实际上，如果没有抢占机制，一个长时间占用 CPU 的协程会阻塞其他的协程被调度。1.14 版本引入了一项新的异步抢占的技术，赋予了调度器更大的能力和控制力。</p><p><em>我推荐你阅读我的文章<a href="https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7" target="_blank" rel="noopener">”Go：协程和抢占“</a>来了解更多之前的特性和它的弊端。</em></p><h2 id="工作流"><a href="#工作流" class="headerlink" title="工作流"></a>工作流</h2><p>我们以一个需要抢占的例子来开始。下面一段代码开启了几个协程，在几个循环中没有其他的函数调用，意味着调度器没有机会抢占它们：</p><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20200501-Go-Asynchronous-Preemption/01.png" alt></p><p>然而，当把这个程序的追踪过程可视化后，我们清晰地看到了协程间的抢占和切换：</p><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20200501-Go-Asynchronous-Preemption/02.png" alt></p><p>我们还可以看到表示协程的每个块儿的长度都相等。所有的协程运行时间相同（约 10 到 20 毫秒）。</p><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20200501-Go-Asynchronous-Preemption/03.png" alt></p><p>异步抢占是基于一个时间条件触发的。当一个协程运行超过 10ms 时，Go 会尝试抢占它。</p><p>抢占是由线程 <code>sysmon</code> 初始化的，该线程专门用于监控包括长时间运行的协程在内的运行时。当某个协程被检测到运行超过 10ms 后，<code>sysmon</code> 向当前的线程发出一个抢占信号。</p><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20200501-Go-Asynchronous-Preemption/04.png" alt></p><p>之后，当信息被信号处理器接收到时，线程中断当前的操作来处理信号，因此不会再运行当前的协程，在我们的例子中是 <code>G7</code>。取而代之的是，<code>gsignal</code> 被调度为管理发送来的信号。当它发现它是一个抢占指令后，在程序处理信号后恢复时它准备好指令来中止当前的协程。下面是这第二个阶段的示意图：</p><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20200501-Go-Asynchronous-Preemption/05.png" alt></p><p><em>如果你想了解更多关于 <code>gsignal</code> 的信息，我推荐你读一下我的文章<a href="https://medium.com/a-journey-with-go/go-gsignal-master-of-signals-329f7ff39391" target="_blank" rel="noopener">”Go：gsignal，信号的掌控者“</a>。</em></p><h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>我们在被选中的信号 <code>SIGURG</code> 中第一次看到了实现的细节。这个选择在提案<a href="https://github.com/golang/proposal/blob/master/design/24543-non-cooperative-preemption.md" target="_blank" rel="noopener">”提案：非合作式协程抢占“</a>中有详细的解释：</p><blockquote><ul><li>它应该是调试者默认传递过来的一个信号。</li><li>它不应该是 Go/C 混合二进制中 libc 内部使用的信号。</li><li>它应该是一个可以伪造而没有其他后果的信号。</li><li>我们需要在没有实时信号时与平台打交道。<br>然后，当信号被注入和接收时，Go 需要一种在程序恢复时能终止当前协程的方式。为了实现这个过程，Go 会把一条指令推进程序计数器，这样看起来运行中的程序调用了运行时的函数。该函数暂停了协程并把它交给了调度器，调度器之后还会运行其他的协程。</li></ul></blockquote><p><em>我们应该注意到 Go 不能做到在任何地方终止程序；当前的指令必须是一个安全点。例如，如果程序现在正在调用运行时，那么抢占协程并不安全，因为运行时很多函数不应该被抢占。</em></p><p>这个新的抢占机制也让垃圾回收器受益，可以用更高效的方式终止所有的协程。诚然，STW 现在非常容易，Go 仅需要向所有运行的线程发出一个信号就可以了。下面是垃圾回收器运行时的一个例子：</p><p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20200501-Go-Asynchronous-Preemption/06.png" alt></p><p>然后，所有的线程都接收到这个信号，在垃圾回收器重新开启全局之前会暂停执行。</p><p><em>如果你想了解更多关于 STW 的信息，我建议你阅读我的文章<a href="https://medium.com/a-journey-with-go/go-how-does-go-stop-the-world-1ffab8bc8846" target="_blank" rel="noopener">”Go：Go 怎样实现 STW？“</a>。</em></p><p>最后，这个特性被封装在一个参数中，你可以用这个参数关闭异步抢占。你可以用 <code>GODEBUG=asyncpreemptoff=1</code> 来运行你的程序，如果你因为升级到了 Go 1.14 发现了不正常的现象就可以调试你的程序，或者观察你的程序有无异步抢占时的不同表现。</p><hr><p>via: <a href="https://medium.com/a-journey-with-go/go-asynchronous-preemption-b5194227371c" target="_blank" rel="noopener">https://medium.com/a-journey-with-go/go-asynchronous-preemption-b5194227371c</a></p><p>作者：<a href="https://medium.com/@blanchon.vincent" target="_blank" rel="noopener">Vincent Blanchon</a><br>译者：<a href="https://github.com/lxbwolf" target="_blank" rel="noopener">lxbwolf</a><br>校对：<a href="https://github.com/polaris1119" target="_blank" rel="noopener">polaris1119</a></p><p>本文由 <a href="https://github.com/studygolang/GCTT" target="_blank" rel="noopener">GCTT</a> 原创编译，<a href="https://studygolang.com/" target="_blank" rel="noopener">Go 中文网</a> 荣誉推出</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/studygolang/gctt-images2/master/20200501-Go-Asynchronous-Preemption/00.png&quot; alt=&quot;Illustration
+      
+    
+    </summary>
+    
+    
+      <category term="Golang" scheme="https://lxb.wiki/categories/Golang/"/>
+    
+    
+      <category term="Go" scheme="https://lxb.wiki/tags/Go/"/>
+    
+  </entry>
   
   <entry>
     <title>Inlining Optimisations in Go</title>
@@ -542,32 +568,6 @@
       <category term="进程" scheme="https://lxb.wiki/tags/%E8%BF%9B%E7%A8%8B/"/>
     
       <category term="端口" scheme="https://lxb.wiki/tags/%E7%AB%AF%E5%8F%A3/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>网易云音乐破版权</title>
-    <link href="https://lxb.wiki/c6996379/"/>
-    <id>https://lxb.wiki/c6996379/</id>
-    <published>2019-10-08T10:07:13.000Z</published>
-    <updated>2019-10-09T17:30:16.320Z</updated>
-    
-    <content type="html"><![CDATA[<p>源码地址: <a href="https://github.com/lxbwolf/UnblockNeteaseMusic" target="_blank" rel="noopener">https://github.com/lxbwolf/UnblockNeteaseMusic</a></p><p><strong>原理:</strong><br>使用其它音乐平台的歌曲替换网易云音乐无版权歌曲。<br>目前备用的平台有：网易云旧链 、QQ 、 虾米 、 百度 、酷狗 、酷我 、咕咪 、JOOX 音源替换变灰歌曲链接 (默认仅启用前四)。</p><p>1、打开网易云音乐客户端的时候，客户端不再直接访问网易云服务器而是访问UnblockNeteaseMusic服务。</p><p>2、UnblockNeteaseMusic收到客户端的请求后，透传给网易云音乐的服务器，并再拿到相关的数据后进行检查，如果发现其中的歌曲没有版权，那么去其它平台查询此歌曲的相关信息。</p><p>3、将查到的数据返回给网易云客户端。</p><p>4、至此完成网易云音乐的解锁。</p><p>整个流程要解决两个重要的问题。</p><p><strong>核心工作:</strong><br>1、将UnblockNeteaseMusic部署到服务器。可以是本地服务器也可以是云服务器。</p><p>2、为网易云客户端设置代理，以达到访问UnblockNeteaseMusic项目的目的。</p><p><strong>部署服务部分</strong></p><ol><li>安装node.js </li><li><code>git clone https://github.com/lxbwolf/UnblockNeteaseMusic.git</code></li><li>在<code>UnblockNeteaseMusic</code> 目录下, 执行<code>npx @nondanee/unblockneteasemusic(官方)</code> 或者 用docker 启动<code>docker run nondanee/unblockneteasemusic &amp;&amp; docker-compose up</code>, 还有另一种方式:<br>在<code>UnblockNeteaseMusic</code> 目录下, 执行<br><code>node app.js -p 8080:443 -f 59.111.160.195</code><br>其中<code>59.111.160.195</code> 这个地址是通过<br><code>ping music.163.com</code> 测出来的</li></ol><p>正常情况下, 服务端启动进程, 客户端配置好IP Port, 就可以用了, </p><p>此时服务端接收到请求会有log, 如果服务端log一直卡在</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">HTTP Server running @ http://0.0.0.0:8080</span><br><span class="line">HTTPS Server running @ https://0.0.0.0:443</span><br></pre></td></tr></table></figure><p>说明客户端的请求并没有打到服务器上, 可能原因是8080和443端口还没有开启</p><p>配置参数</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">$ unblockneteasemusic -h</span><br><span class="line">usage: unblockneteasemusic [-v] [-p port] [-a address] [-u url] [-f host]</span><br><span class="line">                           [-o source [source ...]] [-t token] [-e url] [-s]</span><br><span class="line">                           [-h]</span><br><span class="line"></span><br><span class="line">optional arguments:</span><br><span class="line">  -v, --version                   output the version number</span><br><span class="line">  -p port, --port port            specify server port</span><br><span class="line">  -a address, --address address   specify server host</span><br><span class="line">  -u url, --proxy-url url         request through upstream proxy</span><br><span class="line">  -f host, --force-host host      force the netease server ip</span><br><span class="line">  -o source [source ...], --match-order source [source ...]</span><br><span class="line">                                  set priority of sources</span><br><span class="line">  -t token, --token token         set up proxy authentication</span><br><span class="line">  -e url, --endpoint url          replace virtual endpoint with public host</span><br><span class="line">  -s, --strict                    enable proxy limitation</span><br><span class="line">  -h, --help                      output usage information</span><br></pre></td></tr></table></figure><p><strong>客户端配置</strong></p><p>源码中的<code>README</code> 有详细说明</p><table><thead><tr><th>平台</th><th>基础设置</th></tr></thead><tbody><tr><td>Windows</td><td>设置 &gt; 工具 &gt; 自定义代理 (客户端内)</td></tr><tr><td>UWP</td><td>Windows 设置 &gt; 网络和 Internet &gt; 代理</td></tr><tr><td>Linux</td><td>系统设置 &gt; 网络 &gt; 网络代理</td></tr><tr><td>macOS</td><td>系统偏好设置 &gt; 网络 &gt; 高级 &gt; 代理</td></tr><tr><td>Android</td><td>WLAN &gt; 修改网络 &gt; 高级选项 &gt; 代理</td></tr><tr><td>iOS</td><td>无线局域网 &gt; HTTP 代理 &gt; 配置代理</td></tr></tbody></table><p><strong>Android 手机详细配置:</strong></p><p>设置 &gt; WLAN &gt; 修改网络 &gt; 高级选项 &gt; 代理</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">IP: 106.13.86.198</span><br><span class="line">Port: 8080</span><br></pre></td></tr></table></figure><p><img src="/images/modify-network-android.png" alt></p><p><img src="/images/ip-port-163-android.png" alt></p><p>破解前效果<br><img src="/images/pojieqian-163.png" alt></p><p>破解后效果<br><img src="/images/pojiehou-163.png" alt><br><img src="/images/tingge-163.png" alt></p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;源码地址: &lt;a href=&quot;https://github.com/lxbwolf/UnblockNeteaseMusic&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;https://github.com/lxbwolf/UnblockNeteaseMu
-      
-    
-    </summary>
-    
-    
-      <category term="Tools" scheme="https://lxb.wiki/categories/Tools/"/>
-    
-    
-      <category term="破解" scheme="https://lxb.wiki/tags/%E7%A0%B4%E8%A7%A3/"/>
     
   </entry>
   
