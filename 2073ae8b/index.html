@@ -26,7 +26,7 @@
 <meta property="og:site_name" content="Gate">
 <meta property="og:description" content="1.  树莓派上创建 git 账号，创建用于存放代码的目录/srv/ 2. GitHub 库 clone 到树莓派git clone git@github.com:user/XXXX.git /srv/ 3. 添加 remotegit remote add upstream https://github.com/abcd/XXXX 4. 修改 hook1234#.git/hooks/post-up">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-05-10T11:20:00.102Z">
+<meta property="og:updated_time" content="2020-05-20T15:37:42.070Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="树莓派搭建GitHub镜像服务">
 <meta name="twitter:description" content="1.  树莓派上创建 git 账号，创建用于存放代码的目录/srv/ 2. GitHub 库 clone 到树莓派git clone git@github.com:user/XXXX.git /srv/ 3. 添加 remotegit remote add upstream https://github.com/abcd/XXXX 4. 修改 hook1234#.git/hooks/post-up">
@@ -332,7 +332,7 @@
         <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2073ae8b/#comments" class="article-comment-link">评论</a></span>
         
 	
-		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 134(字)</span>
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 195(字)</span>
 	
 	
 		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 1(分)</span>
@@ -348,7 +348,9 @@
 <h3 id="4-修改-hook"><a href="#4-修改-hook" class="headerlink" title="4. 修改 hook"></a>4. 修改 hook</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#.git/hooks/post-update</span></span><br><span class="line">param=<span class="string">"<span class="variable">$1</span>"</span></span><br><span class="line">push_branch=<span class="variable">$&#123;param##refs/heads/&#125;</span> <span class="comment">#获取到更新的分支名</span></span><br><span class="line">git push origin <span class="variable">$push_branch</span></span><br></pre></td></tr></table></figure>
 
 <h3 id="5-添加定时任务"><a href="#5-添加定时任务" class="headerlink" title="5. 添加定时任务"></a>5. 添加定时任务</h3><p><code>5,35 * * * * cd /srv/XXXX &amp;&amp; git pull upstream master</code></p>
-<h3 id="6-在本地代码添加-remote"><a href="#6-在本地代码添加-remote" class="headerlink" title="6. 在本地代码添加 remote"></a>6. 在本地代码添加 remote</h3><p><code>git remote add pi git@192.168.1.8:/srv/XXXX</code></p>
+<h3 id="6-在本地代码添加-remote"><a href="#6-在本地代码添加-remote" class="headerlink" title="6. 在本地代码添加 remote"></a>6. 在本地代码添加 remote</h3><h4 id="6-1-有多个项目时，为避免修改每个项目的-remote，直接添加-host"><a href="#6-1-有多个项目时，为避免修改每个项目的-remote，直接添加-host" class="headerlink" title="6.1 有多个项目时，为避免修改每个项目的 remote，直接添加 host"></a>6.1 有多个项目时，为避免修改每个项目的 remote，直接添加 host</h4><p><code>192.168.1.8 gitsrv</code></p>
+<h4 id="6-2-在每个项目在添加一次-remote"><a href="#6-2-在每个项目在添加一次-remote" class="headerlink" title="6.2 在每个项目在添加一次 remote"></a>6.2 在每个项目在添加一次 remote</h4><p><code>git remote add pi git@192.168.1.8:/srv/XXXX</code></p>
+<p>这样即使以后地址改变，只需要改一次 host 就可以了</p>
 <h3 id="7-推拉代码时，从-pi-推拉"><a href="#7-推拉代码时，从-pi-推拉" class="headerlink" title="7. 推拉代码时，从 pi 推拉"></a>7. 推拉代码时，从 pi 推拉</h3><p><code>git pull pi branch</code></p>
 <p><code>git push pi branch</code></p>
 
