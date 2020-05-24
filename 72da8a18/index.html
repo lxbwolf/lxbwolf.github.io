@@ -25,7 +25,7 @@
 <meta property="og:site_name" content="Gate">
 <meta property="og:description" content="C的表达式 x == x，何时为假呢？即下面的代码： if (x == x) { printf(&amp;quot;Equal\n&amp;quot;); } else { printf(&amp;quot;Not equal\n&amp;quot;); }什么时候输出为”Not equal”呢？ #include &amp;lt;stdlib.h&amp;gt; #include &amp;lt;stdio.h&amp;gt; #include &amp;lt;st">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-10-03T07:57:15.404Z">
+<meta property="og:updated_time" content="2020-05-24T10:27:47.715Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="x == x">
 <meta name="twitter:description" content="C的表达式 x == x，何时为假呢？即下面的代码： if (x == x) { printf(&amp;quot;Equal\n&amp;quot;); } else { printf(&amp;quot;Not equal\n&amp;quot;); }什么时候输出为”Not equal”呢？ #include &amp;lt;stdlib.h&amp;gt; #include &amp;lt;stdio.h&amp;gt; #include &amp;lt;st">
@@ -405,7 +405,7 @@ x(4294967296.000000) &amp;gt;= 0
 Not equal
 Surprise x(-nan)!!!</code></pre><p>最后两行输出是不是有点surprise啊。</p>
 <p>下面先简单解释一下： 1. 当<code>float x = 0xffffffff</code>：这时将整数赋给一个浮点数，由于float和int的size都是4，而浮点数的存储格式与整数不同，其需要将某些位作为小数位，所以float的范围要小于int的范围。因此这里涉及到了整数转换浮点的规定。因为这个转换其实很少用到，我也就不查了。但是总之，这个转换是合法的。但是最终的值很可能不是你想要的结果——尤其是当浮点的范围小于整数的范围时。 2. 即使整数转换成浮点，数值再不是期望值，但它也一定是一个合法的浮点数值。所以第一个<code>x == x</code>，一定为true，且x不是大于0，就是小于0。这时x存的并不是0xffffffff。 3. 当使用memcpy将0xff填充到x的地址时，这时x存的保证为0xffffffff。但是这个不是一个合法的float的值。因此奇怪的现象发生了，x并不等于x。原因则是与cpu的浮点指令相关. 4. 作为一个非法的float值，当它与其它任何数值比较时，都会返回false。这也就造成了，后面惊奇的结果，x既不大于等于0，也不小于0。</p>
-<p>总结一下：一般来说，浮点类型很少被使用，也不应该在程序中鼓励使用。不仅其效率比整数低，且由于浮点类型特殊的存储格式，很容易造成一些意想不到的错误。如果真的无法避免时，一定要小心小心再小心。特别要注意今天的主题，这种非法的浮点值，会导致任何比较判断都失败。而判断这种浮点值的方法也很简单，如果x != x，那么该浮点即为非法浮点值。</p>
+<p>总结一下：一般来说，浮点类型很少被使用，也不应该在程序中鼓励使用。不仅其效率比整数低，且由于浮点类型特殊的存储格式，很容易造成一些意想不到的错误。如果真的无法避免时，一定要小心小心再小心。特别要注意今天的主题，这种非法的浮点值，会导致任何比较判断都失败。而判断这种浮点值的方法也很简单，如果<code>x != x</code>，那么该浮点即为非法浮点值。</p>
 
       
     </div>
