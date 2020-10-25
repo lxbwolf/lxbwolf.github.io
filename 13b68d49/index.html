@@ -17,7 +17,7 @@
   <meta http-equiv="window-target" content="_top">
   
   
-  <title>用GDB调试程序 | lxbwolf</title>
+  <title>用GDB调试程序 | Xiaobin&#39;s Blog</title>
   <meta name="description" content="使用GDB一般来说GDB主要调试的是C/C++的程序。要调试C/C++的程序，首先在编译时，我们必须要把调试信息加到可执行文件中。使用编译器（cc/gcc/g++）的 -g 参数可以做到这一点。如： $gcc -g -Wall hello.c -o hello $g++ -g -Wall hello.cpp -o hello如果没有-g，你将看不见程序的函数名、变量名，所代替的全是运行时的内存地址">
 <meta name="keywords" content="工具">
 <meta property="og:type" content="article">
@@ -303,6 +303,7 @@
 
       
       <div class="article-meta">
+		<div>lxbwolf</div>
         <span class="article-date">
     <i class="icon icon-calendar-check"></i>
 	<a href="/13b68d49/" class="article-date">
@@ -322,7 +323,7 @@
   </span>
 
 
-        
+<!--        
 
 	<span class="article-read hidden-xs">
     	<i class="icon icon-eye-fill" aria-hidden="true"></i>
@@ -330,7 +331,7 @@
 			<span class="leancloud-visitors-count">0</span>
 		</span>
     </span>
-
+ -->
         <span class="post-comment"><i class="icon icon-comment"></i> <a href="/13b68d49/#comments" class="article-comment-link">评论</a></span>
         
 	
@@ -344,7 +345,7 @@
     </div>
     <div class="article-entry marked-body" itemprop="articleBody">
       
-        <h3 id="使用GDB"><a href="#使用GDB" class="headerlink" title="使用GDB"></a>使用GDB</h3><p>一般来说GDB主要调试的是C/C++的程序。要调试C/C++的程序，首先在编译时，我们必须要把调试信息加到可执行文件中。使用编译器（cc/gcc/g++）的 -g 参数可以做到这一点。如：</p>
+        <h3><span id="使用gdb">使用GDB</span></h3><p>一般来说GDB主要调试的是C/C++的程序。要调试C/C++的程序，首先在编译时，我们必须要把调试信息加到可执行文件中。使用编译器（cc/gcc/g++）的 -g 参数可以做到这一点。如：</p>
 <pre><code>$gcc -g -Wall hello.c -o hello
 $g++ -g -Wall hello.cpp -o hello</code></pre><p>如果没有-g，你将看不见程序的函数名、变量名，所代替的全是运行时的内存地址。当你用-g把调试信息加入之后，并成功编译目标代码以后，让我们来看看如何用gdb来调试他。 启动GDB的方法有以下几种： <code>gdb &lt;program&gt;</code> program也就是你的执行文件，一般在当前目录下。 <code>gdb &lt;program&gt; core</code> 用gdb同时调试一个运行程序和core文件，core是程序非法执行后core dump后产生的文件。 <code>gdb &lt;program&gt; &lt;pid&gt;</code> 如果你的程序是一个服务程序，那么你可以指定这个服务程序运行时的进程ID。gdb会自动attach上去，并调试他。program应该在PATH环境变量中搜索得到。 以上三种都是进入gdb环境和加载被调试程序同时进行的。也可以先进入gdb环境，在加载被调试程序，方法如下：</p>
 <pre><code>*在终端输入：gdb
@@ -415,12 +416,12 @@ GDB把所有make开头的函数全部列出来给你查看。</code></pre><p><st
 <pre><code>(gdb) b &apos;bubble( M-?
 bubble(double,double) bubble(int,int)
 (gdb) b &apos;bubble(</code></pre><p>你可以查看到C++中的所有的重载函数及参数。（注：M-?和“按两次TAB键”是一个意思） 要退出gdb时，只用发quit或命令简称q就行了</p>
-<h3 id="GDB中运行UNIX的shell程序"><a href="#GDB中运行UNIX的shell程序" class="headerlink" title="GDB中运行UNIX的shell程序"></a>GDB中运行UNIX的shell程序</h3><p>在gdb环境中，你可以执行UNIX的shell的命令，使用gdb的shell命令来完成： <code>shell &lt;command string=&quot;&quot;&gt;&lt;/command&gt;</code> 调用UNIX的shell来执行<code>&lt;command string=&quot;&quot;&gt;&lt;/command&gt;</code>，环境变量SHELL中定义的UNIX的shell将会被用来执行<code>&lt;command string=&quot;&quot;&gt;&lt;/command&gt;</code>，如果SHELL没有定义，那就使用UNIX的标准<code>shell：/bin/sh</code>。（在Windows中使用Command.com或cmd.exe） 还有一个gdb命令是make： <code>make &lt;make-args&gt;</code> 可以在gdb中执行make命令来重新build自己的程序。这个命令等价于<code>shell make &lt;make-args&gt;</code>。</p>
-<h3 id="在GDB中运行程序"><a href="#在GDB中运行程序" class="headerlink" title="在GDB中运行程序"></a>在GDB中运行程序</h3><p>当以<code>gdb &lt;program&gt;</code>方式启动gdb后，gdb会在PATH路径和当前目录中搜索<code>&lt;program&gt;</code>的源文件。如要确认gdb是否读到源文件，可使用l或list命令，看看gdb是否能列出源代码。 在gdb中，运行程序使用r或是run命令。程序的运行，你有可能需要设置下面四方面的事。 <strong>1、程序运行参数。</strong> set args 可指定运行时参数。（如：set args 10 20 30 40 50） show args 命令可以查看设置好的运行参数。 <strong>2、运行环境。</strong> `path</p>
+<h3><span id="gdb中运行unix的shell程序">GDB中运行UNIX的shell程序</span></h3><p>在gdb环境中，你可以执行UNIX的shell的命令，使用gdb的shell命令来完成： <code>shell &lt;command string=&quot;&quot;&gt;&lt;/command&gt;</code> 调用UNIX的shell来执行<code>&lt;command string=&quot;&quot;&gt;&lt;/command&gt;</code>，环境变量SHELL中定义的UNIX的shell将会被用来执行<code>&lt;command string=&quot;&quot;&gt;&lt;/command&gt;</code>，如果SHELL没有定义，那就使用UNIX的标准<code>shell：/bin/sh</code>。（在Windows中使用Command.com或cmd.exe） 还有一个gdb命令是make： <code>make &lt;make-args&gt;</code> 可以在gdb中执行make命令来重新build自己的程序。这个命令等价于<code>shell make &lt;make-args&gt;</code>。</p>
+<h3><span id="在gdb中运行程序">在GDB中运行程序</span></h3><p>当以<code>gdb &lt;program&gt;</code>方式启动gdb后，gdb会在PATH路径和当前目录中搜索<code>&lt;program&gt;</code>的源文件。如要确认gdb是否读到源文件，可使用l或list命令，看看gdb是否能列出源代码。 在gdb中，运行程序使用r或是run命令。程序的运行，你有可能需要设置下面四方面的事。 <strong>1、程序运行参数。</strong> set args 可指定运行时参数。（如：set args 10 20 30 40 50） show args 命令可以查看设置好的运行参数。 <strong>2、运行环境。</strong> `path</p>
 <p><code>可设定程序的运行路径。 show paths 查看程序的运行路径。 set environment varname [=value] 设置环境变量。如：set env USER=hchen show environment [varname] 查看环境变量。 **3、工作目录。**</code>cd</p>
 <p>` 相当于shell的cd命令。 pwd 显示当前的所在目录。 <strong>4、程序的输入输出。</strong> info terminal 显示你程序用到的终端的模式。 使用重定向控制程序输出。如：run &gt; outfile tty命令可以指写输入输出的终端设备。如：tty /dev/ttyb</p>
-<h3 id="调试已运行的程序"><a href="#调试已运行的程序" class="headerlink" title="调试已运行的程序"></a>调试已运行的程序</h3><p>两种方法： 1. 在UNIX下用ps查看正在运行的程序的PID（进程ID），然后用<code>gdb &lt;program&gt; PID</code>格式挂接正在运行的程序。 2. 先用<code>gdb &lt;program&gt;</code>关联上源代码，并进行gdb，在gdb中用attach命令来挂接进程的PID。并用detach来取消挂接的进程。</p>
-<h3 id="暂停-恢复程序运行"><a href="#暂停-恢复程序运行" class="headerlink" title="暂停/恢复程序运行"></a>暂停/恢复程序运行</h3><p>调试程序中，暂停程序运行是必须的，GDB可以方便地暂停程序的运行。你可以设置程序的在哪行停住，在什么条件下停住，在收到什么信号时停往等等。以便于你查看运行时的变量，以及运行时的流程。 当进程被gdb停住时，你可以使用<code>info program</code> 来查看程序的是否在运行，进程号，被暂停的原因。 在gdb中，我们可以有以下几种暂停方式：断点（BreakPoint）、观察点（Watch Point）、捕捉点（Catch Point）、信号（Signals）、线程停止（Thread Stops）。如果要恢复程序运行，可以使用c或是 continue命令。</p>
+<h3><span id="调试已运行的程序">调试已运行的程序</span></h3><p>两种方法： 1. 在UNIX下用ps查看正在运行的程序的PID（进程ID），然后用<code>gdb &lt;program&gt; PID</code>格式挂接正在运行的程序。 2. 先用<code>gdb &lt;program&gt;</code>关联上源代码，并进行gdb，在gdb中用attach命令来挂接进程的PID。并用detach来取消挂接的进程。</p>
+<h3><span id="暂停恢复程序运行">暂停/恢复程序运行</span></h3><p>调试程序中，暂停程序运行是必须的，GDB可以方便地暂停程序的运行。你可以设置程序的在哪行停住，在什么条件下停住，在收到什么信号时停往等等。以便于你查看运行时的变量，以及运行时的流程。 当进程被gdb停住时，你可以使用<code>info program</code> 来查看程序的是否在运行，进程号，被暂停的原因。 在gdb中，我们可以有以下几种暂停方式：断点（BreakPoint）、观察点（Watch Point）、捕捉点（Catch Point）、信号（Signals）、线程停止（Thread Stops）。如果要恢复程序运行，可以使用c或是 continue命令。</p>
 <p><strong>下面为重要的使用步骤, 只摘抄了部分必要的信息, 如设置断点, 查看栈信息, 其余操作, 可以在<a href="http://wiki.ubuntu.org.cn/%E7%94%A8GDB%E8%B0%83%E8%AF%95%E7%A8%8B%E5%BA%8F" target="_blank" rel="noopener">wiki.ubuntu</a>查看</strong></p>
 <p><strong>设置断点（Break Points）</strong> 我们用break命令来设置断点。下面有几点设置断点的方法： <code>break &lt;function&gt;</code> 在进入指定函数时停住。C++中可以使用<code>class::function</code>或<code>function(type,type)</code>格式来指定函数名。 <code>break &lt;linenum&gt;</code> 在指定行号停住。 <code>break +offset</code> <code>break -offset</code> 在当前行号的前面或后面的offset行停住。offiset为自然数。 <code>break filename：linenum</code> 在源文件filename的linenum行处停住。 <code>break filename：function</code> 在源文件filename的function函数的入口处停住。 <code>break *address</code> 在程序运行的内存地址处停住。 <code>break</code> break命令没有参数时，表示在下一条指令处停住。 <code>break ... if &lt;condition&gt;</code> …可以是上述的参数，condition表示条件，在条件成立时停住。比如在循环体中，可以设置<code>break if i==100</code>，表示当i为100时停住程序。 查看断点时，可使用info命令，如下所示：（注：n表示断点号） <code>info breakpoints [n]</code> <code>info break [n]</code></p>
 <p><strong>维护停止点</strong> 上面说了如何设置程序的停止点，GDB中的停止点也就是上述的三类。在GDB中，如果你觉得已定义好的停止点没有用了，你可以使用<code>delete</code>、<code>clear</code>、<code>disable</code>、<code>enable</code>这几个命令来进行维护。 <code>clear</code> 清除所有的已定义的停止点。 <code>clear &lt;function&gt;</code> <code>clear &lt;filename：function&gt;</code> 清除所有设置在函数上的停止点。 <code>clear &lt;linenum&gt;</code> <code>clear &lt;filename：linenum&gt;</code> 清除所有设置在指定行上的停止点。 <code>delete [breakpoints] [range...]</code> 删除指定的断点，breakpoints为断点号。如果不指定断点号，则表示删除所有的断点。range 表示断点号的范围（如：3-7）。其简写命令为d。&lt;/filename：linenum&gt;&lt;/filename：function&gt;</p>
@@ -493,6 +494,7 @@ bubble(double,double) bubble(int,int)
   </div>
 </nav>
   
+
 
 
 </main>

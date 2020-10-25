@@ -17,7 +17,7 @@
   <meta http-equiv="window-target" content="_top">
   
   
-  <title>Golang select 的用法 | lxbwolf</title>
+  <title>Golang select 的用法 | Xiaobin&#39;s Blog</title>
   <meta name="description" content="基本使用select 是 Go 中的一个控制结构, 类似于switch 语句, 用于处理异步 IO 操作. select 语句会监听 case语句中channel 的读写操作, 当case 中 channel 读写操作为非阻塞状态(即能读写)时, 将会触发相应的动作. select 中的 case 语句必须是一个 channel 操作 select 中的 default 子句总是可运行的 如果有多">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Golang select 的用法">
@@ -302,6 +302,7 @@
 
       
       <div class="article-meta">
+		<div>lxbwolf</div>
         <span class="article-date">
     <i class="icon icon-calendar-check"></i>
 	<a href="/e353ee8e/" class="article-date">
@@ -316,7 +317,7 @@
 
         
 
-        
+<!--        
 
 	<span class="article-read hidden-xs">
     	<i class="icon icon-eye-fill" aria-hidden="true"></i>
@@ -324,7 +325,7 @@
 			<span class="leancloud-visitors-count">0</span>
 		</span>
     </span>
-
+ -->
         <span class="post-comment"><i class="icon icon-comment"></i> <a href="/e353ee8e/#comments" class="article-comment-link">评论</a></span>
         
 	
@@ -338,7 +339,7 @@
     </div>
     <div class="article-entry marked-body" itemprop="articleBody">
       
-        <h4 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h4><p>select 是 Go 中的一个控制结构, 类似于switch 语句, 用于处理异步 IO 操作. select 语句会监听 case语句中channel 的读写操作, 当case 中 channel 读写操作为非阻塞状态(即能读写)时, 将会触发相应的动作.</p>
+        <h4><span id="基本使用">基本使用</span></h4><p>select 是 Go 中的一个控制结构, 类似于switch 语句, 用于处理异步 IO 操作. select 语句会监听 case语句中channel 的读写操作, 当case 中 channel 读写操作为非阻塞状态(即能读写)时, 将会触发相应的动作.</p>
 <pre><code>select 中的 case 语句必须是一个 channel 操作
 select 中的 default 子句总是可运行的</code></pre><ol>
 <li>如果有多个 case 都可以运行, select 会随机公平地选出一个执行, 其他不会执行</li>
@@ -369,7 +370,7 @@ func main() {
    }    
 }
 
-//输出：no communication</code></pre><h4 id="典型用法"><a href="#典型用法" class="headerlink" title="典型用法"></a>典型用法</h4><h5 id="1-超时判断"><a href="#1-超时判断" class="headerlink" title="1. 超时判断"></a>1. 超时判断</h5><pre><code>//比如在下面的场景中，使用全局resChan来接受response，如果时间超过3S,resChan中还没有数据返回，则第二条case将执行
+//输出：no communication</code></pre><h4><span id="典型用法">典型用法</span></h4><h5><span id="1-超时判断">1. 超时判断</span></h5><pre><code>//比如在下面的场景中，使用全局resChan来接受response，如果时间超过3S,resChan中还没有数据返回，则第二条case将执行
 var resChan = make(chan int)
 // do request
 func test() {
@@ -383,7 +384,7 @@ func test() {
 
 func doData(data int) {
     //...
-}</code></pre><h5 id="2-退出"><a href="#2-退出" class="headerlink" title="2. 退出"></a>2. 退出</h5><pre><code>//主线程（协程）中如下：
+}</code></pre><h5><span id="2-退出">2. 退出</span></h5><pre><code>//主线程（协程）中如下：
 var shouldQuit=make(chan struct{})
 fun main(){
     {
@@ -400,7 +401,7 @@ fun main(){
 }
 
 //再另外一个协程中，如果运行遇到非法操作或不可处理的错误，就向shouldQuit发送数据通知程序停止运行
-close(shouldQuit)</code></pre><h5 id="3-判断-channel-是否阻塞"><a href="#3-判断-channel-是否阻塞" class="headerlink" title="3. 判断 channel 是否阻塞"></a>3. 判断 channel 是否阻塞</h5><pre><code>//在某些情况下是存在不希望channel缓存满了的需求的，可以用如下方法判断
+close(shouldQuit)</code></pre><h5><span id="3-判断-channel-是否阻塞">3. 判断 channel 是否阻塞</span></h5><pre><code>//在某些情况下是存在不希望channel缓存满了的需求的，可以用如下方法判断
 ch := make (chan int, 5)
 //...
 data：=0
@@ -467,6 +468,7 @@ default:
   </div>
 </nav>
   
+
 
 
 </main>

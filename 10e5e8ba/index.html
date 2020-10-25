@@ -17,7 +17,7 @@
   <meta http-equiv="window-target" content="_top">
   
   
-  <title>Go 字符串中的潜在问题 | lxbwolf</title>
+  <title>Go 字符串中的潜在问题 | Xiaobin&#39;s Blog</title>
   <meta name="description" content="在我之前的文章 Go 中我喜欢的东西中提到过，我喜欢的 Go 的东西其中之一就是它的字符串（通常还有切片）。从一个 Python 开发者的角度看，它们之所以伟大，是因为创建它们时开销很少，因为它们通常不需要复制。在 Python 中，任何时候操作字符串都需要复制一部分或全部字符串，而 这很容易对性能造成影响。想要写高性能的 Python 代码需要谨慎考虑复制的问题。在 Go 中，几乎所有的字符串操">
 <meta name="keywords" content="Go">
 <meta property="og:type" content="article">
@@ -303,6 +303,7 @@
 
       
       <div class="article-meta">
+		<div>lxbwolf</div>
         <span class="article-date">
     <i class="icon icon-calendar-check"></i>
 	<a href="/10e5e8ba/" class="article-date">
@@ -322,7 +323,7 @@
   </span>
 
 
-        
+<!--        
 
 	<span class="article-read hidden-xs">
     	<i class="icon icon-eye-fill" aria-hidden="true"></i>
@@ -330,7 +331,7 @@
 			<span class="leancloud-visitors-count">0</span>
 		</span>
     </span>
-
+ -->
         <span class="post-comment"><i class="icon icon-comment"></i> <a href="/10e5e8ba/#comments" class="article-comment-link">评论</a></span>
         
 	
@@ -351,7 +352,7 @@
 <p>（我之所以关注到这个问题，是因为一次我花了大量精力用尽可能少的内存写 Python 程序，尽管它是从一个大的配置文件解析结果然后分块储存。这让我联想到了一些其他的事，如字符串的生命周期、限制字符串只复制一次，等等。然后我用 Go 语言写了一个解析器，这让我由重新考虑了一下这些问题，我意识到由于我的解析器截取出和维持的 bit 一直存在于内存中，从输入文件解析出的庞大字符串也会一直存在与内存中。）</p>
 <p>顺便说一下，我认为这是 Go 做了权衡之后的正确结果。大部分使用字符串的开发者不会遇到这个问题，而且截取子字符串开销很小对于开发者来说用处很大。这种低开销的截取操作也减轻了 GC 的负担；当代码使用大量的子字符串截取（像 Python 中那样）时，你只需要处理固定长度的字符串引用就可以了，而不是需要处理长度变化的字符串。</p>
 <p>当你的代码遇到这个问题时，当然有明显的解决方法：创建一个函数，通过把字符串转换成 <code>[]byte</code> 来 ”最小化“ 字符串，然后返回。这种方法生成了一个最小化的字符串，内存开销是理论上最完美实现的只复制一次，而 Go 现在很容易就可以实现。</p>
-<h2 id="附加问题：strings-ToUpper-等怎样规避没有必要的复制"><a href="#附加问题：strings-ToUpper-等怎样规避没有必要的复制" class="headerlink" title="附加问题：strings.ToUpper() 等怎样规避没有必要的复制"></a>附加问题：<code>strings.ToUpper()</code> 等怎样规避没有必要的复制</h2><p>所有的主动转换函数像 <code>ToUpper()</code> 和 <code>ToTitle()</code> 是用 <code>strings.Map()</code> 和 <a href="http://golang.org/pkg/unicode/" target="_blank" rel="noopener">unicode 包</a> 中的函数实现的。<code>Map()</code> 足够智能，在映射的函数返回一个与已存在的 <code>rune</code> 不同的结果之前不会创建新的字符串。因此，你代码中所有类似的直接使用 <code>Map()</code> 的地方都不会有内存开销。</p>
+<h2><span id="附加问题stringstoupper-等怎样规避没有必要的复制">附加问题：<code>strings.ToUpper()</code> 等怎样规避没有必要的复制</span></h2><p>所有的主动转换函数像 <code>ToUpper()</code> 和 <code>ToTitle()</code> 是用 <code>strings.Map()</code> 和 <a href="http://golang.org/pkg/unicode/" target="_blank" rel="noopener">unicode 包</a> 中的函数实现的。<code>Map()</code> 足够智能，在映射的函数返回一个与已存在的 <code>rune</code> 不同的结果之前不会创建新的字符串。因此，你代码中所有类似的直接使用 <code>Map()</code> 的地方都不会有内存开销。</p>
 <hr>
 <p>via: <a href="https://utcc.utoronto.ca/~cks/space/blog/programming/GoStringsMemoryHolding" target="_blank" rel="noopener">https://utcc.utoronto.ca/~cks/space/blog/programming/GoStringsMemoryHolding</a></p>
 <p>作者：<a href="https://utcc.utoronto.ca/~cks/space/People/ChrisSiebenmann" target="_blank" rel="noopener">Chris Siebenmann</a><br>译者：<a href="https://github.com/lxbwolf" target="_blank" rel="noopener">lxbwolf</a><br>校对：<a href="https://github.com/校对者ID" target="_blank" rel="noopener">校对者ID</a></p>
@@ -415,6 +416,7 @@
   </div>
 </nav>
   
+
 
 
 </main>

@@ -17,7 +17,7 @@
   <meta http-equiv="window-target" content="_top">
   
   
-  <title>基于FFmpeg的推送文件到RTMP服务器 | lxbwolf</title>
+  <title>基于FFmpeg的推送文件到RTMP服务器 | Xiaobin&#39;s Blog</title>
   <meta name="description" content="原文地址: http://blog.csdn.net/leixiaohua1020/article/details/39803457 将本地的MOV/AVI/MKV/MP4/FLV等格式的媒体文件， 通过流媒体协议(RTMP, HTTP, UDP, TCP, RTP等)以直播流的形式推送出去. 在这个推流器的基础上, 可以进行以下几种方式的修改, 实现各式各样的推流器. 例如: * 将输入文件改为">
 <meta property="og:type" content="article">
 <meta property="og:title" content="基于FFmpeg的推送文件到RTMP服务器">
@@ -304,6 +304,7 @@
 
       
       <div class="article-meta">
+		<div>lxbwolf</div>
         <span class="article-date">
     <i class="icon icon-calendar-check"></i>
 	<a href="/5722b57a/" class="article-date">
@@ -318,7 +319,7 @@
 
         
 
-        
+<!--        
 
 	<span class="article-read hidden-xs">
     	<i class="icon icon-eye-fill" aria-hidden="true"></i>
@@ -326,7 +327,7 @@
 			<span class="leancloud-visitors-count">0</span>
 		</span>
     </span>
-
+ -->
         <span class="post-comment"><i class="icon icon-comment"></i> <a href="/5722b57a/#comments" class="article-comment-link">评论</a></span>
         
 	
@@ -343,8 +344,8 @@
         <p>原文地址: <a href="http://blog.csdn.net/leixiaohua1020/article/details/39803457" target="_blank" rel="noopener">http://blog.csdn.net/leixiaohua1020/article/details/39803457</a></p>
 <p>将本地的MOV/AVI/MKV/MP4/FLV等格式的媒体文件， 通过流媒体协议(RTMP, HTTP, UDP, TCP, RTP等)以直播流的形式推送出去.</p>
 <p>在这个推流器的基础上, 可以进行以下几种方式的修改, 实现各式各样的推流器. 例如: * 将输入文件改为网络流URL, 可以显示转流器 * 将输入文件改为回调函数(内存读取)的形式, 可以推送内存中的视频数据 * 将输入文件改为系统设备(通过libavdevice), 同时加上编码的功能, 可以实现实时推流器(现场直播)</p>
-<h3 id="需要注意的地方"><a href="#需要注意的地方" class="headerlink" title="需要注意的地方"></a>需要注意的地方</h3><h4 id="封装格式"><a href="#封装格式" class="headerlink" title="封装格式"></a>封装格式</h4><p>RTMP采用的封装格式FLV, 因此在指定输出流媒体的时候需要制定其封装格式为”flv”. 同理, 其他流媒体协议也需要指定其封装格式. 例如采用UDP推送流媒体的时候, 可以指定其封装格式为”mpegts”.</p>
-<h4 id="延时"><a href="#延时" class="headerlink" title="延时"></a>延时</h4><p>发送流媒体的数据的时候需要延时. 否则, FFmpeg处理数据速度很快, 瞬间就能把所有的数据发送出去, 流媒体服务器是承受不了的. 因此需要按照视频实际的帧率发送数据. 本文的推流器在视频帧与帧之间采用av_usleep()函数休眠的方式来延迟发送. 这样就可以按照视频的帧率发送数据了, 代码如下</p>
+<h3><span id="需要注意的地方">需要注意的地方</span></h3><h4><span id="封装格式">封装格式</span></h4><p>RTMP采用的封装格式FLV, 因此在指定输出流媒体的时候需要制定其封装格式为”flv”. 同理, 其他流媒体协议也需要指定其封装格式. 例如采用UDP推送流媒体的时候, 可以指定其封装格式为”mpegts”.</p>
+<h4><span id="延时">延时</span></h4><p>发送流媒体的数据的时候需要延时. 否则, FFmpeg处理数据速度很快, 瞬间就能把所有的数据发送出去, 流媒体服务器是承受不了的. 因此需要按照视频实际的帧率发送数据. 本文的推流器在视频帧与帧之间采用av_usleep()函数休眠的方式来延迟发送. 这样就可以按照视频的帧率发送数据了, 代码如下</p>
 <pre><code>//…  
 int64_t start_time=av_gettime();  
 while (1) {  
@@ -360,7 +361,7 @@ while (1) {
     }  
 //…  
 }  
-//… </code></pre><h4 id="PTS-DTS问题"><a href="#PTS-DTS问题" class="headerlink" title="PTS/DTS问题"></a>PTS/DTS问题</h4><p>没有封装格式的裸流(例如H.264裸流)是不包含PTS, DTS这些参数的. 在发送这种数据的时候, 需要自己计算并写入AVPacket的PTS, DTS, duration等参数.</p>
+//… </code></pre><h4><span id="ptsdts问题">PTS/DTS问题</span></h4><p>没有封装格式的裸流(例如H.264裸流)是不包含PTS, DTS这些参数的. 在发送这种数据的时候, 需要自己计算并写入AVPacket的PTS, DTS, duration等参数.</p>
 <pre><code>//FIX：No PTS (Example: Raw H.264)  
 //Simple Write PTS  
 if(pkt.pts==AV_NOPTS_VALUE){  
@@ -372,7 +373,7 @@ if(pkt.pts==AV_NOPTS_VALUE){
     pkt.pts=(double)(frame_index*calc_duration)/(double)(av_q2d(time_base1)*AV_TIME_BASE);  
     pkt.dts=pkt.pts;  
     pkt.duration=(double)calc_duration/(double)(av_q2d(time_base1)*AV_TIME_BASE);  
-} </code></pre><h4 id="sequence"><a href="#sequence" class="headerlink" title="sequence"></a>sequence</h4><p><img src="http://img.blog.csdn.net/20180113202019583?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbHhid29sZg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述"></p>
+} </code></pre><h4><span id="sequence">sequence</span></h4><p><img src="http://img.blog.csdn.net/20180113202019583?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbHhid29sZg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述"></p>
 <p>代码</p>
 <pre><code>/** 
  * 最简单的基于FFmpeg的推流器（推送RTMP） 
@@ -636,6 +637,7 @@ end:
   </div>
 </nav>
   
+
 
 
 </main>

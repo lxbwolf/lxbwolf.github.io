@@ -17,7 +17,7 @@
   <meta http-equiv="window-target" content="_top">
   
   
-  <title>go匿名函数和闭包 | lxbwolf</title>
+  <title>go匿名函数和闭包 | Xiaobin&#39;s Blog</title>
   <meta name="description" content="函数变量(函数值)在 Go 语言中，函数被看作是第一类值，这意味着函数像变量一样，有类型、有值，其他普通变量能做的事它也可以。 123func square(x int) &amp;#123;	println(x * x)&amp;#125;   直接调用：square(1) 把函数当成变量一样赋值：s := square；接着可以调用这个函数变量：s(1)。 注意：这里 square 后面没有圆括号，调用才有。">
 <meta name="keywords" content="Go">
 <meta property="og:type" content="article">
@@ -303,6 +303,7 @@
 
       
       <div class="article-meta">
+		<div>lxbwolf</div>
         <span class="article-date">
     <i class="icon icon-calendar-check"></i>
 	<a href="/e2c91def/" class="article-date">
@@ -322,7 +323,7 @@
   </span>
 
 
-        
+<!--        
 
 	<span class="article-read hidden-xs">
     	<i class="icon icon-eye-fill" aria-hidden="true"></i>
@@ -330,7 +331,7 @@
 			<span class="leancloud-visitors-count">0</span>
 		</span>
     </span>
-
+ -->
         <span class="post-comment"><i class="icon icon-comment"></i> <a href="/e2c91def/#comments" class="article-comment-link">评论</a></span>
         
 	
@@ -344,7 +345,7 @@
     </div>
     <div class="article-entry marked-body" itemprop="articleBody">
       
-        <h3 id="函数变量-函数值"><a href="#函数变量-函数值" class="headerlink" title="函数变量(函数值)"></a>函数变量(函数值)</h3><p>在 Go 语言中，函数被看作是第一类值，这意味着函数像变量一样，有类型、有值，其他普通变量能做的事它也可以。</p>
+        <h3><span id="函数变量函数值">函数变量(函数值)</span></h3><p>在 Go 语言中，函数被看作是第一类值，这意味着函数像变量一样，有类型、有值，其他普通变量能做的事它也可以。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">func square(x int) &#123;</span><br><span class="line">	println(x * x)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <ol>
@@ -355,10 +356,10 @@
 <li>调用 <code>nil</code> 的函数变量会导致 panic。</li>
 <li>函数变量的零值是 nil，这意味着它可以跟 nil 比较，但两个函数变量之间不能比较。</li>
 </ul>
-<h3 id="匿名函数"><a href="#匿名函数" class="headerlink" title="匿名函数"></a>匿名函数</h3><p>作用: 在go语言中目前了解的作用就是用于构成闭包</p>
-<h3 id="闭包"><a href="#闭包" class="headerlink" title="闭包"></a>闭包</h3><p>闭包通过引用的方式使用外部函数的变量<br>函数与 与其(直接)相关的环境形成闭包</p>
+<h3><span id="匿名函数">匿名函数</span></h3><p>作用: 在go语言中目前了解的作用就是用于构成闭包</p>
+<h3><span id="闭包">闭包</span></h3><p>闭包通过引用的方式使用外部函数的变量<br>函数与 与其(直接)相关的环境形成闭包</p>
 <p>简单来说: 因为把返回的函数赋给了一个变量, 虽然函数在执行完一瞬间会销毁其执行环境, 但是如果有闭包的话, 闭包会保存外部函数的活动对象(变量), 所以如果不对闭包的引用消除掉, 闭包会一直存在内存中, 垃圾收集器不会销毁闭包占用的内存</p>
-<h4 id="实例1"><a href="#实例1" class="headerlink" title="实例1"></a>实例1</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">//函数A是一个不带参数，返回值是一个匿名函数，且该函数</span><br><span class="line">//带有一个int类型参数，返回值为一个int类型</span><br><span class="line">func A() func(int) int &#123;</span><br><span class="line">	sum := 0</span><br><span class="line">	return func(bb int) int &#123;</span><br><span class="line">		sum += bb</span><br><span class="line">		fmt.Println(&quot;bb=&quot;, bb, &quot;\tsum=&quot;, sum)</span><br><span class="line">		return sum</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4><span id="实例1">实例1</span></h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">//函数A是一个不带参数，返回值是一个匿名函数，且该函数</span><br><span class="line">//带有一个int类型参数，返回值为一个int类型</span><br><span class="line">func A() func(int) int &#123;</span><br><span class="line">	sum := 0</span><br><span class="line">	return func(bb int) int &#123;</span><br><span class="line">		sum += bb</span><br><span class="line">		fmt.Println(&quot;bb=&quot;, bb, &quot;\tsum=&quot;, sum)</span><br><span class="line">		return sum</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>调用1:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">	a := A()//定义变量a,并将函数A的返回值赋给a // 这个时候, 虽然有小括号, 但是func A()还未真正执行, 只是赋值给了变量a</span><br><span class="line">	b := a(4) //真正执行func A()</span><br><span class="line">	fmt.Println(b)</span><br><span class="line">&#125;</span><br><span class="line">/*</span><br><span class="line">**    输出：   </span><br><span class="line">**    bb= 4   sum= 4</span><br><span class="line">**    4</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
@@ -373,7 +374,7 @@
 <p>　可以看出，上例中调用了两次函数A，构成了两个闭包，这两个闭包维护的变量sum不是同一个变量。
 　
 　</p>
-<h4 id="实例2"><a href="#实例2" class="headerlink" title="实例2"></a>实例2</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">func B() []func() &#123;</span><br><span class="line">	b := make([]func(), 3, 3)</span><br><span class="line">	for i := 0; i &lt; 3; i++ &#123;</span><br><span class="line">		b[i] = func() &#123;</span><br><span class="line">			fmt.Println(i)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	return b</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	c := B() // 这个时候并未真正执行函数, 只是定义, 所以不会print</span><br><span class="line">	c[0]() // 这个时候真正执行, 但是由于闭包, c[0] 中拿的i的引用</span><br><span class="line">	c[1]()</span><br><span class="line">	c[2]()</span><br><span class="line">&#125;</span><br><span class="line">/*</span><br><span class="line">**　　输出：</span><br><span class="line">**　　3</span><br><span class="line">**　　3</span><br><span class="line">**　　3</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
+<h4><span id="实例2">实例2</span></h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">func B() []func() &#123;</span><br><span class="line">	b := make([]func(), 3, 3)</span><br><span class="line">	for i := 0; i &lt; 3; i++ &#123;</span><br><span class="line">		b[i] = func() &#123;</span><br><span class="line">			fmt.Println(i)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	return b</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	c := B() // 这个时候并未真正执行函数, 只是定义, 所以不会print</span><br><span class="line">	c[0]() // 这个时候真正执行, 但是由于闭包, c[0] 中拿的i的引用</span><br><span class="line">	c[1]()</span><br><span class="line">	c[2]()</span><br><span class="line">&#125;</span><br><span class="line">/*</span><br><span class="line">**　　输出：</span><br><span class="line">**　　3</span><br><span class="line">**　　3</span><br><span class="line">**　　3</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
 
 <p>闭包通过引用的方式使用外部函数的变量。</p>
 <p>　　上例中只调用了一次函数B,构成一个闭包(<code>func() {fmt.Println(i)}</code> 与它的环境<code>func B() []func(){}</code> 构成闭包)，i 在外部函数B中定义，所以闭包维护该变量 i ，c[0]、c[1]、c[2]中的 i 都是闭包中 i 的引用。</p>
@@ -384,7 +385,7 @@
 <p>在使用defer的时候可能出现类似问题，需要注意：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">for j := 0; j &lt; 2; j++ &#123;</span><br><span class="line">	defer (func() &#123;</span><br><span class="line">		fmt.Println(j)</span><br><span class="line">	&#125;)()</span><br><span class="line">&#125;</span><br><span class="line">/*</span><br><span class="line">**    输出：    </span><br><span class="line">**    2    </span><br><span class="line">**    2</span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
 
-<h4 id="实例3"><a href="#实例3" class="headerlink" title="实例3:"></a>实例3:</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">func incr() func() int &#123;</span><br><span class="line">	var x int</span><br><span class="line">	return func() int &#123;</span><br><span class="line">		x++</span><br><span class="line">		return x</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4><span id="实例3">实例3:</span></h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">func incr() func() int &#123;</span><br><span class="line">	var x int</span><br><span class="line">	return func() int &#123;</span><br><span class="line">		x++</span><br><span class="line">		return x</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>调用这个函数会返回一个函数变量。<br><code>i := incr()</code> : 通过把这个函数变量赋值给<code>i</code>, <code>i</code> 就成为了一个闭包<br>所以<code>i</code> 保存着对<code>x</code> 的引用, 可以想象<code>i</code> 中有着一个指针指向<code>x</code> 或者 <code>i</code> 中有<code>x</code> 的地址</p>
 <p>由于<code>i</code> 有着指向<code>x</code> 的指针, 所以可以修改<code>x</code> , 且保持着状态:</p>
@@ -394,7 +395,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">println(incr()()) // 1</span><br><span class="line">println(incr()()) // 1</span><br><span class="line">println(incr()()) // 1</span><br></pre></td></tr></table></figure>
 
 <p>这是因为这里调用了三次 <code>incr()</code>，返回了三个闭包，这三个闭包引用着三个不同的 <code>x</code>，它们的状态是各自独立的。</p>
-<h4 id="实例4-闭包引用产生的问题"><a href="#实例4-闭包引用产生的问题" class="headerlink" title="实例4: 闭包引用产生的问题"></a>实例4: 闭包引用产生的问题</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">x := 1</span><br><span class="line">f := func() &#123;</span><br><span class="line">	println(x)</span><br><span class="line">&#125;</span><br><span class="line">x = 2</span><br><span class="line">x = 3</span><br><span class="line">f() // 3</span><br></pre></td></tr></table></figure>
+<h4><span id="实例4-闭包引用产生的问题">实例4: 闭包引用产生的问题</span></h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">x := 1</span><br><span class="line">f := func() &#123;</span><br><span class="line">	println(x)</span><br><span class="line">&#125;</span><br><span class="line">x = 2</span><br><span class="line">x = 3</span><br><span class="line">f() // 3</span><br></pre></td></tr></table></figure>
 
 <p>因为闭包对外层词法域变量是引用的，所以这段代码会输出 3。<br>可以想象 f 中保存着 x 的地址，它使用 x 时会直接解引用，所以 x 的值改变了会导致 f 解引用得到的值也会改变。<br>但是，这段代码却会输出 1：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">x := 1</span><br><span class="line">func() &#123;</span><br><span class="line">	println(x) // 1</span><br><span class="line">&#125;()</span><br><span class="line">x = 2</span><br><span class="line">x = 3</span><br></pre></td></tr></table></figure>
@@ -404,19 +405,19 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">x := 1</span><br><span class="line">func() &#123;</span><br><span class="line">	println(&amp;x) // 0xc0000de790</span><br><span class="line">&#125;()</span><br><span class="line">println(&amp;x) // 0xc0000de790</span><br></pre></td></tr></table></figure>
 
 <p>可以看到引用的是同一个地址。</p>
-<h4 id="实例5-1-循环闭包引用"><a href="#实例5-1-循环闭包引用" class="headerlink" title="实例5.1: 循环闭包引用"></a>实例5.1: 循环闭包引用</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">for i := 0; i &lt; 3; i++ &#123;</span><br><span class="line">	func() &#123;</span><br><span class="line">		println(i) // 0, 1, 2</span><br><span class="line">	&#125;()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4><span id="实例51-循环闭包引用">实例5.1: 循环闭包引用</span></h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">for i := 0; i &lt; 3; i++ &#123;</span><br><span class="line">	func() &#123;</span><br><span class="line">		println(i) // 0, 1, 2</span><br><span class="line">	&#125;()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>这段代码相当于：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">for i := 0; i &lt; 3; i++ &#123;</span><br><span class="line">	f := func() &#123;</span><br><span class="line">		println(i) // 0, 1, 2</span><br><span class="line">	&#125;</span><br><span class="line">	f()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>每次迭代后都对 i 进行了解引用并使用得到的值且不再使用，所以这段代码会正常输出。</p>
-<h4 id="实例5-2"><a href="#实例5-2" class="headerlink" title="实例5.2"></a>实例5.2</h4><p>正常代码：输出 0, 1, 2：</p>
+<h4><span id="实例52">实例5.2</span></h4><p>正常代码：输出 0, 1, 2：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">var dummy [3]int</span><br><span class="line">for i := 0; i &lt; len(dummy); i++ &#123;</span><br><span class="line">	println(i) // 0, 1, 2</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>然而这段代码会输出 3：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">var dummy [3]int</span><br><span class="line">var f func()</span><br><span class="line">for i := 0; i &lt; len(dummy); i++ &#123;</span><br><span class="line">	f = func() &#123;</span><br><span class="line">		println(i)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line">f() // 3 这个地方i最后的值是3, 而不是2, 因为只有i的值是3时, 才会跳出循环</span><br></pre></td></tr></table></figure>
 
-<h4 id="实例5-3"><a href="#实例5-3" class="headerlink" title="实例5.3"></a>实例5.3</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">var funcSlice []func()</span><br><span class="line">for i := 0; i &lt; 3; i++ &#123;</span><br><span class="line">	funcSlice = append(funcSlice, func() &#123;</span><br><span class="line">		println(i)</span><br><span class="line">	&#125;)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line">for j := 0; j &lt; 3; j++ &#123;</span><br><span class="line">	funcSlice[j]() // 3, 3, 3</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4><span id="实例53">实例5.3</span></h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">var funcSlice []func()</span><br><span class="line">for i := 0; i &lt; 3; i++ &#123;</span><br><span class="line">	funcSlice = append(funcSlice, func() &#123;</span><br><span class="line">		println(i)</span><br><span class="line">	&#125;)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line">for j := 0; j &lt; 3; j++ &#123;</span><br><span class="line">	funcSlice[j]() // 3, 3, 3</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>为了解决上面这种情况, 可以声明新的匿名函数并传参:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">var funcSlice []func()</span><br><span class="line">for i := 0; i &lt; 3; i++ &#123;</span><br><span class="line">	func(k int) &#123;</span><br><span class="line">		funcSlice = append(funcSlice, func() &#123;</span><br><span class="line">			println(k)</span><br><span class="line">		&#125;)</span><br><span class="line">	&#125;(i)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line">for j := 0; j &lt; 3; j++ &#123;</span><br><span class="line">	funcSlice[j]() // 0, 1, 2</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -483,6 +484,7 @@
   </div>
 </nav>
   
+
 
 
 </main>

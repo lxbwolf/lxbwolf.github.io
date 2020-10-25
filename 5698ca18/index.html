@@ -17,7 +17,7 @@
   <meta http-equiv="window-target" content="_top">
   
   
-  <title>Go：异步抢占 | lxbwolf</title>
+  <title>Go：异步抢占 | Xiaobin&#39;s Blog</title>
   <meta name="description" content="ℹ️ 本文基于 Go 1.14。 抢占是调度器的重要部分，基于抢占调度器可以在各个协程中分配运行的时间。实际上，如果没有抢占机制，一个长时间占用 CPU 的协程会阻塞其他的协程被调度。1.14 版本引入了一项新的异步抢占的技术，赋予了调度器更大的能力和控制力。 我推荐你阅读我的文章”Go：协程和抢占“来了解更多之前的特性和它的弊端。 工作流我们以一个需要抢占的例子来开始。下面一段代码开启了几个协">
 <meta name="keywords" content="Go">
 <meta property="og:type" content="article">
@@ -311,6 +311,7 @@
 
       
       <div class="article-meta">
+		<div>lxbwolf</div>
         <span class="article-date">
     <i class="icon icon-calendar-check"></i>
 	<a href="/5698ca18/" class="article-date">
@@ -330,7 +331,7 @@
   </span>
 
 
-        
+<!--        
 
 	<span class="article-read hidden-xs">
     	<i class="icon icon-eye-fill" aria-hidden="true"></i>
@@ -338,7 +339,7 @@
 			<span class="leancloud-visitors-count">0</span>
 		</span>
     </span>
-
+ -->
         <span class="post-comment"><i class="icon icon-comment"></i> <a href="/5698ca18/#comments" class="article-comment-link">评论</a></span>
         
 	
@@ -356,7 +357,7 @@
 <p>ℹ️ 本文基于 Go 1.14。</p>
 <p>抢占是调度器的重要部分，基于抢占调度器可以在各个协程中分配运行的时间。实际上，如果没有抢占机制，一个长时间占用 CPU 的协程会阻塞其他的协程被调度。1.14 版本引入了一项新的异步抢占的技术，赋予了调度器更大的能力和控制力。</p>
 <p><em>我推荐你阅读我的文章<a href="https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7" target="_blank" rel="noopener">”Go：协程和抢占“</a>来了解更多之前的特性和它的弊端。</em></p>
-<h2 id="工作流"><a href="#工作流" class="headerlink" title="工作流"></a>工作流</h2><p>我们以一个需要抢占的例子来开始。下面一段代码开启了几个协程，在几个循环中没有其他的函数调用，意味着调度器没有机会抢占它们：</p>
+<h2><span id="工作流">工作流</span></h2><p>我们以一个需要抢占的例子来开始。下面一段代码开启了几个协程，在几个循环中没有其他的函数调用，意味着调度器没有机会抢占它们：</p>
 <p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20200501-Go-Asynchronous-Preemption/01.png" alt></p>
 <p>然而，当把这个程序的追踪过程可视化后，我们清晰地看到了协程间的抢占和切换：</p>
 <p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20200501-Go-Asynchronous-Preemption/02.png" alt></p>
@@ -368,7 +369,7 @@
 <p>之后，当信息被信号处理器接收到时，线程中断当前的操作来处理信号，因此不会再运行当前的协程，在我们的例子中是 <code>G7</code>。取而代之的是，<code>gsignal</code> 被调度为管理发送来的信号。当它发现它是一个抢占指令后，在程序处理信号后恢复时它准备好指令来中止当前的协程。下面是这第二个阶段的示意图：</p>
 <p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20200501-Go-Asynchronous-Preemption/05.png" alt></p>
 <p><em>如果你想了解更多关于 <code>gsignal</code> 的信息，我推荐你读一下我的文章<a href="https://medium.com/a-journey-with-go/go-gsignal-master-of-signals-329f7ff39391" target="_blank" rel="noopener">”Go：gsignal，信号的掌控者“</a>。</em></p>
-<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>我们在被选中的信号 <code>SIGURG</code> 中第一次看到了实现的细节。这个选择在提案<a href="https://github.com/golang/proposal/blob/master/design/24543-non-cooperative-preemption.md" target="_blank" rel="noopener">”提案：非合作式协程抢占“</a>中有详细的解释：</p>
+<h2><span id="实现">实现</span></h2><p>我们在被选中的信号 <code>SIGURG</code> 中第一次看到了实现的细节。这个选择在提案<a href="https://github.com/golang/proposal/blob/master/design/24543-non-cooperative-preemption.md" target="_blank" rel="noopener">”提案：非合作式协程抢占“</a>中有详细的解释：</p>
 <blockquote>
 <ul>
 <li>它应该是调试者默认传递过来的一个信号。</li>
@@ -446,6 +447,7 @@
   </div>
 </nav>
   
+
 
 
 </main>

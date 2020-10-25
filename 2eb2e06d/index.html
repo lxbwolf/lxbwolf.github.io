@@ -17,7 +17,7 @@
   <meta http-equiv="window-target" content="_top">
   
   
-  <title>Gerrit + apache 安装 | lxbwolf</title>
+  <title>Gerrit + apache 安装 | Xiaobin&#39;s Blog</title>
   <meta name="description" content="使用gerrit自带的数据库h2, 验证方式为HTTP, SMTP 服务器未配置 git 安装可直接从yum 源安装 gerrit 安装先添加gerrit 用户. gerrit 从2.10开始, 换成了新版界面. 几乎国内所有的镜像都会下载失败, 需要翻墙下载. 下载完成后, 初始化命令为: java -jar gerrrit-war init -d /home/gerrit/repository">
 <meta name="keywords" content="工具">
 <meta property="og:type" content="article">
@@ -303,6 +303,7 @@
 
       
       <div class="article-meta">
+		<div>lxbwolf</div>
         <span class="article-date">
     <i class="icon icon-calendar-check"></i>
 	<a href="/2eb2e06d/" class="article-date">
@@ -322,7 +323,7 @@
   </span>
 
 
-        
+<!--        
 
 	<span class="article-read hidden-xs">
     	<i class="icon icon-eye-fill" aria-hidden="true"></i>
@@ -330,7 +331,7 @@
 			<span class="leancloud-visitors-count">0</span>
 		</span>
     </span>
-
+ -->
         <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2eb2e06d/#comments" class="article-comment-link">评论</a></span>
         
 	
@@ -345,11 +346,11 @@
     <div class="article-entry marked-body" itemprop="articleBody">
       
         <p>使用gerrit自带的数据库h2, 验证方式为HTTP, SMTP 服务器未配置</p>
-<h6 id="git-安装"><a href="#git-安装" class="headerlink" title="git 安装"></a>git 安装</h6><p>可直接从yum 源安装</p>
-<h6 id="gerrit-安装"><a href="#gerrit-安装" class="headerlink" title="gerrit 安装"></a>gerrit 安装</h6><p>先添加gerrit 用户. gerrit 从2.10开始, 换成了新版界面. 几乎国内所有的镜像都会下载失败, 需要翻墙下载. 下载完成后, 初始化命令为: <code>java -jar gerrrit-war init -d /home/gerrit/repository</code></p>
+<h6><span id="git-安装">git 安装</span></h6><p>可直接从yum 源安装</p>
+<h6><span id="gerrit-安装">gerrit 安装</span></h6><p>先添加gerrit 用户. gerrit 从2.10开始, 换成了新版界面. 几乎国内所有的镜像都会下载失败, 需要翻墙下载. 下载完成后, 初始化命令为: <code>java -jar gerrrit-war init -d /home/gerrit/repository</code></p>
 <p>初始化启动时, “Authentication method” 设为”http” ,其他默认 “Listen on port [8080]“ 可用默认, 如端口被占用, 初始化后也可在配置文件修改</p>
-<h6 id="apache-安装"><a href="#apache-安装" class="headerlink" title="apache 安装"></a>apache 安装</h6><p>直接从yum源安装 apache名字为httpd, 服务名也是httpd. 服务启动后, 默认以apache用户运行. 如需访问其他用户的文件, 如<code>/home/gerrit/repository/htpasswd</code>, 需要确保apache 用户有足够的权限</p>
-<h6 id="配置-apache"><a href="#配置-apache" class="headerlink" title="配置 apache"></a>配置 apache</h6><p>修改 apache 的conf 文件, 一般路径为<code>/etc/httpd/conf/httpd.conf</code> windows 下的配置文件路径为 <code>INSTALL_DIR/conf/httpd.conf</code></p>
+<h6><span id="apache-安装">apache 安装</span></h6><p>直接从yum源安装 apache名字为httpd, 服务名也是httpd. 服务启动后, 默认以apache用户运行. 如需访问其他用户的文件, 如<code>/home/gerrit/repository/htpasswd</code>, 需要确保apache 用户有足够的权限</p>
+<h6><span id="配置-apache">配置 apache</span></h6><p>修改 apache 的conf 文件, 一般路径为<code>/etc/httpd/conf/httpd.conf</code> windows 下的配置文件路径为 <code>INSTALL_DIR/conf/httpd.conf</code></p>
 <p>去掉下面几行的注释</p>
 <pre><code>LoadModule proxy_module modules/mod_proxy.so
 LoadModule proxy_connect_module modules/mod_proxy_connect.so
@@ -380,7 +381,7 @@ LoadModule negotiation_module modules/mod_negotiation.so</code></pre><p>在最�
   ProxyPass / http://10.14.132.179:9080/
   ProxyPassReverse / http://10.14.132.179:9080/
 &lt;/VirtualHost&gt;</code></pre><p>如端口被占用, 修改conf文件的”Listen 8080” 字段, 换成其他的端口 查看某个端口是否被占用 : <code>netstat -lnp | grep 8080</code> <code>ProxyPass</code> 和 <code>proxyPassReverse</code> 的端口需与gerrit的conf文件里端口一致</p>
-<h6 id="配置-gerrit"><a href="#配置-gerrit" class="headerlink" title="配置 gerrit"></a>配置 gerrit</h6><p>修改<code>GERRIT_DIR/etc/gerrit.config</code> 文件</p>
+<h6><span id="配置-gerrit">配置 gerrit</span></h6><p>修改<code>GERRIT_DIR/etc/gerrit.config</code> 文件</p>
 <pre><code>[gerrit]
 basePath = git
 canonicalWebUrl = http://10.14.132.179:9080/
@@ -405,9 +406,9 @@ listenUrl = http://10.14.132.179:9080/
 [cache]
 directory = cache</code></pre><p>需要修改的内容: - canonicalWebUrl - auth/type</p>
 <p>需要注意: canonicalWebUrl 和 listenAddress 不是8080. apache 的端口和 gerrit 的端口是不同的, 用户访问地址为 apache 的地址</p>
-<h6 id="启动-gerrit"><a href="#启动-gerrit" class="headerlink" title="启动 gerrit"></a>启动 gerrit</h6><p><code>GERRIT_DIR/bin/gerrit.sh start</code></p>
-<h6 id="启动-apache"><a href="#启动-apache" class="headerlink" title="启动 apache"></a>启动 apache</h6><p><code>service httpd start</code></p>
-<h6 id="添加账号和密码"><a href="#添加账号和密码" class="headerlink" title="添加账号和密码"></a>添加账号和密码</h6><p><code>htpasswd -cm /home/gerrit/repository/htpasswd USER_NAME</code></p>
+<h6><span id="启动-gerrit">启动 gerrit</span></h6><p><code>GERRIT_DIR/bin/gerrit.sh start</code></p>
+<h6><span id="启动-apache">启动 apache</span></h6><p><code>service httpd start</code></p>
+<h6><span id="添加账号和密码">添加账号和密码</span></h6><p><code>htpasswd -cm /home/gerrit/repository/htpasswd USER_NAME</code></p>
 <ul>
 <li>htpasswd 为apache 的命令工具</li>
 <li>参数c 意为新建文件, 即 <code>/home/gerrit/repository/htpasswd</code> 文件不存在时, 新建名为htpasswd的文件</li>
@@ -474,6 +475,7 @@ directory = cache</code></pre><p>需要修改的内容: - canonicalWebUrl - auth
   </div>
 </nav>
   
+
 
 
 </main>

@@ -17,7 +17,7 @@
   <meta http-equiv="window-target" content="_top">
   
   
-  <title>Go GC 怎么标记内存 | lxbwolf</title>
+  <title>Go GC 怎么标记内存 | Xiaobin&#39;s Blog</title>
   <meta name="description" content="ℹ️ 本文基于 Go 1.13。关于内存管理的概念的讨论在我的文章 Go 中的内存管理和分配 中有详细的解释。 Go GC 的作用是回收不再使用的内存。实现的算法是并发的三色标记和清除回收法。本中文，我们研究三色标记法，以及各个颜色的不同用处。 你可以在 Ken Fox 的 解读垃圾回收算法 中了解更多关于不同垃圾回收机制的信息。 标记阶段这个阶段浏览内存来了解哪些块儿是在被我们的代码使用和哪些">
 <meta name="keywords" content="Go,GC">
 <meta property="og:type" content="article">
@@ -316,6 +316,7 @@
 
       
       <div class="article-meta">
+		<div>lxbwolf</div>
         <span class="article-date">
     <i class="icon icon-calendar-check"></i>
 	<a href="/b3baee92/" class="article-date">
@@ -335,7 +336,7 @@
   </span>
 
 
-        
+<!--        
 
 	<span class="article-read hidden-xs">
     	<i class="icon icon-eye-fill" aria-hidden="true"></i>
@@ -343,7 +344,7 @@
 			<span class="leancloud-visitors-count">0</span>
 		</span>
     </span>
-
+ -->
         <span class="post-comment"><i class="icon icon-comment"></i> <a href="/b3baee92/#comments" class="article-comment-link">评论</a></span>
         
 	
@@ -361,7 +362,7 @@
 <p>ℹ️ 本文基于 <em>Go 1.13</em>。关于内存管理的概念的讨论在我的文章 <a href="https://medium.com/a-journey-with-go/go-memory-management-and-allocation-a7396d430f44" target="_blank" rel="noopener">Go 中的内存管理和分配</a> 中有详细的解释。</p>
 <p>Go GC 的作用是回收不再使用的内存。实现的算法是并发的三色标记和清除回收法。本中文，我们研究三色标记法，以及各个颜色的不同用处。</p>
 <p>你可以在 Ken Fox 的 <a href="https://spin.atomicobject.com/2014/09/03/visualizing-garbage-collection-algorithms/" target="_blank" rel="noopener">解读垃圾回收算法</a> 中了解更多关于不同垃圾回收机制的信息。</p>
-<h2 id="标记阶段"><a href="#标记阶段" class="headerlink" title="标记阶段"></a>标记阶段</h2><p>这个阶段浏览内存来了解哪些块儿是在被我们的代码使用和哪些块儿应该被回收。</p>
+<h2><span id="标记阶段">标记阶段</span></h2><p>这个阶段浏览内存来了解哪些块儿是在被我们的代码使用和哪些块儿应该被回收。</p>
 <p>然而，因为 GC 和我们的 Go 程序并行，GC 扫描期间内存中某些对象的状态可能被改变，所以需要一个检测这种可能的变化的方法。为了解决这个潜在的问题，实现了 <a href="https://en.wikipedia.org/wiki/Write_barrier" target="_blank" rel="noopener">写屏障</a> 算法，GC 可以追踪到任何的指针修改。使写屏障生效的唯一条件是短暂终止程序，又名 “Stop the World”。</p>
 <p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/01.png" alt></p>
 <p>在进程启动时，Go 也在每个 processor 起了一个标记 worker 来辅助标记内存。</p>
@@ -376,7 +377,7 @@
 <p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/03.png" alt="扫描内存"></p>
 <p>GC 从栈开始，递归地顺着指针找指针指向的对象，遍历内存。扫描到被标记为 <code>no scan</code> 的 span 时，停止扫描。然而，这个工作是在多个协程中完成的，每个指针被加入到一个 work pool 中的队列。然后，后台运行的标记 worker 从这个 work pool 中拿到前面出列的 work，扫描这个对象然后把在这个对象里找到的指针加入到队列。</p>
 <p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/04.png" alt="garbage collector work pool"></p>
-<h2 id="颜色标记"><a href="#颜色标记" class="headerlink" title="颜色标记"></a>颜色标记</h2><p>worker 需要一种记录哪些内存需要扫描的方法。GC 使用一种 <a href="https://en.wikipedia.org/wiki/Tracing_garbage_collection#Tri-color_marking" target="_blank" rel="noopener">三色标记算法</a>，工作流程如下：</p>
+<h2><span id="颜色标记">颜色标记</span></h2><p>worker 需要一种记录哪些内存需要扫描的方法。GC 使用一种 <a href="https://en.wikipedia.org/wiki/Tracing_garbage_collection#Tri-color_marking" target="_blank" rel="noopener">三色标记算法</a>，工作流程如下：</p>
 <ul>
 <li>开始时，所有对象都被认为是<strong>白色</strong></li>
 <li>root 对象（栈，堆，全局变量）被标记为<strong>灰色</strong></li>
@@ -401,7 +402,7 @@
 <p>我们可以看到，黑色和灰色表示的意义相同。处理的不同之处在于，标记为灰色时是把对象加入到扫描队列，而标记为黑色时，不再扫描。</p>
 <p>GC 最终 STW，清除每一次写屏障对 work pool 做的改变，继续后续的标记。</p>
 <p><em>你可以在我的文章 <a href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-watch-your-application-dbef99be2c35" target="_blank" rel="noopener">Go GC 怎样监控你的应用</a> 中找到关于并发处理和 GC 的标记阶段更详细的描述</em>。</p>
-<h2 id="runtime-分析器"><a href="#runtime-分析器" class="headerlink" title="runtime 分析器"></a>runtime 分析器</h2><p>Go 提供的工具使我们可以对每一步进行可视化，观察 GC 在我们的程序中的影响。开启 tracing 运行我们的代码，可以看到前面所有步骤的一个概览。下面是追踪结果：</p>
+<h2><span id="runtime-分析器">runtime 分析器</span></h2><p>Go 提供的工具使我们可以对每一步进行可视化，观察 GC 在我们的程序中的影响。开启 tracing 运行我们的代码，可以看到前面所有步骤的一个概览。下面是追踪结果：</p>
 <p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/10.png" alt="traces of the garbage collector"></p>
 <p>标记 worker 的生命周期也可以在追踪结果中以协程等级可视化。下面是在启动之前先在后台等待标记内存的 goroutine #33 的例子。</p>
 <p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/11.png" alt="marking worker"></p>
@@ -468,6 +469,7 @@
   </div>
 </nav>
   
+
 
 
 </main>

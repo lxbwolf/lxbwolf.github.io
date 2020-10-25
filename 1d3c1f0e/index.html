@@ -17,7 +17,7 @@
   <meta http-equiv="window-target" content="_top">
   
   
-  <title>Golang的反射 | lxbwolf</title>
+  <title>Golang的反射 | Xiaobin&#39;s Blog</title>
   <meta name="description" content="编程语言中反射的概念在计算机科学领域，反射是指一类应用，它们能够自描述和自控制。也就是说，这类应用通过采用某种机制来实现对自己行为的描述（self-representation）和监测（examination），并能根据自身行为的状态和结果，调整或修改应用所描述行为的状态和相关的语义。 每种语言的反射模型都不同，并且有些语言根本不支持反射。Golang语言实现了反射，反射机制就是在运行时动态的调用">
 <meta name="keywords" content="Go">
 <meta property="og:type" content="article">
@@ -303,6 +303,7 @@
 
       
       <div class="article-meta">
+		<div>lxbwolf</div>
         <span class="article-date">
     <i class="icon icon-calendar-check"></i>
 	<a href="/1d3c1f0e/" class="article-date">
@@ -322,7 +323,7 @@
   </span>
 
 
-        
+<!--        
 
 	<span class="article-read hidden-xs">
     	<i class="icon icon-eye-fill" aria-hidden="true"></i>
@@ -330,7 +331,7 @@
 			<span class="leancloud-visitors-count">0</span>
 		</span>
     </span>
-
+ -->
         <span class="post-comment"><i class="icon icon-comment"></i> <a href="/1d3c1f0e/#comments" class="article-comment-link">评论</a></span>
         
 	
@@ -344,10 +345,10 @@
     </div>
     <div class="article-entry marked-body" itemprop="articleBody">
       
-        <h4 id="编程语言中反射的概念"><a href="#编程语言中反射的概念" class="headerlink" title="编程语言中反射的概念"></a>编程语言中反射的概念</h4><p>在计算机科学领域，反射是指一类应用，它们能够自描述和自控制。也就是说，这类应用通过采用某种机制来实现对自己行为的描述（self-representation）和监测（examination），并能根据自身行为的状态和结果，调整或修改应用所描述行为的状态和相关的语义。</p>
+        <h4><span id="编程语言中反射的概念">编程语言中反射的概念</span></h4><p>在计算机科学领域，反射是指一类应用，它们能够自描述和自控制。也就是说，这类应用通过采用某种机制来实现对自己行为的描述（self-representation）和监测（examination），并能根据自身行为的状态和结果，调整或修改应用所描述行为的状态和相关的语义。</p>
 <p>每种语言的反射模型都不同，并且有些语言根本不支持反射。Golang语言实现了反射，反射机制就是在运行时动态的调用对象的方法和属性，官方自带的reflect包就是反射相关的，只要包含这个包就可以使用。</p>
 <p>Golang的gRPC也是通过反射实现的。</p>
-<h4 id="interface-和反射"><a href="#interface-和反射" class="headerlink" title="interface 和反射"></a>interface 和反射</h4><p>先来看看Golang关于类型设计的一些原则</p>
+<h4><span id="interface-和反射">interface 和反射</span></h4><p>先来看看Golang关于类型设计的一些原则</p>
 <ul>
 <li>变量包括（value, type）两部分<ul>
 <li>理解这一点就知道为什么nil != nil了</li>
@@ -368,18 +369,18 @@
 
 <p>接口变量w的pair与r的pair相同，都是:(tty, *os.File)，即使w是空接口类型，pair也是不变的。</p>
 <p>interface及其pair的存在，是Golang中实现反射的前提，理解了pair，就更容易理解反射。反射就是用来检测存储在接口变量内部(值value；类型concrete type) pair对的一种机制。</p>
-<h4 id="reflect-基本功能TypeOf和ValueOf"><a href="#reflect-基本功能TypeOf和ValueOf" class="headerlink" title="reflect 基本功能TypeOf和ValueOf"></a>reflect 基本功能TypeOf和ValueOf</h4><p>既然反射就是用来检测存储在接口变量内部(值value；类型concrete type) pair对的一种机制。那么在Golang的reflect反射包中有什么样的方式可以让我们直接获取到变量内部的信息呢？ 它提供了两种类型（或者说两个方法）让我们可以很容易的访问接口变量内容，分别是reflect.ValueOf() 和 reflect.TypeOf()，看看官方的解释</p>
+<h4><span id="reflect-基本功能typeof和valueof">reflect 基本功能TypeOf和ValueOf</span></h4><p>既然反射就是用来检测存储在接口变量内部(值value；类型concrete type) pair对的一种机制。那么在Golang的reflect反射包中有什么样的方式可以让我们直接获取到变量内部的信息呢？ 它提供了两种类型（或者说两个方法）让我们可以很容易的访问接口变量内容，分别是reflect.ValueOf() 和 reflect.TypeOf()，看看官方的解释</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">// ValueOf returns a new Value initialized to the concrete value</span><br><span class="line">// stored in the interface i.  ValueOf(nil) returns the zero </span><br><span class="line">func ValueOf(i interface&#123;&#125;) Value &#123;...&#125;</span><br><span class="line"></span><br><span class="line">翻译一下：ValueOf用来获取输入参数接口中的数据的值，如果接口为空则返回0</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// TypeOf returns the reflection Type that represents the dynamic type of i.</span><br><span class="line">// If i is a nil interface value, TypeOf returns nil.</span><br><span class="line">func TypeOf(i interface&#123;&#125;) Type &#123;...&#125;</span><br><span class="line"></span><br><span class="line">翻译一下：TypeOf用来动态获取输入参数接口中的值的类型，如果接口为空则返回nil</span><br></pre></td></tr></table></figure>
 
 <p>reflect.TypeOf()是获取pair中的type，reflect.ValueOf()获取pair中的value，示例如下：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">	&quot;reflect&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	var num float64 = 1.2345</span><br><span class="line"></span><br><span class="line">	fmt.Println(&quot;type: &quot;, reflect.TypeOf(num))</span><br><span class="line">	fmt.Println(&quot;value: &quot;, reflect.ValueOf(num))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果:</span><br><span class="line">type:  float64</span><br><span class="line">value:  1.2345</span><br></pre></td></tr></table></figure>
 
-<h4 id="说明"><a href="#说明" class="headerlink" title="说明"></a>说明</h4><ol>
+<h4><span id="说明">说明</span></h4><ol>
 <li>reflect.TypeOf： 直接给到了我们想要的type类型，如float64、int、各种pointer、struct 等等真实的类型</li>
 <li>reflect.ValueOf：直接给到了我们想要的具体的值，如1.2345这个具体数值，或者类似&amp;{1 “Allen.Wu” 25} 这样的结构体struct的值</li>
 <li>也就是说明反射可以将“接口类型变量”转换为“反射类型对象”，反射类型指的是reflect.Type和reflect.Value这两种</li>
 </ol>
-<h4 id="从relfect-Value中获取接口interface的信息"><a href="#从relfect-Value中获取接口interface的信息" class="headerlink" title="从relfect.Value中获取接口interface的信息"></a>从relfect.Value中获取接口interface的信息</h4><p>当执行reflect.ValueOf(interface)之后，就得到了一个类型为”relfect.Value”变量，可以通过它本身的Interface()方法获得接口变量的真实内容，然后可以通过类型判断进行转换，转换为原有真实类型。不过，我们可能是已知原有类型，也有可能是未知原有类型，因此，下面分两种情况进行说明。</p>
+<h4><span id="从relfectvalue中获取接口interface的信息">从relfect.Value中获取接口interface的信息</span></h4><p>当执行reflect.ValueOf(interface)之后，就得到了一个类型为”relfect.Value”变量，可以通过它本身的Interface()方法获得接口变量的真实内容，然后可以通过类型判断进行转换，转换为原有真实类型。不过，我们可能是已知原有类型，也有可能是未知原有类型，因此，下面分两种情况进行说明。</p>
 <p><strong>已知原有类型【进行“强制转换”】</strong></p>
 <p>已知类型后转换为其对应的类型的做法如下，直接通过Interface方法然后强制转换，如下</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">realValue := value.Interface().(已知的类型)</span><br></pre></td></tr></table></figure>
@@ -387,7 +388,7 @@
 <p>示例:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">	&quot;reflect&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	var num float64 = 1.2345</span><br><span class="line"></span><br><span class="line">	pointer := reflect.ValueOf(&amp;num)</span><br><span class="line">	value := reflect.ValueOf(num)</span><br><span class="line"></span><br><span class="line">	// 可以理解为“强制转换”，但是需要注意的时候，转换的时候，如果转换的类型不完全符合，则直接panic</span><br><span class="line">	// Golang 对类型要求非常严格，类型一定要完全符合</span><br><span class="line">	// 如下两个，一个是*float64，一个是float64，如果弄混，则会panic</span><br><span class="line">	convertPointer := pointer.Interface().(*float64)</span><br><span class="line">	convertValue := value.Interface().(float64)</span><br><span class="line"></span><br><span class="line">	fmt.Println(convertPointer)</span><br><span class="line">	fmt.Println(convertValue)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果：</span><br><span class="line">0xc42000e238</span><br><span class="line">1.2345</span><br></pre></td></tr></table></figure>
 
-<h5 id="说明-1"><a href="#说明-1" class="headerlink" title="说明"></a>说明</h5><ol>
+<h5><span id="说明">说明</span></h5><ol>
 <li>转换的时候，如果转换的类型不完全符合，则直接panic，类型要求非常严格！</li>
 <li>转换的时候，要区分是指针还是指</li>
 <li>也就是说反射可以将“反射类型对象”再重新转换为“接口类型变量”</li>
@@ -396,7 +397,7 @@
 <p>很多情况下，我们可能并不知道其具体类型，那么这个时候，该如何做呢？需要我们进行遍历探测其Filed来得知，示例如下:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">	&quot;reflect&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">type User struct &#123;</span><br><span class="line">	Id   int</span><br><span class="line">	Name string</span><br><span class="line">	Age  int</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (u User) ReflectCallFunc() &#123;</span><br><span class="line">	fmt.Println(&quot;Allen.Wu ReflectCallFunc&quot;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line"></span><br><span class="line">	user := User&#123;1, &quot;Allen.Wu&quot;, 25&#125;</span><br><span class="line"></span><br><span class="line">	DoFiledAndMethod(user)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 通过接口来获取任意参数，然后一一揭晓</span><br><span class="line">func DoFiledAndMethod(input interface&#123;&#125;) &#123;</span><br><span class="line"></span><br><span class="line">	getType := reflect.TypeOf(input)</span><br><span class="line">	fmt.Println(&quot;get Type is :&quot;, getType.Name())</span><br><span class="line"></span><br><span class="line">	getValue := reflect.ValueOf(input)</span><br><span class="line">	fmt.Println(&quot;get all Fields is:&quot;, getValue)</span><br><span class="line"></span><br><span class="line">	// 获取方法字段</span><br><span class="line">	// 1. 先获取interface的reflect.Type，然后通过NumField进行遍历</span><br><span class="line">	// 2. 再通过reflect.Type的Field获取其Field</span><br><span class="line">	// 3. 最后通过Field的Interface()得到对应的value</span><br><span class="line">	for i := 0; i &lt; getType.NumField(); i++ &#123;</span><br><span class="line">		field := getType.Field(i)</span><br><span class="line">		value := getValue.Field(i).Interface()</span><br><span class="line">		fmt.Printf(&quot;%s: %v = %v\n&quot;, field.Name, field.Type, value)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	// 获取方法</span><br><span class="line">	// 1. 先获取interface的reflect.Type，然后通过.NumMethod进行遍历</span><br><span class="line">	for i := 0; i &lt; getType.NumMethod(); i++ &#123;</span><br><span class="line">		m := getType.Method(i)</span><br><span class="line">		fmt.Printf(&quot;%s: %v\n&quot;, m.Name, m.Type)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果：</span><br><span class="line">get Type is : User</span><br><span class="line">get all Fields is: &#123;1 Allen.Wu 25&#125;</span><br><span class="line">Id: int = 1</span><br><span class="line">Name: string = Allen.Wu</span><br><span class="line">Age: int = 25</span><br><span class="line">ReflectCallFunc: func(main.User)</span><br></pre></td></tr></table></figure>
 
-<h5 id="说明-2"><a href="#说明-2" class="headerlink" title="说明"></a>说明</h5><p>通过运行结果可以得知获取未知类型的interface的具体变量及其类型的步骤为：</p>
+<h5><span id="说明">说明</span></h5><p>通过运行结果可以得知获取未知类型的interface的具体变量及其类型的步骤为：</p>
 <ol>
 <li>先获取interface的reflect.Type，然后通过NumField进行遍历</li>
 <li>再通过reflect.Type的Field获取其Field</li>
@@ -415,7 +416,7 @@
 <p>示例如下：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">	&quot;reflect&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line"></span><br><span class="line">	var num float64 = 1.2345</span><br><span class="line">	fmt.Println(&quot;old value of pointer:&quot;, num)</span><br><span class="line"></span><br><span class="line">	// 通过reflect.ValueOf获取num中的reflect.Value，注意，参数必须是指针才能修改其值</span><br><span class="line">	pointer := reflect.ValueOf(&amp;num)</span><br><span class="line">	newValue := pointer.Elem()</span><br><span class="line"></span><br><span class="line">	fmt.Println(&quot;type of pointer:&quot;, newValue.Type())</span><br><span class="line">	fmt.Println(&quot;settability of pointer:&quot;, newValue.CanSet())</span><br><span class="line"></span><br><span class="line">	// 重新赋值</span><br><span class="line">	newValue.SetFloat(77)</span><br><span class="line">	fmt.Println(&quot;new value of pointer:&quot;, num)</span><br><span class="line"></span><br><span class="line">	////////////////////</span><br><span class="line">	// 如果reflect.ValueOf的参数不是指针，会如何？</span><br><span class="line">	pointer = reflect.ValueOf(num)</span><br><span class="line">	//newValue = pointer.Elem() // 如果非指针，这里直接panic，“panic: reflect: call of reflect.Value.Elem on float64 Value”</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果：</span><br><span class="line">old value of pointer: 1.2345</span><br><span class="line">type of pointer: float64</span><br><span class="line">settability of pointer: true</span><br><span class="line">new value of pointer: 77</span><br></pre></td></tr></table></figure>
 
-<h4 id="说明-3"><a href="#说明-3" class="headerlink" title="说明"></a>说明</h4><ol>
+<h4><span id="说明">说明</span></h4><ol>
 <li>需要传入的参数是* float64这个指针，然后可以通过pointer.Elem()去获取所指向的Value，<strong>注意一定要是指针</strong>。</li>
 <li>如果传入的参数不是指针，而是变量，那么<ul>
 <li>通过Elem获取原始值对应的对象则直接panic</li>
@@ -432,7 +433,7 @@
 <p>示例如下：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">	&quot;reflect&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">type User struct &#123;</span><br><span class="line">	Id   int</span><br><span class="line">	Name string</span><br><span class="line">	Age  int</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (u User) ReflectCallFuncHasArgs(name string, age int) &#123;</span><br><span class="line">	fmt.Println(&quot;ReflectCallFuncHasArgs name: &quot;, name, &quot;, age:&quot;, age, &quot;and origal User.Name:&quot;, u.Name)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (u User) ReflectCallFuncNoArgs() &#123;</span><br><span class="line">	fmt.Println(&quot;ReflectCallFuncNoArgs&quot;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 如何通过反射来进行方法的调用？</span><br><span class="line">// 本来可以用u.ReflectCallFuncXXX直接调用的，但是如果要通过反射，那么首先要将方法注册，也就是MethodByName，然后通过反射调动mv.Call</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	user := User&#123;1, &quot;Allen.Wu&quot;, 25&#125;</span><br><span class="line">	</span><br><span class="line">	// 1. 要通过反射来调用起对应的方法，必须要先通过reflect.ValueOf(interface)来获取到reflect.Value，得到“反射类型对象”后才能做下一步处理</span><br><span class="line">	getValue := reflect.ValueOf(user)</span><br><span class="line"></span><br><span class="line">	// 一定要指定参数为正确的方法名</span><br><span class="line">	// 2. 先看看带有参数的调用方法</span><br><span class="line">	methodValue := getValue.MethodByName(&quot;ReflectCallFuncHasArgs&quot;)</span><br><span class="line">	args := []reflect.Value&#123;reflect.ValueOf(&quot;wudebao&quot;), reflect.ValueOf(30)&#125;</span><br><span class="line">	methodValue.Call(args)</span><br><span class="line"></span><br><span class="line">	// 一定要指定参数为正确的方法名</span><br><span class="line">	// 3. 再看看无参数的调用方法</span><br><span class="line">	methodValue = getValue.MethodByName(&quot;ReflectCallFuncNoArgs&quot;)</span><br><span class="line">	args = make([]reflect.Value, 0)</span><br><span class="line">	methodValue.Call(args)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">运行结果：</span><br><span class="line">ReflectCallFuncHasArgs name:  wudebao , age: 30 and origal User.Name: Allen.Wu</span><br><span class="line">ReflectCallFuncNoArgs</span><br></pre></td></tr></table></figure>
 
-<h4 id="说明-4"><a href="#说明-4" class="headerlink" title="说明"></a>说明</h4><ol>
+<h4><span id="说明">说明</span></h4><ol>
 <li>要通过反射来调用起对应的方法，必须要先通过reflect.ValueOf(interface)来获取到reflect.Value，得到“反射类型对象”后才能做下一步处理</li>
 <li>reflect.Value.MethodByName这.MethodByName，需要指定准确真实的方法名字，如果错误将直接panic，MethodByName返回一个函数值对应的reflect.Value方法的名字。</li>
 <li>[]reflect.Value，这个是最终需要调用的方法的参数，可以没有或者一个或者多个，根据实际参数来定。</li>
@@ -456,7 +457,7 @@
 <li>涉及到内存分配以及后续的GC；</li>
 <li>reflect实现里面有大量的枚举，也就是for循环，比如类型之类的。</li>
 </ol>
-<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>上述详细说明了Golang的反射reflect的各种功能和用法，都附带有相应的示例，相信能够在工程应用中进行相应实践，总结一下就是：</p>
+<h4><span id="总结">总结</span></h4><p>上述详细说明了Golang的反射reflect的各种功能和用法，都附带有相应的示例，相信能够在工程应用中进行相应实践，总结一下就是：</p>
 <ul>
 <li>反射可以大大提高程序的灵活性，使得interface{}有更大的发挥余地<ul>
 <li>反射必须结合interface才玩得转</li>
@@ -538,6 +539,7 @@
   </div>
 </nav>
   
+
 
 
 </main>

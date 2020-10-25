@@ -17,7 +17,7 @@
   <meta http-equiv="window-target" content="_top">
   
   
-  <title>[译]How to split a string in C++ | lxbwolf</title>
+  <title>[译]How to split a string in C++ | Xiaobin&#39;s Blog</title>
   <meta name="description" content="这个问题是说, 怎么得到组成一句话的各个单词, 或者得到CSV中的各个数据片段. 这在C++中是个很简单的问题, 却有很多种答案. 有3种方案, 每种有利有弊. 使用时请自己选择最佳方案. 这篇文章的目的是说明 迭代器的接口是如何优胜于简单的容器的, 并且阐明 design of the STL 是何等强大. 方案1使用的标准组件(虽然方案1.2 做了微调). 方案2相对好点但使用了boost.">
 <meta name="keywords" content="翻译">
 <meta property="og:type" content="article">
@@ -303,6 +303,7 @@
 
       
       <div class="article-meta">
+		<div>lxbwolf</div>
         <span class="article-date">
     <i class="icon icon-calendar-check"></i>
 	<a href="/9747854a/" class="article-date">
@@ -322,7 +323,7 @@
   </span>
 
 
-        
+<!--        
 
 	<span class="article-read hidden-xs">
     	<i class="icon icon-eye-fill" aria-hidden="true"></i>
@@ -330,7 +331,7 @@
 			<span class="leancloud-visitors-count">0</span>
 		</span>
     </span>
-
+ -->
         <span class="post-comment"><i class="icon icon-comment"></i> <a href="/9747854a/#comments" class="article-comment-link">评论</a></span>
         
 	
@@ -347,19 +348,19 @@
         <p>这个问题是说, 怎么得到组成一句话的各个单词, 或者得到CSV中的各个数据片段. 这在C++中是个很简单的问题, 却有很多种答案.</p>
 <p>有3种方案, 每种有利有弊. 使用时请自己选择最佳方案. 这篇文章的目的是说明 迭代器的接口是如何优胜于简单的容器的, 并且阐明 <a href="http://www.fluentcpp.com/2017/04/18/the-design-of-the-stl/" target="_blank" rel="noopener">design of the STL</a> 是何等强大.</p>
 <p>方案1使用的标准组件(虽然方案1.2 做了微调). 方案2相对好点但使用了<code>boost</code>. 而方案3 更好但使用了<code>ranges</code>. 所以到底应该用哪个, 取决于你需要什么和你能使用什么.</p>
-<h3 id="Solution-1-Iterating-on-a-stream"><a href="#Solution-1-Iterating-on-a-stream" class="headerlink" title="Solution 1: Iterating on a stream"></a>Solution 1: Iterating on a stream</h3><h4 id="Stepping-into-the-world-of-streams"><a href="#Stepping-into-the-world-of-streams" class="headerlink" title="Stepping into the world of streams"></a>Stepping into the world of streams</h4><p>“流” 是一个 能生成 与源或希望连接的目标 的联系 的对象. 流可以从源中获取信息(<code>std::istream</code>), 或为目标提供信息(<code>std::ostream</code>), 或者两者皆可(<code>std::iostream</code>).</p>
+<h3><span id="solution-1-iterating-on-a-stream">Solution 1: Iterating on a stream</span></h3><h4><span id="stepping-into-the-world-of-streams">Stepping into the world of streams</span></h4><p>“流” 是一个 能生成 与源或希望连接的目标 的联系 的对象. 流可以从源中获取信息(<code>std::istream</code>), 或为目标提供信息(<code>std::ostream</code>), 或者两者皆可(<code>std::iostream</code>).</p>
 <p>源和目标可以是标准输入(<code>std::cin</code>), 标准输出(<code>std::cout</code>), 一个文件, 或者一个字符串, 前提是方式得当. 对流的主要操作包括: - 对于输入流: 使用操作符<code>&gt;&gt;</code> 从里面读取信息 - 对于输出流: 使用操作符<code>&lt;&lt;</code>, 向它推入信息</p>
 <p>一个指向字符串的输入流, <code>std::istringstream</code>, 有个有趣的特性: 它的操作符<code>&gt;&gt;</code> 在源字符串中制造出去向下一个空格的字符串.</p>
-<h4 id="istream-iterator"><a href="#istream-iterator" class="headerlink" title="istream_iterator"></a>istream_iterator</h4><p><code>std::istream_iterator</code> 是连接输入流的迭代器. 它代表了输入迭代器的普遍接口, 但它的操作符<code>++</code> 更像是输入流.</p>
+<h4><span id="istream_iterator">istream_iterator</span></h4><p><code>std::istream_iterator</code> 是连接输入流的迭代器. 它代表了输入迭代器的普遍接口, 但它的操作符<code>++</code> 更像是输入流.</p>
 <p><code>istream_iterator</code> 以它从流里读取的类型为模板. 我们现在使用<code>istream_iterator&lt;std::string&gt;</code>, 它从流里读取字符串, 分离时为我们提供一个字符串.</p>
 <p>当到达流的终点时, 流向它的迭代器发送信号, 然后迭代器被标记为结束.</p>
-<h3 id="Solution-1-1"><a href="#Solution-1-1" class="headerlink" title="Solution 1.1"></a>Solution 1.1</h3><p>现在, 我们可以借迭代器的接口使用算法, 这真切地证明了<code>STL</code> 设计的灵活性. 为了使用<code>STL</code>, 我们需要一个<code>begin</code> 和一个<code>end</code> (请参考<a href="http://www.fluentcpp.com/2017/03/28/inserting-several-elements-into-an-stl-container/" target="_blank" rel="noopener">Inserting several elements into an STL container efficiently</a>). <code>begin</code> 是一个 还没开始着手分割的字符串的<code>istreamstream</code> 的迭代器: <code>std::istream_iterator&lt;std::string&gt;(iss)</code> . 按照惯例, <code>end</code> 的默认值也是个<code>istream_iterator</code> : <code>std::istream_iterator&lt;string&gt;()</code>.</p>
+<h3><span id="solution-11">Solution 1.1</span></h3><p>现在, 我们可以借迭代器的接口使用算法, 这真切地证明了<code>STL</code> 设计的灵活性. 为了使用<code>STL</code>, 我们需要一个<code>begin</code> 和一个<code>end</code> (请参考<a href="http://www.fluentcpp.com/2017/03/28/inserting-several-elements-into-an-stl-container/" target="_blank" rel="noopener">Inserting several elements into an STL container efficiently</a>). <code>begin</code> 是一个 还没开始着手分割的字符串的<code>istreamstream</code> 的迭代器: <code>std::istream_iterator&lt;std::string&gt;(iss)</code> . 按照惯例, <code>end</code> 的默认值也是个<code>istream_iterator</code> : <code>std::istream_iterator&lt;string&gt;()</code>.</p>
 <p>代码如下:</p>
 <pre><code>std::string text = &quot;Let me split this into words&quot;;
 std::istringstream iss(text);
 std::vector&lt;std::string&gt; results((std::istream_iterator&lt;std::string&gt;(iss)), std::istream_iterator&lt;std::string&gt;());</code></pre><p><strong>第一个参数的额外的括号是为了避免与一个函数调用的歧义–请参考Scott Meyers的著作Effective STL 条目6 “most vexing parse”</strong></p>
 <p>优: - 仅使用标准组件 - 除字符串外, 对所有流都适用 劣: - 只能以空格为分隔符进行分割, 而且这在解析CSV时会是个至关重要的问题 - 在性能方面有待优化(但如果这不是影响你整个程序的瓶颈, 这也不是个大问题) - 很多人认为仅为了分割一个字符串, 写了太多代码</p>
-<h3 id="Solution1-2-Pimp-my-operator-gt-gt"><a href="#Solution1-2-Pimp-my-operator-gt-gt" class="headerlink" title="Solution1.2: Pimp my operator&gt;&gt;"></a>Solution1.2: Pimp my operator&gt;&gt;</h3><p>导致上面两条劣势的原因是同一个: <code>istream_iterator</code> 从流里读取字符串时调用的操作符<code>&gt;&gt;</code>. 这个操作符做了很多事: 在下一个空格处停止(这是我们的最初的需求, 但这个不能自定义), 格式化, 读取然后设置一些标志位, 构造对象, 等等. 而以上这些, 大部分我们是不需要的. 所以我们希望自己实现下面的函数:</p>
+<h3><span id="solution12-pimp-my-operatorgtgt">Solution1.2: Pimp my operator&gt;&gt;</span></h3><p>导致上面两条劣势的原因是同一个: <code>istream_iterator</code> 从流里读取字符串时调用的操作符<code>&gt;&gt;</code>. 这个操作符做了很多事: 在下一个空格处停止(这是我们的最初的需求, 但这个不能自定义), 格式化, 读取然后设置一些标志位, 构造对象, 等等. 而以上这些, 大部分我们是不需要的. 所以我们希望自己实现下面的函数:</p>
 <pre><code>std::istream&amp; operator&gt;&gt;(std::istream&amp; is, std::string&amp; output)
 {
     // ...does lots of things...
@@ -384,7 +385,7 @@ class WordDelimitedBy: pulic std::string
 <pre><code>std::string text = &quot;Let;me;split;this;into;words&quot;;
 std::istringstream iss(text);
 std::vector&lt;std::string&gt; results((std::istream_iterator&lt;WordDelimitedBy&lt;&apos;;&apos;&gt;&gt;(iss)), std::istream_iterator&lt;WordDelimitedBy&lt;&apos;;&apos;&gt;&gt;());</code></pre><p>优: - 编译时允许任何分隔符 - 不仅是字符串, 对任何流都可以操作 - 比方案1更快(快20%到30%) 劣: - 虽然可以很方便的复用, 但仍不是标准 - 仅仅为了分割一个字符串, 这个方案仍然使用了大量代码</p>
-<h3 id="Solution2-Using-boost-split"><a href="#Solution2-Using-boost-split" class="headerlink" title="Solution2: Using boost::split"></a>Solution2: Using <code>boost::split</code></h3><p>这个方案比方案1高级, 除非你需要对所有的流都进行操作.</p>
+<h3><span id="solution2-using-boostsplit">Solution2: Using <code>boost::split</code></span></h3><p>这个方案比方案1高级, 除非你需要对所有的流都进行操作.</p>
 <pre><code>#include &lt;boost/algorithm/string.hpp&gt;
 
 std::string text = &quot;Let me split this into words&quot;;
@@ -392,11 +393,11 @@ std::vector&lt;std::string&gt; result;
 boost::split&lt;results, text, [](char c){return &apos; &apos; == c;});</code></pre><p>传给<code>boost::split</code> 的第三个参数是一个函数或函数对象, 确定一个字符是不是分隔符. 上面的例子是使用<code>lambda</code> 表达式, 传入一个<code>char</code>, 返回这个<code>char</code> 是否是空格.</p>
 <p><code>boost::split</code> 的实现很简单: 在到达字符串的结束位置之前, 重复地调用<code>find_if</code> .</p>
 <p>优: - 非常直观的接口 - 允许任何分隔符, 甚至是多个 - 高效: 比方案1.1 快 60% 劣: - 暂不是标准: 需要用到<code>boost</code></p>
-<h3 id="Solution-3-未来-Usingranges"><a href="#Solution-3-未来-Usingranges" class="headerlink" title="Solution 3(未来): Usingranges"></a>Solution 3(未来): Using<code>ranges</code></h3><p>虽然它们现在还没有像标准库甚至<code>boost</code> 里的组件一样被广泛使用, <code>ranges</code> 是<a href="http://www.fluentcpp.com/2017/01/12/ranges-stl-to-the-next-level/" target="_blank" rel="noopener">future of the STL</a> . 在未来几年, 会大量面世.</p>
+<h3><span id="solution-3未来-usingranges">Solution 3(未来): Using<code>ranges</code></span></h3><p>虽然它们现在还没有像标准库甚至<code>boost</code> 里的组件一样被广泛使用, <code>ranges</code> 是<a href="http://www.fluentcpp.com/2017/01/12/ranges-stl-to-the-next-level/" target="_blank" rel="noopener">future of the STL</a> . 在未来几年, 会大量面世.</p>
 <p>Eric Neiber 的 <a href="https://github.com/ericniebler/range-v3/blob/master/test/view/split.cpp" target="_blank" rel="noopener">range-v3</a> 库 提供了非常友好的接口. 为了生成一个字符串的分割<code>view</code>, 代码如下:</p>
 <pre><code>std::string text = &quot;Let me split this into words&quot;;
 auto splitText = text | view::split(&apos; &apos;);</code></pre><p>它有很多有趣的特性, 诸如 使用一个子字符串作为分隔符. <code>ranges</code> 会被<code>C++20</code> 引入, 所以我们应该能在几年之内就可以使用这个功能了.</p>
-<h3 id="So-how-do-I-split-my-string"><a href="#So-how-do-I-split-my-string" class="headerlink" title="So, how do I split my string?"></a>So, how do I split my string?</h3><p>如果你能使用<code>boost</code>, 务必使用方案2. 或者你可以自己写算法, 像<code>boost</code> 那样基于<code>find_if</code> 分割字符串.</p>
+<h3><span id="so-how-do-i-split-my-string">So, how do I split my string?</span></h3><p>如果你能使用<code>boost</code>, 务必使用方案2. 或者你可以自己写算法, 像<code>boost</code> 那样基于<code>find_if</code> 分割字符串.</p>
 <p>如果你不想这么做, 你可以使用标准, 即方案1.1, 如果你需要自定义分隔符, 或者发现1.1是个瓶颈, 那么你可以选择方案1.2 .</p>
 <p>如果你可以使用<code>ranges</code> , 那么就应该选择方案3.</p>
 <p>翻译原文: <a href="http://www.fluentcpp.com/2017/04/21/how-to-split-a-string-in-c/" target="_blank" rel="noopener">http://www.fluentcpp.com/2017/04/21/how-to-split-a-string-in-c/</a></p>
@@ -459,6 +460,7 @@ auto splitText = text | view::split(&apos; &apos;);</code></pre><p>它有很多�
   </div>
 </nav>
   
+
 
 
 </main>
