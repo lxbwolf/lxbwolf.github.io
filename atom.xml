@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://lxb.wiki/"/>
-  <updated>2020-11-08T11:59:49.800Z</updated>
+  <updated>2020-11-08T12:01:55.105Z</updated>
   <id>https://lxb.wiki/</id>
   
   <author>
@@ -20,8 +20,8 @@
     <title>PHP检测图片是否有木马</title>
     <link href="https://lxb.wiki/9a49b652/"/>
     <id>https://lxb.wiki/9a49b652/</id>
-    <published>2020-11-08T11:59:17.000Z</published>
-    <updated>2020-11-08T11:59:49.800Z</updated>
+    <published>2020-10-15T11:59:17.000Z</published>
+    <updated>2020-11-08T12:01:55.105Z</updated>
     
     <content type="html"><![CDATA[<p>header(“Content-type: text/html; charset=utf-8”);<br>function checkHex($img) {<br>  $status = 0;<br>  $tips = array(<br>    “0” =&gt; “文件没问题”,<br>    “5” =&gt; “文件有毒”,<br>    “-1” =&gt; “文件没有上传”<br>  );<br>  if (file_exists($img)) {<br>    $resource = fopen($img, ‘rb’);<br>    $fileSize = filesize($img);<br>    fseek($resource, 0);<br>    if ($fileSize &gt; 512) { // 取头和尾<br>      $hexCode = bin2hex(fread($resource, 512));<br>      fseek($resource, $fileSize - 512);<br>      $hexCode .= bin2hex(fread($resource, 512));<br>    } else { // 取全部<br>      $hexCode = bin2hex(fread($resource, $fileSize));<br>    }<br>    fclose($resource);<br>    /* 匹配16进制中的 &lt;% ( ) %&gt; <em>/<br>    /</em> 匹配16进制中的 <? ( ) ?> <em>/<br>    /</em> 匹配16进制中的 &lt;script | /script&gt; 大小写亦可 <em>/<br>    if (preg_match(“/(3c25.</em>?28.<em>?29.</em>?253e)|(3c3f.<em>?28.</em>?29.*?3f3e)|(3C534352495054)|(2F5343524950543E)|(3C736372697074)|(2F7363726970743E)/is”, $hexCode)) {<br>      $status = 5;<br>    }<br>  } else {<br>    $status = -1;<br>  }<br>  return $tips[$status];<br>}</p><p>$rs = checkHex(“du.png”);</p><p>print_r($rs);</p>]]></content>
     
