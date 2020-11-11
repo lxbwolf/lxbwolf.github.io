@@ -373,10 +373,10 @@
       
         <p><em>环境</em></p>
 <pre><code>CentOS
-nginx</code></pre><h3><span id="获取证书">获取证书</span></h3><p>HTTPS 证书分三类：1. DV 域名验证证书 2. OV 组织机构验证证书 3. EV 增强的组织机构验证证书。每类证书的审核要求不同，在浏览器地址栏也会有区分，对于个人网站而言，使用免费的 DV 证书就足够了。 我使用了大名鼎鼎的 Let’s Encrypt 来生成证书。</p>
-<h4><span id="1-安装-certbot">1. 安装 certbot</span></h4><p>certbot 是 Let’s Encrypt 提供的一套自动化工具。</p>
+nginx</code></pre><h3 id="获取证书"><span id="获取证书">获取证书</span></h3><p>HTTPS 证书分三类：1. DV 域名验证证书 2. OV 组织机构验证证书 3. EV 增强的组织机构验证证书。每类证书的审核要求不同，在浏览器地址栏也会有区分，对于个人网站而言，使用免费的 DV 证书就足够了。 我使用了大名鼎鼎的 Let’s Encrypt 来生成证书。</p>
+<h4 id="1-安装-certbot"><span id="1-安装-certbot">1. 安装 certbot</span></h4><p>certbot 是 Let’s Encrypt 提供的一套自动化工具。</p>
 <pre><code>yum install epel-release
-yum install certbot</code></pre><h4><span id="2-生成证书">2. 生成证书</span></h4><p>这里采用 webroot 作为 Let’s Encrypt 的认证方式。</p>
+yum install certbot</code></pre><h4 id="2-生成证书"><span id="2-生成证书">2. 生成证书</span></h4><p>这里采用 webroot 作为 Let’s Encrypt 的认证方式。</p>
 <pre><code>certbot certonly -a webroot --webroot-path=/your/project/path -d example.com -d www.example.com</code></pre><p>webroot-path就是项目根路径，使用 -d 可以添加多个域名。这时证书就已经生成成功了，默认保存在 /etc/letsencrypt/live/example.com/ 下。证书文件包括：</p>
 <ul>
 <li>cert.pem: 服务端证书</li>
@@ -384,8 +384,8 @@ yum install certbot</code></pre><h4><span id="2-生成证书">2. 生成证书</s
 <li>fullchain.pem: 包括了cert.pem和chain.pem的内容</li>
 <li>privkey.pem: 证书私钥</li>
 </ul>
-<h4><span id="3-生成迪菲-赫尔曼密钥交换组-strong-diffie-hellman-group">3. 生成迪菲-赫尔曼密钥交换组（ Strong Diffie-Hellman Group）</span></h4><p>为了进一步提高安全性，也可以生成一个 Strong Diffie-Hellman Group。</p>
-<pre><code>openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048</code></pre><h3><span id="配置nginx">配置nginx</span></h3><p>编辑 Nginx 配置文件，如果你不知道配置文件在哪，可以用 locate /nginx.conf 命令查找。添加以下内容，具体参数以你的实际情况为准。</p>
+<h4 id="3-生成迪菲-赫尔曼密钥交换组-strong-diffie-hellman-group"><span id="3-生成迪菲-赫尔曼密钥交换组-strong-diffie-hellman-group">3. 生成迪菲-赫尔曼密钥交换组（ Strong Diffie-Hellman Group）</span></h4><p>为了进一步提高安全性，也可以生成一个 Strong Diffie-Hellman Group。</p>
+<pre><code>openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048</code></pre><h3 id="配置nginx"><span id="配置nginx">配置nginx</span></h3><p>编辑 Nginx 配置文件，如果你不知道配置文件在哪，可以用 locate /nginx.conf 命令查找。添加以下内容，具体参数以你的实际情况为准。</p>
 <pre><code>server {
         listen 443 ssl;
         # 启用http2

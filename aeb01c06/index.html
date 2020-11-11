@@ -368,7 +368,7 @@
         <p>原文地址: <a href="https://blog.csdn.net/nonmarking/article/details/50522413" target="_blank" rel="noopener">https://blog.csdn.net/nonmarking/article/details/50522413</a></p>
 <p>对于直播流来说, 只考虑发送端的同步问题, 原理如下: 1. 解析视音频, 讲视频流和音频流的时间戳用同样的时间基准表示 2. 比较转换后的两个时间戳, 找出较小值, 对应发送偏慢的流 3. 读取, 转码, 发送相应的流, 同时, 若该流的转码时间很快, 超前于wall clock, 则还需要进行相应的延时 4. 重复以上过程</p>
 <p>下文包括两部分, 一是音频转码部分, 二是视音频同步</p>
-<h6><span id="音频转码基本流程">音频转码基本流程</span></h6><p>首先是一些音频输入输出的基本设置</p>
+<h6 id="音频转码基本流程"><span id="音频转码基本流程">音频转码基本流程</span></h6><p>首先是一些音频输入输出的基本设置</p>
 <pre><code>//Set own audio device&apos;s name
     if (avformat_open_input(&amp;ifmt_ctx_a, device_name_a, ifmt, &amp;device_param) != 0){
 
@@ -674,7 +674,7 @@ swr_init(aud_convert_ctx);</code></pre><p>此外, 参照transcode_aac.c的做法
                 av_packet_unref(&amp;output_packet);
             }           
             av_frame_free(&amp;output_frame);       
-        }     </code></pre><h6><span id="视音频同步">视音频同步</span></h6><p>首先定义几个变量</p>
+        }     </code></pre><h6 id="视音频同步"><span id="视音频同步">视音频同步</span></h6><p>首先定义几个变量</p>
 <pre><code>int aud_next_pts = 0;//视频流目前的pts,可以理解为目前的进度
 int vid_next_pts = 0;//音频流目前的pts
 int encode_video = 1, encode_audio = 1;//是否要编码视频、音频</code></pre><p>则相应的视音频同步方法如下: 1. 确定视频, 音频二者中至少有一个是需要进行转码的 2. 比较两个流的进度, 使用av_compare_ts函数, 注意：此时的vid_next_pts和aud_next_pts的time base都是ffmpeg内部基准，即<code>AVRational time_base_q = { 1, AV_TIME_BASE };</code> 3. 对进度落后的流进行转码, 并相应地对进度进行更新. 对于视频，有 vid_next_pts=framecnt_calc_duration;，对于音频，有 aud_next_pts = nb_samples_calc_duration;这里framecnt和nb_samples都相当于计数器，而calc_duration是对应流每两个frame或sample之间的时间间隔，也是以ffmpeg内部时间基准为单位的 4. 若转码进度很快完成, 则不能急于写入输出流, 而是需要先进行延时, 但是也要保证延时后的时间不会超过另一个流的进度</p>
