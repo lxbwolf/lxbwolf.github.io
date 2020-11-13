@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title><![CDATA[sed替换含有路径的字符串]]></title>
+    <url>%2Fe4c7cf89%2F</url>
+    <content type="text"><![CDATA[问题描述 初级思路 更好的解决方案 问题描述sed -i &quot;s/old/new/g&quot; file.txt 如果 new 是个路径，即字符串中含有/，这么执行会报错 初级思路把 new 中的 / 进行转义 比如 new 为 /home/users/config.yaml 替换时 sed -i &quot;s/old/\/home\/users\/config.yaml/g&quot; file.txt 如果 new 是变量， 123new="/home/users/config.yaml"new_sed=$(echo $new | sed -e 's/\//\\\//g')sed -i "s/old/$&#123;new_sed&#125;/g" file.txt 更好的解决方案转义会降低可读性，只需用其他特殊字符作为sed表达式的“分隔符”（取代默认的/）即可。例如：sed &#39;s#\$CONFIG#/home/users/config.yaml#g&#39;，使用#代替/从而避免大量转义。 你可以尝试一下 echo aabbccdd | sed &#39;s#aa#bb#g&#39; | sed &#39;s?bb?cc?g&#39; | sed &#39;s@cc@dd@g&#39; | sed &#39;s%dd%ee%g&#39; 用任意字符作间隔 这是 sed 命令方便用户的一个特性，vim 中的 :s 也同样支持]]></content>
+      <categories>
+        <category>Shell</category>
+      </categories>
+      <tags>
+        <tag>Shell</tag>
+        <tag>sed</tag>
+      </tags>
+  </entry>
+  <entry>
     <title><![CDATA[PHP检测图片是否有木马]]></title>
     <url>%2F9a49b652%2F</url>
     <content type="text"><![CDATA[1234567891011121314151617181920212223242526272829303132333435header("Content-type: text/html; charset=utf-8");function checkHex($img) &#123; $status = 0; $tips = array( "0" =&gt; "文件没问题", "5" =&gt; "文件有毒", "-1" =&gt; "文件没有上传" ); if (file_exists($img)) &#123; $resource = fopen($img, 'rb'); $fileSize = filesize($img); fseek($resource, 0); if ($fileSize &gt; 512) &#123; // 取头和尾 $hexCode = bin2hex(fread($resource, 512)); fseek($resource, $fileSize - 512); $hexCode .= bin2hex(fread($resource, 512)); &#125; else &#123; // 取全部 $hexCode = bin2hex(fread($resource, $fileSize)); &#125; fclose($resource); /* 匹配16进制中的 &lt;% ( ) %&gt; */ /* 匹配16进制中的 &lt;? ( ) ?&gt; */ /* 匹配16进制中的 &lt;script | /script&gt; 大小写亦可 */ if (preg_match("/(3c25.*?28.*?29.*?253e)|(3c3f.*?28.*?29.*?3f3e)|(3C534352495054)|(2F5343524950543E)|(3C736372697074)|(2F7363726970743E)/is", $hexCode)) &#123; $status = 5; &#125; &#125; else &#123; $status = -1; &#125; return $tips[$status];&#125;$rs = checkHex("du.png");print_r($rs);]]></content>
