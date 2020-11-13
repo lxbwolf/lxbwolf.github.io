@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://lxb.wiki/"/>
-  <updated>2020-11-13T15:20:26.170Z</updated>
+  <updated>2020-11-12T15:21:04.304Z</updated>
   <id>https://lxb.wiki/</id>
   
   <author>
@@ -15,41 +15,6 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
-  
-  <entry>
-    <title>sed替换含有路径的字符串</title>
-    <link href="https://lxb.wiki/e4c7cf89/"/>
-    <id>https://lxb.wiki/e4c7cf89/</id>
-    <published>2020-11-13T15:16:00.000Z</published>
-    <updated>2020-11-13T15:20:26.170Z</updated>
-    
-    <content type="html"><![CDATA[<!-- toc --><ul><li><a href="#问题描述">问题描述</a></li><li><a href="#初级思路">初级思路</a></li><li><a href="#更好的解决方案">更好的解决方案</a></li></ul><!-- tocstop --><h3 id="问题描述"><span id="问题描述">问题描述</span></h3><p><code>sed -i &quot;s/old/new/g&quot; file.txt</code></p><p>如果 <code>new</code> 是个路径，即字符串中含有<code>/</code>，这么执行会报错</p><h3 id="初级思路"><span id="初级思路">初级思路</span></h3><p>把 <code>new</code> 中的 <code>/</code> 进行转义</p><p>比如 <code>new</code> 为 <code>/home/users/config.yaml</code></p><p>替换时</p><p><code>sed -i &quot;s/old/\/home\/users\/config.yaml/g&quot; file.txt</code></p><p>如果 <code>new</code> 是变量，</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">new=<span class="string">"/home/users/config.yaml"</span></span><br><span class="line">new_sed=$(<span class="built_in">echo</span> <span class="variable">$new</span> | sed -e <span class="string">'s/\//\\\//g'</span>)</span><br><span class="line">sed -i <span class="string">"s/old/<span class="variable">$&#123;new_sed&#125;</span>/g"</span> file.txt</span><br></pre></td></tr></table></figure><h3 id="更好的解决方案"><span id="更好的解决方案">更好的解决方案</span></h3><p>转义会降低可读性，只需用其他特殊字符作为<code>sed</code>表达式的“分隔符”（取代默认的<code>/</code>）即可。<br>例如：<code>sed &#39;s#\$CONFIG#/home/users/config.yaml#g&#39;</code>，使用<code>#</code>代替<code>/</code>从而避免大量转义。</p><p>你可以尝试一下 <code>echo aabbccdd | sed &#39;s#aa#bb#g&#39; | sed &#39;s?bb?cc?g&#39; | sed &#39;s@cc@dd@g&#39; | sed &#39;s%dd%ee%g&#39;</code>  用任意字符作间隔</p><p>这是 <code>sed</code> 命令方便用户的一个特性，<code>vim</code> 中的 <code>:s</code> 也同样支持</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;!-- toc --&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;#问题描述&quot;&gt;问题描述&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#初级思路&quot;&gt;初级思路&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#更好的解决方案&quot;&gt;更好的解决方案&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;!-- to
-      
-    
-    </summary>
-    
-    
-      <category term="Shell" scheme="https://lxb.wiki/categories/Shell/"/>
-    
-    
-      <category term="Shell" scheme="https://lxb.wiki/tags/Shell/"/>
-    
-      <category term="sed" scheme="https://lxb.wiki/tags/sed/"/>
-    
-  </entry>
   
   <entry>
     <title>PHP检测图片是否有木马</title>
@@ -142,6 +107,41 @@
     
     
       <category term="工具" scheme="https://lxb.wiki/tags/%E5%B7%A5%E5%85%B7/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>sed替换含有路径的字符串</title>
+    <link href="https://lxb.wiki/e4c7cf89/"/>
+    <id>https://lxb.wiki/e4c7cf89/</id>
+    <published>2020-09-13T13:16:00.000Z</published>
+    <updated>2020-11-13T15:25:50.434Z</updated>
+    
+    <content type="html"><![CDATA[<!-- toc --><ul><li><a href="#问题描述">问题描述</a></li><li><a href="#初级思路">初级思路</a></li><li><a href="#更好的解决方案">更好的解决方案</a></li></ul><!-- tocstop --><h3 id="问题描述"><span id="问题描述">问题描述</span></h3><p><code>sed -i &quot;s/old/new/g&quot; file.txt</code></p><p>如果 <code>new</code> 是个路径，即字符串中含有<code>/</code>，这么执行会报错</p><h3 id="初级思路"><span id="初级思路">初级思路</span></h3><p>把 <code>new</code> 中的 <code>/</code> 进行转义</p><p>比如 <code>new</code> 为 <code>/home/users/config.yaml</code></p><p>替换时</p><p><code>sed -i &quot;s/old/\/home\/users\/config.yaml/g&quot; file.txt</code></p><p>如果 <code>new</code> 是变量，</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">new=<span class="string">"/home/users/config.yaml"</span></span><br><span class="line">new_sed=$(<span class="built_in">echo</span> <span class="variable">$new</span> | sed -e <span class="string">'s/\//\\\//g'</span>)</span><br><span class="line">sed -i <span class="string">"s/old/<span class="variable">$&#123;new_sed&#125;</span>/g"</span> file.txt</span><br></pre></td></tr></table></figure><h3 id="更好的解决方案"><span id="更好的解决方案">更好的解决方案</span></h3><p>转义会降低可读性，只需用其他特殊字符作为<code>sed</code>表达式的“分隔符”（取代默认的<code>/</code>）即可。<br>例如：<code>sed &#39;s#\$CONFIG#/home/users/config.yaml#g&#39;</code>，使用<code>#</code>代替<code>/</code>从而避免大量转义。</p><p>你可以尝试一下 <code>echo aabbccdd | sed &#39;s#aa#bb#g&#39; | sed &#39;s?bb?cc?g&#39; | sed &#39;s@cc@dd@g&#39; | sed &#39;s%dd%ee%g&#39;</code>  用任意字符作间隔</p><p>这是 <code>sed</code> 命令方便用户的一个特性，<code>vim</code> 中的 <code>:s</code> 也同样支持</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;!-- toc --&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;#问题描述&quot;&gt;问题描述&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#初级思路&quot;&gt;初级思路&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#更好的解决方案&quot;&gt;更好的解决方案&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;!-- to
+      
+    
+    </summary>
+    
+    
+      <category term="Shell" scheme="https://lxb.wiki/categories/Shell/"/>
+    
+    
+      <category term="Shell" scheme="https://lxb.wiki/tags/Shell/"/>
+    
+      <category term="sed" scheme="https://lxb.wiki/tags/sed/"/>
     
   </entry>
   
