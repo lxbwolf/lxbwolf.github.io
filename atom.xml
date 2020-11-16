@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://lxb.wiki/"/>
-  <updated>2020-11-12T15:21:04.304Z</updated>
+  <updated>2020-11-16T13:24:50.114Z</updated>
   <id>https://lxb.wiki/</id>
   
   <author>
@@ -15,6 +15,44 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>目录切换：dirs、pushd、popd命令</title>
+    <link href="https://lxb.wiki/1ca354f7/"/>
+    <id>https://lxb.wiki/1ca354f7/</id>
+    <published>2020-11-01T13:05:57.000Z</published>
+    <updated>2020-11-16T13:24:50.114Z</updated>
+    
+    <content type="html"><![CDATA[<!-- toc --><ul><li><a href="#目录栈指令">目录栈指令</a><ul><li><a href="#1-dirs">1 dirs</a><ul><li><a href="#11-功能">1.1 功能</a></li><li><a href="#12-语法">1.2 语法</a></li></ul></li><li><a href="#2-pushd">2 pushd</a><ul><li><a href="#21-功能">2.1 功能</a></li><li><a href="#22-语法">2.2 语法</a></li></ul></li><li><a href="#3-popd">3 popd</a><ul><li><a href="#31-功能">3.1 功能</a></li><li><a href="#32-语法">3.2 语法</a></li></ul></li><li><a href="#4-示例">4 示例</a></li></ul></li></ul><!-- tocstop --><h2 id="目录栈指令"><span id="目录栈指令">目录栈指令</span></h2><p>目录栈是用户最近访问过的系统目录列表，并以堆栈的形式管理。栈中的内容与Shell环境变量 <code>DIRSTACK</code> 的值对应</p><h3 id="1-dirs"><span id="1-dirs">1 dirs</span></h3><h4 id="11-功能"><span id="11-功能">1.1 功能</span></h4><p>显示当前目录栈中的所有记录（不带参数的dirs命令显示当前目录栈中的记录）</p><h4 id="12-语法"><span id="12-语法">1.2 语法</span></h4><p><strong>格式：</strong></p><p><code>dirs [-clpv] [+n] [-n]</code></p><p><strong>选项</strong></p><ul><li>-c  删除目录栈中的所有记录</li><li>-l   以完整格式显示(绝对路径)</li><li>-p  一个目录一行的方式显示</li><li>-v  每行一个目录来显示目录栈的内容，每个目录前加上的编号</li><li>+N 显示从左到右的第n个目录，数字从0开始</li><li>-N  显示从右到左的第n个日录，数字从0开始</li></ul><p>注意：dirs始终显示当人们目录, 再是堆栈中的内容；即使目录堆栈为空, dirs命令仍然只显示当前目录</p><h3 id="2-pushd"><span id="2-pushd">2 pushd</span></h3><h4 id="21-功能"><span id="21-功能">2.1 功能</span></h4><p>将目录加入到栈顶部，并切换到该目录；若 <code>pushd</code> 命令不加任何参数，则会将位于记录栈最上面的2个目录对换位置</p><h4 id="22-语法"><span id="22-语法">2.2 语法</span></h4><p><strong>格式：</strong></p><p><code>pushd [目录 | -N | +N]  [-n]</code></p><p><strong>选项</strong></p><ul><li>目录  将该目录加入到栈顶，并执行”cd 目录”，切换到该目录</li><li>+N  将第N个目录移至栈顶（从左边数起，数字从0开始）</li><li>-N  将第N个目录移至栈顶（从右边数起，数字从0开始）</li><li>-n  将目录入栈时，不切换目录</li></ul><h3 id="3-popd"><span id="3-popd">3 popd</span></h3><h4 id="31-功能"><span id="31-功能">3.1 功能</span></h4><p>删除目录栈中的记录；如果popd命令不加任何参数，则会先删除目录栈最上面的记录，然后切换到删除过后的目录栈中的最上面的目录</p><h4 id="32-语法"><span id="32-语法">3.2 语法</span></h4><p><strong>格式：</strong></p><p><code>pushd [-N | +N]  [-n]</code></p><p><strong>选项</strong></p><ul><li>+N  将第N个目录删除（从左边数起，数字从0开始）</li><li>-N  将第N个目录删除（从右边数起，数字从0开始）</li><li>-n  将目录出栈时，不切换目录</li></ul><h3 id="4-示例"><span id="4-示例">4 示例</span></h3><p><strong>入栈与出栈</strong></p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">[root@root]:~<span class="comment"># mkdir /root/dir&#123;1,2,3,4&#125;</span></span><br><span class="line">[root@root]:~<span class="comment"># for ((i=1;i&lt;=4;i++)); do pushd /root/dir$&#123;i&#125;; done</span></span><br><span class="line">/root/dir1 ~</span><br><span class="line">/root/dir2 /root/dir1 ~</span><br><span class="line">/root/dir3 /root/dir2 /root/dir1 ~</span><br><span class="line">/root/dir4 /root/dir3 /root/dir2 /root/dir1 ~</span><br><span class="line"></span><br><span class="line">[root@root:/root/dir4]<span class="comment"># dirs </span></span><br><span class="line">/root/dir4 /root/dir3 /root/dir2 /root/dir1 ~</span><br><span class="line"><span class="built_in">dirs</span>显出了栈中的所有目录</span><br><span class="line"></span><br><span class="line">[root@root:/root/dir4]<span class="comment"># popd（相当于popd +0）</span></span><br><span class="line">/root/dir3 /root/dir2 /root/dir1 ~</span><br><span class="line">[root@root:/root/dir3]<span class="comment"># dirs</span></span><br><span class="line">/root/dir3 /root/dir2 /root/dir1 ~</span><br><span class="line">可以看出/root/dir4目录已被清除，此时栈里已经没有了dir4目录，切当前目录切换为dir3</span><br><span class="line"></span><br><span class="line">[root@root:/root/dir3]<span class="comment"># pushd /root/dir4 </span></span><br><span class="line">/root/dir4 /root/dir3 /root/dir2 /root/dir1 ~</span><br><span class="line">[root@root:/root/dir4]</span><br><span class="line">不推荐以上面的方法进行切换，因为这种方式和<span class="built_in">cd</span>没有区别。</span><br><span class="line"></span><br><span class="line">[root@root:/root/dir4]<span class="comment"># popd +1</span></span><br><span class="line">/root/dir4 /root/dir2 /root/dir1 ~</span><br><span class="line">推荐以这种方式进行切换，尤其是目录层次比较多时</span><br><span class="line"></span><br><span class="line">[root@root:/root/dir4]<span class="comment"># popd -2</span></span><br><span class="line">/root/dir4 /root/dir1 ~</span><br><span class="line"></span><br><span class="line">[root@root:/root/dir2]<span class="comment"># pushd -1</span></span><br><span class="line">/root/dir1 ~ /root/dir2 /root/dir3 /root/dir4</span><br><span class="line">[root@root:/root/dir3]</span><br><span class="line">注意：最左边表示栈顶，最右边表示栈底</span><br></pre></td></tr></table></figure><p><strong>清空栈</strong></p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@root]:~<span class="comment"># dirs</span></span><br><span class="line">~ /root/dir2 /root/dir3 /root/dir4 /root/dir1</span><br><span class="line">[root@root]:~<span class="comment"># dirs -c</span></span><br><span class="line">[root@root](mailto:root@root):~<span class="comment"># dirs</span></span><br><span class="line">~</span><br></pre></td></tr></table></figure><p><strong>列表形式显示的栈的内容</strong></p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@root:/root/dir4]<span class="comment"># dirs -l -v</span></span><br><span class="line">0 /root/dir4</span><br><span class="line">1 /root/dir3</span><br><span class="line">2 /root/dir2</span><br><span class="line">3 /root/dir1</span><br><span class="line">4 /root</span><br></pre></td></tr></table></figure><p>注：如果只是两个目录之间的切换 <code>cd -</code>足矣，而且方便。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;!-- toc --&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;#目录栈指令&quot;&gt;目录栈指令&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;#1-dirs&quot;&gt;1 dirs&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;#11-功能&quot;&gt;1.1 功能&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=
+      
+    
+    </summary>
+    
+    
+      <category term="Shell" scheme="https://lxb.wiki/categories/Shell/"/>
+    
+    
+      <category term="Shell" scheme="https://lxb.wiki/tags/Shell/"/>
+    
+      <category term="dirs" scheme="https://lxb.wiki/tags/dirs/"/>
+    
+      <category term="pushd" scheme="https://lxb.wiki/tags/pushd/"/>
+    
+      <category term="popd" scheme="https://lxb.wiki/tags/popd/"/>
+    
+  </entry>
   
   <entry>
     <title>PHP检测图片是否有木马</title>
@@ -597,32 +635,6 @@
     
     
       <category term="signal" scheme="https://lxb.wiki/tags/signal/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>关于 CGo 的字符串函数的解释</title>
-    <link href="https://lxb.wiki/8c45788a/"/>
-    <id>https://lxb.wiki/8c45788a/</id>
-    <published>2020-02-09T12:55:26.000Z</published>
-    <updated>2020-05-05T11:39:59.173Z</updated>
-    
-    <content type="html"><![CDATA[<p><a href="https://github.com/golang/go/wiki/cgo" target="_blank" rel="noopener">cgo</a> 的大量文档都提到过，它提供了四个用于转换 Go 和 C 类型的字符串的函数，都是通过复制数据来实现。在 CGo 的文档中有简洁的解释，但我认为解释得太简洁了，因为文档只涉及了定义中的某些特定字符串，而忽略了两个很重要的注意事项。我曾经踩过这里的坑，现在我要详细解释一下。</p><p>四个函数分别是：</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">C</span>.<span class="title">CString</span><span class="params">(<span class="keyword">string</span>)</span> *<span class="title">C</span>.<span class="title">char</span></span></span><br><span class="line"><span class="function"><span class="title">func</span> <span class="title">C</span>.<span class="title">GoString</span><span class="params">(*C.char)</span> <span class="title">string</span></span></span><br><span class="line"><span class="function"><span class="title">func</span> <span class="title">C</span>.<span class="title">GoStringN</span><span class="params">(*C.char, C.<span class="keyword">int</span>)</span> <span class="title">string</span></span></span><br><span class="line"><span class="function"><span class="title">func</span> <span class="title">C</span>.<span class="title">GoBytes</span><span class="params">(unsafe.Pointer, C.<span class="keyword">int</span>)</span> []<span class="title">byte</span></span></span><br></pre></td></tr></table></figure><p><code>C.CString()</code> 等价于 C 的 <code>strdup()</code>，像文档中提到的那样，把 Go 的字符串复制为可以传递给 C 函数的 C 的 <code>char *</code>。很讨厌的一件事是，由于 Go 和 CGo 类型的定义方式，调用 <code>C.free</code> 时需要做一个转换：</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cs := C.CString(<span class="string">"a string"</span>)</span><br><span class="line">C.free(unsafe.Pointer(cs))</span><br></pre></td></tr></table></figure><p>请留意，Go 字符串中可能嵌入了 <code>\0</code> 字符，而 C 字符串不会。如果你的 Go 字符串中有 <code>\0</code> 字符，当你调用 <code>C.CString()</code> 时，C 代码会从 <code>\0</code> 字符处截断你的字符串。这往往不会被注意到，但<a href="https://utcc.utoronto.ca/~cks/space/blog/programming/BeSureItsACString" target="_blank" rel="noopener">有时文本并不保证不含 null 字符</a>。</p><p><code>C.GoString()</code> 也等价于 <code>strdup()</code>，但与 <code>C.CString()</code> 相反，是把 C 字符串转换为 Go 字符串。你可以用它定义结构体的字段，或者是声明为 C 的 <code>char *</code>（在 Go 中叫 <code>*C.cahr</code>） 的其他变量，抑或其他的一些变量（我们后面会看到）。</p><p><code>C.GoStringN()</code> 等价于 C 的 <code>memmove()</code>，与 C 中普通的字符串函数不同。<strong>它把整个 N 长度的 C buffer 复制为一个 Go 字符串，不单独处理 null 字符。</strong>再详细点，它也通过复制来实现。如果你有一个定义为 <code>char feild[64]</code> 的结构体的字段，然后调用了 <code>C.GoStringN(&amp;field, 64)</code>，那么你得到的 Go 字符串一定是 64 个字符，字符串的末尾有可能是一串 <code>\0</code> 字符。</p><p>(我认为这是 cgo 文档中的一个 bug。它宣称 GoStringN 的入参是一个 C 的字符串，但实际上很明显不是，因为 C 的字符串不能以 null 字符结束，而 GoStringN 不会在 null 字符处结束处理。)</p><p><code>C.GoBytes()</code> 是 <code>C.GoStringN()</code> 的另一个版本，不返回 <code>string</code> 而是返回 <code>[]byte</code>。它没有宣称以 C 字符串作为入参，它仅仅是对整个 buffer 做了内存拷贝。</p><p>如果你要拷贝的东西不是以 null 字符结尾的 C 字符串，而是固定长度的 memory buffer，那么 <code>C.GoString()</code> 正好能满足需求；它避开了 C 中传统的问题<a href="https://utcc.utoronto.ca/~cks/space/blog/programming/BeSureItsACString" target="_blank" rel="noopener">处理不是 C 字符串的 ’string‘</a>。然而，如果你要处理定义为 <code>char field[N]</code> 的结构体字段这种限定长度的 C 字符串时，这些函数<em>都不能</em>满足需求。</p><p>传统语义的结构体中固定长度的字符串变量，定义为 <code>char field[N]</code> 的字段，以及“包含一个字符串”等描述，都表示当且仅当字符串有足够空间时以 null 字符结尾，换句话说，字符串最多有 N-1 个字符。如果字符串正好有 N 个字符，那么它不会以 null 字符结尾。这是 <a href="https://utcc.utoronto.ca/~cks/space/blog/programming/UnixAPIMistake" target="_blank" rel="noopener">C 代码中诸多 bug 的根源</a>，也不是一个好的 API，但我们却摆脱不了这个 API。每次我们遇到这样的字段，文档不会明确告诉你字段的内容并不一定是 null 字符结尾的，你需要自己假设你有这种 API。</p><p><code>C.GoString()</code> 或 <code>C.GoStringN()</code> 都不能正确处理这些字段。使用 <code>GoStringN()</code> 相对来说出错更少；它仅仅返回一个末尾有一串 <code>\0</code> 字符长度为 N 的 Go 字符串（如果你仅仅是把这些字段打印出来，那么你可能不会留意到；我经常干这种事）。使用有诱惑力的 <code>GoString()</code> 更是引狼入室，因为它内部会对入参做 <code>strlen()</code>；如果字符末尾没有 null 字符，<code>strlen()</code> 会访问越界的内存地址。如果你走运，你得到的 Go 字符串末尾会有大量的垃圾。如果你不走运，你的 Go 程序出现段错误，因为 <code>strlen()</code> 访问了未映射的内存地址。</p><p>（总的来说，如果字符串末尾出现了大量垃圾，通常意味着在某处有不含结束符的 C 字符串。）</p><p>你需要的是与 C 的 <code>strndup()</code> 等价的 Go 函数，以此来确保复制不超过 N 个字符且在 null 字符处终止。下面是我写的版本，不保证无错误：</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">strndup</span><span class="params">(cs *C.char, <span class="built_in">len</span> <span class="keyword">int</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">   s := C.GoStringN(cs, C.<span class="keyword">int</span>(<span class="built_in">len</span>))</span><br><span class="line">   i := strings.IndexByte(s, <span class="number">0</span>)</span><br><span class="line">   <span class="keyword">if</span> i == <span class="number">-1</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> s</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">return</span> C.GoString(cs)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>由于有 <a href="https://utcc.utoronto.ca/~cks/space/blog/programming/GoStringsMemoryHolding" target="_blank" rel="noopener">Go 的字符串怎样占用内存</a>的问题，这段代码做了些额外的工作来最小化额外的内存占用。你可能想用另一种方法，返回一个 <code>GoStringN()</code> 字符串的切片。你也可以写复杂的代码，根据 i 和 len 的不同来决定选用哪种方法。</p><p>更新：<a href="https://github.com/golang/go/issues/12428#issuecomment-136581154" target="_blank" rel="noopener">Ian Lance Taylor 给我展示了份更好的代码</a>：</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">strndup</span><span class="params">(cs *C.char, <span class="built_in">len</span> <span class="keyword">int</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">   <span class="keyword">return</span> C.GoStringN(cs, C.<span class="keyword">int</span>(C.strnlen(cs, C.size_t(<span class="built_in">len</span>))))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>是的，这里有大量的转换。这篇文章就是你看到的 Go 和 Gco 类型的结合。</p><hr><p>via: <a href="https://utcc.utoronto.ca/~cks/space/blog/programming/GoCGoStringFunctions" target="_blank" rel="noopener">https://utcc.utoronto.ca/~cks/space/blog/programming/GoCGoStringFunctions</a></p><p>作者：<a href="https://utcc.utoronto.ca/~cks/space/People/ChrisSiebenmann" target="_blank" rel="noopener">ChrisSiebenmann</a><br>译者：<a href="https://github.com/lxbwolf" target="_blank" rel="noopener">lxbwolf</a><br>校对：<a href="https://github.com/polaris1119" target="_blank" rel="noopener">polaris1119</a></p><p>本文由 <a href="https://github.com/studygolang/GCTT" target="_blank" rel="noopener">GCTT</a> 原创编译，<a href="https://studygolang.com/" target="_blank" rel="noopener">Go 中文网</a> 荣誉推出</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;&lt;a href=&quot;https://github.com/golang/go/wiki/cgo&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;cgo&lt;/a&gt; 的大量文档都提到过，它提供了四个用于转换 Go 和 C 类型的字符串的函数，都是通过复制数据来实现。
-      
-    
-    </summary>
-    
-    
-      <category term="Golang" scheme="https://lxb.wiki/categories/Golang/"/>
-    
-    
-      <category term="Go" scheme="https://lxb.wiki/tags/Go/"/>
     
   </entry>
   
