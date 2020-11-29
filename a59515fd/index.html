@@ -20,19 +20,19 @@
 
   
   <title>使用 gosec 检查 Go 代码中的安全问题 | Xiaobin&#39;s Blog</title>
-  <meta name="description" content="来学习下 Go 语言的安全检查工具 gosec。   Go 语言写的代码越来越常见，尤其是在容器、Kubernetes 或云生态相关的开发中。Docker 是最早采用 Golang 的项目之一，随后是 Kubernetes，之后大量的新项目在众多编程语言中选择了 Go。 像其他语言一样，Go 也有它的长处和短处（如安全缺陷）。这些缺陷可能会因为语言本身的缺陷加上程序员编码不当而产生，例如，C 代">
+  <meta name="description" content="开始使用 gosec 安装 Go 和 gosec   使用默认选项运行 gosec 关于误判 高优先级问题 中优先级问题 低优先级问题   自定义 gosec 扫描 排除指定的测试 运行指定的检查 扫描测试文件 修改输出的格式   用 gosec 检查容易被发现的问题     来学习下 Go 语言的安全检查工具 gosec。   Go 语言写的代码越来越常见，尤其是在容器、Kubernete">
 <meta name="keywords" content="Go,gosec">
 <meta property="og:type" content="article">
 <meta property="og:title" content="使用 gosec 检查 Go 代码中的安全问题">
 <meta property="og:url" content="https://lxb.wiki/a59515fd/index.html">
 <meta property="og:site_name" content="Xiaobin&#39;s Blog">
-<meta property="og:description" content="来学习下 Go 语言的安全检查工具 gosec。   Go 语言写的代码越来越常见，尤其是在容器、Kubernetes 或云生态相关的开发中。Docker 是最早采用 Golang 的项目之一，随后是 Kubernetes，之后大量的新项目在众多编程语言中选择了 Go。 像其他语言一样，Go 也有它的长处和短处（如安全缺陷）。这些缺陷可能会因为语言本身的缺陷加上程序员编码不当而产生，例如，C 代">
+<meta property="og:description" content="开始使用 gosec 安装 Go 和 gosec   使用默认选项运行 gosec 关于误判 高优先级问题 中优先级问题 低优先级问题   自定义 gosec 扫描 排除指定的测试 运行指定的检查 扫描测试文件 修改输出的格式   用 gosec 检查容易被发现的问题     来学习下 Go 语言的安全检查工具 gosec。   Go 语言写的代码越来越常见，尤其是在容器、Kubernete">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://img.linux.net.cn/data/attachment/album/202010/04/125129bh4qxxsyqpvqjtx4.jpg">
-<meta property="og:updated_time" content="2020-11-29T15:40:10.985Z">
+<meta property="og:updated_time" content="2020-11-29T15:49:11.331Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="使用 gosec 检查 Go 代码中的安全问题">
-<meta name="twitter:description" content="来学习下 Go 语言的安全检查工具 gosec。   Go 语言写的代码越来越常见，尤其是在容器、Kubernetes 或云生态相关的开发中。Docker 是最早采用 Golang 的项目之一，随后是 Kubernetes，之后大量的新项目在众多编程语言中选择了 Go。 像其他语言一样，Go 也有它的长处和短处（如安全缺陷）。这些缺陷可能会因为语言本身的缺陷加上程序员编码不当而产生，例如，C 代">
+<meta name="twitter:description" content="开始使用 gosec 安装 Go 和 gosec   使用默认选项运行 gosec 关于误判 高优先级问题 中优先级问题 低优先级问题   自定义 gosec 扫描 排除指定的测试 运行指定的检查 扫描测试文件 修改输出的格式   用 gosec 检查容易被发现的问题     来学习下 Go 语言的安全检查工具 gosec。   Go 语言写的代码越来越常见，尤其是在容器、Kubernete">
 <meta name="twitter:image" content="https://img.linux.net.cn/data/attachment/album/202010/04/125129bh4qxxsyqpvqjtx4.jpg">
   <!-- Canonical links  把后面的 index.html 去掉-->
   <link rel="canonical" href="https://lxb.wiki/a59515fd/">
@@ -356,7 +356,7 @@
         <span class="post-comment"><i class="icon icon-comment"></i> <a href="/a59515fd/#comments" class="article-comment-link">评论</a></span>
         
 	
-		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 3.6k(字)</span>
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 3.7k(字)</span>
 	
 	
 		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 15(分)</span>
@@ -366,7 +366,32 @@
     </div>
     <div class="article-entry marked-body" itemprop="articleBody">
       
-        <blockquote>
+        <!-- toc -->
+
+<ul>
+<li><a href="#开始使用-gosec">开始使用 gosec</a><ul>
+<li><a href="#安装-go-和-gosec">安装 Go 和 gosec</a></li>
+</ul>
+</li>
+<li><a href="#使用默认选项运行-gosec">使用默认选项运行 gosec</a><ul>
+<li><a href="#关于误判">关于误判</a></li>
+<li><a href="#高优先级问题">高优先级问题</a></li>
+<li><a href="#中优先级问题">中优先级问题</a></li>
+<li><a href="#低优先级问题">低优先级问题</a></li>
+</ul>
+</li>
+<li><a href="#自定义-gosec-扫描">自定义 gosec 扫描</a><ul>
+<li><a href="#排除指定的测试">排除指定的测试</a></li>
+<li><a href="#运行指定的检查">运行指定的检查</a></li>
+<li><a href="#扫描测试文件">扫描测试文件</a></li>
+<li><a href="#修改输出的格式">修改输出的格式</a></li>
+</ul>
+</li>
+<li><a href="#用-gosec-检查容易被发现的问题">用 gosec 检查容易被发现的问题</a></li>
+</ul>
+<!-- tocstop -->
+
+<blockquote>
 <p>来学习下 Go 语言的安全检查工具 gosec。</p>
 </blockquote>
 <p><img src="https://img.linux.net.cn/data/attachment/album/202010/04/125129bh4qxxsyqpvqjtx4.jpg" alt></p>
