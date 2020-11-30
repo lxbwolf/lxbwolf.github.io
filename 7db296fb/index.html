@@ -20,24 +20,24 @@
 
   
   <title>分布式锁高并发优化 | Xiaobin&#39;s Blog</title>
-  <meta name="description" content="问题场景:假如下单时，用分布式锁来防止库存超卖，但是是每秒上千订单的高并发场景，如何对分布式锁进行高并发优化来应对这个场景？ 库存超卖现象是怎么产生的？ 假设订单系统部署两台机器上，不同的用户都要同时买10台iphone，分别发了一个请求给订单系统。接着每个订单系统实例都去数据库里查了一下，当前iphone库存是12台于是乎，每个订单系统实例都发送SQL到数据库里下单，然后扣减了10个库存，其中一">
+  <meta name="description" content="问题场景: 库存超卖现象是怎么产生的？ 用分布式锁如何解决库存超卖问题？ 分布式锁的方案在高并发场景下 如何对分布式锁进行高并发优化？ 分布式锁并发优化方案有没有什么不足？    问题场景:假如下单时，用分布式锁来防止库存超卖，但是是每秒上千订单的高并发场景，如何对分布式锁进行高并发优化来应对这个场景？ 库存超卖现象是怎么产生的？ 假设订单系统部署两台机器上，不同的用户都要同时买10台iph">
 <meta name="keywords" content="redis,优化,分布式">
 <meta property="og:type" content="article">
 <meta property="og:title" content="分布式锁高并发优化">
 <meta property="og:url" content="https://lxb.wiki/7db296fb/index.html">
 <meta property="og:site_name" content="Xiaobin&#39;s Blog">
-<meta property="og:description" content="问题场景:假如下单时，用分布式锁来防止库存超卖，但是是每秒上千订单的高并发场景，如何对分布式锁进行高并发优化来应对这个场景？ 库存超卖现象是怎么产生的？ 假设订单系统部署两台机器上，不同的用户都要同时买10台iphone，分别发了一个请求给订单系统。接着每个订单系统实例都去数据库里查了一下，当前iphone库存是12台于是乎，每个订单系统实例都发送SQL到数据库里下单，然后扣减了10个库存，其中一">
+<meta property="og:description" content="问题场景: 库存超卖现象是怎么产生的？ 用分布式锁如何解决库存超卖问题？ 分布式锁的方案在高并发场景下 如何对分布式锁进行高并发优化？ 分布式锁并发优化方案有没有什么不足？    问题场景:假如下单时，用分布式锁来防止库存超卖，但是是每秒上千订单的高并发场景，如何对分布式锁进行高并发优化来应对这个场景？ 库存超卖现象是怎么产生的？ 假设订单系统部署两台机器上，不同的用户都要同时买10台iph">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/201122/04.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/201122/05.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/201122/06.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/03.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/201122/07.png">
-<meta property="og:updated_time" content="2020-11-22T15:48:36.796Z">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004321.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004449.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004607.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004059.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004652.png">
+<meta property="og:updated_time" content="2020-11-30T16:47:17.974Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="分布式锁高并发优化">
-<meta name="twitter:description" content="问题场景:假如下单时，用分布式锁来防止库存超卖，但是是每秒上千订单的高并发场景，如何对分布式锁进行高并发优化来应对这个场景？ 库存超卖现象是怎么产生的？ 假设订单系统部署两台机器上，不同的用户都要同时买10台iphone，分别发了一个请求给订单系统。接着每个订单系统实例都去数据库里查了一下，当前iphone库存是12台于是乎，每个订单系统实例都发送SQL到数据库里下单，然后扣减了10个库存，其中一">
-<meta name="twitter:image" content="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/201122/04.png">
+<meta name="twitter:description" content="问题场景: 库存超卖现象是怎么产生的？ 用分布式锁如何解决库存超卖问题？ 分布式锁的方案在高并发场景下 如何对分布式锁进行高并发优化？ 分布式锁并发优化方案有没有什么不足？    问题场景:假如下单时，用分布式锁来防止库存超卖，但是是每秒上千订单的高并发场景，如何对分布式锁进行高并发优化来应对这个场景？ 库存超卖现象是怎么产生的？ 假设订单系统部署两台机器上，不同的用户都要同时买10台iph">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004321.png">
   <!-- Canonical links  把后面的 index.html 去掉-->
   <link rel="canonical" href="https://lxb.wiki/7db296fb/">
   
@@ -360,7 +360,7 @@
         <span class="post-comment"><i class="icon icon-comment"></i> <a href="/7db296fb/#comments" class="article-comment-link">评论</a></span>
         
 	
-		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 1.6k(字)</span>
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 1.7k(字)</span>
 	
 	
 		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 5(分)</span>
@@ -370,12 +370,24 @@
     </div>
     <div class="article-entry marked-body" itemprop="articleBody">
       
-        <h4 id="问题场景"><span id="问题场景">问题场景:</span></h4><p>假如下单时，用分布式锁来防止库存超卖，但是是每秒上千订单的高并发场景，如何对分布式锁进行高并发优化来应对这个场景？</p>
-<h4 id="库存超卖现象是怎么产生的"><span id="库存超卖现象是怎么产生的">库存超卖现象是怎么产生的？</span></h4><p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/201122/04.png" alt="库存超卖"></p>
+        <!-- toc -->
+
+<ul>
+<li><a href="#问题场景">问题场景:</a></li>
+<li><a href="#库存超卖现象是怎么产生的">库存超卖现象是怎么产生的？</a></li>
+<li><a href="#用分布式锁如何解决库存超卖问题">用分布式锁如何解决库存超卖问题？</a></li>
+<li><a href="#分布式锁的方案在高并发场景下">分布式锁的方案在高并发场景下</a></li>
+<li><a href="#如何对分布式锁进行高并发优化">如何对分布式锁进行高并发优化？</a></li>
+<li><a href="#分布式锁并发优化方案有没有什么不足">分布式锁并发优化方案有没有什么不足？</a></li>
+</ul>
+<!-- tocstop -->
+
+<h4 id="问题场景"><span id="问题场景">问题场景:</span></h4><p>假如下单时，用分布式锁来防止库存超卖，但是是每秒上千订单的高并发场景，如何对分布式锁进行高并发优化来应对这个场景？</p>
+<h4 id="库存超卖现象是怎么产生的"><span id="库存超卖现象是怎么产生的">库存超卖现象是怎么产生的？</span></h4><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004321.png" alt="库存超卖"></p>
 <p>假设订单系统部署两台机器上，不同的用户都要同时买10台iphone，分别发了一个请求给订单系统。<br>接着每个订单系统实例都去数据库里查了一下，当前iphone库存是12台<br>于是乎，每个订单系统实例都发送SQL到数据库里下单，然后扣减了10个库存，其中一个将库存从12台扣减为2台，另外一个将库存从2台扣减为-8台</p>
 <h4 id="用分布式锁如何解决库存超卖问题"><span id="用分布式锁如何解决库存超卖问题">用分布式锁如何解决库存超卖问题？</span></h4><p>分布式锁的实现原理:<br>同一个锁key，同一时间只能有一个客户端拿到锁，其他客户端会陷入无限的等待来尝试获取那个锁，只有获取到锁的客户端才能执行下面的业务逻辑。</p>
-<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/201122/05.png" alt="分布式锁代码"></p>
-<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/201122/06.png" alt="fenbushisuo_yuanli"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004449.png" alt="分布式锁代码"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004607.png" alt="fenbushisuo_yuanli"></p>
 <p>从上图可以看到，只有一个订单系统实例可以成功加分布式锁，然后只有他一个实例可以查库存、判断库存是否充足、下单扣减库存，接着释放锁。</p>
 <p>释放锁之后，另外一个订单系统实例才能加锁，接着查库存，一下发现库存只有2台了，库存不足，无法购买，下单失败。不会将库存扣减为-8的</p>
 <h4 id="分布式锁的方案在高并发场景下"><span id="分布式锁的方案在高并发场景下">分布式锁的方案在高并发场景下</span></h4><p>分布式锁一旦加了之后，对同一个商品的下单请求，会导致所有客户端都必须对同一个商品的库存锁key进行加锁。</p>
@@ -383,7 +395,7 @@
 <p>假设加锁之后，释放锁之前，查库存 -&gt; 创建订单 -&gt; 扣减库存，这个过程性能很高吧，算他全过程20毫秒，这应该不错了。</p>
 <p>那么1秒是1000毫秒，只能容纳50个对这个商品的请求依次串行完成处理。</p>
 <p>比如一秒钟来50个请求，都是对iphone下单的，那么每个请求处理20毫秒，一个一个来，最后1000毫秒正好处理完50个请求。</p>
-<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/03.png" alt="分布式锁串行"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004059.png" alt="分布式锁串行"></p>
 <p>所以, 能看出来简单的使用分布式锁来处理库存超卖问题，存在的缺陷就是同一个商品多用户同时下单的时候，会基于分布式锁串行化处理，导致没法同时处理同一个商品的大量下单的请求。</p>
 <p>这种方案，要是应对那种低并发、无秒杀场景的普通小电商系统，可能还可以接受。</p>
 <p>因为如果并发量很低，每秒就不到10个请求，没有瞬时高并发秒杀单个商品的场景的话，其实也很少会对同一个商品在一秒内瞬间下1000个订单，因为小电商系统没那场景。</p>
@@ -394,7 +406,7 @@
 <p>LongAdder中也是采用了类似的分段CAS操作，失败则自动迁移到下一个分段进行CAS的思路。</p>
 <p>其实分布式锁的优化思路也是类似的，之前我们是在另外一个业务场景下落地了这个方案到生产中，不是在库存超卖问题里用的。</p>
 <p>但是库存超卖这个业务场景不错，很容易理解，所以我们就用这个场景来说一下。</p>
-<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/201122/07.png" alt="分段加锁"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004652.png" alt="分段加锁"></p>
 <p>其实这就是分段加锁。你想，假如你现在iphone有1000个库存，那么你完全可以给拆成20个库存段，要是你愿意，可以在数据库的表里建20个库存字段，比如stock_01，stock_02，类似这样的，也可以在redis之类的地方放20个库存key。</p>
 <p>总之，就是把你的1000件库存给他拆开，每个库存段是50件库存，比如stock_01对应50件库存，stock_02对应50件库存。</p>
 <p>接着，每秒1000个请求过来了，好！此时其实可以是自己写一个简单的随机算法，每个请求都是随机在20个分段库存里，选择一个进行加锁。</p>
