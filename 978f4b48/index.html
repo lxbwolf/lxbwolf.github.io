@@ -20,18 +20,18 @@
 
   
   <title>[译]Effective STL 9 | Xiaobin&#39;s Blog</title>
-  <meta name="description" content="条款9：在删除选项中仔细选择 假定你有一个标准STL容器，c，容纳int， Container&amp;lt;int&amp;gt; c; 而你想把c中所有值为1963的对象都去掉。令人吃惊的是，完成这项任务的方法因不同的容 器类型而不同：没有一种方法是通用的。 如果你有一个连续内存容器（vector、deque或string——参见条款1），最好的方法是erase-remove惯用法（参见条款32）： c.er">
+  <meta name="description" content="条款9：在删除选项中仔细选择 假定你有一个标准STL容器，c，容纳int， Container&amp;lt;int&amp;gt; c; 而你想把c中所有值为1963的对象都去掉。令人吃惊的是，完成这项任务的方法因不同的容 器类型而不同：没有一种方法是通用的。 如果你有一个连续内存容器（vector、deque或string——参见条款1），最好的方法是erase-remove惯用法（参见条款32）： 1234">
 <meta name="keywords" content="STL,翻译">
 <meta property="og:type" content="article">
 <meta property="og:title" content="[译]Effective STL 9">
 <meta property="og:url" content="https://lxb.wiki/978f4b48/index.html">
 <meta property="og:site_name" content="Xiaobin&#39;s Blog">
-<meta property="og:description" content="条款9：在删除选项中仔细选择 假定你有一个标准STL容器，c，容纳int， Container&amp;lt;int&amp;gt; c; 而你想把c中所有值为1963的对象都去掉。令人吃惊的是，完成这项任务的方法因不同的容 器类型而不同：没有一种方法是通用的。 如果你有一个连续内存容器（vector、deque或string——参见条款1），最好的方法是erase-remove惯用法（参见条款32）： c.er">
+<meta property="og:description" content="条款9：在删除选项中仔细选择 假定你有一个标准STL容器，c，容纳int， Container&amp;lt;int&amp;gt; c; 而你想把c中所有值为1963的对象都去掉。令人吃惊的是，完成这项任务的方法因不同的容 器类型而不同：没有一种方法是通用的。 如果你有一个连续内存容器（vector、deque或string——参见条款1），最好的方法是erase-remove惯用法（参见条款32）： 1234">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-05-10T03:31:39.332Z">
+<meta property="og:updated_time" content="2020-12-06T16:42:57.663Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="[译]Effective STL 9">
-<meta name="twitter:description" content="条款9：在删除选项中仔细选择 假定你有一个标准STL容器，c，容纳int， Container&amp;lt;int&amp;gt; c; 而你想把c中所有值为1963的对象都去掉。令人吃惊的是，完成这项任务的方法因不同的容 器类型而不同：没有一种方法是通用的。 如果你有一个连续内存容器（vector、deque或string——参见条款1），最好的方法是erase-remove惯用法（参见条款32）： c.er">
+<meta name="twitter:description" content="条款9：在删除选项中仔细选择 假定你有一个标准STL容器，c，容纳int， Container&amp;lt;int&amp;gt; c; 而你想把c中所有值为1963的对象都去掉。令人吃惊的是，完成这项任务的方法因不同的容 器类型而不同：没有一种方法是通用的。 如果你有一个连续内存容器（vector、deque或string——参见条款1），最好的方法是erase-remove惯用法（参见条款32）： 1234">
   <!-- Canonical links  把后面的 index.html 去掉-->
   <link rel="canonical" href="https://lxb.wiki/978f4b48/">
   
@@ -61,7 +61,7 @@
 </head>
 
 
-<body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
   <header class="header" itemscope itemtype="http://schema.org/WPHeader">
   <div class="slimContent">
     <div class="navbar-header">
@@ -366,82 +366,42 @@
       
         <p>条款9：在删除选项中仔细选择 假定你有一个标准STL容器，c，容纳int， <code>Container&lt;int&gt; c;</code> 而你想把c中所有值为<code>1963</code>的对象都去掉。令人吃惊的是，完成这项任务的方法因不同的容 器类型而不同：没有一种方法是通用的。</p>
 <p>如果你有一个连续内存容器（vector、deque或string——参见条款1），最好的方法是erase-remove惯用法（参见条款32）：</p>
-<pre><code>c.erase(remove(c.begin(), c.end(), 1963),       // 当c是vector、string
-c.end());                               // 或deque时，
-// erase-remove惯用法
-// 是去除特定值的元素
-// 的最佳方法</code></pre><p>这方法也适合于list，但是，正如条款44解释的，list的成员函数remove更高效：</p>
-<pre><code>c.remove(1963);     // 当c是list时，
-// remove成员函数是去除
-// 特定值的元素的最佳方法</code></pre><p>当c是标准关联容器（即，set、multiset、map或multimap）时，使用任何叫做remove的东 西都是完全错误的。这样的容器没有叫做remove的成员函数，而且使用remove算法可能覆 盖容器值（参见条款32），潜在地破坏容器。（关于这样的破坏的细节，参考条款22，那 个条款也解释了为什么试图在map和multimap上使用remove肯定不能编译，而试图在set和 multiset上使用可能不能编译。）</p>
-<p>不，对于关联容器，解决问题的适当方法是调用erase：</p>
-<pre><code>c.erase(1963);      // 当c是标准关联容器时
-// erase成员函数是去除
-// 特定值的元素的最佳方法</code></pre><p>这不仅是正确的，而且很高效，只花费对数时间。（序列容器的基于删除的技术需要线性 时间。）并且，关联容器的erase成员函数有基于等价而不是相等的优势，条款19解释了这 一区别的重要性。</p>
-<p>让我们现在稍微修改一下这个问题。不是从c中除去每个有特定值的物体，让我们消除下面 判断式（参见条款39）返回真的每个对象：</p>
-<pre><code>bool badValue(int x);   // 返回x是否是“bad”
-对于序列容器（vector、string、deque和list），我们要做的只是把每个remove()替换为remove_if()，然后就完成了：
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">c.erase(remove(c.begin(), c.end(), <span class="number">1963</span>),       <span class="comment">// 当c是vector、string</span></span><br><span class="line">c.end());                               <span class="comment">// 或deque时，</span></span><br><span class="line"><span class="comment">// erase-remove惯用法</span></span><br><span class="line"><span class="comment">// 是去除特定值的元素</span></span><br><span class="line"><span class="comment">// 的最佳方法</span></span><br></pre></td></tr></table></figure>
 
-c.erase(remove_if(c.begin(), c.end(), badValue),    // 当c是vector、string
-c.end());           // 或deque时这是去掉
-// badValue返回真
-// 的对象的最佳方法
-c.remove_if(badValue);              // 当c是list时这是去掉
-// badValue返回真
-// 的对象的最佳方法</code></pre><p>对于标准关联容器，它不是很直截了当。有两种方法处理该问题，一个更容易编码，另一 个更高效。“更容易但效率较低”的解决方案用<code>remove_copy_if()</code>把我们需要的值拷贝到一 个新容器中，然后把原容器的内容和新的交换：</p>
-<pre><code>AssocContainer&lt;int&gt; c;              // c现在是一种
-...                                 // 标准关联容器
-AssocContainer&lt;int&gt; goodValues;         // 用于容纳不删除
-// 的值的临时容器
-remove_copy_if(c.begin(), c.end(),          // 从c拷贝不删除
-inserter(goodValues,        // 的值到
-goodValues.end()),          // goodValues
-badValue);
-c.swap(goodValues);             // 交换c和goodValues
-// 的内容</code></pre><p>这种方法的缺点是它拷贝了所有不删除的元素，而这样的拷贝开销可能大于我们期望的底线。</p>
+<p>这方法也适合于list，但是，正如条款44解释的，list的成员函数remove更高效：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">c.remove(<span class="number">1963</span>);     <span class="comment">// 当c是list时，</span></span><br><span class="line"><span class="comment">// remove成员函数是去除</span></span><br><span class="line"><span class="comment">// 特定值的元素的最佳方法</span></span><br></pre></td></tr></table></figure>
+
+<p>当c是标准关联容器（即，set、multiset、map或multimap）时，使用任何叫做remove的东 西都是完全错误的。这样的容器没有叫做remove的成员函数，而且使用remove算法可能覆 盖容器值（参见条款32），潜在地破坏容器。（关于这样的破坏的细节，参考条款22，那 个条款也解释了为什么试图在map和multimap上使用remove肯定不能编译，而试图在set和 multiset上使用可能不能编译。）</p>
+<p>不，对于关联容器，解决问题的适当方法是调用erase：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">c.erase(<span class="number">1963</span>);      <span class="comment">// 当c是标准关联容器时</span></span><br><span class="line"><span class="comment">// erase成员函数是去除</span></span><br><span class="line"><span class="comment">// 特定值的元素的最佳方法</span></span><br></pre></td></tr></table></figure>
+
+<p>这不仅是正确的，而且很高效，只花费对数时间。（序列容器的基于删除的技术需要线性 时间。）并且，关联容器的erase成员函数有基于等价而不是相等的优势，条款19解释了这 一区别的重要性。</p>
+<p>让我们现在稍微修改一下这个问题。不是从c中除去每个有特定值的物体，让我们消除下面 判断式（参见条款39）返回真的每个对象：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">badValue</span><span class="params">(<span class="keyword">int</span> x)</span></span>;   <span class="comment">// 返回x是否是“bad”</span></span><br><span class="line">对于序列容器（<span class="built_in">vector</span>、<span class="built_in">string</span>、<span class="built_in">deque</span>和<span class="built_in">list</span>），我们要做的只是把每个remove()替换为remove_if()，然后就完成了：</span><br><span class="line"></span><br><span class="line">c.erase(remove_if(c.begin(), c.end(), badValue),    <span class="comment">// 当c是vector、string</span></span><br><span class="line">c.end());           <span class="comment">// 或deque时这是去掉</span></span><br><span class="line"><span class="comment">// badValue返回真</span></span><br><span class="line"><span class="comment">// 的对象的最佳方法</span></span><br><span class="line">c.remove_if(badValue);              <span class="comment">// 当c是list时这是去掉</span></span><br><span class="line"><span class="comment">// badValue返回真</span></span><br><span class="line"><span class="comment">// 的对象的最佳方法</span></span><br></pre></td></tr></table></figure>
+
+<p>对于标准关联容器，它不是很直截了当。有两种方法处理该问题，一个更容易编码，另一 个更高效。“更容易但效率较低”的解决方案用<code>remove_copy_if()</code>把我们需要的值拷贝到一 个新容器中，然后把原容器的内容和新的交换：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">AssocContainer&lt;<span class="keyword">int</span>&gt; c;              <span class="comment">// c现在是一种</span></span><br><span class="line">...                                 <span class="comment">// 标准关联容器</span></span><br><span class="line">AssocContainer&lt;<span class="keyword">int</span>&gt; goodValues;         <span class="comment">// 用于容纳不删除</span></span><br><span class="line"><span class="comment">// 的值的临时容器</span></span><br><span class="line">remove_copy_if(c.begin(), c.end(),          <span class="comment">// 从c拷贝不删除</span></span><br><span class="line">inserter(goodValues,        <span class="comment">// 的值到</span></span><br><span class="line">goodValues.end()),          <span class="comment">// goodValues</span></span><br><span class="line">badValue);</span><br><span class="line">c.swap(goodValues);             <span class="comment">// 交换c和goodValues</span></span><br><span class="line"><span class="comment">// 的内容</span></span><br></pre></td></tr></table></figure>
+
+<p>这种方法的缺点是它拷贝了所有不删除的元素，而这样的拷贝开销可能大于我们期望的底线。</p>
 <p>我们可以通过直接从原容器删除元素来避开拷贝的开销。不过，因为关联容器没有提供类似<code>remove_if()</code>的成员函数，所以我们必须写一个循环来迭代c中的元素，和原来一样删除元素.</p>
 <p>看起来，这个任务很简单，而且实际上，代码也很简单。不幸的是，那些正确工作的代码 很少是跃出脑海的代码。例如，这是很多程序员首先想到的：</p>
-<pre><code>AssocContainer&lt;int&gt; c;
-...
-for (AssocContainer&lt;int&gt;::iterator i = c.begin();   // 清晰，直截了当
-i!= c.end();                                // 而漏洞百出的用于
-++i) {                                      // 删除c中badValue返回真
-if (badValue(*i)) c.erase(i);                   // 的每个元素的代码
-}                                                   // 不要这么做！&lt;/int&gt;&lt;/int&gt;</code></pre><p>唉，这有未定义的行为。当容器的一个元素被删时，指向那个元素的所有迭代器都失效了 。当c.erase(i)返回时，i已经失效。那对于这个循环是个坏消息，因为在erase()返回后， i通过for循环的++i部分自增。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">AssocContainer&lt;<span class="keyword">int</span>&gt; c;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">for</span> (AssocContainer&lt;<span class="keyword">int</span>&gt;::iterator i = c.begin();   <span class="comment">// 清晰，直截了当</span></span><br><span class="line">i!= c.end();                                <span class="comment">// 而漏洞百出的用于</span></span><br><span class="line">++i) &#123;                                      <span class="comment">// 删除c中badValue返回真</span></span><br><span class="line"><span class="keyword">if</span> (badValue(*i)) c.erase(i);                   <span class="comment">// 的每个元素的代码</span></span><br><span class="line">&#125;                                                   <span class="comment">// 不要这么做！&lt;/int&gt;&lt;/int&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>​    </p>
+<p>唉，这有未定义的行为。当容器的一个元素被删时，指向那个元素的所有迭代器都失效了 。当c.erase(i)返回时，i已经失效。那对于这个循环是个坏消息，因为在erase()返回后， i通过for循环的++i部分自增。</p>
 <p>为了避免这个问题，我们必须保证在调用erase之前就得到了c中下一元素的迭代器。最容 易的方法是当我们调用时在i上使用后置递增：</p>
-<pre><code>AssocContainer&lt;int&gt; c;
-...
-for (AssocContainer&lt;int&gt;::iterator i = c.begin();   // for循环的第三部分
-i != c.end();                                   // 是空的；i现在在下面
-/*nothing*/ ){                                 // 自增
-if (badValue(*i)) c.erase(i++);     // 对于坏的值，把当前的
-else ++i;                           // i传给erase，然后
-}                                       // 作为副作用增加i；
-// 对于好的值，
-// 只增加i</code></pre><p>这种调用erase()的解决方法可以工作，因为表达式i++的值是i的旧值，但作为副作用，i增 加了。因此，我们把i的旧值（没增加的）传给erase，但在erase开始执行前i已经自增了 。那正好是我们想要的。正如我所说的，代码很简单，只不过不是大多数程序员在第一次 尝试时想到的。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">AssocContainer&lt;<span class="keyword">int</span>&gt; c;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">for</span> (AssocContainer&lt;<span class="keyword">int</span>&gt;::iterator i = c.begin();   <span class="comment">// for循环的第三部分</span></span><br><span class="line">i != c.end();                                   <span class="comment">// 是空的；i现在在下面</span></span><br><span class="line"><span class="comment">/*nothing*/</span> )&#123;                                 <span class="comment">// 自增</span></span><br><span class="line"><span class="keyword">if</span> (badValue(*i)) c.erase(i++);     <span class="comment">// 对于坏的值，把当前的</span></span><br><span class="line"><span class="keyword">else</span> ++i;                           <span class="comment">// i传给erase，然后</span></span><br><span class="line">&#125;                                       <span class="comment">// 作为副作用增加i；</span></span><br><span class="line"><span class="comment">// 对于好的值，</span></span><br><span class="line"><span class="comment">// 只增加i</span></span><br></pre></td></tr></table></figure>
+
+<p>这种调用erase()的解决方法可以工作，因为表达式i++的值是i的旧值，但作为副作用，i增 加了。因此，我们把i的旧值（没增加的）传给erase，但在erase开始执行前i已经自增了 。那正好是我们想要的。正如我所说的，代码很简单，只不过不是大多数程序员在第一次 尝试时想到的。</p>
 <p>现在让我们进一步修改该问题。不仅删除badValue返回真的每个元素，而且每当一个元素 被删掉时，我们也想把一条消息写到日志文件中。</p>
 <p>对于关联容器，这说多容易就有多容易，因为只需要对我们刚才开发的循环做一个微不足 道的修改就行了：</p>
-<pre><code>ofstream logFile;                   // 要写入的日志文件
-AssocContainer&lt;int&gt; c;
-...
-for (AssocContainer&lt;int&gt;::iterator i = c.begin();   // 循环条件和前面一样
-i !=c.end();){
-if (badValue(*i)){
-logFile &amp;lt;&amp;lt; &quot;Erasing &quot; &amp;lt;&amp;lt; *i &amp;lt;&amp;lt;&apos;\n&apos;;   // 写日志文件 
-        c.erase(i++);           // 删除元素
-    }
-    else ++i;
-}</code></pre><p>现在是vector、string和deque给我们带来麻烦。我们不能再使用<code>erase-remove</code>惯用法，因为没有办法让erase()或remove()写日志文件。而且，我们不能使用刚刚为关联容器开发的循环, 因为它为vector、string和deque产生未定义的行为！要记得对于那样的容器，调用erase不仅使所有指向被删元素的迭代器失效，也使被删元素之后的所有迭代器失效。在我们的情况里，那包括所有i之后的迭代器。我们写i++，++i或你能想起的其它任何东西都没有用，因为没有能导致迭代器有效的。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">ofstream logFile;                   <span class="comment">// 要写入的日志文件</span></span><br><span class="line">AssocContainer&lt;<span class="keyword">int</span>&gt; c;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">for</span> (AssocContainer&lt;<span class="keyword">int</span>&gt;::iterator i = c.begin();   <span class="comment">// 循环条件和前面一样</span></span><br><span class="line">i !=c.end();)&#123;</span><br><span class="line"><span class="keyword">if</span> (badValue(*i))&#123;</span><br><span class="line">logFile &amp;lt;&amp;lt; <span class="string">"Erasing "</span> &amp;lt;&amp;lt; *i &amp;lt;&amp;lt;<span class="string">'\n'</span>;   <span class="comment">// 写日志文件 </span></span><br><span class="line">        c.erase(i++);           <span class="comment">// 删除元素</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> ++i;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在是vector、string和deque给我们带来麻烦。我们不能再使用<code>erase-remove</code>惯用法，因为没有办法让erase()或remove()写日志文件。而且，我们不能使用刚刚为关联容器开发的循环, 因为它为vector、string和deque产生未定义的行为！要记得对于那样的容器，调用erase不仅使所有指向被删元素的迭代器失效，也使被删元素之后的所有迭代器失效。在我们的情况里，那包括所有i之后的迭代器。我们写i++，++i或你能想起的其它任何东西都没有用，因为没有能导致迭代器有效的。</p>
 <p>我们必须对vector、string和deque采用不同的战略。特别是，我们必须利用erase()的返回值。那个返回值正是我们需要的：一旦删除完成，它就是指向紧接在被删元素之后的元素的有效迭代器。换句话说，我们这么写：</p>
-<pre><code>for (SeqContainer&lt;int&gt;::iterator i = c.begin();
-i != c.end();){
-if (badValue(*i)){
-logFile &amp;lt;&amp;lt; &quot;Erasing &quot; &amp;lt;&amp;lt; *i &amp;lt;&amp;lt; &apos;\n&apos;; 
-        i = c.erase(i);         // 通过把erase的返回值
-    }                   // 赋给i来保持i有效
-    else
-        ++i;
-}</code></pre><p>这可以很好地工作，但只用于标准序列容器。由于论证一个可能的问题（条款5做了），标准关联容器的erase()的返回类型是void[1]。对于那些容器，你必须使用“后置递增你要传给erase()的迭代器”技术。（顺便说说，在为序列容器编码和为关联容器编码之间的这种差别是为什么写容器无关代码一般缺乏考虑的一个例子——参见条款2。)</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (SeqContainer&lt;<span class="keyword">int</span>&gt;::iterator i = c.begin();</span><br><span class="line">i != c.end();)&#123;</span><br><span class="line"><span class="keyword">if</span> (badValue(*i))&#123;</span><br><span class="line">logFile &amp;lt;&amp;lt; <span class="string">"Erasing "</span> &amp;lt;&amp;lt; *i &amp;lt;&amp;lt; <span class="string">'\n'</span>; </span><br><span class="line">        i = c.erase(i);         <span class="comment">// 通过把erase的返回值</span></span><br><span class="line">    &#125;                   <span class="comment">// 赋给i来保持i有效</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        ++i;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这可以很好地工作，但只用于标准序列容器。由于论证一个可能的问题（条款5做了），标准关联容器的erase()的返回类型是void[1]。对于那些容器，你必须使用“后置递增你要传给erase()的迭代器”技术。（顺便说说，在为序列容器编码和为关联容器编码之间的这种差别是为什么写容器无关代码一般缺乏考虑的一个例子——参见条款2。)</p>
 <p>为了避免你奇怪list的适当方法是什么，事实表明对于迭代和删除，你可以像vector/str ing/deque一样或像关联容器一样对待list；两种方法都可以为list工作。</p>
 <p>如果我们观察在本条款中提到的所有东西，我们得出下列结论：</p>
 <p>去除一个容器中有特定值的所有对象： 如果容器是vector、string或deque，使用erase-remove惯用法。</p>
