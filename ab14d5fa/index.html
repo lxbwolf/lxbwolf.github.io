@@ -20,21 +20,21 @@
 
   
   <title>nginx 寻找index 原理 | Xiaobin&#39;s Blog</title>
-  <meta name="description" content="1. nginx 是怎么找index.php 文件的当nginx发现需要/web/echo/index.php 文件时, 就会向内核发起 IO 系统调用(因为要跟硬件打交道, 这里的硬件是指硬盘, 通常需要靠内核来操作, 而内核提供的这些功能是通过系统调用来实现的), 告诉内核, 我需要这个文件, 内核从/ 开始找到web 目录, 再在web 目录下找到echo 目录, 最后在echo 目录下找到">
+  <meta name="description" content="1. nginx 是怎么找index.php 文件的当nginx发现需要/web/echo/index.php 文件时, 就会向内核发起 IO 系统调用(因为要跟硬件打交道, 这里的硬件是指硬盘, 通常需要靠内核来操作, 而内核提供的这些功能是通过系统调用来实现的), 告诉内核, 我需要这个文件, 内核从/ 开始找到web 目录, 再在web 目录下找到echo 目录, 最后在echo">
 <meta name="keywords" content="nginx">
 <meta property="og:type" content="article">
 <meta property="og:title" content="nginx 寻找index 原理">
 <meta property="og:url" content="https://lxb.wiki/ab14d5fa/index.html">
 <meta property="og:site_name" content="Xiaobin&#39;s Blog">
-<meta property="og:description" content="1. nginx 是怎么找index.php 文件的当nginx发现需要/web/echo/index.php 文件时, 就会向内核发起 IO 系统调用(因为要跟硬件打交道, 这里的硬件是指硬盘, 通常需要靠内核来操作, 而内核提供的这些功能是通过系统调用来实现的), 告诉内核, 我需要这个文件, 内核从/ 开始找到web 目录, 再在web 目录下找到echo 目录, 最后在echo 目录下找到">
+<meta property="og:description" content="1. nginx 是怎么找index.php 文件的当nginx发现需要/web/echo/index.php 文件时, 就会向内核发起 IO 系统调用(因为要跟硬件打交道, 这里的硬件是指硬盘, 通常需要靠内核来操作, 而内核提供的这些功能是通过系统调用来实现的), 告诉内核, 我需要这个文件, 内核从/ 开始找到web 目录, 再在web 目录下找到echo 目录, 最后在echo">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://img-blog.csdn.net/20180616013228714?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2x4YndvbGY=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70">
-<meta property="og:image" content="https://img-blog.csdn.net/2018061601462786?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2x4YndvbGY=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70">
-<meta property="og:updated_time" content="2019-10-03T16:57:44.766Z">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201207010354.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201207010430.png">
+<meta property="og:updated_time" content="2020-12-06T17:14:22.707Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="nginx 寻找index 原理">
-<meta name="twitter:description" content="1. nginx 是怎么找index.php 文件的当nginx发现需要/web/echo/index.php 文件时, 就会向内核发起 IO 系统调用(因为要跟硬件打交道, 这里的硬件是指硬盘, 通常需要靠内核来操作, 而内核提供的这些功能是通过系统调用来实现的), 告诉内核, 我需要这个文件, 内核从/ 开始找到web 目录, 再在web 目录下找到echo 目录, 最后在echo 目录下找到">
-<meta name="twitter:image" content="https://img-blog.csdn.net/20180616013228714?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2x4YndvbGY=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70">
+<meta name="twitter:description" content="1. nginx 是怎么找index.php 文件的当nginx发现需要/web/echo/index.php 文件时, 就会向内核发起 IO 系统调用(因为要跟硬件打交道, 这里的硬件是指硬盘, 通常需要靠内核来操作, 而内核提供的这些功能是通过系统调用来实现的), 告诉内核, 我需要这个文件, 内核从/ 开始找到web 目录, 再在web 目录下找到echo 目录, 最后在echo">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201207010354.png">
   <!-- Canonical links  把后面的 index.html 去掉-->
   <link rel="canonical" href="https://lxb.wiki/ab14d5fa/">
   
@@ -64,7 +64,7 @@
 </head>
 
 
-<body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
   <header class="header" itemscope itemtype="http://schema.org/WPHeader">
   <div class="slimContent">
     <div class="navbar-header">
@@ -357,7 +357,7 @@
         <span class="post-comment"><i class="icon icon-comment"></i> <a href="/ab14d5fa/#comments" class="article-comment-link">评论</a></span>
         
 	
-		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 908(字)</span>
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 906(字)</span>
 	
 	
 		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 3(分)</span>
@@ -367,18 +367,38 @@
     </div>
     <div class="article-entry marked-body" itemprop="articleBody">
       
-        <p><strong>1. nginx 是怎么找index.php 文件的</strong><br>当nginx发现需要<code>/web/echo/index.php</code> 文件时, 就会向内核发起 IO 系统调用(因为要跟硬件打交道, 这里的硬件是指硬盘, 通常需要靠内核来操作, 而内核提供的这些功能是通过系统调用来实现的), 告诉内核, 我需要这个文件, 内核从<code>/</code> 开始找到<code>web</code> 目录, 再在<code>web</code> 目录下找到<code>echo</code> 目录, 最后在<code>echo</code> 目录下找到<code>index.php</code> 文件, 于是把这个<code>index.php</code> 从硬盘上读取到内核自身的内存空间, 然后再把这个文件复制到nginx进程所在的内存空间, 于是 nginx就得到了自己想要的文件了 <strong>2. 寻找文件在文件系统层面是怎么操作的</strong><br>如, nginx 需要得到<code>/web/echo/index.php</code> 这个文件 每个分区(像ext3 等文件系统, block块是文件存储的最小单元, 默认是4096字节) 都是包含元数据区和数据区, 每个文件在元数据区都有元数据条目(一般是128字节大小), 每个条目都有一个编号, 称之为 inode(index node), 这个inode 里包含 文件类型, 权限, 连接次数, 属主和数组的 ID&amp;时间戳, 这个文件占据了哪些磁盘块也就是块的编号(block, 每个文件可以占用多个 block, 且 block 不一定是连续的, 每个 block 都有编号), 如下图:<img src="https://img-blog.csdn.net/20180616013228714?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2x4YndvbGY=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70" alt="这里写图片描述"> 目录其实也是普通文件, 也需要占用磁盘块, 目录不是一个容器. 默认创建的目录大小为4096字节, 即只需要占用一个磁盘块, 但这是不确定的. 所以要找到目录也是需要到元数据区里找到对应的条目, 只要找到对应的inode就可以找到目录所占用的磁盘块. 目录里存着一张表(映射表), 里面放着 目录或文件的名称和对应的inode号, 如下:</p>
-<p>-</p>
-<p>-</p>
-<p>文件名称(只是字符串)</p>
-<p>inode 号</p>
-<p>test.txt</p>
-<p>100</p>
+        <!-- toc -->
+
+
+
+<!-- tocstop -->
+
+<p><strong>1. nginx 是怎么找index.php 文件的</strong><br>当nginx发现需要<code>/web/echo/index.php</code> 文件时, 就会向内核发起 IO 系统调用(因为要跟硬件打交道, 这里的硬件是指硬盘, 通常需要靠内核来操作, 而内核提供的这些功能是通过系统调用来实现的), 告诉内核, 我需要这个文件, 内核从<code>/</code> 开始找到<code>web</code> 目录, 再在<code>web</code> 目录下找到<code>echo</code> 目录, 最后在<code>echo</code> 目录下找到<code>index.php</code> 文件, 于是把这个<code>index.php</code> 从硬盘上读取到内核自身的内存空间, 然后再把这个文件复制到nginx进程所在的内存空间, 于是 nginx就得到了自己想要的文件了 </p>
+<p><strong>2. 寻找文件在文件系统层面是怎么操作的</strong><br>如, nginx 需要得到<code>/web/echo/index.php</code> 这个文件 每个分区(像ext3 等文件系统, block块是文件存储的最小单元, 默认是4096字节) 都是包含元数据区和数据区, 每个文件在元数据区都有元数据条目(一般是128字节大小), 每个条目都有一个编号, 称之为 inode(index node), 这个inode 里包含 文件类型, 权限, 连接次数, 属主和数组的 ID&amp;时间戳, 这个文件占据了哪些磁盘块也就是块的编号(block, 每个文件可以占用多个 block, 且 block 不一定是连续的, 每个 block 都有编号), 如下图: </p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201207010354.png" alt> </p>
+<p>目录其实也是普通文件, 也需要占用磁盘块, 目录不是一个容器. 默认创建的目录大小为4096字节, 即只需要占用一个磁盘块, 但这是不确定的. 所以要找到目录也是需要到元数据区里找到对应的条目, 只要找到对应的inode就可以找到目录所占用的磁盘块. 目录里存着一张表(映射表), 里面放着 目录或文件的名称和对应的inode号, 如下:</p>
+<table>
+<thead>
+<tr>
+<th>-</th>
+<th>-</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>文件名称(只是字符串)</td>
+<td>inode 号</td>
+</tr>
+<tr>
+<td>test.txt</td>
+<td>100</td>
+</tr>
+</tbody></table>
 <p>假如</p>
-<pre><code>/           在数据区占据1, 2号 block, `/` 其实也是一个目录, 里面有两个目录, web 和 111
-web         占据5号 block, 是目录, 里面有2个目录 echo 和 data
-echo        占据11号 block, 是目录, 里面有一个文件 index.php
-index.php   占据15, 16号 block, 是文件</code></pre><p>其在文件系统中分布如下图: <img src="https://img-blog.csdn.net/2018061601462786?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2x4YndvbGY=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70" alt="这里写图片描述"> 那么内核究竟是怎么找到<code>index.php</code> 这个文件的呢? 内核拿到 nginx 的 IO 系统调用要获取<code>/web/echo/index.php</code> 这个文件请求之后,</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">/           在数据区占据1, 2号 block, `/` 其实也是一个目录, 里面有两个目录, web 和 111</span><br><span class="line">web         占据5号 block, 是目录, 里面有2个目录 <span class="built_in">echo</span> 和 data</span><br><span class="line"><span class="built_in">echo</span>        占据11号 block, 是目录, 里面有一个文件 index.php</span><br><span class="line">index.php   占据15, 16号 block, 是文件</span><br></pre></td></tr></table></figure>
+
+<p>其在文件系统中分布如下图: </p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201207010430.png" alt></p>
+<p> 那么内核究竟是怎么找到<code>index.php</code> 这个文件的呢? 内核拿到 nginx 的 IO 系统调用要获取<code>/web/echo/index.php</code> 这个文件请求之后,</p>
 <pre><code>1. 内核读取元数据区 / 的inode, 从 inode 里读取 / 所对应的数据块的编号, 然后在数据区找到其对应的块(1, 2号块), 读取1号块上的映射表找到 web 这个名称在元数据区对应的 inode 号
 2. 内核读取 web 对应的 inode(3号), 从中得到 web 在数据区对应的块是5号块, 于是到数据区找到5号块, 从中读取映射表, 知道 echo 对应的 inode 是5号, 于是到元数据区找到5号 inode
 3. 内核读取5号 inode, 得到 echo 在数据区对应的事11号块, 于是到数据区读取11号块得到映射表, 得到index.php 对应的 inode 事9号
