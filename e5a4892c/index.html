@@ -27,14 +27,14 @@
 <meta property="og:site_name" content="Xiaobin&#39;s Blog">
 <meta property="og:description" content="RapidJSON 的设计有一个特性, 进行赋值操作时, 不是把源value复制(copy)到目的 value, 而是转移(move)到目的value. 例如 Value a(123); Value b(456); b = a; // a becomes a Null value, b becomes number 123. 这样的设计的目的是 为了提高性能. 对于固定大小的JSON类型(Numb">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://img.blog.csdn.net/20170510091639158?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbHhid29sZg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
-<meta property="og:image" content="http://img.blog.csdn.net/20170510092703640?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbHhid29sZg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
-<meta property="og:image" content="http://img.blog.csdn.net/20170510094606202?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbHhid29sZg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
-<meta property="og:updated_time" content="2020-05-10T03:28:52.840Z">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201207003749.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201207003815.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201207003854.png">
+<meta property="og:updated_time" content="2020-12-06T16:39:16.277Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Move semantics of RapidJSON">
 <meta name="twitter:description" content="RapidJSON 的设计有一个特性, 进行赋值操作时, 不是把源value复制(copy)到目的 value, 而是转移(move)到目的value. 例如 Value a(123); Value b(456); b = a; // a becomes a Null value, b becomes number 123. 这样的设计的目的是 为了提高性能. 对于固定大小的JSON类型(Numb">
-<meta name="twitter:image" content="http://img.blog.csdn.net/20170510091639158?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbHhid29sZg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201207003749.png">
   <!-- Canonical links  把后面的 index.html 去掉-->
   <link rel="canonical" href="https://lxb.wiki/e5a4892c/">
   
@@ -365,7 +365,7 @@
         <p>RapidJSON 的设计有一个特性, 进行赋值操作时, 不是把源value复制(copy)到目的 value, 而是转移(move)到目的value. 例如</p>
 <pre><code>Value a(123);
 Value b(456);
-b = a; // a becomes a Null value, b becomes number 123.</code></pre><p><img src="http://img.blog.csdn.net/20170510091639158?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbHhid29sZg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述"></p>
+b = a; // a becomes a Null value, b becomes number 123.</code></pre><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201207003749.png" alt></p>
 <p>这样的设计的目的是 为了提高性能. 对于固定大小的JSON类型(Number, True, False, Null), 复制很简单快捷. 而对于可变大小的类型(String, Array, Object), 复制时会产生大量不容易被察觉的开销. 尤其是当我们需要创建一个临时的值, 把它复制给另一个变量, 然后析构它. 若使用正常的<strong>复制</strong> 语义:</p>
 <pre><code>Document d;
 Value o(kObjectType);
@@ -375,7 +375,7 @@ Value o(kObjectType);
     // ...
     o.AddMember(&quot;contacts&quot;, contacts, d.GetAllocator(); // deep clone contacts(may be with lots of allocations)
     // destruct contact
-}</code></pre><p><img src="http://img.blog.csdn.net/20170510092703640?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbHhid29sZg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述"></p>
+}</code></pre><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201207003815.png" alt></p>
 <p><code>o</code> 需要分配跟<code>contacts</code> 大小一样的缓冲区, 做深度复制, 然后析构<code>contacts</code> . 这样会产生大量不必要的内存分配/释放 和内存复制. 有一些方案可以避免实质的复制这些数据, 如引用计数, 垃圾回收等等. 为了使RapidJSON简单和快速, 我们选择使用转移语义来进行赋值. 这与<code>std::auto_ptr</code>类似, 都是在赋值时转移拥有权. 转移比复制简捷地多, 它只需 析构原来的值, 把源值<code>memcpy()</code> 到目的值, 最后再把源值 设为Null类型.</p>
 <p>使用转移语义, 上面的例子变成:</p>
 <pre><code>Document d;
@@ -385,7 +385,7 @@ Value o(kObjectType);
     // Adding elements to contacts array.
     o.AddMember(&quot;contacts&quot;, contacts, d.GetAllocator()); // Just memcpy() of contacts itself to the value of new member(16 bytes)
     // contacts became Null here. Its destructiong is trivial.
-}</code></pre><p><img src="http://img.blog.csdn.net/20170510094606202?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbHhid29sZg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述"></p>
+}</code></pre><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201207003854.png" alt></p>
 <p><strong>转移语义和临时值</strong> 有时, 我们想直接构造一个临时变量传给”转移”函数, 如<code>PushBack()</code> , <code>AddMember()</code> . 由于临时对象不能直接转化成正常的值引用, 我们可以调用<code>Move()</code> 函数</p>
 <pre><code>Value a(kArrayType);
 Document::AllocatorType&amp; allocator = document.GetAllocator();
