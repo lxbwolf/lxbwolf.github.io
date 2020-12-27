@@ -19,20 +19,19 @@
   
 
   
-  <title>C++在重载operator=为带模板的函数的时候的陷阱 | Xiaobin&#39;s Blog</title>
-  <meta name="description" content="原文地址 https://segmentfault.com/a/1190000004467381 最近被一个语法问题缠了半天，终于找到了原因。不仔细思考一下写的时候真的很容易忽略。先看代码： template class A { public: const T t = 0; template A&amp;amp; operator=(const A&amp;amp; a) { return *this; } };">
-<meta property="og:type" content="article">
-<meta property="og:title" content="C++在重载operator=为带模板的函数的时候的陷阱">
-<meta property="og:url" content="https://lxb.wiki/a25c4e07/index.html">
+  <title>归档: 2020/12 | Xiaobin&#39;s Blog</title>
+  <meta name="description" content="我总在抱怨自己没鞋子穿，直到有一天，我遇到了一个没有脚的人。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Xiaobin&#39;s Blog">
+<meta property="og:url" content="https://lxb.wiki/archives/2020/12/index.html">
 <meta property="og:site_name" content="Xiaobin&#39;s Blog">
-<meta property="og:description" content="原文地址 https://segmentfault.com/a/1190000004467381 最近被一个语法问题缠了半天，终于找到了原因。不仔细思考一下写的时候真的很容易忽略。先看代码： template class A { public: const T t = 0; template A&amp;amp; operator=(const A&amp;amp; a) { return *this; } };">
+<meta property="og:description" content="我总在抱怨自己没鞋子穿，直到有一天，我遇到了一个没有脚的人。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-12-06T16:26:31.966Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="C++在重载operator=为带模板的函数的时候的陷阱">
-<meta name="twitter:description" content="原文地址 https://segmentfault.com/a/1190000004467381 最近被一个语法问题缠了半天，终于找到了原因。不仔细思考一下写的时候真的很容易忽略。先看代码： template class A { public: const T t = 0; template A&amp;amp; operator=(const A&amp;amp; a) { return *this; } };">
+<meta name="twitter:title" content="Xiaobin&#39;s Blog">
+<meta name="twitter:description" content="我总在抱怨自己没鞋子穿，直到有一天，我遇到了一个没有脚的人。">
   <!-- Canonical links  把后面的 index.html 去掉-->
-  <link rel="canonical" href="https://lxb.wiki/a25c4e07/">
+  <link rel="canonical" href="https://lxb.wiki/archives/2020/12/">
   
     <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
   
@@ -60,7 +59,7 @@
 </head>
 
 
-<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+<body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
   <header class="header" itemscope itemtype="http://schema.org/WPHeader">
   <div class="slimContent">
     <div class="navbar-header">
@@ -315,122 +314,48 @@
   
   
 <main class="main" role="main">
-  <div class="content">
-  <article id="post-C++在重载operator=为带模板的函数的时候的陷阱" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+  	<article class="content article article-archives article-type-list" itemscope="">
+	    <header class="article-header">
+	      <h1 itemprop="title">归档: 2020/12</h1>
+	      <p class="text-muted">共 1 篇文章</p>
+	    </header>
+	    <div class="article-body">
+	      
+  
+  
     
-    <div class="article-header">
+    
       
-        
-  
-    <h1 class="article-title" itemprop="name">
-      C++在重载operator=为带模板的函数的时候的陷阱
-    </h1>
-  
-
       
-      <div class="article-meta">
-        <span class="article-date">
-    <i class="icon icon-calendar-check"></i>
-	<a href="/a25c4e07/" class="article-date">
-	  <time datetime="2016-10-29T12:20:32.000Z" itemprop="datePublished">2016-10-29</time>
-	</a>
-</span>
-        
-  <span class="article-category">
-    <i class="icon icon-folder"></i>
-    <a class="article-category-link" href="/categories/C/">C++</a>
-  </span>
-
-        
-
-<!--        
- -->
-        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/a25c4e07/#comments" class="article-comment-link">评论</a></span>
-        
-	
-		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 370(字)</span>
-	
-	
-		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 1(分)</span>
-	
-
-      </div>
-    </div>
-    <div class="article-entry marked-body" itemprop="articleBody">
-      
-        <p>原文地址 <a href="https://segmentfault.com/a/1190000004467381" target="_blank" rel="noopener">https://segmentfault.com/a/1190000004467381</a></p>
-<p>最近被一个语法问题缠了半天，终于找到了原因。不仔细思考一下写的时候真的很容易忽略。先看代码：</p>
-<p>template class A { public: const T t = 0;</p>
-<p>template A&amp; operator=(const A&amp; a) { return *this; } };</p>
-<p>int main() { A a, b;</p>
-<p>b = a; // error } 这会带来一个编译错误，然而横睇掂睇都看不出问题。于是我就试了一下这样的代码：A c; b = c;居然通过了编译。F**k，这个模板居然胳膊肘往外拐。</p>
-<p>其实我在写这个代码的时候忽略了一点，就是default assignment operator，它是你在定义类的时候编译器默认给你加上去的，行为是对所有成员变量赋值。它的声明是A&amp; operator=(const A&amp; a);，跟我们自己定义的放在一起：</p>
-<p>template A&amp; operator=(const A&amp; a) { return *this; }</p>
-<p>A&amp; operator=(const A&amp; a) /<em>= delete</em>/; 恰好构成了模板特化，这就糟了。一旦构成了特化，OtherT可以匹配的类型就会除去int，用A赋值时只能调用系统给我们定义的那个。然而它也不起作用，因为成员里面有常量（这样它就会被标记为= delete，留意delete并不会令OtherT可以匹配到int，反而令它匹配不到）。</p>
-<p>知道了原因之后，解决就很方便了，只要重新定义这个默认赋值运算符就好：</p>
-<p>A&amp; operator=(const A&amp; a) { /<em>…</em>/ }</p>
-
-      
-    </div>
-    <div class="article-footer">
-      <blockquote class="mt-2x">
-  <ul class="post-copyright list-unstyled">
+      <section class="panel panel-default b-no">
+        <div class="panel-heading" role="tab">
+          <h3 class="panel-title">
+            <a data-toggle="collapse" href="#collapse2020" aria-expanded="true">
+              <i class="icon icon-calendar-plus text-active"></i><i class="icon icon-calendar-minus text"></i>
+              2020
+            </a>
+            <!-- <a href="/archives/2020" class="archive-year">2020</a> -->
+          </h3>
+        </div>
+        <div id="collapse2020" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="heading2020">
+        <div class="panel-body">
+          <div class="collection">
     
-    <li class="post-copyright-link hidden-xs">
-      <strong>本文链接：</strong>
-      <a href="https://lxb.wiki/a25c4e07/" title="C++在重载operator=为带模板的函数的时候的陷阱" target="_blank" rel="external">https://lxb.wiki/a25c4e07/</a>
-    </li>
     
-    <li class="post-copyright-license">
-      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
-    </li>
-  </ul>
-</blockquote>
-
-    </div>
-  </article>
-  
-    
-  <section id="comments">
-  	
-      <div id="vcomments"></div>
-    
-  </section>
+<a href="/942c23ec/" class="collection-item" target="_blank" itemprop="url">
+  <time datetime="2020-12-02T13:06:56.000Z" itemprop="datePublished">2020-12-02</time>
+  <span>&nbsp;&nbsp;&nbsp;</span> 跳表的增删改查
+</a>
 
 
   
-</div>
-
-  <nav class="bar bar-footer clearfix" data-stick-bottom>
-  <div class="bar-inner">
   
-  <ul class="pager pull-left">
-    
-    <li class="prev">
-      <a href="/72da8a18/" title="x == x"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
-    </li>
-    
-    
-    <li class="next">
-      <a href="/31dc5dc1/" title="Makefile学习笔记"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
-    </li>
-    
-    
-  </ul>
-  
-  
-  
-  <div class="bar-right">
-    
-    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
-    
-  </div>
-  </div>
-</nav>
+    </div></div></div></section>
   
 
-
-
+	    </div>
+  	</article>
+  	 	
 </main>
 
   <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
@@ -484,37 +409,6 @@ window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 
 
 
-
-   
-
-
-
-
-   
-    
-  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/valine"></script>
-  <script type="text/javascript">
-  var GUEST = ['nick', 'mail', 'link'];
-  var meta = 'nick,mail,link';
-  meta = meta.split(',').filter(function(item) {
-    return GUEST.indexOf(item) > -1;
-  });
-  new Valine({
-    el: '#vcomments',
-    verify: false,
-    notify: true,
-    appId: '6bn4rcWK3ehmM0hbKJmE991u-MdYXbMMI',
-    appKey: 'jkoCGVIFrcsbsKrgg7CiPsWP',
-    placeholder: 'Just go go',
-    avatar: '',
-    meta: meta,
-    pageSize: '10' || 10,
-    visitor: false
-  });
-  </script>
-
-     
 
 
 
