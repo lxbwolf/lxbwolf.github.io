@@ -29,6 +29,31 @@
     
     
     <entry>
+      <title>可靠性、可用性、稳定性</title>
+      <link href="/18166f99/"/>
+      <url>/18166f99/</url>
+      
+        <content type="html"><![CDATA[<h2 id="对比availability可用性-reliability可靠性-stability稳定性"><span id="对比availability可用性-reliability可靠性-stability稳定性">对比Availability可用性、Reliability可靠性、Stability稳定性</span></h2><!-- toc --><ul><li><a href="#区分">区分</a></li><li><a href="#总体对比">总体对比</a><ul><li><a href="#可用性">可用性</a></li><li><a href="#可靠性">可靠性</a><ul><li><a href="#mtbfmean-time-between-failure">MTBF（Mean Time Between Failure）</a></li><li><a href="#mttrmean-time-to-repair">MTTR（Mean Time To Repair）</a></li><li><a href="#mttfmean-time-to-failure">MTTF（Mean Time To Failure）</a></li></ul></li><li><a href="#稳定性">稳定性</a></li></ul></li></ul><!-- tocstop --><h1 id="区分"><span id="区分">区分</span></h1><p>从事故、稳定方面简单理解如下：</p><table><thead><tr><th></th><th>描述</th></tr></thead><tbody><tr><td>可靠性</td><td>不出事故</td></tr><tr><td>可用性</td><td>出事故后，快速止损</td></tr><tr><td>稳定性</td><td>解决故障问题基础上，服务持续稳定、性能稳定</td></tr></tbody></table><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210509160538.png" alt></p><h1 id="总体对比"><span id="总体对比">总体对比</span></h1><table>     <tr>        <td></td>        <td>可用性</td>        <td>可靠性</td>        <td>稳定性</td>    </tr>    <tr>        <td>英文</td>        <td>Availability</td>        <td>Reliability</td>        <td>Stability</td>    </tr>    <tr>        <td>关注点</td>        <td>关注的是服务总体的持续时间。系统在给定时间内总体的运行时间越长，可用性越高。</td>        <td>关注系统可以无故障地持续运行的概率，关注的是故障率。<br>故障的频率越高，可靠性越低。<br>影响可靠性的因素就是能够引起故障的所有因素，包括软件设计错误，编码错误，硬件故障等等。</td>        <td>指软件在一个运行周期内、在一定的压力条件下，在持续操作时间内出错的概率，性能劣化趋势等等。<br>如果一个系统的性能时好时坏，它一定是不稳定的，而不一定是不可靠的。<br>稳定性更关注系统在给定条件下的响应是否一致，行为是否稳定。<br>可靠是可用的前提，稳定是可靠的进一步提升。</td>    </tr>    <tr>        <td>对比</td>        <td colspan="2">在《分布式系统原理与范型》中提到的下面例子中比较准确的解释了两者的区别：<br>如果系统在每小时崩溃1ms，那么它的可用性就超过99.9999%，但是它还是高度不可靠。<br>与之类似，如果一个系统从来不崩溃，但是每年要停机两星期，那么它是高度可靠的，但是可用性只有96%。<br>作为系统的响应，首要目标是先降低故障的次数，频率要低，从而提高可靠性；<br>同时在故障出现后，要提高故障的恢复时间，速度要快，从而提高业务的可用性。</td>        <td></td>    </tr>    <tr>        <td>对比</td>        <td></td>        <td colspan="2">对于电力系统而言，<br>稳定性就是“人民用电不要忽明忽暗忽快忽慢”，可靠性就是”不要用着用着突然没有啦“。<br>故障与出错的差别</td>    </tr></table><h2 id="可用性"><span id="可用性">可用性</span></h2><p>可用性指系统在给定时间内可以正常工作的概率，通常用SLA（服务等级协议，service level agreement）指标来表示。</p><p>这是这段时间的总体的可用性指标。</p><table><thead><tr><th>通俗叫法</th><th>可用性级别</th><th>年度宕机时间</th><th>周宕机时间</th><th>每天宕机时间</th></tr></thead><tbody><tr><td>1个9</td><td>90%</td><td>36.5天</td><td>16.8小时</td><td>2.4小时</td></tr><tr><td>2个9</td><td>99%</td><td>87.6小时</td><td>1.68小时</td><td>14分钟</td></tr><tr><td>3个9</td><td>99.9%</td><td>8.76小时</td><td>10.1分钟</td><td>86秒</td></tr><tr><td>4个9</td><td>99.99%</td><td>52.6分钟</td><td>1.01分钟</td><td>8.6秒</td></tr><tr><td>5个9</td><td>99.999%</td><td>5.26分钟，315.36秒</td><td>6.05秒</td><td>0.86秒</td></tr></tbody></table><h2 id="可靠性"><span id="可靠性">可靠性</span></h2><p>可靠性相关的几个指标如下：</p><h3 id="mtbfmean-time-between-failure"><span id="mtbfmean-time-between-failure">MTBF（Mean Time Between Failure）</span></h3><p>即平均无故障时间，是指从新的产品在规定的工作环境条件下开始工作到出现第一个故障的时间的平均值。</p><p>MTBF越长表示可靠性越高，正确工作能力越强 。</p><h3 id="mttrmean-time-to-repair"><span id="mttrmean-time-to-repair">MTTR（Mean Time To Repair）</span></h3><p>即平均修复时间，是指可修复产品的平均修复时间，就是从出现故障到修复中间的这段时间。</p><p>MTTR越短表示易恢复性越好。</p><h3 id="mttfmean-time-to-failure"><span id="mttfmean-time-to-failure">MTTF（Mean Time To Failure）</span></h3><p>即平均失效时间。系统平均能够正常运行多长时间，才发生一次故障。</p><p>系统的可靠性越高，平均无故障时间越长。</p><p>这些指标跟可用性关系</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Availability = UpTime/(UpTime+DownTime) = MTBF / (MTBF + MTTR)</span><br></pre></td></tr></table></figure><h2 id="稳定性"><span id="稳定性">稳定性</span></h2><p>Stackoverflow 看到这样一段代码来表示稳定性和可靠性的区别，甚为有趣：</p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Reliable but unstable:</span></span><br><span class="line">    add(a,b):</span><br><span class="line">     <span class="keyword">if</span> randomInt mod <span class="number">5</span> == <span class="number">0</span>: </span><br><span class="line">        throw exception</span><br><span class="line">     <span class="keyword">else</span></span><br><span class="line">        <span class="keyword">print</span> a+b        </span><br><span class="line"></span><br><span class="line"><span class="comment"># Stable but unreliable:</span></span><br><span class="line">    add(a,b):</span><br><span class="line">     <span class="keyword">if</span> randomInt mod <span class="number">5</span> == <span class="number">0</span>: </span><br><span class="line">         <span class="keyword">print</span> a+a</span><br><span class="line">     <span class="keyword">else</span></span><br><span class="line">         <span class="keyword">print</span> a+b</span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      <categories>
+          
+          <category> Web </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 稳定性 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Joplin+坚果云作为主力笔记工具</title>
       <link href="/f5496f4b/"/>
       <url>/f5496f4b/</url>
