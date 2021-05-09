@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+
+  
+  <title>Golang的反射 | Xiaobin&#39;s Blog</title>
+  <meta name="description" content="编程语言中反射的概念在计算机科学领域，反射是指一类应用，它们能够自描述和自控制。也就是说，这类应用通过采用某种机制来实现对自己行为的描述（self-representation）和监测（examination），并能根据自身行为的状态和结果，调整或修改应用所描述行为的状态和相关的语义。 每种语言的反射模型都不同，并且有些语言根本不支持反射。Golang语言实现了反射，反射机制就是在运行时动态的调用">
+<meta name="keywords" content="Go">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Golang的反射">
+<meta property="og:url" content="https://lxb.wiki/1d3c1f0e/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Blog">
+<meta property="og:description" content="编程语言中反射的概念在计算机科学领域，反射是指一类应用，它们能够自描述和自控制。也就是说，这类应用通过采用某种机制来实现对自己行为的描述（self-representation）和监测（examination），并能根据自身行为的状态和结果，调整或修改应用所描述行为的状态和相关的语义。 每种语言的反射模型都不同，并且有些语言根本不支持反射。Golang语言实现了反射，反射机制就是在运行时动态的调用">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-05-05T11:38:55.811Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Golang的反射">
+<meta name="twitter:description" content="编程语言中反射的概念在计算机科学领域，反射是指一类应用，它们能够自描述和自控制。也就是说，这类应用通过采用某种机制来实现对自己行为的描述（self-representation）和监测（examination），并能根据自身行为的状态和结果，调整或修改应用所描述行为的状态和相关的语义。 每种语言的反射模型都不同，并且有些语言根本不支持反射。Golang语言实现了反射，反射机制就是在运行时动态的调用">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/1d3c1f0e/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+</head>
+
+
+<body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/head.jpeg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin.Liu</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:i@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><span class="category-list-count">19</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/RPI/">RPI</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">12</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.14px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Pic/" style="font-size: 13.29px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.71px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.29px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/joplin/" style="font-size: 13px;">joplin</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mysql/" style="font-size: 13.43px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.29px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.29px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.14px;">torrent</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/优化/" style="font-size: 13px;">优化</a> <a href="/tags/分布式/" style="font-size: 13px;">分布式</a> <a href="/tags/博客/" style="font-size: 13px;">博客</a> <a href="/tags/工具/" style="font-size: 13.57px;">工具</a> <a href="/tags/架构/" style="font-size: 13.14px;">架构</a> <a href="/tags/树莓派/" style="font-size: 13.14px;">树莓派</a> <a href="/tags/破解/" style="font-size: 13px;">破解</a> <a href="/tags/端口/" style="font-size: 13px;">端口</a> <a href="/tags/算法/" style="font-size: 13.43px;">算法</a> <a href="/tags/编译器/" style="font-size: 13.43px;">编译器</a> <a href="/tags/翻译/" style="font-size: 13.86px;">翻译</a> <a href="/tags/解决/" style="font-size: 13px;">解决</a> <a href="/tags/跳表/" style="font-size: 13.14px;">跳表</a> <a href="/tags/进程/" style="font-size: 13.14px;">进程</a> <a href="/tags/邮件/" style="font-size: 13.14px;">邮件</a> <a href="/tags/链表/" style="font-size: 13px;">链表</a> <a href="/tags/锚点失效/" style="font-size: 13px;">锚点失效</a> <a href="/tags/陷阱/" style="font-size: 13px;">陷阱</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/ef3fb32/" class="title">误删了Mac中Chrome书签后如何恢复</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-05-01T10:44:48.000Z" itemprop="datePublished">2021-05-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/f5496f4b/" class="title">Joplin+坚果云作为主力笔记工具</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-03-09T13:07:57.000Z" itemprop="datePublished">2021-03-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Golang/">Golang</a>
+              </p>
+              <p class="item-title">
+                <a href="/e98e0a2b/" class="title">redis 跳表分析并用 Go 实现</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-03-03T15:09:59.000Z" itemprop="datePublished">2021-03-03</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Pic/">Pic</a>
+              </p>
+              <p class="item-title">
+                <a href="/941edb97/" class="title">APNG与 GIF</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-02-24T15:00:47.000Z" itemprop="datePublished">2021-02-24</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Linux/">Linux</a>
+              </p>
+              <p class="item-title">
+                <a href="/686a477f/" class="title">Linux 下 su 和 su - 的区别</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-02-13T13:24:47.000Z" itemprop="datePublished">2021-02-13</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Golang的反射" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Golang的反射
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/1d3c1f0e/" class="article-date">
+	  <time datetime="2019-11-03T13:21:59.000Z" itemprop="datePublished">2019-11-03</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Golang/">Golang</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/Go/">Go</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/1d3c1f0e/#comments" class="article-comment-link">评论</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 3.7k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 14(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h4 id="编程语言中反射的概念"><span id="编程语言中反射的概念">编程语言中反射的概念</span></h4><p>在计算机科学领域，反射是指一类应用，它们能够自描述和自控制。也就是说，这类应用通过采用某种机制来实现对自己行为的描述（self-representation）和监测（examination），并能根据自身行为的状态和结果，调整或修改应用所描述行为的状态和相关的语义。</p>
+<p>每种语言的反射模型都不同，并且有些语言根本不支持反射。Golang语言实现了反射，反射机制就是在运行时动态的调用对象的方法和属性，官方自带的reflect包就是反射相关的，只要包含这个包就可以使用。</p>
+<p>Golang的gRPC也是通过反射实现的。</p>
+<h4 id="interface-和反射"><span id="interface-和反射">interface 和反射</span></h4><p>先来看看Golang关于类型设计的一些原则</p>
+<ul>
+<li>变量包括（value, type）两部分<ul>
+<li>理解这一点就知道为什么nil != nil了</li>
+</ul>
+</li>
+<li>type 包括 static type和concrete type. 简单来说 static type是你在编码是看见的类型(如int、string)，concrete type是runtime系统看见的类型</li>
+<li>类型断言能否成功，取决于变量的concrete type，而不是static type. 因此，一个 reader变量如果它的concrete type也实现了write方法的话，它也可以被类型断言为writer.</li>
+</ul>
+<p>反射，就是建立在类型之上的，Golang的指定类型的变量的类型是静态的（也就是指定int、string这些的变量，它的type是static type），在创建变量的时候就已经确定，反射主要与Golang的interface类型相关（它的type是concrete type），只有interface类型才有反射一说。</p>
+<p>在Golang的实现中，每个interface变量都有一个对应pair，pair中记录了实际变量的值和类型:</p>
+<p><code>(value, type)</code></p>
+<p>value是实际变量值，type是实际变量的类型。一个interface{}类型的变量包含了2个指针，一个指针指向值的类型【对应concrete type】，另外一个指针指向实际的值【对应value】。</p>
+<p>例如，创建类型为*os.File的变量，然后将其赋给一个接口变量r：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">tty, err := os.OpenFile(&quot;/dev/tty&quot;, os.O_RDWR, 0)</span><br><span class="line"></span><br><span class="line">var r io.Reader</span><br><span class="line">r = tty</span><br></pre></td></tr></table></figure>
+
+<p>接口变量r的pair中将记录如下信息：(tty, *os.File)，这个pair在接口变量的连续赋值过程中是不变的，将接口变量r赋给另一个接口变量w:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">var w io.Writer</span><br><span class="line">w = r.(io.Writer)</span><br></pre></td></tr></table></figure>
+
+<p>接口变量w的pair与r的pair相同，都是:(tty, *os.File)，即使w是空接口类型，pair也是不变的。</p>
+<p>interface及其pair的存在，是Golang中实现反射的前提，理解了pair，就更容易理解反射。反射就是用来检测存储在接口变量内部(值value；类型concrete type) pair对的一种机制。</p>
+<h4 id="reflect-基本功能typeof和valueof"><span id="reflect-基本功能typeof和valueof">reflect 基本功能TypeOf和ValueOf</span></h4><p>既然反射就是用来检测存储在接口变量内部(值value；类型concrete type) pair对的一种机制。那么在Golang的reflect反射包中有什么样的方式可以让我们直接获取到变量内部的信息呢？ 它提供了两种类型（或者说两个方法）让我们可以很容易的访问接口变量内容，分别是reflect.ValueOf() 和 reflect.TypeOf()，看看官方的解释</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">// ValueOf returns a new Value initialized to the concrete value</span><br><span class="line">// stored in the interface i.  ValueOf(nil) returns the zero </span><br><span class="line">func ValueOf(i interface&#123;&#125;) Value &#123;...&#125;</span><br><span class="line"></span><br><span class="line">翻译一下：ValueOf用来获取输入参数接口中的数据的值，如果接口为空则返回0</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// TypeOf returns the reflection Type that represents the dynamic type of i.</span><br><span class="line">// If i is a nil interface value, TypeOf returns nil.</span><br><span class="line">func TypeOf(i interface&#123;&#125;) Type &#123;...&#125;</span><br><span class="line"></span><br><span class="line">翻译一下：TypeOf用来动态获取输入参数接口中的值的类型，如果接口为空则返回nil</span><br></pre></td></tr></table></figure>
+
+<p>reflect.TypeOf()是获取pair中的type，reflect.ValueOf()获取pair中的value，示例如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">	&quot;reflect&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	var num float64 = 1.2345</span><br><span class="line"></span><br><span class="line">	fmt.Println(&quot;type: &quot;, reflect.TypeOf(num))</span><br><span class="line">	fmt.Println(&quot;value: &quot;, reflect.ValueOf(num))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果:</span><br><span class="line">type:  float64</span><br><span class="line">value:  1.2345</span><br></pre></td></tr></table></figure>
+
+<h4 id="说明"><span id="说明">说明</span></h4><ol>
+<li>reflect.TypeOf： 直接给到了我们想要的type类型，如float64、int、各种pointer、struct 等等真实的类型</li>
+<li>reflect.ValueOf：直接给到了我们想要的具体的值，如1.2345这个具体数值，或者类似&amp;{1 “Allen.Wu” 25} 这样的结构体struct的值</li>
+<li>也就是说明反射可以将“接口类型变量”转换为“反射类型对象”，反射类型指的是reflect.Type和reflect.Value这两种</li>
+</ol>
+<h4 id="从relfectvalue中获取接口interface的信息"><span id="从relfectvalue中获取接口interface的信息">从relfect.Value中获取接口interface的信息</span></h4><p>当执行reflect.ValueOf(interface)之后，就得到了一个类型为”relfect.Value”变量，可以通过它本身的Interface()方法获得接口变量的真实内容，然后可以通过类型判断进行转换，转换为原有真实类型。不过，我们可能是已知原有类型，也有可能是未知原有类型，因此，下面分两种情况进行说明。</p>
+<p><strong>已知原有类型【进行“强制转换”】</strong></p>
+<p>已知类型后转换为其对应的类型的做法如下，直接通过Interface方法然后强制转换，如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">realValue := value.Interface().(已知的类型)</span><br></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">	&quot;reflect&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	var num float64 = 1.2345</span><br><span class="line"></span><br><span class="line">	pointer := reflect.ValueOf(&amp;num)</span><br><span class="line">	value := reflect.ValueOf(num)</span><br><span class="line"></span><br><span class="line">	// 可以理解为“强制转换”，但是需要注意的时候，转换的时候，如果转换的类型不完全符合，则直接panic</span><br><span class="line">	// Golang 对类型要求非常严格，类型一定要完全符合</span><br><span class="line">	// 如下两个，一个是*float64，一个是float64，如果弄混，则会panic</span><br><span class="line">	convertPointer := pointer.Interface().(*float64)</span><br><span class="line">	convertValue := value.Interface().(float64)</span><br><span class="line"></span><br><span class="line">	fmt.Println(convertPointer)</span><br><span class="line">	fmt.Println(convertValue)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果：</span><br><span class="line">0xc42000e238</span><br><span class="line">1.2345</span><br></pre></td></tr></table></figure>
+
+<h5 id="说明"><span id="说明">说明</span></h5><ol>
+<li>转换的时候，如果转换的类型不完全符合，则直接panic，类型要求非常严格！</li>
+<li>转换的时候，要区分是指针还是指</li>
+<li>也就是说反射可以将“反射类型对象”再重新转换为“接口类型变量”</li>
+</ol>
+<p><strong>未知原有类型【遍历探测其Filed】</strong></p>
+<p>很多情况下，我们可能并不知道其具体类型，那么这个时候，该如何做呢？需要我们进行遍历探测其Filed来得知，示例如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">	&quot;reflect&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">type User struct &#123;</span><br><span class="line">	Id   int</span><br><span class="line">	Name string</span><br><span class="line">	Age  int</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (u User) ReflectCallFunc() &#123;</span><br><span class="line">	fmt.Println(&quot;Allen.Wu ReflectCallFunc&quot;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line"></span><br><span class="line">	user := User&#123;1, &quot;Allen.Wu&quot;, 25&#125;</span><br><span class="line"></span><br><span class="line">	DoFiledAndMethod(user)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 通过接口来获取任意参数，然后一一揭晓</span><br><span class="line">func DoFiledAndMethod(input interface&#123;&#125;) &#123;</span><br><span class="line"></span><br><span class="line">	getType := reflect.TypeOf(input)</span><br><span class="line">	fmt.Println(&quot;get Type is :&quot;, getType.Name())</span><br><span class="line"></span><br><span class="line">	getValue := reflect.ValueOf(input)</span><br><span class="line">	fmt.Println(&quot;get all Fields is:&quot;, getValue)</span><br><span class="line"></span><br><span class="line">	// 获取方法字段</span><br><span class="line">	// 1. 先获取interface的reflect.Type，然后通过NumField进行遍历</span><br><span class="line">	// 2. 再通过reflect.Type的Field获取其Field</span><br><span class="line">	// 3. 最后通过Field的Interface()得到对应的value</span><br><span class="line">	for i := 0; i &lt; getType.NumField(); i++ &#123;</span><br><span class="line">		field := getType.Field(i)</span><br><span class="line">		value := getValue.Field(i).Interface()</span><br><span class="line">		fmt.Printf(&quot;%s: %v = %v\n&quot;, field.Name, field.Type, value)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	// 获取方法</span><br><span class="line">	// 1. 先获取interface的reflect.Type，然后通过.NumMethod进行遍历</span><br><span class="line">	for i := 0; i &lt; getType.NumMethod(); i++ &#123;</span><br><span class="line">		m := getType.Method(i)</span><br><span class="line">		fmt.Printf(&quot;%s: %v\n&quot;, m.Name, m.Type)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果：</span><br><span class="line">get Type is : User</span><br><span class="line">get all Fields is: &#123;1 Allen.Wu 25&#125;</span><br><span class="line">Id: int = 1</span><br><span class="line">Name: string = Allen.Wu</span><br><span class="line">Age: int = 25</span><br><span class="line">ReflectCallFunc: func(main.User)</span><br></pre></td></tr></table></figure>
+
+<h5 id="说明"><span id="说明">说明</span></h5><p>通过运行结果可以得知获取未知类型的interface的具体变量及其类型的步骤为：</p>
+<ol>
+<li>先获取interface的reflect.Type，然后通过NumField进行遍历</li>
+<li>再通过reflect.Type的Field获取其Field</li>
+<li>最后通过Field的Interface()得到对应的value</li>
+</ol>
+<p>通过运行结果可以得知获取未知类型的interface的所属方法（函数）的步骤为：</p>
+<ol>
+<li>先获取interface的reflect.Type，然后通过NumMethod进行遍历</li>
+<li>再分别通过reflect.Type的Method获取对应的真实的方法（函数）</li>
+<li>最后对结果取其Name和Type得知具体的方法名</li>
+<li>也就是说反射可以将“反射类型对象”再重新转换为“接口类型变量”</li>
+<li>struct 或者 struct 的嵌套都是一样的判断处理方式</li>
+</ol>
+<p><strong>通过reflect.Value设置实际变量的值</strong></p>
+<p>reflect.Value是通过reflect.ValueOf(X)获得的，只有当X是指针的时候，才可以通过reflec.Value修改实际变量X的值，即：要修改反射类型的对象就一定要保证其值是“addressable”的。</p>
+<p>示例如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">	&quot;reflect&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line"></span><br><span class="line">	var num float64 = 1.2345</span><br><span class="line">	fmt.Println(&quot;old value of pointer:&quot;, num)</span><br><span class="line"></span><br><span class="line">	// 通过reflect.ValueOf获取num中的reflect.Value，注意，参数必须是指针才能修改其值</span><br><span class="line">	pointer := reflect.ValueOf(&amp;num)</span><br><span class="line">	newValue := pointer.Elem()</span><br><span class="line"></span><br><span class="line">	fmt.Println(&quot;type of pointer:&quot;, newValue.Type())</span><br><span class="line">	fmt.Println(&quot;settability of pointer:&quot;, newValue.CanSet())</span><br><span class="line"></span><br><span class="line">	// 重新赋值</span><br><span class="line">	newValue.SetFloat(77)</span><br><span class="line">	fmt.Println(&quot;new value of pointer:&quot;, num)</span><br><span class="line"></span><br><span class="line">	////////////////////</span><br><span class="line">	// 如果reflect.ValueOf的参数不是指针，会如何？</span><br><span class="line">	pointer = reflect.ValueOf(num)</span><br><span class="line">	//newValue = pointer.Elem() // 如果非指针，这里直接panic，“panic: reflect: call of reflect.Value.Elem on float64 Value”</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">运行结果：</span><br><span class="line">old value of pointer: 1.2345</span><br><span class="line">type of pointer: float64</span><br><span class="line">settability of pointer: true</span><br><span class="line">new value of pointer: 77</span><br></pre></td></tr></table></figure>
+
+<h4 id="说明"><span id="说明">说明</span></h4><ol>
+<li>需要传入的参数是* float64这个指针，然后可以通过pointer.Elem()去获取所指向的Value，<strong>注意一定要是指针</strong>。</li>
+<li>如果传入的参数不是指针，而是变量，那么<ul>
+<li>通过Elem获取原始值对应的对象则直接panic</li>
+<li>通过CanSet方法查询是否可以设置返回false</li>
+</ul>
+</li>
+<li>newValue.CantSet()表示是否可以重新设置其值，如果输出的是true则可修改，否则不能修改，修改完之后再进行打印发现真的已经修改了。</li>
+<li>reflect.Value.Elem() 表示获取原始值对应的反射对象，只有原始对象才能修改，当前反射对象是不能修改的</li>
+<li>也就是说如果要修改反射类型对象，其值必须是“addressable”【对应的要传入的是指针，同时要通过Elem方法获取原始值对应的反射对象】</li>
+<li>struct 或者 struct 的嵌套都是一样的判断处理方式</li>
+</ol>
+<p><strong>通过reflect.ValueOf来进行方法的调用</strong></p>
+<p>这算是一个高级用法了，前面我们只说到对类型、变量的几种反射的用法，包括如何获取其值、其类型、如果重新设置新值。但是在工程应用中，另外一个常用并且属于高级的用法，就是通过reflect来进行方法【函数】的调用。比如我们要做框架工程的时候，需要可以随意扩展方法，或者说用户可以自定义方法，那么我们通过什么手段来扩展让用户能够自定义呢？关键点在于用户的自定义方法是未可知的，因此我们可以通过reflect来搞定</p>
+<p>示例如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">	&quot;reflect&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">type User struct &#123;</span><br><span class="line">	Id   int</span><br><span class="line">	Name string</span><br><span class="line">	Age  int</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (u User) ReflectCallFuncHasArgs(name string, age int) &#123;</span><br><span class="line">	fmt.Println(&quot;ReflectCallFuncHasArgs name: &quot;, name, &quot;, age:&quot;, age, &quot;and origal User.Name:&quot;, u.Name)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (u User) ReflectCallFuncNoArgs() &#123;</span><br><span class="line">	fmt.Println(&quot;ReflectCallFuncNoArgs&quot;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 如何通过反射来进行方法的调用？</span><br><span class="line">// 本来可以用u.ReflectCallFuncXXX直接调用的，但是如果要通过反射，那么首先要将方法注册，也就是MethodByName，然后通过反射调动mv.Call</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	user := User&#123;1, &quot;Allen.Wu&quot;, 25&#125;</span><br><span class="line">	</span><br><span class="line">	// 1. 要通过反射来调用起对应的方法，必须要先通过reflect.ValueOf(interface)来获取到reflect.Value，得到“反射类型对象”后才能做下一步处理</span><br><span class="line">	getValue := reflect.ValueOf(user)</span><br><span class="line"></span><br><span class="line">	// 一定要指定参数为正确的方法名</span><br><span class="line">	// 2. 先看看带有参数的调用方法</span><br><span class="line">	methodValue := getValue.MethodByName(&quot;ReflectCallFuncHasArgs&quot;)</span><br><span class="line">	args := []reflect.Value&#123;reflect.ValueOf(&quot;wudebao&quot;), reflect.ValueOf(30)&#125;</span><br><span class="line">	methodValue.Call(args)</span><br><span class="line"></span><br><span class="line">	// 一定要指定参数为正确的方法名</span><br><span class="line">	// 3. 再看看无参数的调用方法</span><br><span class="line">	methodValue = getValue.MethodByName(&quot;ReflectCallFuncNoArgs&quot;)</span><br><span class="line">	args = make([]reflect.Value, 0)</span><br><span class="line">	methodValue.Call(args)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">运行结果：</span><br><span class="line">ReflectCallFuncHasArgs name:  wudebao , age: 30 and origal User.Name: Allen.Wu</span><br><span class="line">ReflectCallFuncNoArgs</span><br></pre></td></tr></table></figure>
+
+<h4 id="说明"><span id="说明">说明</span></h4><ol>
+<li>要通过反射来调用起对应的方法，必须要先通过reflect.ValueOf(interface)来获取到reflect.Value，得到“反射类型对象”后才能做下一步处理</li>
+<li>reflect.Value.MethodByName这.MethodByName，需要指定准确真实的方法名字，如果错误将直接panic，MethodByName返回一个函数值对应的reflect.Value方法的名字。</li>
+<li>[]reflect.Value，这个是最终需要调用的方法的参数，可以没有或者一个或者多个，根据实际参数来定。</li>
+<li>reflect.Value的 Call 这个方法，这个方法将最终调用真实的方法，参数务必保持一致，如果reflect.Value’Kind不是一个方法，那么将直接panic。</li>
+<li>本来可以用u.ReflectCallFuncXXX直接调用的，但是如果要通过反射，那么首先要将方法注册，也就是MethodByName，然后通过反射调用methodValue.Call</li>
+</ol>
+<p><strong>golang的反射reflect性能</strong></p>
+<p>Golang的反射很慢，这个和它的API设计有关。在 java 里面，我们一般使用反射都是这样来弄的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Field field = clazz.getField(&quot;hello&quot;);</span><br><span class="line">field.get(obj1);</span><br><span class="line">field.get(obj2);</span><br></pre></td></tr></table></figure>
+
+<p>这个取得的反射对象类型是 java.lang.reflect.Field。它是可以复用的。只要传入不同的obj，就可以取得这个obj上对应的 field。</p>
+<p>但是Golang的反射不是这样设计的:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">type_ := reflect.TypeOf(obj)</span><br><span class="line">field, _ := type_.FieldByName(&quot;hello&quot;)</span><br></pre></td></tr></table></figure>
+
+<p>这里取出来的 field 对象是 reflect.StructField 类型，但是它没有办法用来取得对应对象上的值。如果要取值，得用另外一套对object，而不是type的反射</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">type_ := reflect.ValueOf(obj)</span><br><span class="line">fieldValue := type_.FieldByName(&quot;hello&quot;)</span><br></pre></td></tr></table></figure>
+
+<p>这里取出来的 fieldValue 类型是 reflect.Value，它是一个具体的值，而不是一个可复用的反射对象了，每次反射都需要malloc这个reflect.Value结构体，并且还涉及到GC。</p>
+<p>Golang reflect慢主要有两个原因</p>
+<ol>
+<li>涉及到内存分配以及后续的GC；</li>
+<li>reflect实现里面有大量的枚举，也就是for循环，比如类型之类的。</li>
+</ol>
+<h4 id="总结"><span id="总结">总结</span></h4><p>上述详细说明了Golang的反射reflect的各种功能和用法，都附带有相应的示例，相信能够在工程应用中进行相应实践，总结一下就是：</p>
+<ul>
+<li>反射可以大大提高程序的灵活性，使得interface{}有更大的发挥余地<ul>
+<li>反射必须结合interface才玩得转</li>
+<li>变量的type要是concrete type的（也就是interface变量）才有反射一说</li>
+</ul>
+</li>
+<li>反射可以将“接口类型变量”转换为“反射类型对象”<ul>
+<li>反射使用 TypeOf 和 ValueOf 函数从接口中获取目标对象信息</li>
+</ul>
+</li>
+<li>反射可以将“反射类型对象”转换为“接口类型变量<ul>
+<li>reflect.value.Interface().(已知的类型)</li>
+<li>遍历reflect.Type的Field获取其Field</li>
+</ul>
+</li>
+<li>反射可以修改反射类型对象，但是其值必须是“addressable”<ul>
+<li>想要利用反射修改对象状态，前提是 interface.data 是 settable,即 pointer-interface</li>
+</ul>
+</li>
+<li>通过反射可以“动态”调用方法</li>
+<li>因为Golang本身不支持模板，因此在以往需要使用模板的场景下往往就需要使用反射(reflect)来实现</li>
+</ul>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/1d3c1f0e/" title="Golang的反射" target="_blank" rel="external">https://lxb.wiki/1d3c1f0e/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/a2b71d73/" title="合并区间56"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/fb68a62c/" title="环形链表142"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:i@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> lxbwolf </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: true,
+    appId: '6bn4rcWK3ehmM0hbKJmE991u-MdYXbMMI',
+    appKey: 'jkoCGVIFrcsbsKrgg7CiPsWP',
+    placeholder: 'Just go go',
+    avatar: '',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
+</html>

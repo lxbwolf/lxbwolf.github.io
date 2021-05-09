@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+
+  
+  <title>分布式发号器架构设计 | Xiaobin&#39;s Blog</title>
+  <meta name="description" content="一 需求设计 分布式环境下，保证每个序列号（sequence）是全系统唯一的；  序列号可排序，满足单调递增的规律；  特定场景下，能生成无规则（或者看不出规则）的序列号；  生成的序列号尽量短；  序列号可进行二次混淆，提供可扩展的interface，业务方自定义实现。   二 方案设计为了满足上述需求，发号器必须能够支持不同的生成策略，最好是还能支持自定义的生成策略，这就对系统本身的可扩展性提">
+<meta name="keywords" content="架构">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式发号器架构设计">
+<meta property="og:url" content="https://lxb.wiki/3d5a1f1d/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Blog">
+<meta property="og:description" content="一 需求设计 分布式环境下，保证每个序列号（sequence）是全系统唯一的；  序列号可排序，满足单调递增的规律；  特定场景下，能生成无规则（或者看不出规则）的序列号；  生成的序列号尽量短；  序列号可进行二次混淆，提供可扩展的interface，业务方自定义实现。   二 方案设计为了满足上述需求，发号器必须能够支持不同的生成策略，最好是还能支持自定义的生成策略，这就对系统本身的可扩展性提">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210219.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210239.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210341.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210414.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210429.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210445.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210511.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210529.png">
+<meta property="og:updated_time" content="2020-12-06T13:06:00.976Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="分布式发号器架构设计">
+<meta name="twitter:description" content="一 需求设计 分布式环境下，保证每个序列号（sequence）是全系统唯一的；  序列号可排序，满足单调递增的规律；  特定场景下，能生成无规则（或者看不出规则）的序列号；  生成的序列号尽量短；  序列号可进行二次混淆，提供可扩展的interface，业务方自定义实现。   二 方案设计为了满足上述需求，发号器必须能够支持不同的生成策略，最好是还能支持自定义的生成策略，这就对系统本身的可扩展性提">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210219.png">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/3d5a1f1d/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+</head>
+
+
+<body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/head.jpeg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin.Liu</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:i@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><span class="category-list-count">19</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/RPI/">RPI</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">12</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.14px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Pic/" style="font-size: 13.29px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.71px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.29px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/joplin/" style="font-size: 13px;">joplin</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mysql/" style="font-size: 13.43px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.29px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.29px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.14px;">torrent</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/优化/" style="font-size: 13px;">优化</a> <a href="/tags/分布式/" style="font-size: 13px;">分布式</a> <a href="/tags/博客/" style="font-size: 13px;">博客</a> <a href="/tags/工具/" style="font-size: 13.57px;">工具</a> <a href="/tags/架构/" style="font-size: 13.14px;">架构</a> <a href="/tags/树莓派/" style="font-size: 13.14px;">树莓派</a> <a href="/tags/破解/" style="font-size: 13px;">破解</a> <a href="/tags/端口/" style="font-size: 13px;">端口</a> <a href="/tags/算法/" style="font-size: 13.43px;">算法</a> <a href="/tags/编译器/" style="font-size: 13.43px;">编译器</a> <a href="/tags/翻译/" style="font-size: 13.86px;">翻译</a> <a href="/tags/解决/" style="font-size: 13px;">解决</a> <a href="/tags/跳表/" style="font-size: 13.14px;">跳表</a> <a href="/tags/进程/" style="font-size: 13.14px;">进程</a> <a href="/tags/邮件/" style="font-size: 13.14px;">邮件</a> <a href="/tags/链表/" style="font-size: 13px;">链表</a> <a href="/tags/锚点失效/" style="font-size: 13px;">锚点失效</a> <a href="/tags/陷阱/" style="font-size: 13px;">陷阱</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/ef3fb32/" class="title">误删了Mac中Chrome书签后如何恢复</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-05-01T10:44:48.000Z" itemprop="datePublished">2021-05-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/f5496f4b/" class="title">Joplin+坚果云作为主力笔记工具</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-03-09T13:07:57.000Z" itemprop="datePublished">2021-03-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Golang/">Golang</a>
+              </p>
+              <p class="item-title">
+                <a href="/e98e0a2b/" class="title">redis 跳表分析并用 Go 实现</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-03-03T15:09:59.000Z" itemprop="datePublished">2021-03-03</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Pic/">Pic</a>
+              </p>
+              <p class="item-title">
+                <a href="/941edb97/" class="title">APNG与 GIF</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-02-24T15:00:47.000Z" itemprop="datePublished">2021-02-24</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Linux/">Linux</a>
+              </p>
+              <p class="item-title">
+                <a href="/686a477f/" class="title">Linux 下 su 和 su - 的区别</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-02-13T13:24:47.000Z" itemprop="datePublished">2021-02-13</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-分布式发号器架构设计" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      分布式发号器架构设计
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/3d5a1f1d/" class="article-date">
+	  <time datetime="2019-05-10T06:04:04.000Z" itemprop="datePublished">2019-05-10</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/DB/">DB</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/架构/">架构</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/3d5a1f1d/#comments" class="article-comment-link">评论</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 3.1k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 11(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h3 id="一-需求设计"><span id="一-需求设计">一 需求设计</span></h3><ol>
+<li><p>分布式环境下，保证每个序列号（sequence）是全系统唯一的；</p>
+</li>
+<li><p>序列号可排序，满足单调递增的规律；</p>
+</li>
+<li><p>特定场景下，能生成无规则（或者看不出规则）的序列号；</p>
+</li>
+<li><p>生成的序列号尽量短；</p>
+</li>
+<li><p>序列号可进行二次混淆，提供可扩展的interface，业务方自定义实现。</p>
+</li>
+</ol>
+<h3 id="二-方案设计"><span id="二-方案设计">二 方案设计</span></h3><p>为了满足上述需求，发号器必须能够支持不同的生成策略，最好是还能支持自定义的生成策略，这就对系统本身的可扩展性提出了要求。 目前，发号器设计了两种比较通用的基础策略，各有优缺点，但结合起来，能达到优势互补的目的。</p>
+<h4 id="1-segment"><span id="1-segment">1. segment</span></h4><p>第一种策略称之为『分段』（segment），下文将对其进行详细阐述： 整个segment发号器有两个重要的角色：Redis和MongoDB，理论上MongoDB是可以被MySQL或其他DB产品所替代的。 segment发号器所产生的号码满足单调递增的规律，短时间内产生的号码不会有过长的问题（可根据实际需要，设置初始值，比如 100）。</p>
+<h5 id="redis数据结构hash类型"><span id="redis数据结构hash类型">Redis数据结构（Hash类型）</span></h5><pre><code>key: &lt;string&gt;，表示业务主键/名称
+value: {
+  cur: &lt;long&gt;，表示当前序列号
+  max: &lt;long&gt;，表示这个号段最大的可用序列号
+}</code></pre><p>取号的大部分操作都集中在Redis，为了保证序列号递增的原子性，取号的功能可以用Lua脚本实现。</p>
+<pre><code>--[[
+  由于RedisTemplate设置的HashValueSerializer是GenericToStringSerializer，故此处的HASH结构中的
+  VALUE都是string类型，需要使用tonumber函数转换成数字类型。
+]]
+local max = redis.pcall(&quot;HGET&quot;, KEYS[1], &quot;max&quot;)  --获取一段序列号的max
+local cur = redis.pcall(&quot;HGET&quot;, KEYS[1], &quot;cur&quot;)  --获取当前发号位置
+if tonumber(cur) &gt;= tonumber(max) then  --没有超过这段序列号的上限
+    local step = ARGV[1]
+    if (step == nil) then  --没有传入step参数
+        step = redis.pcall(&quot;HGET&quot;, KEYS[1], &quot;step&quot;)  --获取这段序列号的step配置参数值
+    end
+    redis.pcall(&quot;HSET&quot;, KEYS[1], &quot;max&quot;, tonumber(max) + tonumber(step))  --调整max参数值，扩展上限
+end
+return redis.pcall(&quot;HINCRBY&quot;, KEYS[1], &quot;cur&quot;, 1)  --触发HINCRBY操作，对cur自增，并返回自增后的值</code></pre><p>​    </p>
+<p>注意：在redis执行lua script期间，redis处于BUSY状态，这个时候对redis的任何形式的访问都会抛出JedisBusyException异常，所以lua script中的处理逻辑不得太复杂。 </p>
+<p>值得一提的是，即使切换到一个新的database，或者开启新线程执行lua script，都将会遇到同样的问题，毕竟redis是单进程单线程的。</p>
+<p> 如果不幸遇到上述问题，需要使用redis-cli客户端连上redis-server，向其发送SCRIPT KILL命令，即可终止脚本执行。</p>
+<p>如果想避免上述问题，也可以直接使用Springboot提供的RedisTemplate，能支持绝大部分redis command。</p>
+<h5 id="mongodb-数据结构"><span id="mongodb-数据结构">MongoDB 数据结构</span></h5><pre><code>{
+ bizTag: &lt;string&gt;,  表示业务主键/名称
+ max: &lt;long&gt;,  表示这个号段最大的可用序列号
+ step: &lt;int&gt;, 每次分段的步长
+ timestamp: &lt;long&gt;,  更新数据的时间戳（毫秒）
+}</code></pre><p>MongoDB部分主要是对号段的分配进行管理，一个号段不能多发，也可以根据发号情况，适当放缩号段步长（step）。 </p>
+<p>到此为止，segment发号器的雏形已经形成了。 一个比较突出的问题是在两个号段衔接的时间点，当一个segment派发完了后，会对MongoDB和Redis中的数据中的max扩容，I/O消耗比正常发号要稍多，会遇到“尖刺” </p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210219.png" alt></p>
+<p>为了消除“尖刺”，可以使用双Buffer模型</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210239.png" alt></p>
+<p>这个模型的核心思想就是“<strong>预分配</strong>”。可以设置一个阈值（threshold），比如20%，当Buffer-1里面的号段已经消耗了20%，那么立刻根据Buffer-1的max和step，开辟Buffer-2。 当Buffer-1完全消耗了，可以无缝衔接Buffer-2,。</p>
+<p>如果Buffer-2的消耗也达到阈值了，又可以开辟Buffer-1，如此往复。 </p>
+<p>接下来，我们来讨论一下<strong>异常/故障</strong>情况。</p>
+<p> ① Redis宕机。因为大部分发号工作都是依靠Redis完成的，所以发生了这种情况是非常糟糕的。如果想有效降低此风险，最行之有效的办法是对Redis进行集群化，通常是1主2从，这样可以挺住非常高的QPS了。 当然也有退而求其次的办法，就是利用上述提到的双Buffer模型。不依赖Redis取号，直接通过程序控制，利用机器内存。所以当需要重启发号服务之前，要确保依赖的组件是运行良好的，不然号段就丢失了。</p>
+<p> ② 要不要持久化的问题。这个问题主要是针对Redis，如果没有记录下当前的取号进度，那么随着Redis的宕机，取号现场就变得难以恢复了；如果每次都记录取号进度，那么这种I/O高密度型的作业会对服务性能 造成一定影响，并且随着取号的时间延长，恢复取号现场就变得越来越慢了，甚至到最后是无法忍受的。除了对Redis做高可用之外，引入MongoDB也是出于对Redis持久化功能辅助的考虑。 个人建议：如果Redis已经集群化了，而且还开启了双Buffer的策略，以及MongoDB的加持，可以不用再开启Redis的持久化了。 如果考虑到极端情况下，Redis还是宕机了，我们可以使用MongoDB里面存下来的max，就max+1赋值给cur（避免上个号段取完，正好宕机了）。 </p>
+<p>③ MongoDB宕机。这个问题不是很严重，只要将step适当拉长一些（至少取号能支撑20分钟），利用Redis还在正常取号的时间来抢救MongoDB。不过，考虑到实际可能没这么快恢复mongo服务，可以在程序中采取 一些容错措施，比如号段用完了，mongo服务无法到达，直接关闭取号通道，直到MongoDB能正常使用；或者程序给一个默认的step，让MongoDB中的max延长到max+step*n（可能取了N个号段MongoDB才恢复过来）， 这样取号服务也可以继续。依靠程序本身继续服务，那么需要有相关的log，这样才有利于恢复MongoDB中的数据。</p>
+<p> ④ 取号服务宕机。这个没什么好说的，只能尽快恢复服务运行了。 </p>
+<p>⑤ Redis，MongoDB都宕机了。这种情况已经很极端了，只能利用双Buffer策略，以及程序默认的设置进行工作了，同样要有相关的log，以便恢复Redis和MongoDB。</p>
+<p> ⑥ 都宕机了。我有一句mmp不知当讲不当讲……</p>
+<h4 id="2-snowflake"><span id="2-snowflake">2、snowflake</span></h4><p>第二种策略是Twitter出品，算法思想比较巧妙，实现的难度也不大。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210341.png" alt></p>
+<p>以上示意图描述了一个序列号的二进制组成结构。 第一位不用，恒为0，即表示正整数； 接下来的41位表示时间戳，精确到毫秒。为了节约空间，可以将此时间戳定义为距离某个时间点所经历的毫秒数（Java默认是1970-01-01 00:00:00）； 再后来的10位用来标识工作机器，如果出现了跨IDC的情况，可以将这10位一分为二，一部分用于标识IDC，一部分用于标识服务器； 最后12位是序列号，自增长。</p>
+<p> snowflake的核心思想是64bit的合理分配，但不必要严格按照上图所示的分法。 如果在机器较少的情况下，可以适当缩短机器id的长度，留出来给序列号。 </p>
+<p>当然，snowflake的算法将会面临两个挑战： </p>
+<p>① 机器id的指定。这个问题在分布式的环境下会比较突出，通常的解决方案是利用Redis或者Zookeeper进行机器注册，确保注册上去的机器id是唯一的。为了解决 强依赖Redis或者Zookeeper的问题，可以将机器id写入本地文件系统。</p>
+<p> ② 机器id的生成规则。这个问题会有一些纠结，因为机器id的生成大致要满足三个条件：a. int类型(10bit)纯数字，b. 相对稳定，c. 与其他机器要有所区别。至于优雅美观，都是其次了。对于机器id的存储，可以使用HASH结构，KEY的规则是“application-name.port.ip”，其中ip是通过算法转换成了一段长整型的纯数字，VALUE则是机器id， 服务id，机房id，其中，可以通过服务id和机房id反推出机器id。 </p>
+<p>假设服务id(workerId)占8bit，机房id(rackId)占2bit，从1开始，workerId=00000001，rackId=01，machineId=00000000101 如果用Redis存储，其表现形式如下： </p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210414.png" alt></p>
+<p> 如果存储在文件中（建议properties文件），则文件名是sequence-client:8112:3232235742.properties，文件内容如下：</p>
+<p> <img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210429.png" alt></p>
+<p>如果发号服务上线，直接按照“application-name.port.ip”的规则取其内容。</p>
+<p> ③ 时钟回拨。因为snowflake对系统时间是很依赖的，所以对于时钟的波动是很敏感的，尤其是时钟回拨，很有可能就会出现重复发号的情况。时钟回拨问题解决策略通常是直接拒绝发号，直到时钟正常，必要时进行告警。</p>
+<h3 id="三-程序设计"><span id="三-程序设计">三 程序设计</span></h3><p>整个发号过程可以分成三个层次：</p>
+<p> 1、策略层(strategy layer)：这个层面决定的是发号方法/算法，涵盖了上述所讲的segment和snowflake两种方式，当然，用户也可以自己扩展实现其他发号策略。 </p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210445.png" alt></p>
+<p>最顶上定义Sequence实际上就是发号的结果。bizType是对发号业务场景的定义，比如订单号，用户ID，邀请好友的分享码。 发号策略的init接口是发号前的初始化工作，而generate接口就是调用发号器的主入口了。 当然，考虑到各种异常情况，加入了拒绝发号的处理器（SequenceRejectedHandler），默认实现只是记录日志，用户可根据需求去实现该处理器，然后用set方法设置发号策略的拒绝处理器。</p>
+<p> 2、插件层(plugin layer)：此处的插件可以理解是一种拦截器，贯穿SequenceStrategy的发号全周期。引入插件后，无疑是丰富了整个发号的操作过程，用户可以从中干预到发号的整个流程，以便达到其他的目的，比如：记录发号历史，统计发号速率，发号二次混淆等。 </p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210511.png" alt></p>
+<p> 可以看出，插件被设计成『注册式』的，发号策略只有注册了相关插件之后，插件才能生效， 当然，一个插件能被多个发号策略所注册，一个发号策略也能同时注册多个插件，所以两者是多对多的关系，PluginManager的出现就是解决插件的注册管理问题。 从SequencePlugin的定义中可以发现，插件是有优先级（Order）的，通过getOrder()可以获得，在这套发号系统里，Order值越小，表示该插件越优先执行。此外，插件有三个重要的操作： before，表示发号之前的处理。若返回了false，那么该插件后面的操作都失效了，否则继续执行发号流程。 after，表示发号之后的处理。 doException，表示插件发生异常的处理方法。</p>
+<p> 3、持久层(persistence layer)：这个层面指代的是上述所提的MongoDB部分，如果不需要持久化的支持，可以不实现此接口，那么整个发号器就变成纯内存管理的了。</p>
+<p> <img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210529.png" alt></p>
+<p>PersistRepository定义了基本的CRUD方法，其中persistId可以理解成上述提到的BizType。 一切的持久化对象都是从PersistModel开始的，上图中的Segment、PersistDocument都是为了实现分段发号器而定义的。</p>
+<h3 id="四-总结"><span id="四-总结">四 总结</span></h3><p>这篇文章详细阐述了分布式发号器系统的设计，旨在能做出一个可扩展，易维护的发号系统。业界比较知名的发号算法似乎也不多，整个发号系统不一定就按照笔者所做的设计，还是要立足于具体的业务需求。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/3d5a1f1d/" title="分布式发号器架构设计" target="_blank" rel="external">https://lxb.wiki/3d5a1f1d/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/7ee0edaa/" title="大小端"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/936ea20/" title="Go 基础语法"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:i@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> lxbwolf </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: true,
+    appId: '6bn4rcWK3ehmM0hbKJmE991u-MdYXbMMI',
+    appKey: 'jkoCGVIFrcsbsKrgg7CiPsWP',
+    placeholder: 'Just go go',
+    avatar: '',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
+</html>

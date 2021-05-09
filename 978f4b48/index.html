@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+
+  
+  <title>[译]Effective STL 9 | Xiaobin&#39;s Blog</title>
+  <meta name="description" content="条款9：在删除选项中仔细选择 假定你有一个标准STL容器，c，容纳int， Container&amp;lt;int&amp;gt; c; 而你想把c中所有值为1963的对象都去掉。令人吃惊的是，完成这项任务的方法因不同的容 器类型而不同：没有一种方法是通用的。 如果你有一个连续内存容器（vector、deque或string——参见条款1），最好的方法是erase-remove惯用法（参见条款32）： 1234">
+<meta name="keywords" content="STL,翻译">
+<meta property="og:type" content="article">
+<meta property="og:title" content="[译]Effective STL 9">
+<meta property="og:url" content="https://lxb.wiki/978f4b48/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Blog">
+<meta property="og:description" content="条款9：在删除选项中仔细选择 假定你有一个标准STL容器，c，容纳int， Container&amp;lt;int&amp;gt; c; 而你想把c中所有值为1963的对象都去掉。令人吃惊的是，完成这项任务的方法因不同的容 器类型而不同：没有一种方法是通用的。 如果你有一个连续内存容器（vector、deque或string——参见条款1），最好的方法是erase-remove惯用法（参见条款32）： 1234">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-12-06T16:42:57.663Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="[译]Effective STL 9">
+<meta name="twitter:description" content="条款9：在删除选项中仔细选择 假定你有一个标准STL容器，c，容纳int， Container&amp;lt;int&amp;gt; c; 而你想把c中所有值为1963的对象都去掉。令人吃惊的是，完成这项任务的方法因不同的容 器类型而不同：没有一种方法是通用的。 如果你有一个连续内存容器（vector、deque或string——参见条款1），最好的方法是erase-remove惯用法（参见条款32）： 1234">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/978f4b48/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+</head>
+
+
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/head.jpeg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin.Liu</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:i@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><span class="category-list-count">19</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/RPI/">RPI</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">12</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.14px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Pic/" style="font-size: 13.29px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.71px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.29px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/joplin/" style="font-size: 13px;">joplin</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mysql/" style="font-size: 13.43px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.29px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.29px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.14px;">torrent</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/优化/" style="font-size: 13px;">优化</a> <a href="/tags/分布式/" style="font-size: 13px;">分布式</a> <a href="/tags/博客/" style="font-size: 13px;">博客</a> <a href="/tags/工具/" style="font-size: 13.57px;">工具</a> <a href="/tags/架构/" style="font-size: 13.14px;">架构</a> <a href="/tags/树莓派/" style="font-size: 13.14px;">树莓派</a> <a href="/tags/破解/" style="font-size: 13px;">破解</a> <a href="/tags/端口/" style="font-size: 13px;">端口</a> <a href="/tags/算法/" style="font-size: 13.43px;">算法</a> <a href="/tags/编译器/" style="font-size: 13.43px;">编译器</a> <a href="/tags/翻译/" style="font-size: 13.86px;">翻译</a> <a href="/tags/解决/" style="font-size: 13px;">解决</a> <a href="/tags/跳表/" style="font-size: 13.14px;">跳表</a> <a href="/tags/进程/" style="font-size: 13.14px;">进程</a> <a href="/tags/邮件/" style="font-size: 13.14px;">邮件</a> <a href="/tags/链表/" style="font-size: 13px;">链表</a> <a href="/tags/锚点失效/" style="font-size: 13px;">锚点失效</a> <a href="/tags/陷阱/" style="font-size: 13px;">陷阱</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/ef3fb32/" class="title">误删了Mac中Chrome书签后如何恢复</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-05-01T10:44:48.000Z" itemprop="datePublished">2021-05-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/f5496f4b/" class="title">Joplin+坚果云作为主力笔记工具</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-03-09T13:07:57.000Z" itemprop="datePublished">2021-03-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Golang/">Golang</a>
+              </p>
+              <p class="item-title">
+                <a href="/e98e0a2b/" class="title">redis 跳表分析并用 Go 实现</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-03-03T15:09:59.000Z" itemprop="datePublished">2021-03-03</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Pic/">Pic</a>
+              </p>
+              <p class="item-title">
+                <a href="/941edb97/" class="title">APNG与 GIF</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-02-24T15:00:47.000Z" itemprop="datePublished">2021-02-24</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Linux/">Linux</a>
+              </p>
+              <p class="item-title">
+                <a href="/686a477f/" class="title">Linux 下 su 和 su - 的区别</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-02-13T13:24:47.000Z" itemprop="datePublished">2021-02-13</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Effective STL 9" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      [译]Effective STL 9
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/978f4b48/" class="article-date">
+	  <time datetime="2017-03-09T13:09:09.000Z" itemprop="datePublished">2017-03-09</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/C/">C++</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/STL/">STL</a>, <a class="article-tag-link" href="/tags/翻译/">翻译</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/978f4b48/#comments" class="article-comment-link">评论</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 2.5k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 9(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>条款9：在删除选项中仔细选择 假定你有一个标准STL容器，c，容纳int， <code>Container&lt;int&gt; c;</code> 而你想把c中所有值为<code>1963</code>的对象都去掉。令人吃惊的是，完成这项任务的方法因不同的容 器类型而不同：没有一种方法是通用的。</p>
+<p>如果你有一个连续内存容器（vector、deque或string——参见条款1），最好的方法是erase-remove惯用法（参见条款32）：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">c.erase(remove(c.begin(), c.end(), <span class="number">1963</span>),       <span class="comment">// 当c是vector、string</span></span><br><span class="line">c.end());                               <span class="comment">// 或deque时，</span></span><br><span class="line"><span class="comment">// erase-remove惯用法</span></span><br><span class="line"><span class="comment">// 是去除特定值的元素</span></span><br><span class="line"><span class="comment">// 的最佳方法</span></span><br></pre></td></tr></table></figure>
+
+<p>这方法也适合于list，但是，正如条款44解释的，list的成员函数remove更高效：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">c.remove(<span class="number">1963</span>);     <span class="comment">// 当c是list时，</span></span><br><span class="line"><span class="comment">// remove成员函数是去除</span></span><br><span class="line"><span class="comment">// 特定值的元素的最佳方法</span></span><br></pre></td></tr></table></figure>
+
+<p>当c是标准关联容器（即，set、multiset、map或multimap）时，使用任何叫做remove的东 西都是完全错误的。这样的容器没有叫做remove的成员函数，而且使用remove算法可能覆 盖容器值（参见条款32），潜在地破坏容器。（关于这样的破坏的细节，参考条款22，那 个条款也解释了为什么试图在map和multimap上使用remove肯定不能编译，而试图在set和 multiset上使用可能不能编译。）</p>
+<p>不，对于关联容器，解决问题的适当方法是调用erase：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">c.erase(<span class="number">1963</span>);      <span class="comment">// 当c是标准关联容器时</span></span><br><span class="line"><span class="comment">// erase成员函数是去除</span></span><br><span class="line"><span class="comment">// 特定值的元素的最佳方法</span></span><br></pre></td></tr></table></figure>
+
+<p>这不仅是正确的，而且很高效，只花费对数时间。（序列容器的基于删除的技术需要线性 时间。）并且，关联容器的erase成员函数有基于等价而不是相等的优势，条款19解释了这 一区别的重要性。</p>
+<p>让我们现在稍微修改一下这个问题。不是从c中除去每个有特定值的物体，让我们消除下面 判断式（参见条款39）返回真的每个对象：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">badValue</span><span class="params">(<span class="keyword">int</span> x)</span></span>;   <span class="comment">// 返回x是否是“bad”</span></span><br><span class="line">对于序列容器（<span class="built_in">vector</span>、<span class="built_in">string</span>、<span class="built_in">deque</span>和<span class="built_in">list</span>），我们要做的只是把每个remove()替换为remove_if()，然后就完成了：</span><br><span class="line"></span><br><span class="line">c.erase(remove_if(c.begin(), c.end(), badValue),    <span class="comment">// 当c是vector、string</span></span><br><span class="line">c.end());           <span class="comment">// 或deque时这是去掉</span></span><br><span class="line"><span class="comment">// badValue返回真</span></span><br><span class="line"><span class="comment">// 的对象的最佳方法</span></span><br><span class="line">c.remove_if(badValue);              <span class="comment">// 当c是list时这是去掉</span></span><br><span class="line"><span class="comment">// badValue返回真</span></span><br><span class="line"><span class="comment">// 的对象的最佳方法</span></span><br></pre></td></tr></table></figure>
+
+<p>对于标准关联容器，它不是很直截了当。有两种方法处理该问题，一个更容易编码，另一 个更高效。“更容易但效率较低”的解决方案用<code>remove_copy_if()</code>把我们需要的值拷贝到一 个新容器中，然后把原容器的内容和新的交换：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">AssocContainer&lt;<span class="keyword">int</span>&gt; c;              <span class="comment">// c现在是一种</span></span><br><span class="line">...                                 <span class="comment">// 标准关联容器</span></span><br><span class="line">AssocContainer&lt;<span class="keyword">int</span>&gt; goodValues;         <span class="comment">// 用于容纳不删除</span></span><br><span class="line"><span class="comment">// 的值的临时容器</span></span><br><span class="line">remove_copy_if(c.begin(), c.end(),          <span class="comment">// 从c拷贝不删除</span></span><br><span class="line">inserter(goodValues,        <span class="comment">// 的值到</span></span><br><span class="line">goodValues.end()),          <span class="comment">// goodValues</span></span><br><span class="line">badValue);</span><br><span class="line">c.swap(goodValues);             <span class="comment">// 交换c和goodValues</span></span><br><span class="line"><span class="comment">// 的内容</span></span><br></pre></td></tr></table></figure>
+
+<p>这种方法的缺点是它拷贝了所有不删除的元素，而这样的拷贝开销可能大于我们期望的底线。</p>
+<p>我们可以通过直接从原容器删除元素来避开拷贝的开销。不过，因为关联容器没有提供类似<code>remove_if()</code>的成员函数，所以我们必须写一个循环来迭代c中的元素，和原来一样删除元素.</p>
+<p>看起来，这个任务很简单，而且实际上，代码也很简单。不幸的是，那些正确工作的代码 很少是跃出脑海的代码。例如，这是很多程序员首先想到的：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">AssocContainer&lt;<span class="keyword">int</span>&gt; c;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">for</span> (AssocContainer&lt;<span class="keyword">int</span>&gt;::iterator i = c.begin();   <span class="comment">// 清晰，直截了当</span></span><br><span class="line">i!= c.end();                                <span class="comment">// 而漏洞百出的用于</span></span><br><span class="line">++i) &#123;                                      <span class="comment">// 删除c中badValue返回真</span></span><br><span class="line"><span class="keyword">if</span> (badValue(*i)) c.erase(i);                   <span class="comment">// 的每个元素的代码</span></span><br><span class="line">&#125;                                                   <span class="comment">// 不要这么做！&lt;/int&gt;&lt;/int&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>​    </p>
+<p>唉，这有未定义的行为。当容器的一个元素被删时，指向那个元素的所有迭代器都失效了 。当c.erase(i)返回时，i已经失效。那对于这个循环是个坏消息，因为在erase()返回后， i通过for循环的++i部分自增。</p>
+<p>为了避免这个问题，我们必须保证在调用erase之前就得到了c中下一元素的迭代器。最容 易的方法是当我们调用时在i上使用后置递增：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">AssocContainer&lt;<span class="keyword">int</span>&gt; c;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">for</span> (AssocContainer&lt;<span class="keyword">int</span>&gt;::iterator i = c.begin();   <span class="comment">// for循环的第三部分</span></span><br><span class="line">i != c.end();                                   <span class="comment">// 是空的；i现在在下面</span></span><br><span class="line"><span class="comment">/*nothing*/</span> )&#123;                                 <span class="comment">// 自增</span></span><br><span class="line"><span class="keyword">if</span> (badValue(*i)) c.erase(i++);     <span class="comment">// 对于坏的值，把当前的</span></span><br><span class="line"><span class="keyword">else</span> ++i;                           <span class="comment">// i传给erase，然后</span></span><br><span class="line">&#125;                                       <span class="comment">// 作为副作用增加i；</span></span><br><span class="line"><span class="comment">// 对于好的值，</span></span><br><span class="line"><span class="comment">// 只增加i</span></span><br></pre></td></tr></table></figure>
+
+<p>这种调用erase()的解决方法可以工作，因为表达式i++的值是i的旧值，但作为副作用，i增 加了。因此，我们把i的旧值（没增加的）传给erase，但在erase开始执行前i已经自增了 。那正好是我们想要的。正如我所说的，代码很简单，只不过不是大多数程序员在第一次 尝试时想到的。</p>
+<p>现在让我们进一步修改该问题。不仅删除badValue返回真的每个元素，而且每当一个元素 被删掉时，我们也想把一条消息写到日志文件中。</p>
+<p>对于关联容器，这说多容易就有多容易，因为只需要对我们刚才开发的循环做一个微不足 道的修改就行了：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">ofstream logFile;                   <span class="comment">// 要写入的日志文件</span></span><br><span class="line">AssocContainer&lt;<span class="keyword">int</span>&gt; c;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">for</span> (AssocContainer&lt;<span class="keyword">int</span>&gt;::iterator i = c.begin();   <span class="comment">// 循环条件和前面一样</span></span><br><span class="line">i !=c.end();)&#123;</span><br><span class="line"><span class="keyword">if</span> (badValue(*i))&#123;</span><br><span class="line">logFile &amp;lt;&amp;lt; <span class="string">"Erasing "</span> &amp;lt;&amp;lt; *i &amp;lt;&amp;lt;<span class="string">'\n'</span>;   <span class="comment">// 写日志文件 </span></span><br><span class="line">        c.erase(i++);           <span class="comment">// 删除元素</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> ++i;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在是vector、string和deque给我们带来麻烦。我们不能再使用<code>erase-remove</code>惯用法，因为没有办法让erase()或remove()写日志文件。而且，我们不能使用刚刚为关联容器开发的循环, 因为它为vector、string和deque产生未定义的行为！要记得对于那样的容器，调用erase不仅使所有指向被删元素的迭代器失效，也使被删元素之后的所有迭代器失效。在我们的情况里，那包括所有i之后的迭代器。我们写i++，++i或你能想起的其它任何东西都没有用，因为没有能导致迭代器有效的。</p>
+<p>我们必须对vector、string和deque采用不同的战略。特别是，我们必须利用erase()的返回值。那个返回值正是我们需要的：一旦删除完成，它就是指向紧接在被删元素之后的元素的有效迭代器。换句话说，我们这么写：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (SeqContainer&lt;<span class="keyword">int</span>&gt;::iterator i = c.begin();</span><br><span class="line">i != c.end();)&#123;</span><br><span class="line"><span class="keyword">if</span> (badValue(*i))&#123;</span><br><span class="line">logFile &amp;lt;&amp;lt; <span class="string">"Erasing "</span> &amp;lt;&amp;lt; *i &amp;lt;&amp;lt; <span class="string">'\n'</span>; </span><br><span class="line">        i = c.erase(i);         <span class="comment">// 通过把erase的返回值</span></span><br><span class="line">    &#125;                   <span class="comment">// 赋给i来保持i有效</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        ++i;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这可以很好地工作，但只用于标准序列容器。由于论证一个可能的问题（条款5做了），标准关联容器的erase()的返回类型是void[1]。对于那些容器，你必须使用“后置递增你要传给erase()的迭代器”技术。（顺便说说，在为序列容器编码和为关联容器编码之间的这种差别是为什么写容器无关代码一般缺乏考虑的一个例子——参见条款2。)</p>
+<p>为了避免你奇怪list的适当方法是什么，事实表明对于迭代和删除，你可以像vector/str ing/deque一样或像关联容器一样对待list；两种方法都可以为list工作。</p>
+<p>如果我们观察在本条款中提到的所有东西，我们得出下列结论：</p>
+<p>去除一个容器中有特定值的所有对象： 如果容器是vector、string或deque，使用erase-remove惯用法。</p>
+<p>如果容器是list，使用list::remove。</p>
+<p>如果容器是标准关联容器，使用它的erase成员函数。</p>
+<p>去除一个容器中满足一个特定判定式的所有对象： 如果容器是vector、string或deque，使用<code>erase-remove_if</code>惯用法。</p>
+<p>如果容器是list，使用list::remove_if。</p>
+<p>如果容器是标准关联容器，使用<code>remove_copy_if</code>和<code>swap</code>，或写一个循环来遍历容器元素， 当你把迭代器传给erase时记得后置递增它。</p>
+<p>在循环内做某些事情（除了删除对象之外）： 如果容器是标准序列容器，写一个循环来遍历容器元素，每当调用erase时记得都用它的返回值更新你的迭代器。 如果容器是标准关联容器，写一个循环来遍历容器元素，当你把迭代器传给erase时记得后置递增它。</p>
+<p>如你所见，与仅仅调用erase相比，有效地删除容器元素有更多的东西。解决问题的最好方法取决于你是怎样鉴别出哪个对象是要被去掉的，储存它们的容器的类型，和当你删除它们的时候你还想要做什么（如果有的话）。只要你小心而且注意了本条款的建议，你将毫不费力。如果你不小心，你将冒着产生不必要低效的代码或未定义行为的危险。</p>
+<h2 id="-"><span id="-">------------------------------------------------------------------------------</span></h2><p>[1] 这仅对带有迭代器实参的erase()形式是正确的。关联容器也提供一个带有一个值的实参 的erase()形式，而那种形式返回被删掉的元素个数。但这里，我们只关心通过迭代器删除东 西。</p>
+<p><a href="https://bbs.sjtu.edu.cn/bbsanc,path,%2Fgroups%2FGROUP_3%2FC%2Fnetres%2Feffstl%2Ffile10.html" target="_blank" rel="noopener">参考地址</a></p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/978f4b48/" title="[译]Effective STL 9" target="_blank" rel="external">https://lxb.wiki/978f4b48/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/56dc57bb/" title="[译]How to (std::)find something efficiently with the STL"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/b12cd95a/" title="STL 的 erase( ) 陷阱-迭代器失效总结"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:i@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> lxbwolf </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: true,
+    appId: '6bn4rcWK3ehmM0hbKJmE991u-MdYXbMMI',
+    appKey: 'jkoCGVIFrcsbsKrgg7CiPsWP',
+    placeholder: 'Just go go',
+    avatar: '',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
+</html>
