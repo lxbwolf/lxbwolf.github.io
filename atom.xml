@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://lxb.wiki/"/>
-  <updated>2021-05-03T03:31:22.040Z</updated>
+  <updated>2021-05-13T15:28:17.442Z</updated>
   <id>https://lxb.wiki/</id>
   
   <author>
@@ -15,6 +15,44 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Mac iTerm2，使用rz和sz无效，解决方式</title>
+    <link href="https://lxb.wiki/32451f0a/"/>
+    <id>https://lxb.wiki/32451f0a/</id>
+    <published>2021-05-13T15:25:13.000Z</published>
+    <updated>2021-05-13T15:28:17.442Z</updated>
+    
+    <content type="html"><![CDATA[<!-- toc --><ul><li><a href="#1安装lrzsz要先安装brew">1.安装lrzsz（要先安装brew）</a></li><li><a href="#2配置">2.配置</a></li></ul><!-- tocstop --><h1 id="1安装lrzsz要先安装brew"><span id="1安装lrzsz要先安装brew">1.安装lrzsz（要先安装brew）</span></h1><p><code>brew install lrzsz</code></p><h1 id="2配置"><span id="2配置">2.配置</span></h1><p><code>cd /usr/local/bin</code><br>   在/usr/loal/bin 目录下创建两个文件</p><p>命令：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">vi iterm2-recv-zmodem.sh</span><br><span class="line">vi iterm2-send-zmodem.sh</span><br></pre></td></tr></table></figure><p>创建好两个文件后分别添加内容：</p><ol><li><strong>iterm2-recv-zmodem.sh</strong></li></ol><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/bash</span><br><span class="line"># Author: Matt Mastracci (matthew@mastracci.com)</span><br><span class="line"># AppleScript from http://stackoverflow.com/questions/4309087/cancel-button-on-osascript-in-a-bash-script</span><br><span class="line"># licensed under cc-wiki with attribution required </span><br><span class="line"># Remainder of script public domain</span><br><span class="line"> </span><br><span class="line">osascript -e &apos;tell application &quot;iTerm2&quot; to version&apos; &gt; /dev/null 2&gt;&amp;1 &amp;&amp; NAME=iTerm2 || NAME=iTerm</span><br><span class="line">if [[ $NAME = &quot;iTerm&quot; ]]; then</span><br><span class="line">    FILE=`osascript -e &apos;tell application &quot;iTerm&quot; to activate&apos; -e &apos;tell application &quot;iTerm&quot; to set thefile to choose folder with prompt &quot;Choose a folder to place received files in&quot;&apos; -e &quot;do shell script (\&quot;echo \&quot;&amp;(quoted form of POSIX path of thefile as Unicode text)&amp;\&quot;\&quot;)&quot;`</span><br><span class="line">else</span><br><span class="line">    FILE=`osascript -e &apos;tell application &quot;iTerm2&quot; to activate&apos; -e &apos;tell application &quot;iTerm2&quot; to set thefile to choose folder with prompt &quot;Choose a folder to place received files in&quot;&apos; -e &quot;do shell script (\&quot;echo \&quot;&amp;(quoted form of POSIX path of thefile as Unicode text)&amp;\&quot;\&quot;)&quot;`</span><br><span class="line">fi</span><br><span class="line"> </span><br><span class="line">if [[ $FILE = &quot;&quot; ]]; then</span><br><span class="line">    echo Cancelled.</span><br><span class="line">    # Send ZModem cancel</span><br><span class="line">    echo -e \\x18\\x18\\x18\\x18\\x18</span><br><span class="line">    sleep 1</span><br><span class="line">    echo</span><br><span class="line">    echo \# Cancelled transfer</span><br><span class="line">else</span><br><span class="line">    cd &quot;$FILE&quot;</span><br><span class="line">    /usr/local/bin/rz -E -e -b</span><br><span class="line">    sleep 1</span><br><span class="line">    echo</span><br><span class="line">    echo</span><br><span class="line">    echo \# Sent \-\&gt; $FILE</span><br><span class="line">fi</span><br></pre></td></tr></table></figure><ol start="2"><li><strong>iterm2-send-zmodem.sh</strong></li></ol><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/bash</span><br><span class="line"># Author: Matt Mastracci (matthew@mastracci.com)</span><br><span class="line"># AppleScript from http://stackoverflow.com/questions/4309087/cancel-button-on-osascript-in-a-bash-script</span><br><span class="line"># licensed under cc-wiki with attribution required </span><br><span class="line"># Remainder of script public domain</span><br><span class="line"> </span><br><span class="line">osascript -e &apos;tell application &quot;iTerm2&quot; to version&apos; &gt; /dev/null 2&gt;&amp;1 &amp;&amp; NAME=iTerm2 || NAME=iTerm</span><br><span class="line">if [[ $NAME = &quot;iTerm&quot; ]]; then</span><br><span class="line">    FILE=`osascript -e &apos;tell application &quot;iTerm&quot; to activate&apos; -e &apos;tell application &quot;iTerm&quot; to set thefile to choose file with prompt &quot;Choose a file to send&quot;&apos; -e &quot;do shell script (\&quot;echo \&quot;&amp;(quoted form of POSIX path of thefile as Unicode text)&amp;\&quot;\&quot;)&quot;`</span><br><span class="line">else</span><br><span class="line">    FILE=`osascript -e &apos;tell application &quot;iTerm2&quot; to activate&apos; -e &apos;tell application &quot;iTerm2&quot; to set thefile to choose file with prompt &quot;Choose a file to send&quot;&apos; -e &quot;do shell script (\&quot;echo \&quot;&amp;(quoted form of POSIX path of thefile as Unicode text)&amp;\&quot;\&quot;)&quot;`</span><br><span class="line">fi</span><br><span class="line">if [[ $FILE = &quot;&quot; ]]; then</span><br><span class="line">    echo Cancelled.</span><br><span class="line">    # Send ZModem cancel</span><br><span class="line">    echo -e \\x18\\x18\\x18\\x18\\x18</span><br><span class="line">    sleep 1</span><br><span class="line">    echo</span><br><span class="line">    echo \# Cancelled transfer</span><br><span class="line">else</span><br><span class="line">    /usr/local/bin/sz &quot;$FILE&quot; -e -b</span><br><span class="line">    sleep 1</span><br><span class="line">    echo</span><br><span class="line">    echo \# Received $FILE</span><br><span class="line">fi</span><br></pre></td></tr></table></figure><p>将文件写好后保存好，使用如下命令添加权限</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod 777 iterm2-*</span><br></pre></td></tr></table></figure><p>配置好配置文件之后，开始对iTerm2进行配置</p><p>点击 iTerm2 的设置界面 Perference-&gt; Profiles -&gt; Default -&gt; Advanced -&gt; Triggers 的 Edit 按钮，加入以下配置</p><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210513232741.png" alt></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">Regular expression: rz waiting to receive.\*\*B0100</span><br><span class="line">Action: Run Silent Coprocess</span><br><span class="line">Parameters: /usr/local/bin/iterm2-send-zmodem.sh</span><br><span class="line"> </span><br><span class="line">Regular expression: \*\*B00000000000000</span><br><span class="line">Action: Run Silent Coprocess</span><br><span class="line">Parameters: /usr/local/bin/iterm2-recv-zmodem.sh</span><br></pre></td></tr></table></figure><p><strong><em>\</em>备注：**</strong></p><p>rz 上传功能  ：在bash中，也就是iTerm2终端输入rz 就会弹出文件选择框，选择文件 choose 就开始上传，会上传到当前目录<br>sz 下载功能 ：sz fileName(你要下载的文件的名字) 回车，会弹出窗体 我们选择要保存的地方即可。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;!-- toc --&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;#1安装lrzsz要先安装brew&quot;&gt;1.安装lrzsz（要先安装brew）&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#2配置&quot;&gt;2.配置&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;!-- tocstop --&gt;
+
+&lt;h1
+      
+    
+    </summary>
+    
+    
+      <category term="Tools" scheme="https://lxb.wiki/categories/Tools/"/>
+    
+    
+      <category term="工具" scheme="https://lxb.wiki/tags/%E5%B7%A5%E5%85%B7/"/>
+    
+      <category term="Mac" scheme="https://lxb.wiki/tags/Mac/"/>
+    
+      <category term="iTerm" scheme="https://lxb.wiki/tags/iTerm/"/>
+    
+  </entry>
   
   <entry>
     <title>误删了Mac中Chrome书签后如何恢复</title>
@@ -627,45 +665,6 @@
       <category term="Shell" scheme="https://lxb.wiki/tags/Shell/"/>
     
       <category term="sed" scheme="https://lxb.wiki/tags/sed/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>hexo使用hexo-toc锚点失效问题</title>
-    <link href="https://lxb.wiki/b4c41686/"/>
-    <id>https://lxb.wiki/b4c41686/</id>
-    <published>2020-09-03T13:02:23.000Z</published>
-    <updated>2020-11-12T15:24:15.223Z</updated>
-    
-    <content type="html"><![CDATA[<!-- toc --><ul><li><a href="#现象">现象</a></li><li><a href="#原因">原因</a></li><li><a href="#修复方法">修复方法</a></li></ul><!-- tocstop --><h4 id="现象"><span id="现象">现象</span></h4><p>使用 hexo-toc 生成文章目录时，点击某个目录，url 变成 </p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://localhost:4000/690c8418/#null</span><br></pre></td></tr></table></figure><h4 id="原因"><span id="原因">原因</span></h4><p>插件在把 markdown 编译成 HTML 时，</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">## title</span><br></pre></td></tr></table></figure><p>会编译为 </p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;h2&gt;&lt;span id=&quot;title&quot;&gt;title&lt;/span&gt;&lt;/h2&gt;</span><br></pre></td></tr></table></figure><p>而在插件源码的<a href="https://github.com/hexojs/hexo/blob/master/lib/plugins/helper/toc.js#L27" target="_blank" rel="noopener">这次提交</a>之前，是会编译成</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;h2 id=&quot;title&quot;&gt;title&lt;/h2&gt;</span><br></pre></td></tr></table></figure><p>因此新版本的 <code>hexo-toc</code> 生成 TOC 时，元素没有 <code>id</code> 这个属性，进而导致 TOC 中的锚点失效。</p><h4 id="修复方法"><span id="修复方法">修复方法</span></h4><p>修改 <code>node_modules/hexo-toc/lib/filter.js</code></p><p>把 28 行的 <code>$title.attr(&#39;id&#39;, id);</code> 注释打开</p><p>把 31 行的 <code>$title.removeAttr(&#39;id&#39;);</code> 注释掉</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;!-- toc --&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;#现象&quot;&gt;现象&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#原因&quot;&gt;原因&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;#修复方法&quot;&gt;修复方法&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;!-- tocstop --&gt;
-
-&lt;h4
-      
-    
-    </summary>
-    
-    
-      <category term="Tools" scheme="https://lxb.wiki/categories/Tools/"/>
-    
-    
-      <category term="hexo" scheme="https://lxb.wiki/tags/hexo/"/>
-    
-      <category term="hexo-toc" scheme="https://lxb.wiki/tags/hexo-toc/"/>
-    
-      <category term="锚点失效" scheme="https://lxb.wiki/tags/%E9%94%9A%E7%82%B9%E5%A4%B1%E6%95%88/"/>
     
   </entry>
   
