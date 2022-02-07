@@ -19,11 +19,11 @@
   
 
   
-  <title>微服务中的熔断器和重试 | Xiaobin&#39;s Blog</title>
+  <title>[译]微服务中的熔断器和重试 | Xiaobin&#39;s Blog</title>
   <meta name="description" content="今天我们来讨论微服务架构中的自我恢复能力。通常情况下，服务间会通过同步或异步的方式进行通信。我们假定把一个庞大的系统分解成一个个的小块能将各个服务解耦。管理服务内部的通信可能有点困难了。你可能听说过这两个著名的概念：熔断和重试。 熔断器 想象一个简单的场景：用户发出的请求访问服务 A 随后访问另一个服务 B。我们可以称 B 是 A 的依赖服务或下游服务。到服务 B 的请求在到达各个实例前会先通过负">
 <meta name="keywords" content="Go">
 <meta property="og:type" content="article">
-<meta property="og:title" content="微服务中的熔断器和重试">
+<meta property="og:title" content="[译]微服务中的熔断器和重试">
 <meta property="og:url" content="https://lxb.wiki/c9399f4/index.html">
 <meta property="og:site_name" content="Xiaobin&#39;s Blog">
 <meta property="og:description" content="今天我们来讨论微服务架构中的自我恢复能力。通常情况下，服务间会通过同步或异步的方式进行通信。我们假定把一个庞大的系统分解成一个个的小块能将各个服务解耦。管理服务内部的通信可能有点困难了。你可能听说过这两个著名的概念：熔断和重试。 熔断器 想象一个简单的场景：用户发出的请求访问服务 A 随后访问另一个服务 B。我们可以称 B 是 A 的依赖服务或下游服务。到服务 B 的请求在到达各个实例前会先通过负">
@@ -34,9 +34,9 @@
 <meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204011142.png">
 <meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204111132.png">
 <meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204011245.png">
-<meta property="og:updated_time" content="2020-12-03T17:19:06.579Z">
+<meta property="og:updated_time" content="2022-02-07T00:43:22.033Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="微服务中的熔断器和重试">
+<meta name="twitter:title" content="[译]微服务中的熔断器和重试">
 <meta name="twitter:description" content="今天我们来讨论微服务架构中的自我恢复能力。通常情况下，服务间会通过同步或异步的方式进行通信。我们假定把一个庞大的系统分解成一个个的小块能将各个服务解耦。管理服务内部的通信可能有点困难了。你可能听说过这两个著名的概念：熔断和重试。 熔断器 想象一个简单的场景：用户发出的请求访问服务 A 随后访问另一个服务 B。我们可以称 B 是 A 的依赖服务或下游服务。到服务 B 的请求在到达各个实例前会先通过负">
 <meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204010211.png">
   <!-- Canonical links  把后面的 index.html 去掉-->
@@ -203,7 +203,7 @@
   <div class="widget">
     <h3 class="widget-title">分类</h3>
     <div class="widget-body">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><span class="category-list-count">19</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Other/">Other</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/RPI/">RPI</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">13</span></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><span class="category-list-count">19</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/RPI/">RPI</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">13</span></li></ul>
     </div>
   </div>
 
@@ -222,7 +222,7 @@
   <div class="widget">
     <h3 class="widget-title">归档</h3>
     <div class="widget-body">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
     </div>
   </div>
 
@@ -234,36 +234,6 @@
     <div class="widget-body">
       <ul class="recent-post-list list-unstyled no-thumbnail">
         
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Other/">Other</a>
-              </p>
-              <p class="item-title">
-                <a href="/e2b0935b/" class="title">健身动作</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2021-06-20T12:16:24.000Z" itemprop="datePublished">2021-06-20</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Other/">Other</a>
-              </p>
-              <p class="item-title">
-                <a href="/31bd80b4/" class="title">惜罇空</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2021-06-15T13:03:00.000Z" itemprop="datePublished">2021-06-15</time>
-              </p>
-            </div>
-          </li>
-          
           <li>
             
             <div class="item-inner">
@@ -309,6 +279,36 @@
             </div>
           </li>
           
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/f5496f4b/" class="title">Joplin+坚果云作为主力笔记工具</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-03-09T13:07:57.000Z" itemprop="datePublished">2021-03-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Golang/">Golang</a>
+              </p>
+              <p class="item-title">
+                <a href="/e98e0a2b/" class="title">redis 跳表分析并用 Go 实现</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-03-03T15:09:59.000Z" itemprop="datePublished">2021-03-03</time>
+              </p>
+            </div>
+          </li>
+          
       </ul>
     </div>
   </div>
@@ -329,7 +329,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      微服务中的熔断器和重试
+      [译]微服务中的熔断器和重试
     </h1>
   
 
@@ -436,7 +436,7 @@
     
     <li class="post-copyright-link hidden-xs">
       <strong>本文链接：</strong>
-      <a href="https://lxb.wiki/c9399f4/" title="微服务中的熔断器和重试" target="_blank" rel="external">https://lxb.wiki/c9399f4/</a>
+      <a href="https://lxb.wiki/c9399f4/" title="[译]微服务中的熔断器和重试" target="_blank" rel="external">https://lxb.wiki/c9399f4/</a>
     </li>
     
     <li class="post-copyright-license">
@@ -465,12 +465,12 @@
   <ul class="pager pull-left">
     
     <li class="prev">
-      <a href="/b3baee92/" title="Go GC 怎么标记内存"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+      <a href="/b3baee92/" title="[译]Go GC 怎么标记内存"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
     </li>
     
     
     <li class="next">
-      <a href="/4e717bb5/" title="协程，操作系统线程和 CPU 管理"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+      <a href="/4e717bb5/" title="[译]协程，操作系统线程和 CPU 管理"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
     </li>
     
     
