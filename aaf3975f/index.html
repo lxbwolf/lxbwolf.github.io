@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+
+  
+  <title>go map数据结构 | Xiaobin&#39;s Blog</title>
+  <meta name="description" content="1. 前言 2. go map的数据结构 2.1 核心结体体 2.2 数据结构图   3. go map的常用操作 3.1 创建 3.2 插入或更新 3.3 删除 3.4 查找 3.5 range迭代 3.5.1 初始化迭代器mapiterinit() 3.5.2 迭代过程mapiternext()     4. go map的扩容缩容 4.1 扩容缩容的基本原理 4.2 为什么叫“伪缩容”">
+<meta name="keywords" content="Go">
+<meta property="og:type" content="article">
+<meta property="og:title" content="go map数据结构">
+<meta property="og:url" content="https://lxb.wiki/aaf3975f/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Blog">
+<meta property="og:description" content="1. 前言 2. go map的数据结构 2.1 核心结体体 2.2 数据结构图   3. go map的常用操作 3.1 创建 3.2 插入或更新 3.3 删除 3.4 查找 3.5 range迭代 3.5.1 初始化迭代器mapiterinit() 3.5.2 迭代过程mapiternext()     4. go map的扩容缩容 4.1 扩容缩容的基本原理 4.2 为什么叫“伪缩容”">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226143452.png">
+<meta property="og:updated_time" content="2022-02-26T06:46:51.919Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="go map数据结构">
+<meta name="twitter:description" content="1. 前言 2. go map的数据结构 2.1 核心结体体 2.2 数据结构图   3. go map的常用操作 3.1 创建 3.2 插入或更新 3.3 删除 3.4 查找 3.5 range迭代 3.5.1 初始化迭代器mapiterinit() 3.5.2 迭代过程mapiternext()     4. go map的扩容缩容 4.1 扩容缩容的基本原理 4.2 为什么叫“伪缩容”">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226143452.png">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/aaf3975f/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+</head>
+
+
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/head.jpeg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin.Liu</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:lxb@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><span class="category-list-count">20</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/RPI/">RPI</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">13</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.17px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.33px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.67px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.33px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13px;">joplin</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mq/" style="font-size: 13px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.67px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.33px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.83px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.17px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/优化/" style="font-size: 13px;">优化</a> <a href="/tags/分布式/" style="font-size: 13.17px;">分布式</a> <a href="/tags/博客/" style="font-size: 13px;">博客</a> <a href="/tags/工具/" style="font-size: 13.83px;">工具</a> <a href="/tags/架构/" style="font-size: 13.33px;">架构</a> <a href="/tags/树莓派/" style="font-size: 13.17px;">树莓派</a> <a href="/tags/破解/" style="font-size: 13px;">破解</a> <a href="/tags/稳定性/" style="font-size: 13.17px;">稳定性</a> <a href="/tags/端口/" style="font-size: 13px;">端口</a> <a href="/tags/算法/" style="font-size: 13.5px;">算法</a> <a href="/tags/编译器/" style="font-size: 13.5px;">编译器</a> <a href="/tags/网络/" style="font-size: 13.33px;">网络</a> <a href="/tags/翻译/" style="font-size: 13.83px;">翻译</a> <a href="/tags/解决/" style="font-size: 13px;">解决</a> <a href="/tags/跳表/" style="font-size: 13.17px;">跳表</a> <a href="/tags/进程/" style="font-size: 13.17px;">进程</a> <a href="/tags/邮件/" style="font-size: 13.17px;">邮件</a> <a href="/tags/链表/" style="font-size: 13px;">链表</a> <a href="/tags/锚点失效/" style="font-size: 13px;">锚点失效</a> <a href="/tags/陷阱/" style="font-size: 13px;">陷阱</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">20</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Design/">Design</a>
+              </p>
+              <p class="item-title">
+                <a href="/78259bf9/" class="title">学习路线</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-09-15T14:00:13.000Z" itemprop="datePublished">2021-09-15</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Design/">Design</a>
+              </p>
+              <p class="item-title">
+                <a href="/3bdd21ca/" class="title">分布式系统的CAP理论</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-09-10T13:54:27.000Z" itemprop="datePublished">2021-09-10</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Golang/">Golang</a>
+              </p>
+              <p class="item-title">
+                <a href="/aaf3975f/" class="title">go map数据结构</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-08-28T14:30:18.000Z" itemprop="datePublished">2021-08-28</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/3af5472b/" class="title">网络 IO 模型</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-08-16T14:52:32.000Z" itemprop="datePublished">2021-08-16</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/DB/">DB</a>
+              </p>
+              <p class="item-title">
+                <a href="/689978a2/" class="title">MySQL的四种事务隔离级别</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2021-08-02T15:20:12.000Z" itemprop="datePublished">2021-08-02</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-go-map数据结构" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      go map数据结构
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/aaf3975f/" class="article-date">
+	  <time datetime="2021-08-28T14:30:18.000Z" itemprop="datePublished">2021-08-28</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Golang/">Golang</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/Go/">Go</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/aaf3975f/#comments" class="article-comment-link">评论</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 6.7k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 26(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#1-前言">1. 前言</a></li>
+<li><a href="#2-go-map的数据结构">2. go map的数据结构</a><ul>
+<li><a href="#21-核心结体体">2.1 核心结体体</a></li>
+<li><a href="#22-数据结构图">2.2 数据结构图</a></li>
+</ul>
+</li>
+<li><a href="#3-go-map的常用操作">3. go map的常用操作</a><ul>
+<li><a href="#31-创建">3.1 创建</a></li>
+<li><a href="#32-插入或更新">3.2 插入或更新</a></li>
+<li><a href="#33-删除">3.3 删除</a></li>
+<li><a href="#34-查找">3.4 查找</a></li>
+<li><a href="#35-range迭代">3.5 range迭代</a><ul>
+<li><a href="#351-初始化迭代器mapiterinit">3.5.1 初始化迭代器mapiterinit()</a></li>
+<li><a href="#352-迭代过程mapiternext">3.5.2 迭代过程mapiternext()</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#4-go-map的扩容缩容">4. go map的扩容缩容</a><ul>
+<li><a href="#41-扩容缩容的基本原理">4.1 扩容缩容的基本原理</a></li>
+<li><a href="#42-为什么叫伪缩容如何实现真缩容">4.2 为什么叫“伪缩容”？如何实现“真缩容”？</a></li>
+</ul>
+</li>
+<li><a href="#5-qa关键知识点">5 Q&amp;A关键知识点</a><ul>
+<li><a href="#51-基本原理">5.1 基本原理</a></li>
+<li><a href="#52-时间复杂度和空间复杂度分析">5.2 时间复杂度和空间复杂度分析</a></li>
+</ul>
+</li>
+</ul>
+<!-- tocstop -->
+
+<h1 id="1-前言"><span id="1-前言">1. 前言</span></h1><p>go的map底层实现方式是hash表（C++的map是红黑树实现，而C++ 11新增的unordered_map则与go的map类似，都是hash实现）。go map的数据被置入一个由桶组成的有序数组中，每个桶最多可以存放8个key/value对。key的hash值(32位)的低阶位用于在该数组中定位到桶，而高8位则用于在桶中区分key/value对。<br>go map的hash表中的基本单位是桶，每个桶最多存8个键值对，超了，则会链接到额外的溢出桶。所以go map是基本数据结构是hash数组+桶内的key-value数组+溢出的桶链表<br>当hash表超过阈值需要扩容增长时，会分配一个新的数组，新数组的大小一般是旧数组的2倍。这里从旧数组将数据迁移到新数组，不会一次全量拷贝，go会在每次读写Map时以桶为单位做动态搬迁疏散。</p>
+<h1 id="2-go-map的数据结构"><span id="2-go-map的数据结构">2. go map的数据结构</span></h1><h2 id="21-核心结体体"><span id="21-核心结体体">2.1 核心结体体</span></h2><p>map主要由两个核心的结构，即基础结构和桶实现：</p>
+<ul>
+<li>hmap：map的基础结构</li>
+<li>bmap：严格来说hmap.buckets指向桶组成的数组，每个桶的头部是bmap，之后是8个key，再是8个value，最后是1个溢出指针。溢出指针指向额外的桶链表，用于存储溢出的数据</li>
+</ul>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> ( <span class="comment">// 关键的变量</span></span><br><span class="line">    bucketCntBits = <span class="number">3</span></span><br><span class="line">	bucketCnt     = <span class="number">1</span> &lt;&lt; bucketCntBits  <span class="comment">// 一个桶最多存储8个key-value对</span></span><br><span class="line">	loadFactorNum = <span class="number">13</span> <span class="comment">// 扩散因子：loadFactorNum / loadFactorDen = 6.5。</span></span><br><span class="line">	loadFactorDen = <span class="number">2</span>  <span class="comment">// 即元素数量 &gt;= (hash桶数量(2^hmp.B) * 6.5 / 8) 时，触发扩容</span></span><br><span class="line">)</span><br><span class="line"><span class="comment">// map的基础数据结构</span></span><br><span class="line"><span class="keyword">type</span> hmap <span class="keyword">struct</span> &#123;</span><br><span class="line">	count     <span class="keyword">int</span>	 <span class="comment">// map存储的元素对计数，len()函数返回此值，所以map的len()时间复杂度是O(1)</span></span><br><span class="line">	flags     <span class="keyword">uint8</span>  <span class="comment">// 记录几个特殊的位标记，如当前是否有别的线程正在写map、当前是否为相同大小的增长（扩容/缩容？）</span></span><br><span class="line">	B         <span class="keyword">uint8</span>  <span class="comment">// hash桶buckets的数量为2^B个</span></span><br><span class="line">	noverflow <span class="keyword">uint16</span> <span class="comment">// 溢出的桶的数量的近似值</span></span><br><span class="line">	hash0     <span class="keyword">uint32</span> <span class="comment">// hash种子</span></span><br><span class="line"></span><br><span class="line">	buckets    unsafe.Pointer <span class="comment">// 指向2^B个桶组成的数组的指针，数据存在这里</span></span><br><span class="line">	oldbuckets unsafe.Pointer <span class="comment">// 指向扩容前的旧buckets数组，只在map增长时有效</span></span><br><span class="line">	nevacuate  <span class="keyword">uintptr</span>        <span class="comment">// 计数器，标示扩容后搬迁的进度</span></span><br><span class="line"></span><br><span class="line">	extra *mapextra <span class="comment">// 保存溢出桶的链表和未使用的溢出桶数组的首地址</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 桶的实现结构</span></span><br><span class="line"><span class="keyword">type</span> bmap <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// tophash存储桶内每个key的hash值的高字节</span></span><br><span class="line">	<span class="comment">// tophash[0] &lt; minTopHash表示桶的疏散状态</span></span><br><span class="line">	<span class="comment">// 当前版本bucketCnt的值是8，一个桶最多存储8个key-value对</span></span><br><span class="line">	tophash [bucketCnt]<span class="keyword">uint8</span></span><br><span class="line">	<span class="comment">// 特别注意：</span></span><br><span class="line">	<span class="comment">// 实际分配内存时会申请一个更大的内存空间A，A的前8字节为bmap</span></span><br><span class="line">	<span class="comment">// 后面依次跟8个key、8个value、1个溢出指针</span></span><br><span class="line">	<span class="comment">// map的桶结构实际指的是内存空间A</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// map.go里很多函数的第1个入参是这个结构，从成员来看很明显，此结构标示了键值对和桶的大小等必要信息</span></span><br><span class="line"><span class="comment">// 有了这个结构的信息，map.go的代码就可以与键值对的具体数据类型解耦</span></span><br><span class="line"><span class="comment">// 所以map.go用内存偏移量和unsafe.Pointer指针来直接对内存进行存取，而无需关心key或value的具体类型</span></span><br><span class="line"><span class="keyword">type</span> maptype <span class="keyword">struct</span> &#123;</span><br><span class="line">	typ        _type</span><br><span class="line">	key        *_type</span><br><span class="line">	elem       *_type</span><br><span class="line">	bucket     *_type <span class="comment">// internal type representing a hash bucket</span></span><br><span class="line">	keysize    <span class="keyword">uint8</span>  <span class="comment">// size of key slot</span></span><br><span class="line">	valuesize  <span class="keyword">uint8</span>  <span class="comment">// size of value slot</span></span><br><span class="line">	bucketsize <span class="keyword">uint16</span> <span class="comment">// size of bucket</span></span><br><span class="line">	flags      <span class="keyword">uint32</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>C++使用模板可以根据不同的类型生成map的代码。<br>golang则通过上述maptype结构体传递键值对的类型大小等信息，从而map.go直接用指针操作对应大小的内存来实现全局一份map代码同时适用于不同类型的键值对。这点上可以认为相比C++用模板实现map的方式，go map的目标文件的代码量会更小。</p>
+<h2 id="22-数据结构图"><span id="22-数据结构图">2.2 数据结构图</span></h2><p>map底层创建时，会初始化一个hmap结构体，同时分配一个足够大的内存空间A。其中A的前段用于hash数组，A的后段预留给溢出的桶。于是hmap.buckets指向hash数组，即A的首地址；hmap.extra.nextOverflow初始时指向内存A中的后段，即hash数组结尾的下一个桶，也即第1个预留的溢出桶。所以当hash冲突需要使用到新的溢出桶时，会优先使用上述预留的溢出桶，hmap.extra.nextOverflow依次往后偏移直到用完所有的溢出桶，才有可能会申请新的溢出桶空间。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226143452.png" alt></p>
+<p>上图中，当需要分配一个溢出桶时，会优先从预留的溢出桶数组里取一个出来链接到链表后面，这时不需要再次申请内存。但当预留的桶被用完了，则需要申请新的内存给溢出桶。</p>
+<h1 id="3-go-map的常用操作"><span id="3-go-map的常用操作">3. go map的常用操作</span></h1><h2 id="31-创建"><span id="31-创建">3.1 创建</span></h2><p>使用make(map[k]v, hint)创建map时会调用makemap()函数，代码逻辑比较简单。<br>值得注意的是，makemap()创建的hash数组，数组的前面是hash表的空间，当hint &gt;= 4时后面会追加2^(hint-4)个桶，之后再内存页帧对齐又追加了若干个桶（参见2.2章节结构图的hash数组部分）<br>所以创建map时一次内存分配既分配了用户预期大小的hash数组，又追加了一定量的预留的溢出桶，还做了内存对齐，一举多得。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// make(map[k]v, hint), hint即预分配大小</span></span><br><span class="line"><span class="comment">// 不传hint时，如用new创建个预设容量为0的map时，makemap只初始化hmap结构，不分配hash数组</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">makemap</span><span class="params">(t *maptype, hint <span class="keyword">int</span>, h *hmap)</span> *<span class="title">hmap</span></span> &#123;</span><br><span class="line">	<span class="comment">// 省略部分代码</span></span><br><span class="line">	<span class="comment">// 随机hash种子</span></span><br><span class="line">	h.hash0 = fastrand()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 2^h.B 为大于hint*6.5(扩容因子)的最小的2的幂</span></span><br><span class="line">	B := <span class="keyword">uint8</span>(<span class="number">0</span>)</span><br><span class="line">	<span class="comment">// overLoadFactor(hint, B)只有一行代码：return hint &gt; bucketCnt &amp;&amp; uintptr(hint) &gt; loadFactorNum*(bucketShift(B)/loadFactorDen)</span></span><br><span class="line">	<span class="comment">// 即B的大小应满足 hint &lt;= (2^B) * 6.5</span></span><br><span class="line">	<span class="comment">// 一个桶能存8对key-value，所以这就表示B的初始值是保证这个map不需要扩容即可存下hint个元素对的最小的B值</span></span><br><span class="line">	<span class="keyword">for</span> overLoadFactor(hint, B) &#123;</span><br><span class="line">		B++</span><br><span class="line">	&#125;</span><br><span class="line">	h.B = B</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 这里分配hash数组</span></span><br><span class="line">	<span class="keyword">if</span> h.B != <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">var</span> nextOverflow *bmap</span><br><span class="line">		h.buckets, nextOverflow = makeBucketArray(t, h.B, <span class="literal">nil</span>)</span><br><span class="line">		<span class="comment">// makeBucketArray()会在hash数组后面预分配一些溢出桶，</span></span><br><span class="line">		<span class="comment">// h.extra.nextOverflow用来保存上述溢出桶的首地址</span></span><br><span class="line">		<span class="keyword">if</span> nextOverflow != <span class="literal">nil</span> &#123;</span><br><span class="line">			h.extra = <span class="built_in">new</span>(mapextra)</span><br><span class="line">			h.extra.nextOverflow = nextOverflow</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> h</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 分配hash数组</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">makeBucketArray</span><span class="params">(t *maptype, b <span class="keyword">uint8</span>, dirtyalloc unsafe.Pointer)</span> <span class="params">(buckets unsafe.Pointer, nextOverflow *bmap)</span></span> &#123;</span><br><span class="line">	base := bucketShift(b) <span class="comment">// base代表用户预期的桶的数量，即hash数组的真实大小</span></span><br><span class="line">	nbuckets := base <span class="comment">// nbuckets表示实际分配的桶的数量，&gt;= base，这就可能会追加一些溢出桶作为溢出的预留</span></span><br><span class="line">	<span class="keyword">if</span> b &gt;= <span class="number">4</span> &#123;</span><br><span class="line">		<span class="comment">// 这里追加一定数量的桶，并做内存对齐</span></span><br><span class="line">		nbuckets += bucketShift(b - <span class="number">4</span>)</span><br><span class="line">		sz := t.bucket.size * nbuckets</span><br><span class="line">		up := roundupsize(sz)</span><br><span class="line">		<span class="keyword">if</span> up != sz &#123;</span><br><span class="line">			nbuckets = up / t.bucket.size</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 后面的代码就是申请内存空间了，此处省略</span></span><br><span class="line">	<span class="comment">// 这里大家可以思考下这个数组空间要怎么分配，其实就是n*sizeof(桶)，所以：</span></span><br><span class="line">		<span class="comment">// 每个桶前面是8字节的tophash数组，然后是8个key，再是8个value，最后放一个溢出指针</span></span><br><span class="line">		<span class="comment">// sizeof(桶) = 8 + 8*sizeof(key) + 8*sizeof(value) + 8</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> buckets, nextOverflow</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="32-插入或更新"><span id="32-插入或更新">3.2 插入或更新</span></h2><p>go map的插入操作，调用mapassign()函数。<br>同学们或许在某些资料上了解过：</p>
+<ul>
+<li>go map需要初始化才能使用，对空map插入会panic。hmap指针传递的方式，决定了map在使用前必须初始化</li>
+<li>go map不支持并发读写，会panic。如果一定要并发，请用sync.Map或自己解决冲突</li>
+</ul>
+<p>上述两个限制，在mapassign()函数开头能找到答案：</p>
+<p>1 参数合法性检测，计算hash值</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mapassign</span><span class="params">(t *maptype, h *hmap, key unsafe.Pointer)</span> <span class="title">unsafe</span>.<span class="title">Pointer</span></span> &#123;</span><br><span class="line">    <span class="comment">// 不熟悉指针操作的同学，用指针传参往往会踩空指针的坑</span></span><br><span class="line">    <span class="comment">// 这里大家可以思考下，为什么h要非空判断？</span></span><br><span class="line">    <span class="comment">// 如果一定要在这里支持空map并检测到map为空时自动初始化，应该怎么写？</span></span><br><span class="line">    <span class="comment">// 提示：指针的指针</span></span><br><span class="line">	<span class="keyword">if</span> h == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(plainError(<span class="string">"assignment to entry in nil map"</span>))</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 在这里做并发判断，检测到并发写时，抛异常</span></span><br><span class="line">	<span class="comment">// 注意：go map的并发检测是伪检测，并不保证所有的并发都会被检测出来。而且这玩意是在运行期检测。</span></span><br><span class="line">	<span class="comment">// 所以对map有并发要求时，应使用sync.map来代替普通map，通过加锁来阻断并发冲突</span></span><br><span class="line">	<span class="keyword">if</span> h.flags&amp;hashWriting != <span class="number">0</span> &#123;</span><br><span class="line">		throw(<span class="string">"concurrent map writes"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	hash := alg.hash(key, <span class="keyword">uintptr</span>(h.hash0)) <span class="comment">// 这里得到uint32的hash值</span></span><br><span class="line">	h.flags ^= hashWriting <span class="comment">// 置Writing标志，key写入buckets后才会清除标志</span></span><br><span class="line">	<span class="keyword">if</span> h.buckets == <span class="literal">nil</span> &#123; <span class="comment">// map不能为空，但hash数组可以初始是空的，这里会初始化</span></span><br><span class="line">		h.buckets = newobject(t.bucket) <span class="comment">// newarray(t.bucket, 1)</span></span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>2 定位key在hash表中的位置</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mapassign</span><span class="params">(t *maptype, h *hmap, key unsafe.Pointer)</span> <span class="title">unsafe</span>.<span class="title">Pointer</span></span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    </span><br><span class="line">again:</span><br><span class="line">	bucket := hash &amp; bucketMask(h.B) <span class="comment">// 这里用hash值的低阶位定位hash数组的下标偏移量</span></span><br><span class="line">	<span class="keyword">if</span> h.growing() &#123;</span><br><span class="line">		growWork(t, h, bucket) <span class="comment">// 这里是map的扩容缩容操作，我们在第4章单独讲</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 通过下标bucket，偏移定位到具体的桶</span></span><br><span class="line">	b := (*bmap)(unsafe.Pointer(<span class="keyword">uintptr</span>(h.buckets) + bucket*<span class="keyword">uintptr</span>(t.bucketsize)))</span><br><span class="line">	top := tophash(hash) <span class="comment">// 这里取高8位用于在桶内定位键值对</span></span><br><span class="line">	</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>3 进一步定位key可以插入的桶及桶中的位置</p>
+<ul>
+<li>两轮循环，外层循环遍历hash桶及其指向的溢出链表，内层循环则在桶内遍历（一个桶最多8个key-value对）</li>
+<li>有可能正好链表上的桶都满了，这时inserti为nil，第4步会链接一个新的溢出桶进来</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mapassign</span><span class="params">(t *maptype, h *hmap, key unsafe.Pointer)</span> <span class="title">unsafe</span>.<span class="title">Pointer</span></span> &#123;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> inserti *<span class="keyword">uint8</span>          <span class="comment">// tophash插入位置</span></span><br><span class="line">	<span class="keyword">var</span> insertk unsafe.Pointer  <span class="comment">// key插入位置</span></span><br><span class="line">	<span class="keyword">var</span> val unsafe.Pointer      <span class="comment">// value插入位置</span></span><br><span class="line">bucketloop:</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">for</span> i := <span class="keyword">uintptr</span>(<span class="number">0</span>); i &lt; bucketCnt; i++ &#123;</span><br><span class="line">			<span class="keyword">if</span> b.tophash[i] != top &#123;</span><br><span class="line">				<span class="keyword">if</span> isEmpty(b.tophash[i]) &amp;&amp; inserti == <span class="literal">nil</span> &#123;</span><br><span class="line">				    <span class="comment">// 找到个空位，先记录下tophash、key、value的插入位置</span></span><br><span class="line">				    <span class="comment">// 但要遍历完才能确定要不要插入到这个位置，因为后面有可能有重复的元素</span></span><br><span class="line">					inserti = &amp;b.tophash[i]</span><br><span class="line">					insertk = add(unsafe.Pointer(b), dataOffset+i*<span class="keyword">uintptr</span>(t.keysize))</span><br><span class="line">					val = add(unsafe.Pointer(b), dataOffset+bucketCnt*<span class="keyword">uintptr</span>(t.keysize)+i*<span class="keyword">uintptr</span>(t.valuesize))</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">if</span> b.tophash[i] == emptyRest &#123;</span><br><span class="line">					<span class="keyword">break</span> bucketloop <span class="comment">// 遍历完整个溢出链表，退出循环</span></span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">continue</span></span><br><span class="line">			&#125;</span><br><span class="line">			k := add(unsafe.Pointer(b), dataOffset+i*<span class="keyword">uintptr</span>(t.keysize))</span><br><span class="line">			<span class="keyword">if</span> t.indirectkey() &#123;</span><br><span class="line">				k = *((*unsafe.Pointer)(k))</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> !alg.equal(key, k) &#123;</span><br><span class="line">				<span class="keyword">continue</span></span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 走到这里说明map里找到一个重复的key，更新key-value，跳到第5步</span></span><br><span class="line">			<span class="keyword">if</span> t.needkeyupdate() &#123;</span><br><span class="line">				typedmemmove(t.key, k, key)</span><br><span class="line">			&#125;</span><br><span class="line">			val = add(unsafe.Pointer(b), dataOffset+bucketCnt*<span class="keyword">uintptr</span>(t.keysize)+i*<span class="keyword">uintptr</span>(t.valuesize))</span><br><span class="line">			<span class="keyword">goto</span> done <span class="comment">// 更新Key后跳到第5步</span></span><br><span class="line">		&#125;</span><br><span class="line">		ovf := b.overflow(t)</span><br><span class="line">		<span class="keyword">if</span> ovf == <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">break</span> <span class="comment">// 遍历完整个溢出链表，没找到能插入的空位，结束循环，下一步再追加一个溢出桶进来</span></span><br><span class="line">		&#125;</span><br><span class="line">		b = ovf <span class="comment">// 继续遍历下一个溢出桶</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>4 插入 key</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mapassign</span><span class="params">(t *maptype, h *hmap, key unsafe.Pointer)</span> <span class="title">unsafe</span>.<span class="title">Pointer</span></span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 这里判断要不要扩容，我们第4章再讲</span></span><br><span class="line">    <span class="keyword">if</span> !h.growing() &amp;&amp; (overLoadFactor(h.count+<span class="number">1</span>, h.B) || tooManyOverflowBuckets(h.noverflow, h.B)) &#123;</span><br><span class="line">		hashGrow(t, h)</span><br><span class="line">		<span class="keyword">goto</span> again <span class="comment">// Growing the table invalidates everything, so try again</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> inserti == <span class="literal">nil</span> &#123; <span class="comment">// inserti == nil说明上1步没找到空位，整个链表是满的，这里添加一个新的溢出桶上去</span></span><br><span class="line">		newb := h.newoverflow(t, b) <span class="comment">// 分配新溢出桶，优先用3.1章节预留的溢出桶，用完了则分配一个新桶内存</span></span><br><span class="line">		inserti = &amp;newb.tophash[<span class="number">0</span>]</span><br><span class="line">		insertk = add(unsafe.Pointer(newb), dataOffset)</span><br><span class="line">		val = add(insertk, bucketCnt*<span class="keyword">uintptr</span>(t.keysize))</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 当key或value的类型大小超过一定值时，桶只存储key或value的指针。这里分配空间并取指针</span></span><br><span class="line">	<span class="keyword">if</span> t.indirectkey() &#123;</span><br><span class="line">		kmem := newobject(t.key)</span><br><span class="line">		*(*unsafe.Pointer)(insertk) = kmem</span><br><span class="line">		insertk = kmem</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> t.indirectvalue() &#123;</span><br><span class="line">		vmem := newobject(t.elem)</span><br><span class="line">		*(*unsafe.Pointer)(val) = vmem</span><br><span class="line">	&#125;</span><br><span class="line">	typedmemmove(t.key, insertk, key) <span class="comment">// 在桶中对应位置插入key</span></span><br><span class="line">	*inserti = top <span class="comment">// 插入tophash，hash值高8位</span></span><br><span class="line">	h.count++ <span class="comment">// 插入了新的键值对，h.count数量+1</span></span><br><span class="line"></span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>5 结束插入</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">func</span> <span class="title">mapassign</span><span class="params">(t *maptype, h *hmap, key unsafe.Pointer)</span> <span class="title">unsafe</span>.<span class="title">Pointer</span></span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    </span><br><span class="line"> done:</span><br><span class="line">	<span class="keyword">if</span> h.flags&amp;hashWriting == <span class="number">0</span> &#123;</span><br><span class="line">		throw(<span class="string">"concurrent map writes"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	h.flags &amp;^= hashWriting <span class="comment">// 释放hashWriting标志位</span></span><br><span class="line">	<span class="keyword">if</span> t.indirectvalue() &#123;</span><br><span class="line">		val = *((*unsafe.Pointer)(val))</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> val <span class="comment">// 返回value可插入位置的指针，注意，value还没插入</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>只插入了tophash和key，就结束了吗？value还没插入呢</li>
+<li>是的，mapassign()只插入tophash和key，并返回val指针，编译器会在调用mapassign()后用汇编往val插入value</li>
+<li>google大佬这么骚气的操作，是为了减少value值传递的次数吗？</li>
+</ul>
+<h2 id="33-删除"><span id="33-删除">3.3 删除</span></h2><ol>
+<li>删除与插入类似，前面的步骤都是参数和状态判断、定位key-value位置，然后clear对应的内存。不展开说。以下是几个关键点：</li>
+</ol>
+<ul>
+<li>删除过程中也会置hashWriting标志</li>
+<li>当key/value过大时，hash表里存储的是指针，这时候用软删除，置指针为nil，数据交给gc去删。当然，这是map的内部处理，外层是无感知的，拿到的都是值拷贝</li>
+<li>无论Key/value是值类型还是指针类型，删除操作都只影响hash表，外层已经拿到的数据不受影响。尤其是指针类型，外层的指针还能继续使用</li>
+</ul>
+<ol>
+<li>由于定位key位置的方式是查找tophash，所以删除操作对tophash的处理是关键：</li>
+</ol>
+<ul>
+<li>map首先将对应位置的tophash[i]置为emptyOne，表示该位置已被删除</li>
+<li>如果tophash[i]不是整个链表的最后一个，则只置emptyOne标志，该位置被删除但未释放，后续插入操作不能使用此位置</li>
+<li>如果tophash[i]是链表最后一个有效节点了，则把链表最后面的所有标志为emptyOne的位置，都置为emptyRest。置为emptyRest的位置可以在后续的插入操作中被使用。</li>
+<li>这种删除方式，以少量空间来避免桶链表和桶内的数据移动。事实上，go 数据一旦被插入到桶的确切位置，map是不会再移动该数据在桶中的位置了。</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mapdelete</span><span class="params">(t *maptype, h *hmap, key unsafe.Pointer)</span></span> &#123;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">            b.tophash[i] = emptyOne <span class="comment">// 先标记删除</span></span><br><span class="line">			<span class="comment">// 如果b.tophash[i]不是最后一个元素，则暂时先占着坑。emptyOne标记的位置暂时不能被插入新元素(见3.2章节插入函数)</span></span><br><span class="line">			<span class="keyword">if</span> i == bucketCnt<span class="number">-1</span> &#123;</span><br><span class="line">				<span class="keyword">if</span> b.overflow(t) != <span class="literal">nil</span> &amp;&amp; b.overflow(t).tophash[<span class="number">0</span>] != emptyRest &#123;</span><br><span class="line">					<span class="keyword">goto</span> notLast</span><br><span class="line">				&#125;</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="keyword">if</span> b.tophash[i+<span class="number">1</span>] != emptyRest &#123;</span><br><span class="line">					<span class="keyword">goto</span> notLast</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">for</span> &#123; <span class="comment">// 如果b.tophash[i]是最后一个元素，则把末尾的emptyOne全部清除置为emptyRest</span></span><br><span class="line">				b.tophash[i] = emptyRest</span><br><span class="line">				<span class="keyword">if</span> i == <span class="number">0</span> &#123;</span><br><span class="line">					<span class="keyword">if</span> b == bOrig &#123;</span><br><span class="line">						<span class="keyword">break</span> <span class="comment">// beginning of initial bucket, we're done.</span></span><br><span class="line">					&#125;</span><br><span class="line">					<span class="comment">// Find previous bucket, continue at its last entry.</span></span><br><span class="line">					c := b</span><br><span class="line">					<span class="keyword">for</span> b = bOrig; b.overflow(t) != c; b = b.overflow(t) &#123;</span><br><span class="line">					&#125;</span><br><span class="line">					i = bucketCnt - <span class="number">1</span></span><br><span class="line">				&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">					i--</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">if</span> b.tophash[i] != emptyOne &#123;</span><br><span class="line">					<span class="keyword">break</span></span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="34-查找"><span id="34-查找">3.4 查找</span></h2><p>查找操作由mapaccess开头的一组函数实现。前面的章节在插入和删除之前都得先定位查找到元素，逻辑是类似的，也比较简单，就不细说了：</p>
+<ul>
+<li>mapaccess1()：通过Key查找，返回value指针，用于val := map[key]。未找到时返回value类型的0值。</li>
+<li>mapaccess2()：通过key查找，返回value指针，以及bool类型的是否查找成功的标志，用于val, ok := map[key]。未找到时返回value类型的0值。</li>
+<li>mapaccessK()：通过key查找，返回key和value指针，用于迭代器(range)。未找到时返回空指针</li>
+<li>mapaccess1_fat()，对mapaccess1()的封装，区别是mapaccess1_fat()多了个zero参数，未找到时返回zero</li>
+<li>mapaccess2_fat()，也是对mapaccess1()的封装。相比mapaccess1_fat()，本函数增加一个是否查找成功的标志</li>
+</ul>
+<h2 id="35-range迭代"><span id="35-range迭代">3.5 range迭代</span></h2><p>map的迭代是通过hiter结构和对应的两个辅助函数实现的。hiter结构由编译器在调用辅助函数之前创建并传入，每次迭代结果也由hiter结构传回。下方的it即是hiter结构体的指针变量。</p>
+<h3 id="351-初始化迭代器mapiterinit"><span id="351-初始化迭代器mapiterinit">3.5.1 初始化迭代器mapiterinit()</span></h3><p>mapiterinit()函数主要是决定我们从哪个位置开始迭代，为什么是从哪个位置，而不是直接从hash数组头部开始呢？《go程序设计语言》好像提到过，hash表中数据每次插入的位置是变化的（其实是因为实现的原因，一方面hash种子是随机的，这导致相同的数据在不同的map变量内的hash值不同；另一方面即使同一个map变量内，数据删除再添加的位置也有可能变化，因为在同一个桶及溢出链表中数据的位置不分先后），所以为了防止用户错误的依赖于每次迭代的顺序，map作者干脆让相同的map每次迭代的顺序也是随机的。<br>迭代顺序随机的实现方式也简单，直接从随机的一个位置开始就行了：</p>
+<ul>
+<li>it.startBucket：这个是hash数组的偏移量，表示遍历从这个桶开始</li>
+<li>it.offset：这个是桶内的偏移量，表示每个桶的遍历都从这个偏移量开始</li>
+</ul>
+<p>于是，map的遍历过程如下：</p>
+<ul>
+<li>从hash数组中第it.startBucket个桶开始，先遍历hash桶，然后是这个桶的溢出链表。</li>
+<li>之后hash数组偏移量+1，继续前一步动作。</li>
+<li>遍历每一个桶，无论是hash桶还是溢出桶，都从it.offset偏移量开始。（如果只是随机一个开始的桶，range结果还是有序的；但每个桶都加it.offset偏移，这个输出结果就有点扑朔迷离，大家可以亲手试下，对同一个map多次range）</li>
+<li>当迭代器经过一轮循环回到it.startBucket的位置，结束遍历。</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mapiterinit</span><span class="params">(t *maptype, h *hmap, it *hiter)</span></span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 随机一个偏移量来开始</span></span><br><span class="line">    r := <span class="keyword">uintptr</span>(fastrand())</span><br><span class="line">    <span class="keyword">if</span> h.B &gt; <span class="number">31</span>-bucketCntBits &#123;</span><br><span class="line">		r += <span class="keyword">uintptr</span>(fastrand()) &lt;&lt; <span class="number">31</span></span><br><span class="line">    &#125;</span><br><span class="line">	it.startBucket = r &amp; bucketMask(h.B)</span><br><span class="line">	it.offset = <span class="keyword">uint8</span>(r &gt;&gt; h.B &amp; (bucketCnt - <span class="number">1</span>))</span><br><span class="line">	</span><br><span class="line">	...</span><br><span class="line">	</span><br><span class="line">	mapiternext(it) <span class="comment">// 初始化迭代器的同时也返回第1对key/value</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="352-迭代过程mapiternext"><span id="352-迭代过程mapiternext">3.5.2 迭代过程mapiternext()</span></h3><p>上一节迭代循环的过程很清晰了，这里我们说明几个重要的参数：</p>
+<ul>
+<li>it.startBucket：开始的桶</li>
+<li>it.offset：每个桶开始的偏移量</li>
+<li>it.bptr：当前遍历的桶</li>
+<li>it.i：it.bptr已经遍历的键值对数量，i初始为0，当i=8时表示这个桶遍历完了，将it.bptr移向下一个桶</li>
+<li>it.key：每次迭代的结果</li>
+<li>it.value：每次迭代的结果</li>
+</ul>
+<p>此外，迭代还需要关注扩容缩容的情况：</p>
+<ul>
+<li>如果是在迭代开始后才growing，这种情况当前的逻辑没处理，迭代有可能异常。呃，go map不支持并发。</li>
+<li>如果是先growing，再开始迭代，这是有可能的。这种情况下，会先到旧hash表中检查key对应的桶有没有被疏散，未疏散则遍历旧桶，已疏散则遍历新hash表里对应的桶。</li>
+</ul>
+<h1 id="4-go-map的扩容缩容"><span id="4-go-map的扩容缩容">4. go map的扩容缩容</span></h1><h2 id="41-扩容缩容的基本原理"><span id="41-扩容缩容的基本原理">4.1 扩容缩容的基本原理</span></h2><p>go map的扩容缩容都是grow相关的函数，这里扩容是真的，缩容是伪缩容，后面我会解释。我们先看下触发条件：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mapassign</span><span class="params">(t *maptype, h *hmap, key unsafe.Pointer)</span> <span class="title">unsafe</span>.<span class="title">Pointer</span></span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> !h.growing() &amp;&amp; (overLoadFactor(h.count+<span class="number">1</span>, h.B) || tooManyOverflowBuckets(h.noverflow, h.B)) &#123;</span><br><span class="line">		hashGrow(t, h)</span><br><span class="line">		<span class="keyword">goto</span> again <span class="comment">// Growing the table invalidates everything, so try again</span></span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// overLoadFactor()返回true则触发扩容，即map的count大于hash桶数量(2^B)*6.5</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">overLoadFactor</span><span class="params">(count <span class="keyword">int</span>, B <span class="keyword">uint8</span>)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> count &gt; bucketCnt &amp;&amp; <span class="keyword">uintptr</span>(count) &gt; loadFactorNum*(bucketShift(B)/loadFactorDen)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// tooManyOverflowBuckets()，顾名思义，溢出桶太多了触发缩容</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">tooManyOverflowBuckets</span><span class="params">(noverflow <span class="keyword">uint16</span>, B <span class="keyword">uint8</span>)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> B &gt; <span class="number">15</span> &#123;</span><br><span class="line">		B = <span class="number">15</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> noverflow &gt;= <span class="keyword">uint16</span>(<span class="number">1</span>)&lt;&lt;(B&amp;<span class="number">15</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>map只在插入元素即mapassign()函数中对是否扩容缩容进行触发，条件即是上面这段代码：</p>
+<ul>
+<li>条件1：当前不处在growing状态</li>
+<li>条件2-1：触发扩容：map的数据量count大于hash桶数量(2B)*6.5。注意这里的(2B)只是hash数组大小，不包括溢出的桶</li>
+<li>条件2-2：触发缩容：溢出的桶数量noverflow&gt;=32768(1&lt;&lt;15)或者&gt;=hash数组大小。</li>
+</ul>
+<p>仔细观察触发的代码，扩容和缩容是同一个函数，这是怎么做到的呢？在hashGrow()开始，会先判断是否满足扩容条件，如果满足就表明这次是扩容，不满足就一定是缩容条件触发了。扩容和缩容剩下的逻辑，主要区别就在于容量变化，就是hmap.B参数，扩容时B+1则hash表容量扩大1倍，缩容时hash表容量不变。</p>
+<ul>
+<li>h.oldbuckets：指向旧的hash数组，即当前的h.buckets</li>
+<li>h.buckets：指向新创建的hash数组</li>
+</ul>
+<p>到这里触发的主要工作已经完成，接下来就是怎么把元素搬迁到新hash表里了。如果现在就一次全量搬迁过去，显然接下来会有比较长的一段时间map被占用（不支持并发）。所以搬迁的工作是异步增量搬迁的。<br>在插入和删除的函数内都有下面一段代码用于在每次插入和删除操作时，执行一次搬迁工作：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> h.growing() &#123; <span class="comment">// 当前处于搬迁状态</span></span><br><span class="line">		growWork(t, h, bucket) <span class="comment">// 调用搬迁函数</span></span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">growWork</span><span class="params">(t *maptype, h *hmap, bucket <span class="keyword">uintptr</span>)</span></span> &#123;</span><br><span class="line">	<span class="comment">// 将当前需要处理的桶搬迁</span></span><br><span class="line">	evacuate(t, h, bucket&amp;h.oldbucketmask())</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> h.growing() &#123; <span class="comment">// 再多搬迁一个桶</span></span><br><span class="line">		evacuate(t, h, h.nevacuate)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>每执行一次插入或删除，都会调用growWork搬迁0~2个hash桶（有可能这次需要搬迁的2个桶在此之前都被搬过了）</li>
+<li>搬迁是以hash桶为单位的，包含对应的hash桶和这个桶的溢出链表</li>
+<li>被delete掉的元素(emptyone标志)会被舍弃（这是缩容的关键）</li>
+</ul>
+<h2 id="42-为什么叫伪缩容如何实现真缩容"><span id="42-为什么叫伪缩容如何实现真缩容">4.2 为什么叫“伪缩容”？如何实现“真缩容”？</span></h2><p>现在可以解释为什么我把map的缩容叫做伪缩容了：因为缩容仅仅针对溢出桶太多的情况，触发缩容时hash数组的大小不变，即hash数组所占用的空间只增不减。也就是说，如果我们把一个已经增长到很大的map的元素挨个全部删除掉，hash表所占用的内存空间也不会被释放。</p>
+<p>所以如果要实现“真缩容”，需自己实现缩容搬迁，即创建一个较小的map，将需要缩容的map的元素挨个搬迁过来：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// go map缩容代码示例</span></span><br><span class="line">myMap := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">int</span>]<span class="keyword">int</span>, <span class="number">1000000</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 假设这里我们对bigMap做了很多次插入，之后又做了很多次删除，此时bigMap的元素数量远小于hash表大小</span></span><br><span class="line"><span class="comment">// 接下来我们开始缩容</span></span><br><span class="line">smallMap := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">int</span>]<span class="keyword">int</span>, <span class="built_in">len</span>(myMap))</span><br><span class="line"><span class="keyword">for</span> k, v := <span class="keyword">range</span> myMap &#123;</span><br><span class="line">    smallMap[k] = v</span><br><span class="line">&#125;</span><br><span class="line">myMap = smallMap <span class="comment">// 缩容完成，原来的map被我们丢弃，交给gc去清理</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="5-qampa关键知识点"><span id="5-qampa关键知识点">5 Q&amp;A关键知识点</span></h1><h2 id="51-基本原理"><span id="51-基本原理">5.1 基本原理</span></h2><ul>
+<li>底层是hash实现，数据结构为hash数组 + 桶 + 溢出的桶链表，每个桶存储最多8个key-value对</li>
+<li>查找和插入的原理：key的hash值（低阶位）与桶数量相与，得到key所在的hash桶，再用key的高8位与桶中的tophash[i]对比，相同则进一步对比key值，key值相等则找到</li>
+<li>go map不支持并发。插入、删除、搬迁等操作会置writing标志，检测到并发直接panic</li>
+<li>每次扩容hash表增大1倍，hash表只增不减</li>
+<li>支持有限缩容，delete操作只置删除标志位，释放溢出桶的空间依靠触发缩容来实现。</li>
+<li>map在使用前必须初始化，否则panic：已初始化的map是make(map[key]value)或make(map[key]value, hint)这两种形式。而new或var xxx map[key]value这两种形式是未初始化的，直接使用会panic。</li>
+</ul>
+<h2 id="52-时间复杂度和空间复杂度分析"><span id="52-时间复杂度和空间复杂度分析">5.2 时间复杂度和空间复杂度分析</span></h2><p>时间复杂度，go map是hash实现，我们先不管具体原理，江湖套路hash实现的就叫它O(1)的时间复杂度：</p>
+<ul>
+<li>正常情况，且不考虑扩容状态，复杂度O(1)：通过hash值定位桶是O(1)，一个桶最多8个元素，合理的hash算法应该能把元素相对均匀散列，所以溢出链表（如果有）也不会太长，所以虽然在桶和溢出链表上定位key是遍历，考虑到数量小也可以认为是O(1)</li>
+<li>正常情况，处于扩容状态时，复杂度也是O(1)：相比于上一种状态，扩容会增加搬迁最多2个桶和溢出链表的时间消耗，当溢出链表不太长时，复杂度也可以认为是O(1)</li>
+<li>极端情况，散列极不均匀，大部分数据被集中在一条散列链表上，复杂度退化为O(n)。</li>
+</ul>
+<p>go采用的hash算法应是很成熟的算法，极端情况暂不考虑。所以综合情况下go map的时间复杂度应为O(1)</p>
+<p>空间复杂度分析：<br>首先我们不考虑因删除大量元素导致的空间浪费情况（这种情况现在go是留给程序员自己解决），只考虑一个持续增长状态的map的一个空间使用率：<br>由于溢出桶数量超过hash桶数量时会触发缩容，所以最坏的情况是数据被集中在一条链上，hash表基本是空的，这时空间浪费O(n)。<br>最好的情况下，数据均匀散列在hash表上，没有元素溢出，这时最好的空间复杂度就是扩散因子决定了，当前go的扩散因子由全局变量决定，即loadFactorNum/loadFactorDen = 6.5。即平均每个hash桶被分配到6.5个元素以上时，开始扩容。所以最小的空间浪费是(8-6.5)/8 = 0.1875，即O(0.1875n)</p>
+<p>结论：go map的空间复杂度（指除去正常存储元素所需空间之外的空间浪费）是O(0.1875n) ~ O(n)之间。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/aaf3975f/" title="go map数据结构" target="_blank" rel="external">https://lxb.wiki/aaf3975f/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/3bdd21ca/" title="分布式系统的CAP理论"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/3af5472b/" title="网络 IO 模型"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:lxb@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> lxbwolf </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+
+
+  <script src='https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: true,
+    appId: '6bn4rcWK3ehmM0hbKJmE991u-MdYXbMMI',
+    appKey: 'jkoCGVIFrcsbsKrgg7CiPsWP',
+    placeholder: 'Just go go',
+    avatar: '',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+
+</body>
+</html>
