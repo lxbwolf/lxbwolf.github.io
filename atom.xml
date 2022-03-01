@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://lxb.wiki/"/>
-  <updated>2022-03-01T07:02:30.596Z</updated>
+  <updated>2022-03-01T08:41:25.953Z</updated>
   <id>https://lxb.wiki/</id>
   
   <author>
@@ -17,42 +17,38 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>学习路线</title>
-    <link href="https://lxb.wiki/78259bf9/"/>
-    <id>https://lxb.wiki/78259bf9/</id>
-    <published>2021-09-15T14:00:13.000Z</published>
-    <updated>2022-03-01T07:02:30.596Z</updated>
+    <title>hexo支持mermaid</title>
+    <link href="https://lxb.wiki/6541b31d/"/>
+    <id>https://lxb.wiki/6541b31d/</id>
+    <published>2021-09-15T13:34:12.000Z</published>
+    <updated>2022-03-01T08:41:25.953Z</updated>
     
-    <content type="html"><![CDATA[<pre class="mermaid">graph LR    0(复习路线)---10(语言) & 11(架构) & 12(网络)    10 --- 100(C++) & 101(Go)    101 --- 1010(Go 的内存分配)    101 --- 1011(MPG 模型)    101 --- 1012(捕获异常)    101 --- 1013(逃逸分析)    101 --- 1014(实现单例)    11 --- 110("稳定性、可用性")    11 --- 111(高并发)    11 --- 112(分布式数据一致性)    11 --- 113(微服务)    11 --- 114(存储)    114 --- 1140(Redis) --- 11400(持久化) & 11401(Redis线程模型) & 11402(Redis 数据结构)    114 --- 1141(MySQL) --- 11410(索引) & 11411("B 树和 B+树") & 11412(MySQL 如何查询数据) & 11413(事务隔离)    11 --- 115(中间件)    12 --- 120("TCP 三次握手、四次挥手")    12 --- 121("TCP/UDP 区别，应用场景")    12 --- 122(epoll)    12 --- 123(Reactor 模式)    12 --- 124(网络 IO 模型)</pre>]]></content>
+    <content type="html"><![CDATA[<!-- toc --><ul><li><a href="#前言">前言</a></li><li><a href="#安装插件">安装插件</a></li><li><a href="#编辑配置文件">编辑配置文件</a></li><li><a href="#在-ejs-中引入-mermaidjs">在 ejs 中引入 mermaid.js</a></li><li><a href="#qa">Q&amp;A</a></li></ul><!-- tocstop --><h2 id="前言"><span id="前言">前言</span></h2><p>一定要参考[官网](<a href="https://mermaid-js.github.io/mermaid/#/" target="_blank" rel="noopener">mermaid - Markdownish syntax for generating flowcharts, sequence diagrams, class diagrams, gantt charts and git graphs. (mermaid-js.github.io)</a>)</p><p>不要相信垃圾 CSDN</p><h2 id="安装插件"><span id="安装插件">安装插件</span></h2><p>npm 安装</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install hexo-filter-mermaid-diagrams</span><br></pre></td></tr></table></figure><p>项目 [GitHub 主页]<a href="https://github.com/webappdevelp/hexo-filter-mermaid-diagrams" target="_blank" rel="noopener">webappdevelp/hexo-filter-mermaid-diagrams: mermaid diagrams for hexo (github.com)</a></p><h2 id="编辑配置文件"><span id="编辑配置文件">编辑配置文件</span></h2><p>修改文件 <code>themes/pure/_config.yml</code></p><p>文件最好添加以下内容：</p><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># mermaid chart</span></span><br><span class="line"><span class="attr">mermaid:</span> <span class="comment">## mermaid url https://github.com/knsv/mermaid</span></span><br><span class="line"><span class="attr">  enable:</span> <span class="literal">true</span>  <span class="comment"># default true</span></span><br><span class="line"><span class="attr">  version:</span> <span class="string">"7.1.2"</span> <span class="comment"># default v7.1.2</span></span><br><span class="line"><span class="attr">  options:</span>  <span class="comment"># find more api options from https://github.com/knsv/mermaid/blob/master/src/mermaidAPI.js</span></span><br><span class="line">    <span class="comment">#startOnload: true  // default true</span></span><br></pre></td></tr></table></figure><h2 id="在-ejs-中引入-mermaidjs"><span id="在-ejs-中引入-mermaidjs">在 ejs 中引入 mermaid.js</span></h2><p>修改 <code>themes/pure/layout/_common/footer.ejs</code></p><p>添加以下内容</p><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&lt;% <span class="keyword">if</span> (theme.mermaid.enable) &#123; %&gt;</span><br><span class="line">  &lt;script src=<span class="string">'https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'</span>&gt;<span class="xml"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span></span><br><span class="line">  &lt;script&gt;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">window</span>.mermaid) &#123;</span><br><span class="line">      mermaid.initialize(&#123;<span class="attr">theme</span>: <span class="string">'forest'</span>&#125;);</span><br><span class="line">    &#125;</span><br><span class="line">  &lt;<span class="regexp">/script&gt;</span></span><br><span class="line"><span class="regexp">&lt;% &#125; %&gt;</span></span><br></pre></td></tr></table></figure><h2 id="qampa"><span id="qampa">Q&amp;A</span></h2><p>如果加载完后，显示的图不正确，那么很有可能是因为引入 <code>mermaid.min.js</code> 的链接不正确</p>]]></content>
     
     <summary type="html">
     
       
       
-        &lt;pre class=&quot;mermaid&quot;&gt;graph LR
-    0(复习路线)---10(语言) &amp; 11(架构) &amp; 12(网络)
-    10 --- 100(C++) &amp; 101(Go)
-    101 --- 1010(Go 的内存分配)
-    101 --- 10
+        &lt;!-- toc --&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;#前言&quot;&gt;前言&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#安装插件&quot;&gt;安装插件&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#编辑配置文件&quot;&gt;编辑配置文件&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#在-ejs
       
     
     </summary>
     
     
-      <category term="Design" scheme="https://lxb.wiki/categories/Design/"/>
+      <category term="Tools" scheme="https://lxb.wiki/categories/Tools/"/>
     
     
       <category term="工具" scheme="https://lxb.wiki/tags/%E5%B7%A5%E5%85%B7/"/>
     
-      <category term="Go" scheme="https://lxb.wiki/tags/Go/"/>
+      <category term="mermaid" scheme="https://lxb.wiki/tags/mermaid/"/>
     
-      <category term="mysql" scheme="https://lxb.wiki/tags/mysql/"/>
-    
-      <category term="redis" scheme="https://lxb.wiki/tags/redis/"/>
-    
-      <category term="网络" scheme="https://lxb.wiki/tags/%E7%BD%91%E7%BB%9C/"/>
-    
-      <category term="架构" scheme="https://lxb.wiki/tags/%E6%9E%B6%E6%9E%84/"/>
+      <category term="hexo" scheme="https://lxb.wiki/tags/hexo/"/>
     
   </entry>
   
