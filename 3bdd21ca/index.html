@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+
+  
+  <title>分布式系统的CAP理论 | Xiaobin&#39;s Blog</title>
+  <meta name="description" content="CAP理论概述 CAP的定义 Consistency 一致性 Availability 可用性 Partition Tolerance分区容错性   CAP的证明 CAP权衡 CA without P CP without A AP wihtout C      CAP理论概述CAP理论：一个分布式系统最多只能同时满足一致性（Consistency）、可用性（Availability）和分区">
+<meta name="keywords" content="分布式">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式系统的CAP理论">
+<meta property="og:url" content="https://lxb.wiki/3bdd21ca/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Blog">
+<meta property="og:description" content="CAP理论概述 CAP的定义 Consistency 一致性 Availability 可用性 Partition Tolerance分区容错性   CAP的证明 CAP权衡 CA without P CP without A AP wihtout C      CAP理论概述CAP理论：一个分布式系统最多只能同时满足一致性（Consistency）、可用性（Availability）和分区">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226145516.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226154057.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226154153.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226154349.png">
+<meta property="og:updated_time" content="2022-02-26T07:50:30.182Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="分布式系统的CAP理论">
+<meta name="twitter:description" content="CAP理论概述 CAP的定义 Consistency 一致性 Availability 可用性 Partition Tolerance分区容错性   CAP的证明 CAP权衡 CA without P CP without A AP wihtout C      CAP理论概述CAP理论：一个分布式系统最多只能同时满足一致性（Consistency）、可用性（Availability）和分区">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226145516.png">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/3bdd21ca/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+</head>
+
+
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin.Liu</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:lxb@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><span class="category-list-count">24</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/RPI/">RPI</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">17</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">16</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.11px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/业务/" style="font-size: 13px;">业务</a> <a href="/tags/事故/" style="font-size: 13px;">事故</a> <a href="/tags/代码/" style="font-size: 13px;">代码</a> <a href="/tags/优化/" style="font-size: 13.11px;">优化</a> <a href="/tags/分布式/" style="font-size: 13.11px;">分布式</a> <a href="/tags/博客/" style="font-size: 13px;">博客</a> <a href="/tags/工具/" style="font-size: 13.78px;">工具</a> <a href="/tags/架构/" style="font-size: 13.22px;">架构</a> <a href="/tags/树莓派/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/破解/" style="font-size: 13px;">破解</a> <a href="/tags/稳定性/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/端口/" style="font-size: 13px;">端口</a> <a href="/tags/算法/" style="font-size: 13.33px;">算法</a> <a href="/tags/编译器/" style="font-size: 13.33px;">编译器</a> <a href="/tags/网络/" style="font-size: 13.11px;">网络</a> <a href="/tags/翻译/" style="font-size: 13.89px;">翻译</a> <a href="/tags/解决/" style="font-size: 13.11px;">解决</a> <a href="/tags/跳表/" style="font-size: 13.11px;">跳表</a> <a href="/tags/进程/" style="font-size: 13.11px;">进程</a> <a href="/tags/邮件/" style="font-size: 13.11px;">邮件</a> <a href="/tags/链表/" style="font-size: 13px;">链表</a> <a href="/tags/锚点失效/" style="font-size: 13px;">锚点失效</a> <a href="/tags/陷阱/" style="font-size: 13px;">陷阱</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/ea5f4ef1/" class="title">【译】如何把WordPress网站迁移到新主机</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-04-24T13:36:34.000Z" itemprop="datePublished">2022-04-24</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Golang/">Golang</a>
+              </p>
+              <p class="item-title">
+                <a href="/dfd7f257/" class="title">【译】Go中的模糊测试</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-04-19T13:30:29.000Z" itemprop="datePublished">2022-04-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Design/">Design</a>
+              </p>
+              <p class="item-title">
+                <a href="/f17b426c/" class="title">【转】Redis 分布式锁使用不当事故记录</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-04-01T13:42:21.000Z" itemprop="datePublished">2022-04-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Design/">Design</a>
+              </p>
+              <p class="item-title">
+                <a href="/f5fbcabb/" class="title">【译】解决 CI/CD 中的仓库阻抗失配</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-03-26T06:32:25.000Z" itemprop="datePublished">2022-03-26</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/3632d5ff/" class="title">Postman 自动填充 Header</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-03-10T14:51:15.000Z" itemprop="datePublished">2022-03-10</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-分布式系统的CAP理论" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      分布式系统的CAP理论
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/3bdd21ca/" class="article-date">
+	  <time datetime="2021-09-10T13:54:27.000Z" itemprop="datePublished">2021-09-10</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Design/">Design</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/分布式/">分布式</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/3bdd21ca/#comments" class="article-comment-link">评论</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 3.4k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 11(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#cap理论概述">CAP理论概述</a></li>
+<li><a href="#cap的定义">CAP的定义</a><ul>
+<li><a href="#consistency-一致性">Consistency 一致性</a></li>
+<li><a href="#availability-可用性">Availability 可用性</a></li>
+<li><a href="#partition-tolerance分区容错性">Partition Tolerance分区容错性</a></li>
+</ul>
+</li>
+<li><a href="#cap的证明">CAP的证明</a></li>
+<li><a href="#cap权衡">CAP权衡</a><ul>
+<li><a href="#ca-without-p">CA without P</a></li>
+<li><a href="#cp-without-a">CP without A</a></li>
+<li><a href="#ap-wihtout-c">AP wihtout C</a></li>
+</ul>
+</li>
+</ul>
+<!-- tocstop -->
+
+<h2><span id="cap理论概述">CAP理论概述</span></h2><p>CAP理论：一个分布式系统最多只能同时满足一致性（Consistency）、可用性（Availability）和分区容错性（Partition tolerance）这三项中的两项。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226145516.png" alt></p>
+<blockquote>
+<p>CAP理论中的CA和数据库事务中ACID的CA并不是同一回事儿。两者之中的C都是都是一致性(Consistency)。CAP中的A指的是可用性（Availability），而ACID中的A指的是原子性（Atomicity)，切勿混为一谈。</p>
+</blockquote>
+<h2><span id="cap的定义">CAP的定义</span></h2><h3><span id="consistency-一致性">Consistency 一致性</span></h3><p>一致性指“<code>all nodes see the same data at the same time</code>”，即更新操作成功并返回客户端完成后，所有节点在同一时间的数据完全一致，所以，一致性，说的就是数据一致性。<a href="http://www.hollischuang.com/archives/663" target="_blank" rel="noopener">分布式的一致性</a></p>
+<p>对于一致性，可以分为从客户端和服务端两个不同的视角。从客户端来看，一致性主要指的是多并发访问时更新过的数据如何获取的问题。从服务端来看，则是更新如何复制分布到整个系统，以保证数据最终一致。</p>
+<p>一致性是因为有并发读写才有的问题，因此在理解一致性的问题时，一定要注意结合考虑并发读写的场景。</p>
+<p>从客户端角度，多进程并发访问时，更新过的数据在不同进程如何获取的不同策略，决定了不同的一致性。</p>
+<p><strong>三种一致性策略</strong></p>
+<p>对于关系型数据库，要求更新过的数据能被后续的访问都能看到，这是强一致性。</p>
+<p>如果能容忍后续的部分或者全部访问不到，则是弱一致性。</p>
+<p>如果经过一段时间后要求能访问到更新后的数据，则是最终一致性。</p>
+<p>CAP中说，不可能同时满足的这个一致性指的是强一致性。</p>
+<h3><span id="availability-可用性">Availability 可用性</span></h3><p>可用性指“<code>Reads and writes always succeed</code>”，即服务一直可用，而且是正常响应时间。</p>
+<p>对于一个可用性的分布式系统，每一个非故障的节点必须对每一个请求作出响应。所以，一般我们在衡量一个系统的可用性的时候，都是通过停机时间来计算的。</p>
+<table>
+<thead>
+<tr>
+<th align="center">可用性分类</th>
+<th align="center">可用水平（%）</th>
+<th align="center">年可容忍停机时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">容错可用性</td>
+<td align="center">99.9999</td>
+<td align="center">&lt;1 min</td>
+</tr>
+<tr>
+<td align="center">极高可用性</td>
+<td align="center">99.999</td>
+<td align="center">&lt;5 min</td>
+</tr>
+<tr>
+<td align="center">具有故障自动恢复能力的可用性</td>
+<td align="center">99.99</td>
+<td align="center">&lt;53 min</td>
+</tr>
+<tr>
+<td align="center">高可用性</td>
+<td align="center">99.9</td>
+<td align="center">&lt;8.8h</td>
+</tr>
+<tr>
+<td align="center">商品可用性</td>
+<td align="center">99</td>
+<td align="center">&lt;43.8 min</td>
+</tr>
+</tbody></table>
+<p>通常我们描述一个系统的可用性时，我们说淘宝的系统可用性可以达到5个9，意思就是说他的可用水平是99.999%，即全年停机时间不超过 <code>(1-0.99999)*365*24*60 = 5.256 min</code>，这是一个极高的要求。</p>
+<p>好的可用性主要是指系统能够很好的为用户服务，不出现用户操作失败或者访问超时等用户体验不好的情况。一个分布式系统，上下游设计很多系统如负载均衡、WEB服务器、应用代码、数据库服务器等，任何一个节点的不稳定都可以影响可用性。</p>
+<h3><span id="partition-tolerance分区容错性">Partition Tolerance分区容错性</span></h3><p>分区容错性指“<code>the system continues to operate despite arbitrary message loss or failure of part of the system</code>”，即分布式系统在遇到某节点或网络分区故障的时候，仍然能够对外提供满足一致性和可用性的服务。</p>
+<p>分区容错性和扩展性紧密相关。在分布式应用中，可能因为一些分布式的原因导致系统无法正常运转。好的分区容错性要求能够使应用虽然是一个分布式系统，而看上去却好像是在一个可以运转正常的整体。比如现在的分布式系统中有某一个或者几个机器宕掉了，其他剩下的机器还能够正常运转满足系统需求，或者是机器之间有网络异常，将分布式系统分隔未独立的几个部分，各个部分还能维持分布式系统的运作，这样就具有好的分区容错性。</p>
+<p>简单点说，就是在网络中断，消息丢失的情况下，系统如果还能正常工作，就是有比较好的分区容错性。</p>
+<h2><span id="cap的证明">CAP的证明</span></h2><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226154057.png" alt></p>
+<p>如上图，是我们证明CAP的基本场景，网络中有两个节点N1和N2，可以简单的理解N1和N2分别是两台计算机，他们之间网络可以连通，N1中有一个应用程序A，和一个数据库V，N2也有一个应用程序B2和一个数据库V。现在，A和B是分布式系统的两个部分，V是分布式系统的数据存储的两个子数据库。</p>
+<p>在满足一致性的时候，N1和N2中的数据是一样的，V0=V0。在满足可用性的时候，用户不管是请求N1或者N2，都会得到立即响应。在满足分区容错性的情况下，N1和N2有任何一方宕机，或者网络不通的时候，都不会影响N1和N2彼此之间的正常运作。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226154153.png" alt></p>
+<p>如上图，是分布式系统正常运转的流程，用户向N1机器请求数据更新，程序A更新数据库Vo为V1，分布式系统将数据进行同步操作M，将V1同步的N2中V0，使得N2中的数据V0也更新为V1，N2中的数据再响应N2的请求。</p>
+<p>这里，可以定义N1和N2的数据库V之间的数据是否一样为一致性；外部对N1和N2的请求响应为可用行；N1和N2之间的网络环境为分区容错性。这是正常运作的场景，也是理想的场景，然而现实是残酷的，当错误发生的时候，一致性和可用性还有分区容错性，是否能同时满足，还是说要进行取舍呢？</p>
+<p>作为一个分布式系统，它和单机系统的最大区别，就在于网络，现在假设一种极端情况，N1和N2之间的网络断开了，我们要支持这种网络异常，相当于要满足分区容错性，能不能同时满足一致性和响应性呢？还是说要对他们进行取舍。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226154349.png" alt></p>
+<p>假设在N1和N2之间网络断开的时候，有用户向N1发送数据更新请求，那N1中的数据V0将被更新为V1，由于网络是断开的，所以分布式系统同步操作M，所以N2中的数据依旧是V0；这个时候，有用户向N2发送数据读取请求，由于数据还没有进行同步，应用程序没办法立即给用户返回最新的数据V1，怎么办呢？</p>
+<p>有二种选择，第一，牺牲数据一致性，保证可用性。响应旧的数据V0给用户；</p>
+<p>第二，牺牲可用性，保证数据一致性。阻塞等待，直到网络连接恢复，数据更新操作M完成之后，再给用户响应最新的数据V1。</p>
+<p>这个过程，证明了要满足分区容错性的分布式系统，只能在一致性和可用性两者中，选择其中一个。</p>
+<h2><span id="cap权衡">CAP权衡</span></h2><p>通过CAP理论及前面的证明，我们知道无法同时满足一致性、可用性和分区容错性这三个特性，那要舍弃哪个呢？</p>
+<p>我们分三种情况来阐述一下。</p>
+<h3><span id="ca-without-p">CA without P</span></h3><p>这种情况在分布式系统中几乎是不存在的。首先在分布式环境下，网络分区是一个自然的事实。因为分区是必然的，所以如果舍弃P，意味着要舍弃分布式系统。那也就没有必要再讨论CAP理论了。这也是为什么在前面的CAP证明中，我们以系统满足P为前提论述了无法同时满足C和A。</p>
+<p>比如我们熟知的关系型数据库，如My Sql和Oracle就是保证了可用性和数据一致性，但是他并不是个分布式系统。一旦关系型数据库要考虑主备同步、集群部署等就必须要把P也考虑进来。</p>
+<p>其实，在CAP理论中。C，A，P三者并不是平等的，CAP之父在《Spanner，真时，CAP理论》一文中写到：</p>
+<blockquote>
+<p>如果说Spanner真有什么特别之处，那就是谷歌的广域网。Google通过建立私有网络以及强大的网络工程能力来保证P，在多年运营改进的基础上，在生产环境中可以最大程度的减少分区发生，从而实现高可用性。</p>
+</blockquote>
+<p>从Google的经验中可以得到的结论是，无法通过降低CA来提升P。要想提升系统的分区容错性，需要通过提升基础设施的稳定性来保障。</p>
+<p>所以，对于一个分布式系统来说。P是一个基本要求，CAP三者中，只能在CA两者之间做权衡，并且要想尽办法提升P。</p>
+<h3><span id="cp-without-a">CP without A</span></h3><p>如果一个分布式系统不要求强的可用性，即容许系统停机或者长时间无响应的话，就可以在CAP三者中保障CP而舍弃A。</p>
+<p>一个保证了CP而一个舍弃了A的分布式系统，一旦发生网络故障或者消息丢失等情况，就要牺牲用户的体验，等待所有数据全部一致了之后再让用户访问系统。</p>
+<p>设计成CP的系统其实也不少，其中最典型的就是很多分布式数据库，他们都是设计成CP的。在发生极端情况时，优先保证数据的强一致性，代价就是舍弃系统的可用性。如Redis、HBase等，还有分布式系统中常用的Zookeeper也是在CAP三者之中选择优先保证CP的。</p>
+<p>无论是像Redis、HBase这种分布式存储系统，还是像Zookeeper这种分布式协调组件。数据的一致性是他们最最基本的要求。一个连数据一致性都保证不了的分布式存储要他有何用？</p>
+<p>ZooKeeper是个CP（一致性+分区容错性）的，即任何时刻对ZooKeeper的访问请求能得到一致的数据结果，同时系统对网络分割具备容错性。但是它不能保证每次服务请求的可用性，也就是在极端环境下，ZooKeeper可能会丢弃一些请求，消费者程序需要重新请求才能获得结果。ZooKeeper是分布式协调服务，它的职责是保证数据在其管辖下的所有服务之间保持同步、一致。所以就不难理解为什么ZooKeeper被设计成CP而不是AP特性的了。</p>
+<h3><span id="ap-wihtout-c">AP wihtout C</span></h3><p>要高可用并允许分区，则需放弃一致性。一旦网络问题发生，节点之间可能会失去联系。为了保证高可用，需要在用户访问时可以马上得到返回，则每个节点只能用本地数据提供服务，而这样会导致全局数据的不一致性。</p>
+<p>这种舍弃强一致性而保证系统的分区容错性和可用性的场景和案例非常多。前面我们介绍可用性的时候说到过，很多系统在可用性方面会做很多事情来保证系统的全年可用性可以达到N个9，所以，对于很多业务系统来说，比如淘宝的购物，12306的买票。都是在可用性和一致性之间舍弃了一致性而选择可用性。</p>
+<p>你在12306买票的时候肯定遇到过这种场景，当你购买的时候提示你是有票的（但是可能实际已经没票了），你也正常的去输入验证码，下单了。但是过了一会系统提示你下单失败，余票不足。这其实就是先在可用性方面保证系统可以正常的服务，然后在数据的一致性方面做了些牺牲，会影响一些用户体验，但是也不至于造成用户流程的严重阻塞。</p>
+<p>但是，我们说很多网站牺牲了一致性，选择了可用性，这其实也不准确的。就比如上面的买票的例子，其实舍弃的只是强一致性。退而求其次保证了最终一致性。也就是说，虽然下单的瞬间，关于车票的库存可能存在数据不一致的情况，但是过了一段时间，还是要保证最终一致性的。</p>
+<p>对于多数大型互联网应用的场景，主机众多、部署分散，而且现在的集群规模越来越大，所以节点故障、网络故障是常态，而且要保证服务可用性达到N个9，即保证P和A，舍弃C（退而求其次保证最终一致性）。虽然某些地方会影响客户体验，但没达到造成用户流程的严重程度。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/3bdd21ca/" title="分布式系统的CAP理论" target="_blank" rel="external">https://lxb.wiki/3bdd21ca/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/6541b31d/" title="hexo支持mermaid"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/aaf3975f/" title="go map数据结构"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:lxb@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> lxbwolf </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+
+
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
+</html>

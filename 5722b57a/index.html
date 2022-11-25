@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+
+  
+  <title>基于FFmpeg的推送文件到RTMP服务器 | Xiaobin&#39;s Blog</title>
+  <meta name="description" content="原文地址: http://blog.csdn.net/leixiaohua1020/article/details/39803457 将本地的MOV/AVI/MKV/MP4/FLV等格式的媒体文件， 通过流媒体协议(RTMP, HTTP, UDP, TCP, RTP等)以直播流的形式推送出去. 在这个推流器的基础上, 可以进行以下几种方式的修改, 实现各式各样的推流器. 例如: * 将输入文件改为">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于FFmpeg的推送文件到RTMP服务器">
+<meta property="og:url" content="https://lxb.wiki/5722b57a/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Blog">
+<meta property="og:description" content="原文地址: http://blog.csdn.net/leixiaohua1020/article/details/39803457 将本地的MOV/AVI/MKV/MP4/FLV等格式的媒体文件， 通过流媒体协议(RTMP, HTTP, UDP, TCP, RTP等)以直播流的形式推送出去. 在这个推流器的基础上, 可以进行以下几种方式的修改, 实现各式各样的推流器. 例如: * 将输入文件改为">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://img.blog.csdn.net/20180113202019583?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbHhid29sZg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
+<meta property="og:updated_time" content="2019-10-03T07:57:15.424Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="基于FFmpeg的推送文件到RTMP服务器">
+<meta name="twitter:description" content="原文地址: http://blog.csdn.net/leixiaohua1020/article/details/39803457 将本地的MOV/AVI/MKV/MP4/FLV等格式的媒体文件， 通过流媒体协议(RTMP, HTTP, UDP, TCP, RTP等)以直播流的形式推送出去. 在这个推流器的基础上, 可以进行以下几种方式的修改, 实现各式各样的推流器. 例如: * 将输入文件改为">
+<meta name="twitter:image" content="http://img.blog.csdn.net/20180113202019583?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbHhid29sZg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/5722b57a/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+</head>
+
+
+<body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin.Liu</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:lxb@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><span class="category-list-count">24</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/RPI/">RPI</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">17</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">16</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.11px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/业务/" style="font-size: 13px;">业务</a> <a href="/tags/事故/" style="font-size: 13px;">事故</a> <a href="/tags/代码/" style="font-size: 13px;">代码</a> <a href="/tags/优化/" style="font-size: 13.11px;">优化</a> <a href="/tags/分布式/" style="font-size: 13.11px;">分布式</a> <a href="/tags/博客/" style="font-size: 13px;">博客</a> <a href="/tags/工具/" style="font-size: 13.78px;">工具</a> <a href="/tags/架构/" style="font-size: 13.22px;">架构</a> <a href="/tags/树莓派/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/破解/" style="font-size: 13px;">破解</a> <a href="/tags/稳定性/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/端口/" style="font-size: 13px;">端口</a> <a href="/tags/算法/" style="font-size: 13.33px;">算法</a> <a href="/tags/编译器/" style="font-size: 13.33px;">编译器</a> <a href="/tags/网络/" style="font-size: 13.11px;">网络</a> <a href="/tags/翻译/" style="font-size: 13.89px;">翻译</a> <a href="/tags/解决/" style="font-size: 13.11px;">解决</a> <a href="/tags/跳表/" style="font-size: 13.11px;">跳表</a> <a href="/tags/进程/" style="font-size: 13.11px;">进程</a> <a href="/tags/邮件/" style="font-size: 13.11px;">邮件</a> <a href="/tags/链表/" style="font-size: 13px;">链表</a> <a href="/tags/锚点失效/" style="font-size: 13px;">锚点失效</a> <a href="/tags/陷阱/" style="font-size: 13px;">陷阱</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/ea5f4ef1/" class="title">【译】如何把WordPress网站迁移到新主机</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-04-24T13:36:34.000Z" itemprop="datePublished">2022-04-24</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Golang/">Golang</a>
+              </p>
+              <p class="item-title">
+                <a href="/dfd7f257/" class="title">【译】Go中的模糊测试</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-04-19T13:30:29.000Z" itemprop="datePublished">2022-04-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Design/">Design</a>
+              </p>
+              <p class="item-title">
+                <a href="/f17b426c/" class="title">【转】Redis 分布式锁使用不当事故记录</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-04-01T13:42:21.000Z" itemprop="datePublished">2022-04-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Design/">Design</a>
+              </p>
+              <p class="item-title">
+                <a href="/f5fbcabb/" class="title">【译】解决 CI/CD 中的仓库阻抗失配</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-03-26T06:32:25.000Z" itemprop="datePublished">2022-03-26</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/3632d5ff/" class="title">Postman 自动填充 Header</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-03-10T14:51:15.000Z" itemprop="datePublished">2022-03-10</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-基于FFmpeg的推送文件到RTMP服务器" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      基于FFmpeg的推送文件到RTMP服务器
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/5722b57a/" class="article-date">
+	  <time datetime="2018-01-13T03:51:28.000Z" itemprop="datePublished">2018-01-13</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/A-amp-V/">A&amp;V</a>
+  </span>
+
+        
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/5722b57a/#comments" class="article-comment-link">评论</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 1.4k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 7(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>原文地址: <a href="http://blog.csdn.net/leixiaohua1020/article/details/39803457" target="_blank" rel="noopener">http://blog.csdn.net/leixiaohua1020/article/details/39803457</a></p>
+<p>将本地的MOV/AVI/MKV/MP4/FLV等格式的媒体文件， 通过流媒体协议(RTMP, HTTP, UDP, TCP, RTP等)以直播流的形式推送出去.</p>
+<p>在这个推流器的基础上, 可以进行以下几种方式的修改, 实现各式各样的推流器. 例如: * 将输入文件改为网络流URL, 可以显示转流器 * 将输入文件改为回调函数(内存读取)的形式, 可以推送内存中的视频数据 * 将输入文件改为系统设备(通过libavdevice), 同时加上编码的功能, 可以实现实时推流器(现场直播)</p>
+<h3><span id="需要注意的地方">需要注意的地方</span></h3><h4><span id="封装格式">封装格式</span></h4><p>RTMP采用的封装格式FLV, 因此在指定输出流媒体的时候需要制定其封装格式为”flv”. 同理, 其他流媒体协议也需要指定其封装格式. 例如采用UDP推送流媒体的时候, 可以指定其封装格式为”mpegts”.</p>
+<h4><span id="延时">延时</span></h4><p>发送流媒体的数据的时候需要延时. 否则, FFmpeg处理数据速度很快, 瞬间就能把所有的数据发送出去, 流媒体服务器是承受不了的. 因此需要按照视频实际的帧率发送数据. 本文的推流器在视频帧与帧之间采用av_usleep()函数休眠的方式来延迟发送. 这样就可以按照视频的帧率发送数据了, 代码如下</p>
+<pre><code>//…  
+int64_t start_time=av_gettime();  
+while (1) {  
+//…  
+    //Important:Delay  
+    if(pkt.stream_index==videoindex){  
+        AVRational time_base=ifmt_ctx-&gt;streams[videoindex]-&gt;time_base;  
+        AVRational time_base_q={1,AV_TIME_BASE};  
+        int64_t pts_time = av_rescale_q(pkt.dts, time_base, time_base_q);  
+        int64_t now_time = av_gettime() - start_time;  
+        if (pts_time &gt; now_time)  
+            av_usleep(pts_time - now_time);  
+    }  
+//…  
+}  
+//… </code></pre><h4><span id="ptsdts问题">PTS/DTS问题</span></h4><p>没有封装格式的裸流(例如H.264裸流)是不包含PTS, DTS这些参数的. 在发送这种数据的时候, 需要自己计算并写入AVPacket的PTS, DTS, duration等参数.</p>
+<pre><code>//FIX：No PTS (Example: Raw H.264)  
+//Simple Write PTS  
+if(pkt.pts==AV_NOPTS_VALUE){  
+    //Write PTS  
+    AVRational time_base1=ifmt_ctx-&gt;streams[videoindex]-&gt;time_base;  
+    //Duration between 2 frames (us)  
+    int64_t calc_duration=(double)AV_TIME_BASE/av_q2d(ifmt_ctx-&gt;streams[videoindex]-&gt;r_frame_rate);  
+    //Parameters  
+    pkt.pts=(double)(frame_index*calc_duration)/(double)(av_q2d(time_base1)*AV_TIME_BASE);  
+    pkt.dts=pkt.pts;  
+    pkt.duration=(double)calc_duration/(double)(av_q2d(time_base1)*AV_TIME_BASE);  
+} </code></pre><h4><span id="sequence">sequence</span></h4><p><img src="http://img.blog.csdn.net/20180113202019583?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbHhid29sZg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述"></p>
+<p>代码</p>
+<pre><code>/** 
+ * 最简单的基于FFmpeg的推流器（推送RTMP） 
+ * Simplest FFmpeg Streamer (Send RTMP) 
+ *  
+ * 雷霄骅 Lei Xiaohua 
+ * leixiaohua1020@126.com 
+ * 中国传媒大学/数字电视技术 
+ * Communication University of China / Digital TV Technology 
+ * http://blog.csdn.net/leixiaohua1020 
+ *  
+ * 本例子实现了推送本地视频至流媒体服务器（以RTMP为例）。 
+ * 是使用FFmpeg进行流媒体推送最简单的教程。 
+ * 
+ * This example stream local media files to streaming media  
+ * server (Use RTMP as example).  
+ * It&apos;s the simplest FFmpeg streamer. 
+ *  
+ */  
+
+#include &lt;stdio.h&gt;  
+
+#define __STDC_CONSTANT_MACROS  
+
+#ifdef _WIN32  
+//Windows  
+extern &quot;C&quot;  
+{  
+#include &quot;libavformat/avformat.h&quot;  
+#include &quot;libavutil/mathematics.h&quot;  
+#include &quot;libavutil/time.h&quot;  
+};  
+#else  
+//Linux...  
+#ifdef __cplusplus  
+extern &quot;C&quot;  
+{  
+#endif  
+#include &lt;libavformat/avformat.h&gt;  
+#include &lt;libavutil/mathematics.h&gt;  
+#include &lt;libavutil/time.h&gt;  
+#ifdef __cplusplus  
+};  
+#endif  
+#endif  
+
+int main(int argc, char* argv[])  
+{  
+    AVOutputFormat *ofmt = NULL;  
+    //输入对应一个AVFormatContext，输出对应一个AVFormatContext  
+    //（Input AVFormatContext and Output AVFormatContext）  
+    AVFormatContext *ifmt_ctx = NULL, *ofmt_ctx = NULL;  
+    AVPacket pkt;  
+    const char *in_filename, *out_filename;  
+    int ret, i;  
+    int videoindex=-1;  
+    int frame_index=0;  
+    int64_t start_time=0;  
+    //in_filename  = &quot;cuc_ieschool.mov&quot;;  
+    //in_filename  = &quot;cuc_ieschool.mkv&quot;;  
+    //in_filename  = &quot;cuc_ieschool.ts&quot;;  
+    //in_filename  = &quot;cuc_ieschool.mp4&quot;;  
+    //in_filename  = &quot;cuc_ieschool.h264&quot;;  
+    in_filename  = &quot;cuc_ieschool.flv&quot;;//输入URL（Input file URL）  
+    //in_filename  = &quot;shanghai03_p.h264&quot;;  
+
+    out_filename = &quot;rtmp://localhost/publishlive/livestream&quot;;//输出 URL（Output URL）[RTMP]  
+    //out_filename = &quot;rtp://233.233.233.233:6666&quot;;//输出 URL（Output URL）[UDP]  
+
+    av_register_all();  
+    //Network  
+    avformat_network_init();  
+    //输入（Input）  
+    if ((ret = avformat_open_input(&amp;ifmt_ctx, in_filename, 0, 0)) &lt; 0) {  
+        printf( &quot;Could not open input file.&quot;);  
+        goto end;  
+    }  
+    if ((ret = avformat_find_stream_info(ifmt_ctx, 0)) &lt; 0) {  
+        printf( &quot;Failed to retrieve input stream information&quot;);  
+        goto end;  
+    }  
+
+    for(i=0; i&lt;ifmt_ctx-&gt;nb_streams; i++)   
+        if(ifmt_ctx-&gt;streams[i]-&gt;codec-&gt;codec_type==AVMEDIA_TYPE_VIDEO){  
+            videoindex=i;  
+            break;  
+        }  
+
+    av_dump_format(ifmt_ctx, 0, in_filename, 0);  
+
+    //输出（Output）  
+
+    avformat_alloc_output_context2(&amp;ofmt_ctx, NULL, &quot;flv&quot;, out_filename); //RTMP  
+    //avformat_alloc_output_context2(&amp;ofmt_ctx, NULL, &quot;mpegts&quot;, out_filename);//UDP  
+
+    if (!ofmt_ctx) {  
+        printf( &quot;Could not create output context\n&quot;);  
+        ret = AVERROR_UNKNOWN;  
+        goto end;  
+    }  
+    ofmt = ofmt_ctx-&gt;oformat;  
+    for (i = 0; i &lt; ifmt_ctx-&gt;nb_streams; i++) {  
+        //根据输入流创建输出流（Create output AVStream according to input AVStream）  
+        AVStream *in_stream = ifmt_ctx-&gt;streams[i];  
+        AVStream *out_stream = avformat_new_stream(ofmt_ctx, in_stream-&gt;codec-&gt;codec);  
+        if (!out_stream) {  
+            printf( &quot;Failed allocating output stream\n&quot;);  
+            ret = AVERROR_UNKNOWN;  
+            goto end;  
+        }  
+        //复制AVCodecContext的设置（Copy the settings of AVCodecContext）  
+        ret = avcodec_copy_context(out_stream-&gt;codec, in_stream-&gt;codec);  
+        if (ret &lt; 0) {  
+            printf( &quot;Failed to copy context from input to output stream codec context\n&quot;);  
+            goto end;  
+        }  
+        out_stream-&gt;codec-&gt;codec_tag = 0;  
+        if (ofmt_ctx-&gt;oformat-&gt;flags &amp; AVFMT_GLOBALHEADER)  
+            out_stream-&gt;codec-&gt;flags |= CODEC_FLAG_GLOBAL_HEADER;  
+    }  
+    //Dump Format------------------  
+    av_dump_format(ofmt_ctx, 0, out_filename, 1);  
+    //打开输出URL（Open output URL）  
+    if (!(ofmt-&gt;flags &amp; AVFMT_NOFILE)) {  
+        ret = avio_open(&amp;ofmt_ctx-&gt;pb, out_filename, AVIO_FLAG_WRITE);  
+        if (ret &lt; 0) {  
+            printf( &quot;Could not open output URL &apos;%s&apos;&quot;, out_filename);  
+            goto end;  
+        }  
+    }  
+    //写文件头（Write file header）  
+    ret = avformat_write_header(ofmt_ctx, NULL);  
+    if (ret &lt; 0) {  
+        printf( &quot;Error occurred when opening output URL\n&quot;);  
+        goto end;  
+    }  
+
+    start_time=av_gettime();  
+    while (1) {  
+        AVStream *in_stream, *out_stream;  
+        //获取一个AVPacket（Get an AVPacket）  
+        ret = av_read_frame(ifmt_ctx, &amp;pkt);  
+        if (ret &lt; 0)  
+            break;  
+        //FIX：No PTS (Example: Raw H.264)  
+        //Simple Write PTS  
+        if(pkt.pts==AV_NOPTS_VALUE){  
+            //Write PTS  
+            AVRational time_base1=ifmt_ctx-&gt;streams[videoindex]-&gt;time_base;  
+            //Duration between 2 frames (us)  
+            int64_t calc_duration=(double)AV_TIME_BASE/av_q2d(ifmt_ctx-&gt;streams[videoindex]-&gt;r_frame_rate);  
+            //Parameters  
+            pkt.pts=(double)(frame_index*calc_duration)/(double)(av_q2d(time_base1)*AV_TIME_BASE);  
+            pkt.dts=pkt.pts;  
+            pkt.duration=(double)calc_duration/(double)(av_q2d(time_base1)*AV_TIME_BASE);  
+        }  
+        //Important:Delay  
+        if(pkt.stream_index==videoindex){  
+            AVRational time_base=ifmt_ctx-&gt;streams[videoindex]-&gt;time_base;  
+            AVRational time_base_q={1,AV_TIME_BASE};  
+            int64_t pts_time = av_rescale_q(pkt.dts, time_base, time_base_q);  
+            int64_t now_time = av_gettime() - start_time;  
+            if (pts_time &gt; now_time)  
+                av_usleep(pts_time - now_time);  
+
+        }  
+
+        in_stream  = ifmt_ctx-&gt;streams[pkt.stream_index];  
+        out_stream = ofmt_ctx-&gt;streams[pkt.stream_index];  
+        /* copy packet */  
+        //转换PTS/DTS（Convert PTS/DTS）  
+        pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream-&gt;time_base, out_stream-&gt;time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));  
+        pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream-&gt;time_base, out_stream-&gt;time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));  
+        pkt.duration = av_rescale_q(pkt.duration, in_stream-&gt;time_base, out_stream-&gt;time_base);  
+        pkt.pos = -1;  
+        //Print to Screen  
+        if(pkt.stream_index==videoindex){  
+            printf(&quot;Send %8d video frames to output URL\n&quot;,frame_index);  
+            frame_index++;  
+        }  
+        //ret = av_write_frame(ofmt_ctx, &amp;pkt);  
+        ret = av_interleaved_write_frame(ofmt_ctx, &amp;pkt);  
+
+        if (ret &lt; 0) {  
+            printf( &quot;Error muxing packet\n&quot;);  
+            break;  
+        }  
+
+        av_free_packet(&amp;pkt);  
+
+    }  
+    //写文件尾（Write file trailer）  
+    av_write_trailer(ofmt_ctx);  
+end:  
+    avformat_close_input(&amp;ifmt_ctx);  
+    /* close output */  
+    if (ofmt_ctx &amp;&amp; !(ofmt-&gt;flags &amp; AVFMT_NOFILE))  
+        avio_close(ofmt_ctx-&gt;pb);  
+    avformat_free_context(ofmt_ctx);  
+    if (ret &lt; 0 &amp;&amp; ret != AVERROR_EOF) {  
+        printf( &quot;Error occurred.\n&quot;);  
+        return -1;  
+    }  
+    return 0;  
+}</code></pre>
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/5722b57a/" title="基于FFmpeg的推送文件到RTMP服务器" target="_blank" rel="external">https://lxb.wiki/5722b57a/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/ae1aac27/" title="基于FFmpeg的摄像头直播(推流)"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/b3ed22dc/" title="ffmpeg 推流工具"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:lxb@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> lxbwolf </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+
+
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+
+  
+  <title>raft 算法 | Xiaobin&#39;s Blog</title>
+  <meta name="description" content="拜占庭将军问题 针对简化版拜占庭将军问题，Raft 解决方案类比 1. Raft 节点状态 2. 选主 Leader Election 2.1 正常情况下选主 2.2 Leader 出故障情况下的选主 2.3 多个 Candidate 情况下的选主   3. 复制日志 Log Replication 3.1 正常情况下复制日志 3.2 Network Partition 情况下进行复制日志">
+<meta name="keywords" content="算法,raft">
+<meta property="og:type" content="article">
+<meta property="og:title" content="raft 算法">
+<meta property="og:url" content="https://lxb.wiki/3d118e3a/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Blog">
+<meta property="og:description" content="拜占庭将军问题 针对简化版拜占庭将军问题，Raft 解决方案类比 1. Raft 节点状态 2. 选主 Leader Election 2.1 正常情况下选主 2.2 Leader 出故障情况下的选主 2.3 多个 Candidate 情况下的选主   3. 复制日志 Log Replication 3.1 正常情况下复制日志 3.2 Network Partition 情况下进行复制日志">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204025.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204121.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204149.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204532.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204600.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204614.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204652.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204743.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204807.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204831.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204909.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204929.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205008.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205055.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205115.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205141.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205210.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205227.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205242.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205257.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205319.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205340.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205354.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205420.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205438.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205539.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205616.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205634.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205655.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205712.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205803.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205819.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205832.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205851.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205919.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226210105.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226210129.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226210159.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226210245.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226210329.png">
+<meta property="og:updated_time" content="2021-02-26T13:05:52.078Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="raft 算法">
+<meta name="twitter:description" content="拜占庭将军问题 针对简化版拜占庭将军问题，Raft 解决方案类比 1. Raft 节点状态 2. 选主 Leader Election 2.1 正常情况下选主 2.2 Leader 出故障情况下的选主 2.3 多个 Candidate 情况下的选主   3. 复制日志 Log Replication 3.1 正常情况下复制日志 3.2 Network Partition 情况下进行复制日志">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204025.png">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/3d118e3a/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+</head>
+
+
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin.Liu</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:lxb@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><span class="category-list-count">24</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/RPI/">RPI</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">17</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">16</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.11px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/业务/" style="font-size: 13px;">业务</a> <a href="/tags/事故/" style="font-size: 13px;">事故</a> <a href="/tags/代码/" style="font-size: 13px;">代码</a> <a href="/tags/优化/" style="font-size: 13.11px;">优化</a> <a href="/tags/分布式/" style="font-size: 13.11px;">分布式</a> <a href="/tags/博客/" style="font-size: 13px;">博客</a> <a href="/tags/工具/" style="font-size: 13.78px;">工具</a> <a href="/tags/架构/" style="font-size: 13.22px;">架构</a> <a href="/tags/树莓派/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/破解/" style="font-size: 13px;">破解</a> <a href="/tags/稳定性/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/端口/" style="font-size: 13px;">端口</a> <a href="/tags/算法/" style="font-size: 13.33px;">算法</a> <a href="/tags/编译器/" style="font-size: 13.33px;">编译器</a> <a href="/tags/网络/" style="font-size: 13.11px;">网络</a> <a href="/tags/翻译/" style="font-size: 13.89px;">翻译</a> <a href="/tags/解决/" style="font-size: 13.11px;">解决</a> <a href="/tags/跳表/" style="font-size: 13.11px;">跳表</a> <a href="/tags/进程/" style="font-size: 13.11px;">进程</a> <a href="/tags/邮件/" style="font-size: 13.11px;">邮件</a> <a href="/tags/链表/" style="font-size: 13px;">链表</a> <a href="/tags/锚点失效/" style="font-size: 13px;">锚点失效</a> <a href="/tags/陷阱/" style="font-size: 13px;">陷阱</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/ea5f4ef1/" class="title">【译】如何把WordPress网站迁移到新主机</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-04-24T13:36:34.000Z" itemprop="datePublished">2022-04-24</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Golang/">Golang</a>
+              </p>
+              <p class="item-title">
+                <a href="/dfd7f257/" class="title">【译】Go中的模糊测试</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-04-19T13:30:29.000Z" itemprop="datePublished">2022-04-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Design/">Design</a>
+              </p>
+              <p class="item-title">
+                <a href="/f17b426c/" class="title">【转】Redis 分布式锁使用不当事故记录</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-04-01T13:42:21.000Z" itemprop="datePublished">2022-04-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Design/">Design</a>
+              </p>
+              <p class="item-title">
+                <a href="/f5fbcabb/" class="title">【译】解决 CI/CD 中的仓库阻抗失配</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-03-26T06:32:25.000Z" itemprop="datePublished">2022-03-26</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/3632d5ff/" class="title">Postman 自动填充 Header</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-03-10T14:51:15.000Z" itemprop="datePublished">2022-03-10</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-raft-算法" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      raft 算法
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/3d118e3a/" class="article-date">
+	  <time datetime="2021-02-06T12:36:12.000Z" itemprop="datePublished">2021-02-06</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Algorithm/">Algorithm</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/raft/">raft</a>, <a class="article-tag-link" href="/tags/算法/">算法</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/3d118e3a/#comments" class="article-comment-link">评论</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 3.1k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 11(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#拜占庭将军问题">拜占庭将军问题</a></li>
+<li><a href="#针对简化版拜占庭将军问题raft-解决方案类比">针对简化版拜占庭将军问题，Raft 解决方案类比</a><ul>
+<li><a href="#1-raft-节点状态">1. Raft 节点状态</a></li>
+<li><a href="#2-选主-leader-election">2. 选主 Leader Election</a><ul>
+<li><a href="#21-正常情况下选主">2.1 正常情况下选主</a></li>
+<li><a href="#22-leader-出故障情况下的选主">2.2 Leader 出故障情况下的选主</a></li>
+<li><a href="#23-多个-candidate-情况下的选主">2.3 多个 Candidate 情况下的选主</a></li>
+</ul>
+</li>
+<li><a href="#3-复制日志-log-replication">3. 复制日志 Log Replication</a><ul>
+<li><a href="#31-正常情况下复制日志">3.1 正常情况下复制日志</a></li>
+<li><a href="#32-network-partition-情况下进行复制日志">3.2 Network Partition 情况下进行复制日志</a></li>
+</ul>
+</li>
+<li><a href="#小总结">小总结</a></li>
+</ul>
+</li>
+</ul>
+<!-- tocstop -->
+
+<h1><span id="拜占庭将军问题">拜占庭将军问题</span></h1><p>拜占庭将军问题是 Leslie Lamport 在 <a href="https://web.archive.org/web/20170205142845/http://lamport.azurewebsites.net/pubs/byz.pdf" target="_blank" rel="noopener">The Byzantine Generals Problem</a> 论文中提出的分布式领域的容错问题，它是分布式领域中最复杂、最严格的容错模型。</p>
+<p>在该模型下，系统不会对集群中的节点做任何的限制，它们可以向其他节点发送随机数据、错误数据，也可以选择不响应其他节点的请求，这些无法预测的行为使得容错这一问题变得更加复杂。</p>
+<p>拜占庭将军问题描述了一个如下的场景，有一组将军分别指挥一部分军队，每一个将军都不知道其它将军是否是可靠的，也不知道其他将军传递的信息是否可靠，但是它们需要通过投票选择是否要进攻或者撤退：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204025.png" alt></p>
+<p>在这一节中，黄色代表状态未知，绿色代表进攻，蓝色代表撤退，最后红色代表当前将军的信息不可靠。</p>
+<p>在这时，无论将军是否可靠，只要所有的将军达成了统一的方案，选择进攻或者撤退其实就是没有任何问题的：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204121.png" alt></p>
+<p>上述的情况不会对当前的战局有太多的影响，也不会造成损失，但是如果其中的一个将军告诉其中一部分将军选择进攻、另一部分选择撤退，就会出现非常严重的问题了。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204149.png" alt></p>
+<p>由于将军的队伍中出了一个叛徒或者信息在传递的过程中被拦截，会导致一部分将军会选择进攻，剩下的一部分会选择撤退，它们都认为自己的选择是大多数人的选择，这时就出现了严重的不一致问题。</p>
+<p>拜占庭将军问题是对分布式系统容错的最高要求，然而这不是日常工作中使用的大多数分布式系统中会面对的问题，我们遇到更多的还是节点故障宕机或者不响应等情况，这就大大简化了系统对容错的要求；不过类似 Bitcoin、Ethereum 等分布式系统确实需要考虑拜占庭容错的问题。</p>
+<blockquote>
+<p>​    拜占庭将军问题是分布式领域最复杂、最严格的容错模型。但在日常工作中使用的分布式系统面对的问题不会那么复杂，更多的是计算机故障挂掉了，或者网络通信问题而没法传递信息，这种情况不考虑计算机之间互相发送恶意信息，极大简化了系统对容错的要求，最主要的是达到一致性。</p>
+</blockquote>
+<p>所以将拜占庭将军问题根据常见的工作上的问题进行简化：<strong>假设将军中没有叛军，信使的信息可靠但有可能被暗杀的情况下，将军们如何达成一致性决定？</strong></p>
+<p>对于这个简化后的问题，有许多解决方案，第一个被证明的共识算法是 Paxos，由拜占庭将军问题的作者 Leslie Lamport 在1990年提出，最初以论文难懂而出名，后来这哥们在2001重新发了一篇简单版的论文 <a href="https://link.jianshu.com?t=%5Bhttps%3A%2F%2Flamport.azurewebsites.net%2Fpubs%2Fpaxos-simple.pdf%5D(https%3A%2F%2Flamport.azurewebsites.net%2Fpubs%2Fpaxos-simple.pdf)" target="_blank" rel="noopener">Paxos Made Simple</a>，然而还是挺难懂的。</p>
+<p>因为 Paxos 难懂，难实现，所以斯坦福大学的教授在2014年发表了新的分布式协议 Raft。与 Paxos 相比，Raft 有着基本相同运行效率，但是更容易理解，也更容易被用在系统开发上。</p>
+<h1><span id="针对简化版拜占庭将军问题raft-解决方案类比">针对简化版拜占庭将军问题，Raft 解决方案类比</span></h1><p>我们还是用拜占庭将军的例子来帮助理解 Raft。</p>
+<blockquote>
+<p>​    假设将军中没有叛军，信使的信息可靠但有可能被暗杀的情况下，将军们如何达成一致性决定？</p>
+</blockquote>
+<p>Raft 的解决方案大概可以理解成 先在所有将军中选出一个大将军，所有的决定由大将军来做。<strong>选举环节</strong>：比如说现在一共有3个将军 A, B, C，每个将军都有一个<strong>随机时间</strong>的倒计时器，倒计时一结束，这个将军就会把自己当成大将军候选人，然后派信使去问其他几个将军，能不能选我为总将军？假设现在将军A倒计时结束了，他派信使传递选举投票的信息给将军B和C，如果将军B和C还没把自己当成候选人（倒计时还没有结束），并且没有把选举票投给其他，他们把票投给将军A，信使在回到将军A时，将军A知道自己收到了足够的票数，成为了大将军。在这之后，是否要进攻就由大将军决定，然后派信使去通知另外两个将军，如果在一段时间后还没有收到回复（可能信使被暗杀），那就再重派一个信使，直到收到回复。</p>
+<p>故事先讲到这里，希望不做技术方面的朋友可以大概能理解 Raft 的原理，下面从比较技术的角度讲讲 Raft 的原理。 </p>
+<h2><span id="1-raft-节点状态">1. Raft 节点状态</span></h2><p>从拜占庭将军的故事映射到分布式系统上，每个将军相当于一个分布式网络节点，每个节点有<strong>三种状态：Follower，Candidate，Leader</strong>，状态之间是互相转换的，可以参考下图，具体的后面说。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204532.png" alt></p>
+<p>每个节点上都有一个倒计时器 (Election Timeout)，时间随机在 150ms 到 300ms 之间。有几种情况会重设 Timeout：</p>
+<ol>
+<li>收到选举的请求</li>
+<li>收到 Leader 的 Heartbeat (后面会讲到)</li>
+</ol>
+<p>在 Raft 运行过程中，最主要进行两个活动：</p>
+<ol>
+<li>选主 Leader Election</li>
+<li>复制日志 Log Replication</li>
+</ol>
+<h2><span id="2-选主-leader-election">2. 选主 Leader Election</span></h2><h3><span id="21-正常情况下选主">2.1 正常情况下选主</span></h3><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204600.png" alt></p>
+<p>假设现在有如图5个节点，5个节点一开始的状态都是 Follower。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204614.png" alt></p>
+<p>在一个节点倒计时结束 (Timeout) 后，这个节点的状态变成 Candidate 开始选举，它给其他几个节点发送选举请求 (RequestVote)</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204652.png" alt></p>
+<p>其他四个节点都返回成功，这个节点的状态由 Candidate 变成了 Leader，并在每个一小段时间后，就给所有的 Follower 发送一个 Heartbeat 以保持所有节点的状态，Follower 收到 Leader 的 Heartbeat 后重设 Timeout。</p>
+<p>这是最简单的选主情况，<strong>只要有超过一半的节点投支持票了，Candidate 才会被选举为 Leader</strong>，5个节点的情况下，3个节点 (包括 Candidate 本身) 投了支持就行。</p>
+<h3><span id="22-leader-出故障情况下的选主">2.2 Leader 出故障情况下的选主</span></h3><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204743.png" alt></p>
+<p>一开始已经有一个 Leader，所有节点正常运行。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204807.png" alt></p>
+<p>Leader 出故障挂掉了，其他四个 Follower 将进行重新选主。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204831.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204909.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226204929.png" alt></p>
+<p>4个节点的选主过程和5个节点的类似，在选出一个新的 Leader 后，原来的 Leader 恢复了又重新加入了，这个时候怎么处理？在 Raft 里，第几轮选举是有记录的，重新加入的 Leader 是第一轮选举 (Term 1) 选出来的，而现在的 Leader 则是 Term 2，所有原来的 Leader 会自觉降级为 Follower</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205008.png" alt></p>
+<h3><span id="23-多个-candidate-情况下的选主">2.3 多个 Candidate 情况下的选主</span></h3><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205055.png" alt></p>
+<p>假设一开始有4个节点，都还是 Follower。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205115.png" alt></p>
+<p>有两个 Follower 同时 Timeout，都变成了 Candidate 开始选举，分别给一个 Follower 发送了投票请求。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205141.png" alt></p>
+<p>两个 Follower 分别返回了ok，这时两个 Candidate 都只有2票，要3票才能被选成 Leader。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205210.png" alt></p>
+<p>两个 Candidate 会分别给另外一个还没有给自己投票的 Follower 发送投票请求。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205227.png" alt></p>
+<p>但是因为 Follower 在这一轮选举中，都已经投完票了，所以都拒绝了他们的请求。所以在 Term 2 没有 Leader 被选出来。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205242.png" alt></p>
+<p>这时，两个节点的状态是 Candidate，两个是 Follower，但是他们的倒计时器仍然在运行，最先 Timeout 的那个节点会进行发起新一轮 Term 3 的投票。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205257.png" alt></p>
+<p>两个 Follower 在 Term 3 还没投过票，所以返回 OK，这时 Candidate 一共有三票，被选为了 Leader。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205319.png" alt></p>
+<p>如果 Leader Heartbeat 的时间晚于另外一个 Candidate timeout 的时间，另外一个 Candidate 仍然会发送选举请求。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205340.png" alt></p>
+<p>两个 Follower 已经投完票了，拒绝了这个 Candidate 的投票请求。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205354.png" alt></p>
+<p>Leader 进行 Heartbeat， Candidate 收到后状态自动转为 Follower，完成选主。</p>
+<p>以上是 Raft 最重要活动之一选主的介绍，以及在不同情况下如何进行选主。</p>
+<h2><span id="3-复制日志-log-replication">3. 复制日志 Log Replication</span></h2><h3><span id="31-正常情况下复制日志">3.1 正常情况下复制日志</span></h3><p>Raft 在实际应用场景中的一致性更多的是体现在不同节点之间的数据一致性，客户端发送请求到任何一个节点都能收到一致的返回，当一个节点出故障后，其他节点仍然能以已有的数据正常进行。在选主之后的复制日志就是为了达到这个目的。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205420.png" alt></p>
+<p>一开始，Leader 和 两个 Follower 都没有任何数据。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205438.png" alt></p>
+<p>客户端发送请求给 Leader，储存数据 “sally”，Leader 先将数据写在本地日志，这时候数据还是 <strong>Uncommitted</strong> (还没最终确认，红色表示)</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205539.png" alt></p>
+<p>Leader 给两个 Follower 发送 AppendEntries 请求，数据在 Follower 上没有冲突，则将数据暂时写在本地日志，Follower 的数据也还是 Uncommitted。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205616.png" alt></p>
+<p>Follower 将数据写到本地后，返回 OK。Leader 收到后成功返回，<strong>只要收到的成功的返回数量超过半数 (包含Leader)</strong>，Leader 将数据 “sally” 的状态改成 Committed。( 这个时候 Leader 就可以返回给客户端了)</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205634.png" alt></p>
+<p>Leader 再次给 Follower 发送 AppendEntries 请求，收到请求后，Follower 将本地日志里 Uncommitted 数据改成 Committed。这样就完成了一整个复制日志的过程，三个节点的数据是一致的，</p>
+<h3><span id="32-network-partition-情况下进行复制日志">3.2 Network Partition 情况下进行复制日志</span></h3><p>在 Network Partition 的情况下，部分节点之间没办法互相通信，Raft 也能保证在这种情况下数据的一致性。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205655.png" alt></p>
+<p>一开始有 5 个节点处于同一网络状态下。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205712.png" alt></p>
+<p>Network Partition 将节点分成两边，一边有两个节点，一边三个节点。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205803.png" alt></p>
+<p>两个节点这边已经有 Leader 了，来自客户端的数据 “bob” 通过 Leader 同步到 Follower。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205819.png" alt></p>
+<p>因为只有两个节点，少于3个节点，所以 “bob” 的状态仍是 Uncommitted。所以在这里，<strong>服务器会返回错误给客户端</strong></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205832.png" alt></p>
+<p>另外一个 Partition 有三个节点，进行重新选主。客户端数据 “tom” 发到新的 Leader，通过和上节网络状态下相似的过程，同步到另外两个 Follower。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205851.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226205919.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226210105.png" alt></p>
+<p>因为这个 Partition 有3个节点，超过半数，所以数据 “tom” 都 Commit 了。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226210129.png" alt></p>
+<p>网络状态恢复，5个节点再次处于同一个网络状态下。但是这里出现了数据冲突 “bob” 和 “tom”</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226210159.png" alt></p>
+<p>三个节点的 Leader 广播 AppendEntries</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226210245.png" alt></p>
+<p>两个节点 Partition 的 Leader 自动降级为 Follower，因为这个 Partition 的数据 “bob” 没有 Commit，返回给客户端的是错误，客户端知道请求没有成功，所以 Follower 在收到 AppendEntries 请求时，可以把 “bob“ 删除，然后同步 ”tom”，通过这么一个过程，就完成了在 Network Partition 情况下的复制日志，保证了数据的一致性。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210226210329.png" alt></p>
+<h2><span id="小总结">小总结</span></h2><p>Raft 是能够实现分布式系统强一致性的算法，每个系统节点有三种状态 Follower，Candidate，Leader。实现 Raft 算法两个最重要的事是：选主和复制日志</p>
+<p><strong>参考链接：</strong><br>Raft 官网：<a href="https://link.jianshu.com?t=https%3A%2F%2Fraft.github.io%2F" target="_blank" rel="noopener">https://raft.github.io/</a></p>
+<p>Raft 原理动画 (推荐看看)：<a href="https://link.jianshu.com?t=http%3A%2F%2Fthesecretlivesofdata.com%2Fraft%2F" target="_blank" rel="noopener">http://thesecretlivesofdata.com/raft/</a></p>
+<p>Raft 算法解析图片来源：<a href="https://link.jianshu.com?t=http%3A%2F%2Fwww.infoq.com%2Fcn%2Farticles%2Fcoreos-analyse-etcd" target="_blank" rel="noopener">http://www.infoq.com/cn/articles/coreos-analyse-etcd</a></p>
+<p>分布式一致性与共识算法 <a href="https://draveness.me/consensus/" target="_blank" rel="noopener">https://draveness.me/consensus/</a></p>
+<p>共识算法：Raft <a href="https://www.jianshu.com/p/8e4bbe7e276c" target="_blank" rel="noopener">https://www.jianshu.com/p/8e4bbe7e276c</a></p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/3d118e3a/" title="raft 算法" target="_blank" rel="external">https://lxb.wiki/3d118e3a/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/686a477f/" title="Linux 下 su 和 su - 的区别"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/331c3227/" title="【译】使用子模块和子树来管理 Git 项目"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:lxb@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> lxbwolf </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+
+
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
+</html>

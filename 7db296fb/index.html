@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+
+  
+  <title>分布式锁高并发优化 | Xiaobin&#39;s Blog</title>
+  <meta name="description" content="问题场景: 库存超卖现象是怎么产生的？ 用分布式锁如何解决库存超卖问题？ 分布式锁的方案在高并发场景下 如何对分布式锁进行高并发优化？ 分布式锁并发优化方案有没有什么不足？    问题场景:假如下单时，用分布式锁来防止库存超卖，但是是每秒上千订单的高并发场景，如何对分布式锁进行高并发优化来应对这个场景？ 库存超卖现象是怎么产生的？ 假设订单系统部署两台机器上，不同的用户都要同时买10台iph">
+<meta name="keywords" content="redis,分布式,优化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式锁高并发优化">
+<meta property="og:url" content="https://lxb.wiki/7db296fb/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Blog">
+<meta property="og:description" content="问题场景: 库存超卖现象是怎么产生的？ 用分布式锁如何解决库存超卖问题？ 分布式锁的方案在高并发场景下 如何对分布式锁进行高并发优化？ 分布式锁并发优化方案有没有什么不足？    问题场景:假如下单时，用分布式锁来防止库存超卖，但是是每秒上千订单的高并发场景，如何对分布式锁进行高并发优化来应对这个场景？ 库存超卖现象是怎么产生的？ 假设订单系统部署两台机器上，不同的用户都要同时买10台iph">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004321.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004449.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004607.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004059.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004652.png">
+<meta property="og:updated_time" content="2022-02-12T13:19:40.296Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="分布式锁高并发优化">
+<meta name="twitter:description" content="问题场景: 库存超卖现象是怎么产生的？ 用分布式锁如何解决库存超卖问题？ 分布式锁的方案在高并发场景下 如何对分布式锁进行高并发优化？ 分布式锁并发优化方案有没有什么不足？    问题场景:假如下单时，用分布式锁来防止库存超卖，但是是每秒上千订单的高并发场景，如何对分布式锁进行高并发优化来应对这个场景？ 库存超卖现象是怎么产生的？ 假设订单系统部署两台机器上，不同的用户都要同时买10台iph">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004321.png">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/7db296fb/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+</head>
+
+
+<body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin.Liu</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:lxb@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><span class="category-list-count">24</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/RPI/">RPI</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">17</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">16</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.11px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/业务/" style="font-size: 13px;">业务</a> <a href="/tags/事故/" style="font-size: 13px;">事故</a> <a href="/tags/代码/" style="font-size: 13px;">代码</a> <a href="/tags/优化/" style="font-size: 13.11px;">优化</a> <a href="/tags/分布式/" style="font-size: 13.11px;">分布式</a> <a href="/tags/博客/" style="font-size: 13px;">博客</a> <a href="/tags/工具/" style="font-size: 13.78px;">工具</a> <a href="/tags/架构/" style="font-size: 13.22px;">架构</a> <a href="/tags/树莓派/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/破解/" style="font-size: 13px;">破解</a> <a href="/tags/稳定性/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/端口/" style="font-size: 13px;">端口</a> <a href="/tags/算法/" style="font-size: 13.33px;">算法</a> <a href="/tags/编译器/" style="font-size: 13.33px;">编译器</a> <a href="/tags/网络/" style="font-size: 13.11px;">网络</a> <a href="/tags/翻译/" style="font-size: 13.89px;">翻译</a> <a href="/tags/解决/" style="font-size: 13.11px;">解决</a> <a href="/tags/跳表/" style="font-size: 13.11px;">跳表</a> <a href="/tags/进程/" style="font-size: 13.11px;">进程</a> <a href="/tags/邮件/" style="font-size: 13.11px;">邮件</a> <a href="/tags/链表/" style="font-size: 13px;">链表</a> <a href="/tags/锚点失效/" style="font-size: 13px;">锚点失效</a> <a href="/tags/陷阱/" style="font-size: 13px;">陷阱</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/ea5f4ef1/" class="title">【译】如何把WordPress网站迁移到新主机</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-04-24T13:36:34.000Z" itemprop="datePublished">2022-04-24</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Golang/">Golang</a>
+              </p>
+              <p class="item-title">
+                <a href="/dfd7f257/" class="title">【译】Go中的模糊测试</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-04-19T13:30:29.000Z" itemprop="datePublished">2022-04-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Design/">Design</a>
+              </p>
+              <p class="item-title">
+                <a href="/f17b426c/" class="title">【转】Redis 分布式锁使用不当事故记录</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-04-01T13:42:21.000Z" itemprop="datePublished">2022-04-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Design/">Design</a>
+              </p>
+              <p class="item-title">
+                <a href="/f5fbcabb/" class="title">【译】解决 CI/CD 中的仓库阻抗失配</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-03-26T06:32:25.000Z" itemprop="datePublished">2022-03-26</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/3632d5ff/" class="title">Postman 自动填充 Header</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-03-10T14:51:15.000Z" itemprop="datePublished">2022-03-10</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-分布式锁高并发优化" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      分布式锁高并发优化
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/7db296fb/" class="article-date">
+	  <time datetime="2019-10-18T14:38:39.000Z" itemprop="datePublished">2019-10-18</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Design/">Design</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/redis/">redis</a>, <a class="article-tag-link" href="/tags/优化/">优化</a>, <a class="article-tag-link" href="/tags/分布式/">分布式</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/7db296fb/#comments" class="article-comment-link">评论</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 1.7k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 5(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#问题场景">问题场景:</a></li>
+<li><a href="#库存超卖现象是怎么产生的">库存超卖现象是怎么产生的？</a></li>
+<li><a href="#用分布式锁如何解决库存超卖问题">用分布式锁如何解决库存超卖问题？</a></li>
+<li><a href="#分布式锁的方案在高并发场景下">分布式锁的方案在高并发场景下</a></li>
+<li><a href="#如何对分布式锁进行高并发优化">如何对分布式锁进行高并发优化？</a></li>
+<li><a href="#分布式锁并发优化方案有没有什么不足">分布式锁并发优化方案有没有什么不足？</a></li>
+</ul>
+<!-- tocstop -->
+
+<h4><span id="问题场景">问题场景:</span></h4><p>假如下单时，用分布式锁来防止库存超卖，但是是每秒上千订单的高并发场景，如何对分布式锁进行高并发优化来应对这个场景？</p>
+<h4><span id="库存超卖现象是怎么产生的">库存超卖现象是怎么产生的？</span></h4><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004321.png" alt="库存超卖"></p>
+<p>假设订单系统部署两台机器上，不同的用户都要同时买10台iphone，分别发了一个请求给订单系统。<br>接着每个订单系统实例都去数据库里查了一下，当前iphone库存是12台<br>于是乎，每个订单系统实例都发送SQL到数据库里下单，然后扣减了10个库存，其中一个将库存从12台扣减为2台，另外一个将库存从2台扣减为-8台</p>
+<h4><span id="用分布式锁如何解决库存超卖问题">用分布式锁如何解决库存超卖问题？</span></h4><p>分布式锁的实现原理:<br>同一个锁key，同一时间只能有一个客户端拿到锁，其他客户端会陷入无限的等待来尝试获取那个锁，只有获取到锁的客户端才能执行下面的业务逻辑。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004449.png" alt="分布式锁代码"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004607.png" alt="fenbushisuo_yuanli"></p>
+<p>从上图可以看到，只有一个订单系统实例可以成功加分布式锁，然后只有他一个实例可以查库存、判断库存是否充足、下单扣减库存，接着释放锁。</p>
+<p>释放锁之后，另外一个订单系统实例才能加锁，接着查库存，一下发现库存只有2台了，库存不足，无法购买，下单失败。不会将库存扣减为-8的</p>
+<h4><span id="分布式锁的方案在高并发场景下">分布式锁的方案在高并发场景下</span></h4><p>分布式锁一旦加了之后，对同一个商品的下单请求，会导致所有客户端都必须对同一个商品的库存锁key进行加锁。</p>
+<p>比如，对iphone这个商品的下单，都必对“iphone_stock”这个锁key来加锁。这样会导致对同一个商品的下单请求，就必须串行化，一个接一个的处理。</p>
+<p>假设加锁之后，释放锁之前，查库存 -&gt; 创建订单 -&gt; 扣减库存，这个过程性能很高吧，算他全过程20毫秒，这应该不错了。</p>
+<p>那么1秒是1000毫秒，只能容纳50个对这个商品的请求依次串行完成处理。</p>
+<p>比如一秒钟来50个请求，都是对iphone下单的，那么每个请求处理20毫秒，一个一个来，最后1000毫秒正好处理完50个请求。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004059.png" alt="分布式锁串行"></p>
+<p>所以, 能看出来简单的使用分布式锁来处理库存超卖问题，存在的缺陷就是同一个商品多用户同时下单的时候，会基于分布式锁串行化处理，导致没法同时处理同一个商品的大量下单的请求。</p>
+<p>这种方案，要是应对那种低并发、无秒杀场景的普通小电商系统，可能还可以接受。</p>
+<p>因为如果并发量很低，每秒就不到10个请求，没有瞬时高并发秒杀单个商品的场景的话，其实也很少会对同一个商品在一秒内瞬间下1000个订单，因为小电商系统没那场景。</p>
+<h4><span id="如何对分布式锁进行高并发优化">如何对分布式锁进行高并发优化？</span></h4><p>现在按照刚才的计算，你一秒钟只能处理针对iphone的50个订单。</p>
+<p>其实说出来也很简单，相信很多人看过java里的ConcurrentHashMap的源码和底层原理，应该知道里面的核心思路，就是分段加锁！</p>
+<p>把数据分成很多个段，每个段是一个单独的锁，所以多个线程过来并发修改数据的时候，可以并发的修改不同段的数据。不至于说，同一时间只能有一个线程独占修改ConcurrentHashMap中的数据。</p>
+<p>另外，Java 8中新增了一个LongAdder类，也是针对Java 7以前的AtomicLong进行的优化，解决的是CAS类操作在高并发场景下，使用乐观锁思路，会导致大量线程长时间重复循环。</p>
+<p>LongAdder中也是采用了类似的分段CAS操作，失败则自动迁移到下一个分段进行CAS的思路。</p>
+<p>其实分布式锁的优化思路也是类似的，之前我们是在另外一个业务场景下落地了这个方案到生产中，不是在库存超卖问题里用的。</p>
+<p>但是库存超卖这个业务场景不错，很容易理解，所以我们就用这个场景来说一下。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004652.png" alt="分段加锁"></p>
+<p>其实这就是分段加锁。你想，假如你现在iphone有1000个库存，那么你完全可以给拆成20个库存段，要是你愿意，可以在数据库的表里建20个库存字段，比如stock_01，stock_02，类似这样的，也可以在redis之类的地方放20个库存key。</p>
+<p>总之，就是把你的1000件库存给他拆开，每个库存段是50件库存，比如stock_01对应50件库存，stock_02对应50件库存。</p>
+<p>接着，每秒1000个请求过来了，好！此时其实可以是自己写一个简单的随机算法，每个请求都是随机在20个分段库存里，选择一个进行加锁。</p>
+<p>这样就好了，同时可以有最多20个下单请求一起执行，每个下单请求锁了一个库存分段，然后在业务逻辑里面，就对数据库或者是Redis中的那个分段库存进行操作即可，包括查库存 -&gt; 判断库存是否充足 -&gt; 扣减库存。</p>
+<p>这相当于什么呢？相当于一个20毫秒，可以并发处理掉20个下单请求，那么1秒，也就可以依次处理掉20 * 50  = 1000个对iphone的下单请求了。</p>
+<p>一旦对某个数据做了分段处理之后，有一个坑大家一定要注意：如果某个下单请求，咔嚓加锁，然后发现这个分段库存里的库存不足了，此时咋办？</p>
+<p>这时你得自动释放锁，然后立马换下一个分段库存，再次尝试加锁后尝试处理。这个过程一定要实现</p>
+<h4><span id="分布式锁并发优化方案有没有什么不足">分布式锁并发优化方案有没有什么不足？</span></h4>
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/7db296fb/" title="分布式锁高并发优化" target="_blank" rel="external">https://lxb.wiki/7db296fb/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/4fe063a2/" title="Golang编译器漏洞和标准库设计失误"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2d1cc7f9/" title="CentOS释放被占用端口"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:lxb@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> lxbwolf </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+
+
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
+</html>

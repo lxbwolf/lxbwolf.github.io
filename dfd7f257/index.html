@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+
+  
+  <title>【译】Go中的模糊测试 | Xiaobin&#39;s Blog</title>
+  <meta name="description" content="什么是模糊测试？ Go 中的软件测试 新增对模糊测试的支持 安装 gotip 来获取最新的功能 社区对于模糊测试的观点 现实中的模糊测试 为什么在 Go 中新增对模糊测试的原生支持 模糊测试工具     Go 团队接受了新增对模糊测试的支持的提议。  Go 的应用越来越广泛。现在它是云原生软件、容器软件、命令行工具和数据库等等的首选语言。Go 很早之前就已经有了内建的 对测试的支持。这使得写">
+<meta name="keywords" content="Go,翻译">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【译】Go中的模糊测试">
+<meta property="og:url" content="https://lxb.wiki/dfd7f257/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Blog">
+<meta property="og:description" content="什么是模糊测试？ Go 中的软件测试 新增对模糊测试的支持 安装 gotip 来获取最新的功能 社区对于模糊测试的观点 现实中的模糊测试 为什么在 Go 中新增对模糊测试的原生支持 模糊测试工具     Go 团队接受了新增对模糊测试的支持的提议。  Go 的应用越来越广泛。现在它是云原生软件、容器软件、命令行工具和数据库等等的首选语言。Go 很早之前就已经有了内建的 对测试的支持。这使得写">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2022-11-24T13:33:42.510Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【译】Go中的模糊测试">
+<meta name="twitter:description" content="什么是模糊测试？ Go 中的软件测试 新增对模糊测试的支持 安装 gotip 来获取最新的功能 社区对于模糊测试的观点 现实中的模糊测试 为什么在 Go 中新增对模糊测试的原生支持 模糊测试工具     Go 团队接受了新增对模糊测试的支持的提议。  Go 的应用越来越广泛。现在它是云原生软件、容器软件、命令行工具和数据库等等的首选语言。Go 很早之前就已经有了内建的 对测试的支持。这使得写">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/dfd7f257/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+</head>
+
+
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin.Liu</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:lxb@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/A-amp-V/">A&amp;V</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/C/">C++</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Golang/">Golang</a><span class="category-list-count">24</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Qt/">Qt</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/RPI/">RPI</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">17</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">16</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.11px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/业务/" style="font-size: 13px;">业务</a> <a href="/tags/事故/" style="font-size: 13px;">事故</a> <a href="/tags/代码/" style="font-size: 13px;">代码</a> <a href="/tags/优化/" style="font-size: 13.11px;">优化</a> <a href="/tags/分布式/" style="font-size: 13.11px;">分布式</a> <a href="/tags/博客/" style="font-size: 13px;">博客</a> <a href="/tags/工具/" style="font-size: 13.78px;">工具</a> <a href="/tags/架构/" style="font-size: 13.22px;">架构</a> <a href="/tags/树莓派/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/破解/" style="font-size: 13px;">破解</a> <a href="/tags/稳定性/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/端口/" style="font-size: 13px;">端口</a> <a href="/tags/算法/" style="font-size: 13.33px;">算法</a> <a href="/tags/编译器/" style="font-size: 13.33px;">编译器</a> <a href="/tags/网络/" style="font-size: 13.11px;">网络</a> <a href="/tags/翻译/" style="font-size: 13.89px;">翻译</a> <a href="/tags/解决/" style="font-size: 13.11px;">解决</a> <a href="/tags/跳表/" style="font-size: 13.11px;">跳表</a> <a href="/tags/进程/" style="font-size: 13.11px;">进程</a> <a href="/tags/邮件/" style="font-size: 13.11px;">邮件</a> <a href="/tags/链表/" style="font-size: 13px;">链表</a> <a href="/tags/锚点失效/" style="font-size: 13px;">锚点失效</a> <a href="/tags/陷阱/" style="font-size: 13px;">陷阱</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/ea5f4ef1/" class="title">【译】如何把WordPress网站迁移到新主机</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-04-24T13:36:34.000Z" itemprop="datePublished">2022-04-24</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Golang/">Golang</a>
+              </p>
+              <p class="item-title">
+                <a href="/dfd7f257/" class="title">【译】Go中的模糊测试</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-04-19T13:30:29.000Z" itemprop="datePublished">2022-04-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Design/">Design</a>
+              </p>
+              <p class="item-title">
+                <a href="/f17b426c/" class="title">【转】Redis 分布式锁使用不当事故记录</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-04-01T13:42:21.000Z" itemprop="datePublished">2022-04-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Design/">Design</a>
+              </p>
+              <p class="item-title">
+                <a href="/f5fbcabb/" class="title">【译】解决 CI/CD 中的仓库阻抗失配</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-03-26T06:32:25.000Z" itemprop="datePublished">2022-03-26</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/3632d5ff/" class="title">Postman 自动填充 Header</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-03-10T14:51:15.000Z" itemprop="datePublished">2022-03-10</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-【译】Go中的模糊测试" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      【译】Go中的模糊测试
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/dfd7f257/" class="article-date">
+	  <time datetime="2022-04-19T13:30:29.000Z" itemprop="datePublished">2022-04-19</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Golang/">Golang</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/Go/">Go</a>, <a class="article-tag-link" href="/tags/翻译/">翻译</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/dfd7f257/#comments" class="article-comment-link">评论</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 2.1k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 7(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#什么是模糊测试">什么是模糊测试？</a></li>
+<li><a href="#go-中的软件测试">Go 中的软件测试</a></li>
+<li><a href="#新增对模糊测试的支持">新增对模糊测试的支持</a></li>
+<li><a href="#安装-gotip-来获取最新的功能">安装 gotip 来获取最新的功能</a></li>
+<li><a href="#社区对于模糊测试的观点">社区对于模糊测试的观点</a></li>
+<li><a href="#现实中的模糊测试">现实中的模糊测试</a></li>
+<li><a href="#为什么在-go-中新增对模糊测试的原生支持">为什么在 Go 中新增对模糊测试的原生支持</a></li>
+<li><a href="#模糊测试工具">模糊测试工具</a></li>
+</ul>
+<!-- tocstop -->
+
+<blockquote>
+<p>Go 团队接受了新增对模糊测试的支持的提议。</p>
+</blockquote>
+<p><a href="https://go.dev/" target="_blank" rel="noopener">Go</a> 的应用越来越广泛。现在它是云原生软件、容器软件、命令行工具和数据库等等的首选语言。Go 很早之前就已经有了内建的 <a href="https://pkg.go.dev/testing" target="_blank" rel="noopener">对测试的支持</a>。这使得写测试代码和运行都相当简单。</p>
+<h3><span id="什么是模糊测试">什么是模糊测试？</span></h3><p><ruby>模糊测试<rt>fuzz testing</rt></ruby>（fuzzing）是指向你的软件输入非预期的数据。理想情况下，这种测试会让你的应用程序崩溃或有非预期的表现。抛开最终的结果，从程序对非预期的输入数据的处理结果中你可以得到很多信息，这样你就可以增加一些合适的错误处理。</p>
+<p>任何一个软件都有对不同来源的输入或数据的接收说明，软件会对这些数据进行处理并返回适当的结果。软件开发后，测试工程师团队对其进行测试，找出软件中的错误，给出测试报告，并（由开发者）修复。通常测试的目的是验证软件的行为是否符合预期。测试又可以细分为不同的类型，如功能测试、集成测试、性能测试等等。每种测试方法关注软件功能的某一个方面，以便发现错误或者提升可靠性或性能。</p>
+<p>模糊测试在这一测试过程上更进一步，尝试向软件程序输入一些“无效”或“随机”的数据。这种输入是故意的，期望得到的结果就是程序崩溃或输出异常，这样就可以暴露程序中的错误以便由开发者来修复它们。与其他测试类似，很少需要手动进行模糊测试，业界有大量的模糊测试工具可以将这个过程自动化。</p>
+<h3><span id="go-中的软件测试">Go 中的软件测试</span></h3><p>举个例子，假如你想测试 <code>add.go</code> 中的 <code>Add()</code> 函数，你可以在 <code>add_test.go</code> 中导入 <code>testing</code> 包并把测试体写在以 <code>TestXXX()</code>  开头的函数内。</p>
+<p>考虑如下代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">func Add(num1, num2 int) int &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 <code>add_test.go</code> 文件中，你可能有如下测试代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">import &quot;testing&quot;</span><br><span class="line"></span><br><span class="line">func TestAdd(t *testing.T) &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行测试：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ go test</span><br></pre></td></tr></table></figure>
+
+<h3><span id="新增对模糊测试的支持">新增对模糊测试的支持</span></h3><p>Go 团队已经接受了 <a href="https://github.com/golang/go/issues/44551" target="_blank" rel="noopener">新增对模糊测试的支持的提议</a>，以进一步推动这项工作。这涉及到新增一个 <code>testing.F</code> 类型，在 <code>_test.go</code> 文件中新增 <code>FuzzXXX()</code> 函数，在 Go 工具中会新增一个 <code>-fuzz</code> 选项来执行这些测试。</p>
+<p>在 <code>add_test.go</code> 文件中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">func FuzzAdd(f *testing.F) &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行以下代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ go test -fuzz</span><br></pre></td></tr></table></figure>
+
+<p>在本文编写时，这个 <a href="https://go.dev/blog/fuzz-beta" target="_blank" rel="noopener">功能还是试验性的</a>，但是应该会在 1.18 发布版本中包含。（LCTT 译注：<a href="https://go.dev/blog/go1.18" target="_blank" rel="noopener">Go 1.18</a> 刚刚发布，已经包含了对模糊测试的支持）目前很多功能如 <code>-keepfuzzing</code>、<code>-race</code> 等也还没有支持。Go 团队最近发布了一篇 <a href="https://go.dev/doc/tutorial/fuzz" target="_blank" rel="noopener">模糊测试教程</a>，值得读一下。</p>
+<h3><span id="安装-gotip-来获取最新的功能">安装 gotip 来获取最新的功能</span></h3><p>如果你极度渴望在正式发布之前尝试这些功能，你可以使用 <code>gotip</code> 来测试即将正式发布的 Go 功能并反馈给他们。你可以使用下面的命令来安装 <code>gotip</code>。安装之后，你可以用 <code>gotip</code> 程序代替以前的 <code>go</code> 程序来编译和运行程序。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ go install golang.org/dl/gotip@latest</span><br><span class="line">$ gotip download</span><br><span class="line"></span><br><span class="line">$ gotip version</span><br><span class="line">go version devel go1.18-f009910 Thu Jan 6 16:22:21 2022 +0000 linux/amd64</span><br></pre></td></tr></table></figure>
+
+<h3><span id="社区对于模糊测试的观点">社区对于模糊测试的观点</span></h3><p>软件社区中经常会讨论模糊测试，不同的人对模糊测试有不同的看法。有些人认为这是一种有用的技术，可以找到错误，尤其是在安全方面。然而考虑到模糊测试所需要的资源（CPU、内存），有人就认为这是一种浪费，而他们更愿意用其他的测试方法。即使在 Go 团队内部，意见也不统一。我们可以看到 Go 的联合创始人 Rob Pike 对模糊测试的使用和在 Go 中的实现是持轻微的怀疑态度的。</p>
+<blockquote>
+<p>…<em>虽然模糊测试有助于发现某类错误，但是它会占用大量的 CPU 和存储资源，并且效益成本比率也不明确。我担心为了写模糊测试浪费精力，或者 git 仓库中充斥大量无用的测试数据</em></p>
+<p>~<a href="https://github.com/golang/go/issues/44551#issuecomment-784584785" target="_blank" rel="noopener">Rob Pike</a></p>
+</blockquote>
+<p>然而，Go 安全团队的另一个成员，Filo Sottile，似乎对 Go 新增支持模糊测试很乐观，举了很多例子来支持，也希望模糊测试能成为开发过程中的一部分。</p>
+<blockquote>
+<p><em>我想说模糊测试可以发现极端情况下的错误。这是我们作为安全团队对其感兴趣的原因：在极端情况下发现的错误可以避免在生产环境中成为弱点。</em></p>
+<p><em>我们希望模糊测试能成为开发的一部分 —— 不只是构建或安全方面 —— 而是整个开发过程：它能提升相关代码的质量…</em></p>
+<p>~<a href="https://github.com/golang/go/issues/44551#issuecomment-784655571" target="_blank" rel="noopener">Filo Sottile</a></p>
+</blockquote>
+<h3><span id="现实中的模糊测试">现实中的模糊测试</span></h3><p>对我而言，模糊测试在发现错误以及让系统变得更安全和更有弹性方面似乎非常有效。举个例子，Linux 内核也会使用名为 <a href="https://github.com/google/syzkaller" target="_blank" rel="noopener">syzkaller</a> 的工具进行模糊测试，这个工具已经发现了 <a href="https://github.com/google/syzkaller/blob/master/docs/linux/found_bugs.md" target="_blank" rel="noopener">大量</a> 错误。</p>
+<p><a href="https://github.com/google/AFL" target="_blank" rel="noopener">AFL</a> 也是比较流行的模糊测试工具，用来测试 C/C++ 写的程序。</p>
+<p>之前也有对 Go 程序进行模糊测试的观点，其中之一就是 Filo 在 GitHub 评论中提到的 <a href="https://github.com/dvyukov/go-fuzz" target="_blank" rel="noopener">go-fuzz</a>。</p>
+<blockquote>
+<p><em>go-fuzz 的记录提供了相当惊人的证据，证明模糊处理能很好地找到人类没有发现的错误。根据我的经验，我们只需要消耗一点点 CPU 的时间就可以得到极端情况下非常高效的测试结果。</em></p>
+</blockquote>
+<h3><span id="为什么在-go-中新增对模糊测试的原生支持">为什么在 Go 中新增对模糊测试的原生支持</span></h3><p>如果我们的需求是对 Go 程序进行模糊测试，之前的工具像 <code>go-fuzz</code> 就可以完成，那么为什么要在这种语言中增加原生支持呢？<a href="https://go.googlesource.com/proposal/+/master/design/draft-fuzzing.md" target="_blank" rel="noopener">Go 模糊测试设计草案</a> 中说明了这样做的一些根本原因。设计的思路是让开发过程更简单，因为前面说的工具增加了开发者的工作量，还有功能缺失。如果你没有接触过模糊测试，那么我建议你读一下设计草案文档。</p>
+<blockquote>
+<p>开发者可以使用诸如 <code>go-fuzz</code> 或 <code>fzgo</code>（基于 <code>go-fuzz</code>）来解决某些需求。然而，已有的每种解决方案都需要在典型的 Go 测试上做更多的事，而且还缺少关键的功能。相比于其他的 Go 测试（如基准测试和单元测试），模糊测试不应该比它们复杂，功能也不应该比它们少。已有的解决方案增加了额外的开销，比如自定义命令行工具。</p>
+</blockquote>
+<h3><span id="模糊测试工具">模糊测试工具</span></h3><p>在大家期望 Go 语言新增功能的列表中，模糊测试是其中很受欢迎的一项。虽然现在还是试验性的，但在将要到来的发布版本中会变得更强大。这给了我们足够的时间去尝试它以及探索它的使用场景。我们不应该把它视为一种开销，如果使用得当它会是一种发现错误非常高效的测试工具。使用 Go 的团队应该推动它的使用，开发者可以写简单的模糊测试，测试团队去慢慢扩展以此来使用它全部的能力。</p>
+<hr>
+<p>via: <a href="https://opensource.com/article/22/1/native-go-fuzz-testing" target="_blank" rel="noopener">https://opensource.com/article/22/1/native-go-fuzz-testing</a></p>
+<p>作者：<a href="https://opensource.com/users/gkamathe" target="_blank" rel="noopener">Gaurav Kamathe</a><br>选题：<a href="https://github.com/lujun9972" target="_blank" rel="noopener">lujun9972</a><br>译者：<a href="https://github.com/lxbwolf" target="_blank" rel="noopener">lxbwolf</a><br>校对：<a href="https://github.com/wxy" target="_blank" rel="noopener">wxy</a></p>
+<p>本文由 <a href="https://github.com/LCTT/TranslateProject" target="_blank" rel="noopener">LCTT</a> 原创编译，<a href="https://linux.cn/" target="_blank" rel="noopener">Linux中国</a> 荣誉推出</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/dfd7f257/" title="【译】Go中的模糊测试" target="_blank" rel="external">https://lxb.wiki/dfd7f257/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/ea5f4ef1/" title="【译】如何把WordPress网站迁移到新主机"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/f17b426c/" title="【转】Redis 分布式锁使用不当事故记录"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:lxb@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> lxbwolf </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+
+
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
+</html>
