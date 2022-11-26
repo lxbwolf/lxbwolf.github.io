@@ -1,38 +1,39 @@
 <!DOCTYPE html>
 <html lang=zh>
-<head><meta name="generator" content="Hexo 3.9.0">
+<head>
   <meta charset="utf-8">
   
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
   <meta name="renderer" content="webkit">
-  <meta http-equiv="Cache-Control" content="no-transform">
-  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="format-detection" content="telephone=no,email=no,adress=no">
   <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
   <!-- Color theme for statusbar -->
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#000000" />
   <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
-  <meta http-equiv="window-target" content="_top">
+  <meta http-equiv="window-target" content="_top" />
   
 
   
   <title>Linux 守护进程的启动方法 | Xiaobin&#39;s Blog</title>
-  <meta name="description" content="1 问题的由来 2 前台任务与后台任务 3 SIGHUP信号 4 disown 命令 5 标准 I/O 6 nohup 命令 7 Screen 命令与 Tmux 命令 8 Node 工具 9 Systemd    “守护进程”（daemon）就是一直在后台运行的进程（daemon）。 如何将一个 Web 应用，启动为守护进程。  1 问题的由来Web应用写好后，下一件事就是启动，让它一直在后">
-<meta name="keywords" content="进程,daemon">
+  <meta name="description" content="1 问题的由来 2 前台任务与后台任务 3 SIGHUP信号 4 disown 命令 5 标准 I&#x2F;O 6 nohup 命令 7 Screen 命令与 Tmux 命令 8 Node 工具 9 Systemd    “守护进程”（daemon）就是一直在后台运行的进程（daemon）。 如何将一个 Web 应用，启动为守护进程。  1 问题的由来Web应用写好后，下一件事就是启动，让它一直在后">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Linux 守护进程的启动方法">
 <meta property="og:url" content="https://lxb.wiki/2e3ff18f/index.html">
 <meta property="og:site_name" content="Xiaobin&#39;s Blog">
-<meta property="og:description" content="1 问题的由来 2 前台任务与后台任务 3 SIGHUP信号 4 disown 命令 5 标准 I/O 6 nohup 命令 7 Screen 命令与 Tmux 命令 8 Node 工具 9 Systemd    “守护进程”（daemon）就是一直在后台运行的进程（daemon）。 如何将一个 Web 应用，启动为守护进程。  1 问题的由来Web应用写好后，下一件事就是启动，让它一直在后">
-<meta property="og:locale" content="zh-CN">
+<meta property="og:description" content="1 问题的由来 2 前台任务与后台任务 3 SIGHUP信号 4 disown 命令 5 标准 I&#x2F;O 6 nohup 命令 7 Screen 命令与 Tmux 命令 8 Node 工具 9 Systemd    “守护进程”（daemon）就是一直在后台运行的进程（daemon）。 如何将一个 Web 应用，启动为守护进程。  1 问题的由来Web应用写好后，下一件事就是启动，让它一直在后">
+<meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/201130/00.png">
-<meta property="og:updated_time" content="2020-11-30T16:07:09.880Z">
+<meta property="article:published_time" content="2020-11-03T12:49:04.000Z">
+<meta property="article:modified_time" content="2020-11-30T16:07:09.880Z">
+<meta property="article:author" content="Xiaobin.Liu">
+<meta property="article:tag" content="进程">
+<meta property="article:tag" content="daemon">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Linux 守护进程的启动方法">
-<meta name="twitter:description" content="1 问题的由来 2 前台任务与后台任务 3 SIGHUP信号 4 disown 命令 5 标准 I/O 6 nohup 命令 7 Screen 命令与 Tmux 命令 8 Node 工具 9 Systemd    “守护进程”（daemon）就是一直在后台运行的进程（daemon）。 如何将一个 Web 应用，启动为守护进程。  1 问题的由来Web应用写好后，下一件事就是启动，让它一直在后">
 <meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/201130/00.png">
   <!-- Canonical links  把后面的 index.html 去掉-->
   <link rel="canonical" href="https://lxb.wiki/2e3ff18f/">
@@ -42,7 +43,9 @@
   
     <link rel="icon" href="/favicon.png" type="image/x-icon">
   
-  <link rel="stylesheet" href="/css/style.css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
   
   
   
@@ -60,7 +63,7 @@
 
       gtag('config', 'G-JZ2PWLT6JY');
     </script>
-</head>
+<meta name="generator" content="Hexo 6.0.0"></head>
 
 
 <body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
@@ -208,7 +211,7 @@
   <div class="widget">
     <h3 class="widget-title">标签云</h3>
     <div class="widget-body tagcloud">
-      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.11px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/业务/" style="font-size: 13px;">业务</a> <a href="/tags/事故/" style="font-size: 13px;">事故</a> <a href="/tags/代码/" style="font-size: 13px;">代码</a> <a href="/tags/优化/" style="font-size: 13.11px;">优化</a> <a href="/tags/分布式/" style="font-size: 13.11px;">分布式</a> <a href="/tags/博客/" style="font-size: 13px;">博客</a> <a href="/tags/工具/" style="font-size: 13.78px;">工具</a> <a href="/tags/架构/" style="font-size: 13.22px;">架构</a> <a href="/tags/树莓派/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/破解/" style="font-size: 13px;">破解</a> <a href="/tags/稳定性/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/端口/" style="font-size: 13px;">端口</a> <a href="/tags/算法/" style="font-size: 13.33px;">算法</a> <a href="/tags/编译器/" style="font-size: 13.33px;">编译器</a> <a href="/tags/网络/" style="font-size: 13.11px;">网络</a> <a href="/tags/翻译/" style="font-size: 13.89px;">翻译</a> <a href="/tags/解决/" style="font-size: 13.11px;">解决</a> <a href="/tags/跳表/" style="font-size: 13.11px;">跳表</a> <a href="/tags/进程/" style="font-size: 13.11px;">进程</a> <a href="/tags/邮件/" style="font-size: 13.11px;">邮件</a> <a href="/tags/链表/" style="font-size: 13px;">链表</a> <a href="/tags/锚点失效/" style="font-size: 13px;">锚点失效</a> <a href="/tags/陷阱/" style="font-size: 13px;">陷阱</a>
+      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.11px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/%E4%B8%9A%E5%8A%A1/" style="font-size: 13px;">业务</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E4%BB%A3%E7%A0%81/" style="font-size: 13px;">代码</a> <a href="/tags/%E4%BC%98%E5%8C%96/" style="font-size: 13.11px;">优化</a> <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" style="font-size: 13.11px;">分布式</a> <a href="/tags/%E5%8D%9A%E5%AE%A2/" style="font-size: 13px;">博客</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.78px;">工具</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.22px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/%E7%AB%AF%E5%8F%A3/" style="font-size: 13px;">端口</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.33px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91%E5%99%A8/" style="font-size: 13.33px;">编译器</a> <a href="/tags/%E7%BD%91%E7%BB%9C/" style="font-size: 13.11px;">网络</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.89px;">翻译</a> <a href="/tags/%E8%A7%A3%E5%86%B3/" style="font-size: 13.11px;">解决</a> <a href="/tags/%E8%B7%B3%E8%A1%A8/" style="font-size: 13.11px;">跳表</a> <a href="/tags/%E8%BF%9B%E7%A8%8B/" style="font-size: 13.11px;">进程</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.11px;">邮件</a> <a href="/tags/%E9%93%BE%E8%A1%A8/" style="font-size: 13px;">链表</a> <a href="/tags/%E9%94%9A%E7%82%B9%E5%A4%B1%E6%95%88/" style="font-size: 13px;">锚点失效</a> <a href="/tags/%E9%99%B7%E9%98%B1/" style="font-size: 13px;">陷阱</a>
     </div>
   </div>
 
@@ -345,7 +348,7 @@
         
   <span class="article-tag">
     <i class="icon icon-tags"></i>
-	<a class="article-tag-link" href="/tags/daemon/">daemon</a>, <a class="article-tag-link" href="/tags/进程/">进程</a>
+	<a class="article-tag-link-link" href="/tags/daemon/" rel="tag">daemon</a>, <a class="article-tag-link-link" href="/tags/%E8%BF%9B%E7%A8%8B/" rel="tag">进程</a>
   </span>
 
 
@@ -354,10 +357,10 @@
         <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2e3ff18f/#comments" class="article-comment-link">评论</a></span>
         
 	
-		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 2.4k(字)</span>
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 2.3k(字)</span>
 	
 	
-		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 9(分)</span>
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 8(分)</span>
 	
 
       </div>
@@ -379,12 +382,12 @@
 </ul>
 <!-- tocstop -->
 
-<p><a href="http://baike.baidu.com/view/53123.htm" target="_blank" rel="noopener">“守护进程”</a>（daemon）就是一直在后台运行的进程（daemon）。</p>
+<p><a target="_blank" rel="noopener" href="http://baike.baidu.com/view/53123.htm">“守护进程”</a>（daemon）就是一直在后台运行的进程（daemon）。</p>
 <p>如何将一个 Web 应用，启动为守护进程。</p>
 <p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/201130/00.png" alt></p>
 <h2><span id="1-问题的由来">1 问题的由来</span></h2><p>Web应用写好后，下一件事就是启动，让它一直在后台运行。</p>
 <p>这并不容易。举例来说，下面是一个最简单的Node应用<code>server.js</code>，只有6行。</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> http = <span class="built_in">require</span>(<span class="string">'http'</span>);</span><br><span class="line"></span><br><span class="line">http.createServer(<span class="function"><span class="keyword">function</span>(<span class="params">req, res</span>) </span>&#123;</span><br><span class="line">  res.writeHead(<span class="number">200</span>, &#123;<span class="string">'Content-Type'</span>: <span class="string">'text/plain'</span>&#125;);</span><br><span class="line">  res.end(<span class="string">'Hello World'</span>);</span><br><span class="line">&#125;).listen(<span class="number">5000</span>);</span><br></pre></td></tr></table></figure>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> http = <span class="built_in">require</span>(<span class="string">&#x27;http&#x27;</span>);</span><br><span class="line"></span><br><span class="line">http.<span class="title function_">createServer</span>(<span class="keyword">function</span>(<span class="params">req, res</span>) &#123;</span><br><span class="line">  res.<span class="title function_">writeHead</span>(<span class="number">200</span>, &#123;<span class="string">&#x27;Content-Type&#x27;</span>: <span class="string">&#x27;text/plain&#x27;</span>&#125;);</span><br><span class="line">  res.<span class="title function_">end</span>(<span class="string">&#x27;Hello World&#x27;</span>);</span><br><span class="line">&#125;).<span class="title function_">listen</span>(<span class="number">5000</span>);</span><br></pre></td></tr></table></figure>
 
 <p>你在命令行下启动它。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ node server.js</span><br></pre></td></tr></table></figure>
@@ -428,7 +431,7 @@
 
 <h2><span id="5-标准-io">5 标准 I/O</span></h2><p>使用<code>disown</code>命令之后，还有一个问题。那就是，退出 session 以后，如果后台进程与标准I/O有交互，它还是会挂掉。</p>
 <p>还是以上面的脚本为例，现在加入一行。</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> http = <span class="built_in">require</span>(<span class="string">'http'</span>);</span><br><span class="line"></span><br><span class="line">http.createServer(<span class="function"><span class="keyword">function</span>(<span class="params">req, res</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'server starts...'</span>); <span class="comment">// 加入此行</span></span><br><span class="line">  res.writeHead(<span class="number">200</span>, &#123;<span class="string">'Content-Type'</span>: <span class="string">'text/plain'</span>&#125;);</span><br><span class="line">  res.end(<span class="string">'Hello World'</span>);</span><br><span class="line">&#125;).listen(<span class="number">5000</span>);</span><br></pre></td></tr></table></figure>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> http = <span class="built_in">require</span>(<span class="string">&#x27;http&#x27;</span>);</span><br><span class="line"></span><br><span class="line">http.<span class="title function_">createServer</span>(<span class="keyword">function</span>(<span class="params">req, res</span>) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;server starts...&#x27;</span>); <span class="comment">// 加入此行</span></span><br><span class="line">  res.<span class="title function_">writeHead</span>(<span class="number">200</span>, &#123;<span class="string">&#x27;Content-Type&#x27;</span>: <span class="string">&#x27;text/plain&#x27;</span>&#125;);</span><br><span class="line">  res.<span class="title function_">end</span>(<span class="string">&#x27;Hello World&#x27;</span>);</span><br><span class="line">&#125;).<span class="title function_">listen</span>(<span class="number">5000</span>);</span><br></pre></td></tr></table></figure>
 
 <p>启动上面的脚本，然后再执行<code>disown</code>命令。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ node server.js &amp;</span><br><span class="line">$ <span class="built_in">disown</span></span><br></pre></td></tr></table></figure>
@@ -437,12 +440,12 @@
 <p>这是因为”后台任务”的标准 I/O 继承自当前 session，<code>disown</code>命令并没有改变这一点。一旦”后台任务”读写标准 I/O，就会发现它已经不存在了，所以就报错终止执行。</p>
 <p>为了解决这个问题，需要对”后台任务”的标准 I/O 进行重定向。</p>
 <blockquote>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; $ node server.js &gt; stdout.txt 2&gt; stderr.txt &lt; /dev/null &amp;</span><br><span class="line">&gt; $ <span class="built_in">disown</span></span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ node server.js &gt; stdout.txt 2&gt; stderr.txt &lt; /dev/null &amp;</span><br><span class="line">$ <span class="built_in">disown</span></span><br></pre></td></tr></table></figure>
 </blockquote>
 <p>上面这样执行，基本上就没有问题了。</p>
 <h2><span id="6-nohup-命令">6 nohup 命令</span></h2><p>还有比<code>disown</code>更方便的命令，就是<code>nohup</code>。</p>
 <blockquote>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; $ nohup node server.js &amp;</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">nohup</span> node server.js &amp;</span><br></pre></td></tr></table></figure>
 </blockquote>
 <p><code>nohup</code>命令对<code>server.js</code>进程做了三件事。</p>
 <blockquote>
@@ -454,45 +457,45 @@
 </blockquote>
 <p>也就是说，<code>nohup</code>命令实际上将子进程与它所在的 session 分离了。</p>
 <p>注意，<code>nohup</code>命令不会自动把进程变为”后台任务”，所以必须加上<code>&amp;</code>符号。</p>
-<h2><span id="7-screen-命令与-tmux-命令">7 Screen 命令与 Tmux 命令</span></h2><p>另一种思路是使用 terminal multiplexer （终端复用器：在同一个终端里面，管理多个session），典型的就是 <a href="https://www.gnu.org/software/screen/" target="_blank" rel="noopener">Screen</a> 命令和 <a href="https://tmux.github.io/" target="_blank" rel="noopener">Tmux</a> 命令。</p>
+<h2><span id="7-screen-命令与-tmux-命令">7 Screen 命令与 Tmux 命令</span></h2><p>另一种思路是使用 terminal multiplexer （终端复用器：在同一个终端里面，管理多个session），典型的就是 <a target="_blank" rel="noopener" href="https://www.gnu.org/software/screen/">Screen</a> 命令和 <a target="_blank" rel="noopener" href="https://tmux.github.io/">Tmux</a> 命令。</p>
 <p>它们可以在当前 session 里面，新建另一个 session。这样的话，当前 session 一旦结束，不影响其他 session。而且，以后重新登录，还可以再连上早先新建的 session。</p>
 <p>Screen 的用法如下。</p>
 <blockquote>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&gt; <span class="comment"># 新建一个 session</span></span><br><span class="line">&gt; $ screen</span><br><span class="line">&gt; $ node server.js</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 新建一个 session</span></span><br><span class="line">$ screen</span><br><span class="line">$ node server.js</span><br></pre></td></tr></table></figure>
 </blockquote>
 <p>然后，按下<code>ctrl + A</code>和<code>ctrl + D</code>，回到原来的 session，从那里退出登录。下次登录时，再切回去。</p>
 <blockquote>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; $ screen -r</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ screen -r</span><br></pre></td></tr></table></figure>
 </blockquote>
 <p>如果新建多个后台 session，就需要为它们指定名字。</p>
 <blockquote>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&gt; $ screen -S name</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 切回指定 session</span></span><br><span class="line">&gt; $ screen -r name</span><br><span class="line">&gt; $ screen -r pid_number</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 列出所有 session</span></span><br><span class="line">&gt; $ screen -ls</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ screen -S name</span><br><span class="line"></span><br><span class="line"><span class="comment"># 切回指定 session</span></span><br><span class="line">$ screen -r name</span><br><span class="line">$ screen -r pid_number</span><br><span class="line"></span><br><span class="line"><span class="comment"># 列出所有 session</span></span><br><span class="line">$ screen -<span class="built_in">ls</span></span><br></pre></td></tr></table></figure>
 </blockquote>
 <p>如果要停掉某个 session，可以先切回它，然后按下<code>ctrl + c</code>和<code>ctrl + d</code>。</p>
 <p>Tmux 比 Screen 功能更多、更强大，它的基本用法如下。</p>
 <blockquote>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&gt; $ tmux</span><br><span class="line">&gt; $ node server.js</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 返回原来的session</span></span><br><span class="line">&gt; $ tmux detach</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ tmux</span><br><span class="line">$ node server.js</span><br><span class="line"></span><br><span class="line"><span class="comment"># 返回原来的session</span></span><br><span class="line">$ tmux detach</span><br></pre></td></tr></table></figure>
 </blockquote>
 <p>除了<code>tmux detach</code>，另一种方法是按下<code>Ctrl + B</code>和<code>d</code> ，也可以回到原来的 session。</p>
 <blockquote>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; <span class="comment"># 下次登录时，返回后台正在运行服务session</span></span><br><span class="line">&gt; $ tmux attach</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 下次登录时，返回后台正在运行服务session</span></span><br><span class="line">$ tmux attach</span><br></pre></td></tr></table></figure>
 </blockquote>
 <p>如果新建多个 session，就需要为每个 session 指定名字。</p>
 <blockquote>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&gt; <span class="comment"># 新建 session</span></span><br><span class="line">&gt; $ tmux new -s session_name</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 切换到指定 session</span></span><br><span class="line">&gt; $ tmux attach -t session_name</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 列出所有 session</span></span><br><span class="line">&gt; $ tmux list-sessions</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 退出当前 session，返回前一个 session </span></span><br><span class="line">&gt; $ tmux detach</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 杀死指定 session</span></span><br><span class="line">&gt; $ tmux <span class="built_in">kill</span>-session -t session-name</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 新建 session</span></span><br><span class="line">$ tmux new -s session_name</span><br><span class="line"></span><br><span class="line"><span class="comment"># 切换到指定 session</span></span><br><span class="line">$ tmux attach -t session_name</span><br><span class="line"></span><br><span class="line"><span class="comment"># 列出所有 session</span></span><br><span class="line">$ tmux list-sessions</span><br><span class="line"></span><br><span class="line"><span class="comment"># 退出当前 session，返回前一个 session </span></span><br><span class="line">$ tmux detach</span><br><span class="line"></span><br><span class="line"><span class="comment"># 杀死指定 session</span></span><br><span class="line">$ tmux kill-session -t session-name</span><br></pre></td></tr></table></figure>
 </blockquote>
-<h2><span id="8-node-工具">8 Node 工具</span></h2><p>对于 Node 应用来说，可以不用上面的方法，有一些专门用来启动的工具：<a href="https://github.com/foreverjs/forever" target="_blank" rel="noopener">forever</a>，<a href="http://nodemon.io/" target="_blank" rel="noopener">nodemon</a> 和 <a href="http://pm2.keymetrics.io/" target="_blank" rel="noopener">pm2</a>。</p>
+<h2><span id="8-node-工具">8 Node 工具</span></h2><p>对于 Node 应用来说，可以不用上面的方法，有一些专门用来启动的工具：<a target="_blank" rel="noopener" href="https://github.com/foreverjs/forever">forever</a>，<a target="_blank" rel="noopener" href="http://nodemon.io/">nodemon</a> 和 <a target="_blank" rel="noopener" href="http://pm2.keymetrics.io/">pm2</a>。</p>
 <p>forever 的功能很简单，就是保证进程退出时，应用会自动重启。</p>
 <blockquote>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">&gt; <span class="comment"># 作为前台任务启动</span></span><br><span class="line">&gt; $ forever server.js</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 作为服务进程启动 </span></span><br><span class="line">&gt; $ forever start app.js</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 停止服务进程</span></span><br><span class="line">&gt; $ forever stop Id</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 重启服务进程</span></span><br><span class="line">&gt; $ forever restart Id</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 监视当前目录的文件变动，一有变动就重启</span></span><br><span class="line">&gt; $ forever -w server.js</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># -m 参数指定最多重启次数</span></span><br><span class="line">&gt; $ forever -m 5 server.js </span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 列出所有进程</span></span><br><span class="line">&gt; $ forever list</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 作为前台任务启动</span></span><br><span class="line">$ forever server.js</span><br><span class="line"></span><br><span class="line"><span class="comment"># 作为服务进程启动 </span></span><br><span class="line">$ forever start app.js</span><br><span class="line"></span><br><span class="line"><span class="comment"># 停止服务进程</span></span><br><span class="line">$ forever stop Id</span><br><span class="line"></span><br><span class="line"><span class="comment"># 重启服务进程</span></span><br><span class="line">$ forever restart Id</span><br><span class="line"></span><br><span class="line"><span class="comment"># 监视当前目录的文件变动，一有变动就重启</span></span><br><span class="line">$ forever -w server.js</span><br><span class="line"></span><br><span class="line"><span class="comment"># -m 参数指定最多重启次数</span></span><br><span class="line">$ forever -m 5 server.js </span><br><span class="line"></span><br><span class="line"><span class="comment"># 列出所有进程</span></span><br><span class="line">$ forever list</span><br></pre></td></tr></table></figure>
 </blockquote>
 <p><code>nodemon</code>一般只在开发时使用，它最大的长处在于 watch 功能，一旦文件发生变化，就自动重启进程。</p>
 <blockquote>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&gt; <span class="comment"># 默认监视当前目录的文件变化</span></span><br><span class="line">&gt; $ nodemon server.js</span><br><span class="line">&gt; </span><br><span class="line">&gt; ＃ 监视指定文件的变化   </span><br><span class="line">&gt; $ nodemon --watch app --watch libs server.js  </span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 默认监视当前目录的文件变化</span></span><br><span class="line">$ nodemon server.js</span><br><span class="line"></span><br><span class="line">＃ 监视指定文件的变化   </span><br><span class="line">$ nodemon --watch app --watch libs server.js  </span><br></pre></td></tr></table></figure>
 </blockquote>
 <p>pm2 的功能最强大，除了重启进程以外，还能实时收集日志和监控。</p>
 <blockquote>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">&gt; <span class="comment"># 启动应用</span></span><br><span class="line">&gt; $ pm2 start app.js</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 指定同时起多少个进程（由CPU核心数决定），组成一个集群</span></span><br><span class="line">&gt; $ pm2 start app.js -i max</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 列出所有任务</span></span><br><span class="line">&gt; $ pm2 list</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 停止指定任务</span></span><br><span class="line">&gt; $ pm2 stop 0</span><br><span class="line">&gt; </span><br><span class="line">&gt; ＃ 重启指定任务</span><br><span class="line">&gt; $ pm2 restart 0</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 删除指定任务</span></span><br><span class="line">&gt; $ pm2 delete 0</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 保存当前的所有任务，以后可以恢复</span></span><br><span class="line">&gt; $ pm2 save</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 列出每个进程的统计数据</span></span><br><span class="line">&gt; $ pm2 monit</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 查看所有日志</span></span><br><span class="line">&gt; $ pm2 logs</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 导出数据</span></span><br><span class="line">&gt; $ pm2 dump</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 重启所有进程</span></span><br><span class="line">&gt; $ pm2 <span class="built_in">kill</span></span><br><span class="line">&gt; $ pm2 resurect</span><br><span class="line">&gt; </span><br><span class="line">&gt; <span class="comment"># 启动web界面 http://localhost:9615</span></span><br><span class="line">&gt; $ pm2 web</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 启动应用</span></span><br><span class="line">$ pm2 start app.js</span><br><span class="line"></span><br><span class="line"><span class="comment"># 指定同时起多少个进程（由CPU核心数决定），组成一个集群</span></span><br><span class="line">$ pm2 start app.js -i max</span><br><span class="line"></span><br><span class="line"><span class="comment"># 列出所有任务</span></span><br><span class="line">$ pm2 list</span><br><span class="line"></span><br><span class="line"><span class="comment"># 停止指定任务</span></span><br><span class="line">$ pm2 stop 0</span><br><span class="line"></span><br><span class="line">＃ 重启指定任务</span><br><span class="line">$ pm2 restart 0</span><br><span class="line"></span><br><span class="line"><span class="comment"># 删除指定任务</span></span><br><span class="line">$ pm2 delete 0</span><br><span class="line"></span><br><span class="line"><span class="comment"># 保存当前的所有任务，以后可以恢复</span></span><br><span class="line">$ pm2 save</span><br><span class="line"></span><br><span class="line"><span class="comment"># 列出每个进程的统计数据</span></span><br><span class="line">$ pm2 monit</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看所有日志</span></span><br><span class="line">$ pm2 logs</span><br><span class="line"></span><br><span class="line"><span class="comment"># 导出数据</span></span><br><span class="line">$ pm2 dump</span><br><span class="line"></span><br><span class="line"><span class="comment"># 重启所有进程</span></span><br><span class="line">$ pm2 <span class="built_in">kill</span></span><br><span class="line">$ pm2 resurect</span><br><span class="line"></span><br><span class="line"><span class="comment"># 启动web界面 http://localhost:9615</span></span><br><span class="line">$ pm2 web</span><br></pre></td></tr></table></figure>
 </blockquote>
 <h2><span id="9-systemd">9 Systemd</span></h2><p>除了专用工具以外，Linux系统有自己的守护进程管理工具 Systemd 。它是操作系统的一部分，直接与内核交互，性能出色，功能极其强大。我们完全可以将程序交给 Systemd ，让系统统一管理，成为真正意义上的系统服务。</p>
 
@@ -593,8 +596,12 @@
 <script>
 window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 </script>
+
 <script src="/js/plugin.min.js"></script>
+
+
 <script src="/js/application.js"></script>
+
 
     <script>
 (function (window) {
@@ -612,7 +619,9 @@ window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
     window.INSIGHT_CONFIG = INSIGHT_CONFIG;
 })(window);
 </script>
+
 <script src="/js/insight.js"></script>
+
 
 
 

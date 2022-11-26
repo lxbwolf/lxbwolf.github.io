@@ -1,37 +1,37 @@
 <!DOCTYPE html>
 <html lang=zh>
-<head><meta name="generator" content="Hexo 3.9.0">
+<head>
   <meta charset="utf-8">
   
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
   <meta name="renderer" content="webkit">
-  <meta http-equiv="Cache-Control" content="no-transform">
-  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="format-detection" content="telephone=no,email=no,adress=no">
   <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
   <!-- Color theme for statusbar -->
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#000000" />
   <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
-  <meta http-equiv="window-target" content="_top">
+  <meta http-equiv="window-target" content="_top" />
   
 
   
   <title>【译】How to split a string in C++ | Xiaobin&#39;s Blog</title>
   <meta name="description" content="这个问题是说, 怎么得到组成一句话的各个单词, 或者得到CSV中的各个数据片段. 这在C++中是个很简单的问题, 却有很多种答案. 有3种方案, 每种有利有弊. 使用时请自己选择最佳方案. 这篇文章的目的是说明 迭代器的接口是如何优胜于简单的容器的, 并且阐明 design of the STL 是何等强大. 方案1使用的标准组件(虽然方案1.2 做了微调). 方案2相对好点但使用了boost.">
-<meta name="keywords" content="翻译">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【译】How to split a string in C++">
 <meta property="og:url" content="https://lxb.wiki/9747854a/index.html">
 <meta property="og:site_name" content="Xiaobin&#39;s Blog">
 <meta property="og:description" content="这个问题是说, 怎么得到组成一句话的各个单词, 或者得到CSV中的各个数据片段. 这在C++中是个很简单的问题, 却有很多种答案. 有3种方案, 每种有利有弊. 使用时请自己选择最佳方案. 这篇文章的目的是说明 迭代器的接口是如何优胜于简单的容器的, 并且阐明 design of the STL 是何等强大. 方案1使用的标准组件(虽然方案1.2 做了微调). 方案2相对好点但使用了boost.">
-<meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2022-03-15T07:47:28.900Z">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2017-06-04T10:40:14.000Z">
+<meta property="article:modified_time" content="2022-03-15T07:47:28.900Z">
+<meta property="article:author" content="Xiaobin.Liu">
+<meta property="article:tag" content="翻译">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="【译】How to split a string in C++">
-<meta name="twitter:description" content="这个问题是说, 怎么得到组成一句话的各个单词, 或者得到CSV中的各个数据片段. 这在C++中是个很简单的问题, 却有很多种答案. 有3种方案, 每种有利有弊. 使用时请自己选择最佳方案. 这篇文章的目的是说明 迭代器的接口是如何优胜于简单的容器的, 并且阐明 design of the STL 是何等强大. 方案1使用的标准组件(虽然方案1.2 做了微调). 方案2相对好点但使用了boost.">
   <!-- Canonical links  把后面的 index.html 去掉-->
   <link rel="canonical" href="https://lxb.wiki/9747854a/">
   
@@ -40,7 +40,9 @@
   
     <link rel="icon" href="/favicon.png" type="image/x-icon">
   
-  <link rel="stylesheet" href="/css/style.css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
   
   
   
@@ -58,7 +60,7 @@
 
       gtag('config', 'G-JZ2PWLT6JY');
     </script>
-</head>
+<meta name="generator" content="Hexo 6.0.0"></head>
 
 
 <body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
@@ -206,7 +208,7 @@
   <div class="widget">
     <h3 class="widget-title">标签云</h3>
     <div class="widget-body tagcloud">
-      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.11px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/业务/" style="font-size: 13px;">业务</a> <a href="/tags/事故/" style="font-size: 13px;">事故</a> <a href="/tags/代码/" style="font-size: 13px;">代码</a> <a href="/tags/优化/" style="font-size: 13.11px;">优化</a> <a href="/tags/分布式/" style="font-size: 13.11px;">分布式</a> <a href="/tags/博客/" style="font-size: 13px;">博客</a> <a href="/tags/工具/" style="font-size: 13.78px;">工具</a> <a href="/tags/架构/" style="font-size: 13.22px;">架构</a> <a href="/tags/树莓派/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/破解/" style="font-size: 13px;">破解</a> <a href="/tags/稳定性/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/端口/" style="font-size: 13px;">端口</a> <a href="/tags/算法/" style="font-size: 13.33px;">算法</a> <a href="/tags/编译器/" style="font-size: 13.33px;">编译器</a> <a href="/tags/网络/" style="font-size: 13.11px;">网络</a> <a href="/tags/翻译/" style="font-size: 13.89px;">翻译</a> <a href="/tags/解决/" style="font-size: 13.11px;">解决</a> <a href="/tags/跳表/" style="font-size: 13.11px;">跳表</a> <a href="/tags/进程/" style="font-size: 13.11px;">进程</a> <a href="/tags/邮件/" style="font-size: 13.11px;">邮件</a> <a href="/tags/链表/" style="font-size: 13px;">链表</a> <a href="/tags/锚点失效/" style="font-size: 13px;">锚点失效</a> <a href="/tags/陷阱/" style="font-size: 13px;">陷阱</a>
+      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.11px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/%E4%B8%9A%E5%8A%A1/" style="font-size: 13px;">业务</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E4%BB%A3%E7%A0%81/" style="font-size: 13px;">代码</a> <a href="/tags/%E4%BC%98%E5%8C%96/" style="font-size: 13.11px;">优化</a> <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" style="font-size: 13.11px;">分布式</a> <a href="/tags/%E5%8D%9A%E5%AE%A2/" style="font-size: 13px;">博客</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.78px;">工具</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.22px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/%E7%AB%AF%E5%8F%A3/" style="font-size: 13px;">端口</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.33px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91%E5%99%A8/" style="font-size: 13.33px;">编译器</a> <a href="/tags/%E7%BD%91%E7%BB%9C/" style="font-size: 13.11px;">网络</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.89px;">翻译</a> <a href="/tags/%E8%A7%A3%E5%86%B3/" style="font-size: 13.11px;">解决</a> <a href="/tags/%E8%B7%B3%E8%A1%A8/" style="font-size: 13.11px;">跳表</a> <a href="/tags/%E8%BF%9B%E7%A8%8B/" style="font-size: 13.11px;">进程</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.11px;">邮件</a> <a href="/tags/%E9%93%BE%E8%A1%A8/" style="font-size: 13px;">链表</a> <a href="/tags/%E9%94%9A%E7%82%B9%E5%A4%B1%E6%95%88/" style="font-size: 13px;">锚点失效</a> <a href="/tags/%E9%99%B7%E9%98%B1/" style="font-size: 13px;">陷阱</a>
     </div>
   </div>
 
@@ -343,7 +345,7 @@
         
   <span class="article-tag">
     <i class="icon icon-tags"></i>
-	<a class="article-tag-link" href="/tags/翻译/">翻译</a>
+	<a class="article-tag-link-link" href="/tags/%E7%BF%BB%E8%AF%91/" rel="tag">翻译</a>
   </span>
 
 
@@ -363,7 +365,7 @@
     <div class="article-entry marked-body" itemprop="articleBody">
       
         <p>这个问题是说, 怎么得到组成一句话的各个单词, 或者得到CSV中的各个数据片段. 这在C++中是个很简单的问题, 却有很多种答案.</p>
-<p>有3种方案, 每种有利有弊. 使用时请自己选择最佳方案. 这篇文章的目的是说明 迭代器的接口是如何优胜于简单的容器的, 并且阐明 <a href="http://www.fluentcpp.com/2017/04/18/the-design-of-the-stl/" target="_blank" rel="noopener">design of the STL</a> 是何等强大.</p>
+<p>有3种方案, 每种有利有弊. 使用时请自己选择最佳方案. 这篇文章的目的是说明 迭代器的接口是如何优胜于简单的容器的, 并且阐明 <a target="_blank" rel="noopener" href="http://www.fluentcpp.com/2017/04/18/the-design-of-the-stl/">design of the STL</a> 是何等强大.</p>
 <p>方案1使用的标准组件(虽然方案1.2 做了微调). 方案2相对好点但使用了<code>boost</code>. 而方案3 更好但使用了<code>ranges</code>. 所以到底应该用哪个, 取决于你需要什么和你能使用什么.</p>
 <h3><span id="solution-1-iterating-on-a-stream">Solution 1: Iterating on a stream</span></h3><h4><span id="stepping-into-the-world-of-streams">Stepping into the world of streams</span></h4><p>“流” 是一个 能生成 与源或希望连接的目标 的联系 的对象. 流可以从源中获取信息(<code>std::istream</code>), 或为目标提供信息(<code>std::ostream</code>), 或者两者皆可(<code>std::iostream</code>).</p>
 <p>源和目标可以是标准输入(<code>std::cin</code>), 标准输出(<code>std::cout</code>), 一个文件, 或者一个字符串, 前提是方式得当. 对流的主要操作包括: - 对于输入流: 使用操作符<code>&gt;&gt;</code> 从里面读取信息 - 对于输出流: 使用操作符<code>&lt;&lt;</code>, 向它推入信息</p>
@@ -371,7 +373,7 @@
 <h4><span id="istream_iterator">istream_iterator</span></h4><p><code>std::istream_iterator</code> 是连接输入流的迭代器. 它代表了输入迭代器的普遍接口, 但它的操作符<code>++</code> 更像是输入流.</p>
 <p><code>istream_iterator</code> 以它从流里读取的类型为模板. 我们现在使用<code>istream_iterator&lt;std::string&gt;</code>, 它从流里读取字符串, 分离时为我们提供一个字符串.</p>
 <p>当到达流的终点时, 流向它的迭代器发送信号, 然后迭代器被标记为结束.</p>
-<h3><span id="solution-11">Solution 1.1</span></h3><p>现在, 我们可以借迭代器的接口使用算法, 这真切地证明了<code>STL</code> 设计的灵活性. 为了使用<code>STL</code>, 我们需要一个<code>begin</code> 和一个<code>end</code> (请参考<a href="http://www.fluentcpp.com/2017/03/28/inserting-several-elements-into-an-stl-container/" target="_blank" rel="noopener">Inserting several elements into an STL container efficiently</a>). <code>begin</code> 是一个 还没开始着手分割的字符串的<code>istreamstream</code> 的迭代器: <code>std::istream_iterator&lt;std::string&gt;(iss)</code> . 按照惯例, <code>end</code> 的默认值也是个<code>istream_iterator</code> : <code>std::istream_iterator&lt;string&gt;()</code>.</p>
+<h3><span id="solution-11">Solution 1.1</span></h3><p>现在, 我们可以借迭代器的接口使用算法, 这真切地证明了<code>STL</code> 设计的灵活性. 为了使用<code>STL</code>, 我们需要一个<code>begin</code> 和一个<code>end</code> (请参考<a target="_blank" rel="noopener" href="http://www.fluentcpp.com/2017/03/28/inserting-several-elements-into-an-stl-container/">Inserting several elements into an STL container efficiently</a>). <code>begin</code> 是一个 还没开始着手分割的字符串的<code>istreamstream</code> 的迭代器: <code>std::istream_iterator&lt;std::string&gt;(iss)</code> . 按照惯例, <code>end</code> 的默认值也是个<code>istream_iterator</code> : <code>std::istream_iterator&lt;string&gt;()</code>.</p>
 <p>代码如下:</p>
 <pre><code>std::string text = &quot;Let me split this into words&quot;;
 std::istringstream iss(text);
@@ -379,26 +381,26 @@ std::vector&lt;std::string&gt; results((std::istream_iterator&lt;std::string&gt;
 <p>优: - 仅使用标准组件 - 除字符串外, 对所有流都适用 劣: - 只能以空格为分隔符进行分割, 而且这在解析CSV时会是个至关重要的问题 - 在性能方面有待优化(但如果这不是影响你整个程序的瓶颈, 这也不是个大问题) - 很多人认为仅为了分割一个字符串, 写了太多代码</p>
 <h3><span id="solution12-pimp-my-operatorgtgt">Solution1.2: Pimp my operator&gt;&gt;</span></h3><p>导致上面两条劣势的原因是同一个: <code>istream_iterator</code> 从流里读取字符串时调用的操作符<code>&gt;&gt;</code>. 这个操作符做了很多事: 在下一个空格处停止(这是我们的最初的需求, 但这个不能自定义), 格式化, 读取然后设置一些标志位, 构造对象, 等等. 而以上这些, 大部分我们是不需要的. 所以我们希望自己实现下面的函数:</p>
 <pre><code>std::istream&amp; operator&gt;&gt;(std::istream&amp; is, std::string&amp; output)
-{
+&#123;
     // ...does lots of things...
-}</code></pre><p>实际上, 我们无法改变这些, 因为这是在标注库里的. 我们可以用另一个类型重载它, 但是这个类型需要是<code>string</code> 的一种.</p>
+&#125;</code></pre><p>实际上, 我们无法改变这些, 因为这是在标注库里的. 我们可以用另一个类型重载它, 但是这个类型需要是<code>string</code> 的一种.</p>
 <p>所以现在的需求就是, 用另一种类型伪装成<code>string</code>. 有两种方案: 继承<code>std::string</code> 和 用显式转换封装<code>string</code>. 这里我们选择继承.</p>
 <p>假如我们希望以逗号为分割符分割一个字符串:</p>
 <pre><code>class WordDelimitedByCommas: pulic std::string
-{};</code></pre><p>我必须承认这是有争议的. 有人会说:”<code>std::string</code> 没有虚析构函数, 所以你不应该继承它!” 这可能, 大概, 也许是有一点点点点武断. 这里我要说的是, 继承本身不会产生问题. 诚然, 当一个指向<code>WordDelimitedByCommas</code> 的指针以<code>std::string</code> 的形式被<code>delete</code> 掉时, 会产生问题. 继续读, 你会发现, 我们不会这么做. 现在我们可以阻止写代码的人借<code>WordDelimitedByCommas</code> 突发冷箭破坏程序吗? 我们不能. 但是这个险值得我们冒吗? 请继续读, 然后你自己判断.</p>
+&#123;&#125;;</code></pre><p>我必须承认这是有争议的. 有人会说:”<code>std::string</code> 没有虚析构函数, 所以你不应该继承它!” 这可能, 大概, 也许是有一点点点点武断. 这里我要说的是, 继承本身不会产生问题. 诚然, 当一个指向<code>WordDelimitedByCommas</code> 的指针以<code>std::string</code> 的形式被<code>delete</code> 掉时, 会产生问题. 继续读, 你会发现, 我们不会这么做. 现在我们可以阻止写代码的人借<code>WordDelimitedByCommas</code> 突发冷箭破坏程序吗? 我们不能. 但是这个险值得我们冒吗? 请继续读, 然后你自己判断.</p>
 <p>现在为了仅实现我们需要的功能, 我们可以重载操作符<code>&gt;&gt;</code> : 获取下一个逗号之前的所有字符. 这个可以借用<code>getline</code> 函数实现:</p>
 <pre><code>std::istream&amp; operator&gt;&gt;(std::istream* is, std::WordDelimitedByCommas&amp;)
-{
+&#123;
     std::getline(is, output, &apos;,&apos;);
     return is;
-}</code></pre><p><strong>返回值<code>is</code> 保证了可以连续调用操作符<code>&gt;&gt;</code></strong></p>
+&#125;</code></pre><p><strong>返回值<code>is</code> 保证了可以连续调用操作符<code>&gt;&gt;</code></strong></p>
 <p>现在我们可以写初级代码了:</p>
 <pre><code>std::string text = &quot;Let,me,split,this,into,words&quot;;
 std::istringstream iss(text);
 std::vector&lt;std::string&gt; results((std::istream_iterator&lt;WordDelimitedByCommas&gt;(iss)), std::istream_iterator&lt;WordDelimitedByCommas&gt;());</code></pre><p>我们可以通过模板化<code>WordDelimitedByCommas</code> 泛华所有的分隔符:</p>
 <pre><code>template&lt;char delemiter&gt;
 class WordDelimitedBy: pulic std::string
-{};</code></pre><p>现在以分号举例:</p>
+&#123;&#125;;</code></pre><p>现在以分号举例:</p>
 <pre><code>std::string text = &quot;Let;me;split;this;into;words&quot;;
 std::istringstream iss(text);
 std::vector&lt;std::string&gt; results((std::istream_iterator&lt;WordDelimitedBy&lt;&apos;;&apos;&gt;&gt;(iss)), std::istream_iterator&lt;WordDelimitedBy&lt;&apos;;&apos;&gt;&gt;());</code></pre><p>优: - 编译时允许任何分隔符 - 不仅是字符串, 对任何流都可以操作 - 比方案1更快(快20%到30%) 劣: - 虽然可以很方便的复用, 但仍不是标准 - 仅仅为了分割一个字符串, 这个方案仍然使用了大量代码</p>
@@ -407,17 +409,17 @@ std::vector&lt;std::string&gt; results((std::istream_iterator&lt;WordDelimitedBy
 
 std::string text = &quot;Let me split this into words&quot;;
 std::vector&lt;std::string&gt; result;
-boost::split&lt;results, text, [](char c){return &apos; &apos; == c;});</code></pre><p>传给<code>boost::split</code> 的第三个参数是一个函数或函数对象, 确定一个字符是不是分隔符. 上面的例子是使用<code>lambda</code> 表达式, 传入一个<code>char</code>, 返回这个<code>char</code> 是否是空格.</p>
+boost::split&lt;results, text, [](char c)&#123;return &apos; &apos; == c;&#125;);</code></pre><p>传给<code>boost::split</code> 的第三个参数是一个函数或函数对象, 确定一个字符是不是分隔符. 上面的例子是使用<code>lambda</code> 表达式, 传入一个<code>char</code>, 返回这个<code>char</code> 是否是空格.</p>
 <p><code>boost::split</code> 的实现很简单: 在到达字符串的结束位置之前, 重复地调用<code>find_if</code> .</p>
 <p>优: - 非常直观的接口 - 允许任何分隔符, 甚至是多个 - 高效: 比方案1.1 快 60% 劣: - 暂不是标准: 需要用到<code>boost</code></p>
-<h3><span id="solution-3未来-usingranges">Solution 3(未来): Using<code>ranges</code></span></h3><p>虽然它们现在还没有像标准库甚至<code>boost</code> 里的组件一样被广泛使用, <code>ranges</code> 是<a href="http://www.fluentcpp.com/2017/01/12/ranges-stl-to-the-next-level/" target="_blank" rel="noopener">future of the STL</a> . 在未来几年, 会大量面世.</p>
-<p>Eric Neiber 的 <a href="https://github.com/ericniebler/range-v3/blob/master/test/view/split.cpp" target="_blank" rel="noopener">range-v3</a> 库 提供了非常友好的接口. 为了生成一个字符串的分割<code>view</code>, 代码如下:</p>
+<h3><span id="solution-3未来-usingranges">Solution 3(未来): Using<code>ranges</code></span></h3><p>虽然它们现在还没有像标准库甚至<code>boost</code> 里的组件一样被广泛使用, <code>ranges</code> 是<a target="_blank" rel="noopener" href="http://www.fluentcpp.com/2017/01/12/ranges-stl-to-the-next-level/">future of the STL</a> . 在未来几年, 会大量面世.</p>
+<p>Eric Neiber 的 <a target="_blank" rel="noopener" href="https://github.com/ericniebler/range-v3/blob/master/test/view/split.cpp">range-v3</a> 库 提供了非常友好的接口. 为了生成一个字符串的分割<code>view</code>, 代码如下:</p>
 <pre><code>std::string text = &quot;Let me split this into words&quot;;
 auto splitText = text | view::split(&apos; &apos;);</code></pre><p>它有很多有趣的特性, 诸如 使用一个子字符串作为分隔符. <code>ranges</code> 会被<code>C++20</code> 引入, 所以我们应该能在几年之内就可以使用这个功能了.</p>
 <h3><span id="so-how-do-i-split-my-string">So, how do I split my string?</span></h3><p>如果你能使用<code>boost</code>, 务必使用方案2. 或者你可以自己写算法, 像<code>boost</code> 那样基于<code>find_if</code> 分割字符串.</p>
 <p>如果你不想这么做, 你可以使用标准, 即方案1.1, 如果你需要自定义分隔符, 或者发现1.1是个瓶颈, 那么你可以选择方案1.2 .</p>
 <p>如果你可以使用<code>ranges</code> , 那么就应该选择方案3.</p>
-<p>翻译原文: <a href="http://www.fluentcpp.com/2017/04/21/how-to-split-a-string-in-c/" target="_blank" rel="noopener">http://www.fluentcpp.com/2017/04/21/how-to-split-a-string-in-c/</a></p>
+<p>翻译原文: <a target="_blank" rel="noopener" href="http://www.fluentcpp.com/2017/04/21/how-to-split-a-string-in-c/">http://www.fluentcpp.com/2017/04/21/how-to-split-a-string-in-c/</a></p>
 
       
     </div>
@@ -516,8 +518,12 @@ auto splitText = text | view::split(&apos; &apos;);</code></pre><p>它有很多�
 <script>
 window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 </script>
+
 <script src="/js/plugin.min.js"></script>
+
+
 <script src="/js/application.js"></script>
+
 
     <script>
 (function (window) {
@@ -535,7 +541,9 @@ window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
     window.INSIGHT_CONFIG = INSIGHT_CONFIG;
 })(window);
 </script>
+
 <script src="/js/insight.js"></script>
+
 
 
 

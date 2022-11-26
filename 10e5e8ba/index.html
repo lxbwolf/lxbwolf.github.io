@@ -1,37 +1,37 @@
 <!DOCTYPE html>
 <html lang=zh>
-<head><meta name="generator" content="Hexo 3.9.0">
+<head>
   <meta charset="utf-8">
   
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
   <meta name="renderer" content="webkit">
-  <meta http-equiv="Cache-Control" content="no-transform">
-  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="format-detection" content="telephone=no,email=no,adress=no">
   <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
   <!-- Color theme for statusbar -->
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#000000" />
   <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
-  <meta http-equiv="window-target" content="_top">
+  <meta http-equiv="window-target" content="_top" />
   
 
   
   <title>【译】Go 字符串中的潜在问题 | Xiaobin&#39;s Blog</title>
   <meta name="description" content="在我之前的文章 Go 中我喜欢的东西中提到过，我喜欢的 Go 的东西其中之一就是它的字符串（通常还有切片）。从一个 Python 开发者的角度看，它们之所以伟大，是因为创建它们时开销很少，因为它们通常不需要复制。在 Python 中，任何时候操作字符串都需要复制一部分或全部字符串，而 这很容易对性能造成影响。想要写高性能的 Python 代码需要谨慎考虑复制的问题。在 Go 中，几乎所有的字符串操">
-<meta name="keywords" content="Go">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【译】Go 字符串中的潜在问题">
 <meta property="og:url" content="https://lxb.wiki/10e5e8ba/index.html">
 <meta property="og:site_name" content="Xiaobin&#39;s Blog">
 <meta property="og:description" content="在我之前的文章 Go 中我喜欢的东西中提到过，我喜欢的 Go 的东西其中之一就是它的字符串（通常还有切片）。从一个 Python 开发者的角度看，它们之所以伟大，是因为创建它们时开销很少，因为它们通常不需要复制。在 Python 中，任何时候操作字符串都需要复制一部分或全部字符串，而 这很容易对性能造成影响。想要写高性能的 Python 代码需要谨慎考虑复制的问题。在 Go 中，几乎所有的字符串操">
-<meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2022-11-24T13:50:54.730Z">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-01-16T16:12:58.000Z">
+<meta property="article:modified_time" content="2022-11-24T13:50:54.730Z">
+<meta property="article:author" content="Xiaobin.Liu">
+<meta property="article:tag" content="Go">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="【译】Go 字符串中的潜在问题">
-<meta name="twitter:description" content="在我之前的文章 Go 中我喜欢的东西中提到过，我喜欢的 Go 的东西其中之一就是它的字符串（通常还有切片）。从一个 Python 开发者的角度看，它们之所以伟大，是因为创建它们时开销很少，因为它们通常不需要复制。在 Python 中，任何时候操作字符串都需要复制一部分或全部字符串，而 这很容易对性能造成影响。想要写高性能的 Python 代码需要谨慎考虑复制的问题。在 Go 中，几乎所有的字符串操">
   <!-- Canonical links  把后面的 index.html 去掉-->
   <link rel="canonical" href="https://lxb.wiki/10e5e8ba/">
   
@@ -40,7 +40,9 @@
   
     <link rel="icon" href="/favicon.png" type="image/x-icon">
   
-  <link rel="stylesheet" href="/css/style.css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
   
   
   
@@ -58,7 +60,7 @@
 
       gtag('config', 'G-JZ2PWLT6JY');
     </script>
-</head>
+<meta name="generator" content="Hexo 6.0.0"></head>
 
 
 <body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
@@ -206,7 +208,7 @@
   <div class="widget">
     <h3 class="widget-title">标签云</h3>
     <div class="widget-body tagcloud">
-      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.11px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/业务/" style="font-size: 13px;">业务</a> <a href="/tags/事故/" style="font-size: 13px;">事故</a> <a href="/tags/代码/" style="font-size: 13px;">代码</a> <a href="/tags/优化/" style="font-size: 13.11px;">优化</a> <a href="/tags/分布式/" style="font-size: 13.11px;">分布式</a> <a href="/tags/博客/" style="font-size: 13px;">博客</a> <a href="/tags/工具/" style="font-size: 13.78px;">工具</a> <a href="/tags/架构/" style="font-size: 13.22px;">架构</a> <a href="/tags/树莓派/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/破解/" style="font-size: 13px;">破解</a> <a href="/tags/稳定性/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/端口/" style="font-size: 13px;">端口</a> <a href="/tags/算法/" style="font-size: 13.33px;">算法</a> <a href="/tags/编译器/" style="font-size: 13.33px;">编译器</a> <a href="/tags/网络/" style="font-size: 13.11px;">网络</a> <a href="/tags/翻译/" style="font-size: 13.89px;">翻译</a> <a href="/tags/解决/" style="font-size: 13.11px;">解决</a> <a href="/tags/跳表/" style="font-size: 13.11px;">跳表</a> <a href="/tags/进程/" style="font-size: 13.11px;">进程</a> <a href="/tags/邮件/" style="font-size: 13.11px;">邮件</a> <a href="/tags/链表/" style="font-size: 13px;">链表</a> <a href="/tags/锚点失效/" style="font-size: 13px;">锚点失效</a> <a href="/tags/陷阱/" style="font-size: 13px;">陷阱</a>
+      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.11px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/%E4%B8%9A%E5%8A%A1/" style="font-size: 13px;">业务</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E4%BB%A3%E7%A0%81/" style="font-size: 13px;">代码</a> <a href="/tags/%E4%BC%98%E5%8C%96/" style="font-size: 13.11px;">优化</a> <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" style="font-size: 13.11px;">分布式</a> <a href="/tags/%E5%8D%9A%E5%AE%A2/" style="font-size: 13px;">博客</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.78px;">工具</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.22px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/%E7%AB%AF%E5%8F%A3/" style="font-size: 13px;">端口</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.33px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91%E5%99%A8/" style="font-size: 13.33px;">编译器</a> <a href="/tags/%E7%BD%91%E7%BB%9C/" style="font-size: 13.11px;">网络</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.89px;">翻译</a> <a href="/tags/%E8%A7%A3%E5%86%B3/" style="font-size: 13.11px;">解决</a> <a href="/tags/%E8%B7%B3%E8%A1%A8/" style="font-size: 13.11px;">跳表</a> <a href="/tags/%E8%BF%9B%E7%A8%8B/" style="font-size: 13.11px;">进程</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.11px;">邮件</a> <a href="/tags/%E9%93%BE%E8%A1%A8/" style="font-size: 13px;">链表</a> <a href="/tags/%E9%94%9A%E7%82%B9%E5%A4%B1%E6%95%88/" style="font-size: 13px;">锚点失效</a> <a href="/tags/%E9%99%B7%E9%98%B1/" style="font-size: 13px;">陷阱</a>
     </div>
   </div>
 
@@ -343,7 +345,7 @@
         
   <span class="article-tag">
     <i class="icon icon-tags"></i>
-	<a class="article-tag-link" href="/tags/Go/">Go</a>
+	<a class="article-tag-link-link" href="/tags/Go/" rel="tag">Go</a>
   </span>
 
 
@@ -362,18 +364,18 @@
     </div>
     <div class="article-entry marked-body" itemprop="articleBody">
       
-        <p>在我之前的文章 <a href="https://utcc.utoronto.ca/~cks/space/blog/programming/GoThingsILike" target="_blank" rel="noopener">Go 中我喜欢的东西</a>中提到过，我喜欢的 <a href="https://golang.org/" target="_blank" rel="noopener">Go</a> 的东西其中之一就是它的字符串（通常还有切片）。从一个 Python 开发者的角度看，它们之所以伟大，是因为创建它们时开销很少，因为它们通常不需要复制。在 Python 中，任何时候操作字符串都需要复制一部分或全部字符串，而 <a href="https://utcc.utoronto.ca/~cks/space/blog/python/StringSpeedSurprises" target="_blank" rel="noopener">这很容易对性能造成影响</a>。想要写高性能的 Python 代码需要谨慎考虑复制的问题。在 Go 中，几乎所有的字符串操作都是不复制的，仅仅是从原字符串取一个子集（例如去除字符串首尾的空白字符），因此你可以更自由地操作字符串。这个机制可以非常直接地解决你的问题，并且非常高效。</p>
+        <p>在我之前的文章 <a target="_blank" rel="noopener" href="https://utcc.utoronto.ca/~cks/space/blog/programming/GoThingsILike">Go 中我喜欢的东西</a>中提到过，我喜欢的 <a target="_blank" rel="noopener" href="https://golang.org/">Go</a> 的东西其中之一就是它的字符串（通常还有切片）。从一个 Python 开发者的角度看，它们之所以伟大，是因为创建它们时开销很少，因为它们通常不需要复制。在 Python 中，任何时候操作字符串都需要复制一部分或全部字符串，而 <a target="_blank" rel="noopener" href="https://utcc.utoronto.ca/~cks/space/blog/python/StringSpeedSurprises">这很容易对性能造成影响</a>。想要写高性能的 Python 代码需要谨慎考虑复制的问题。在 Go 中，几乎所有的字符串操作都是不复制的，仅仅是从原字符串取一个子集（例如去除字符串首尾的空白字符），因此你可以更自由地操作字符串。这个机制可以非常直接地解决你的问题，并且非常高效。</p>
 <p>（当然，不是所有的字符串操作都不复制。例如，把一个字符串转换成大写需要复制，尽管 Go 中的实现已经足够智能，在不需要改变原字符串时 — 例如由于它已经是一个全大写的字符串 — 可以规避掉复制。）</p>
 <p>但是这个优势也带来了潜在的坏处，那些没有开销的子字符串使原来的整个字符串一直存在于内存中。Go 中的字符串（和切片）操作之所以内存开销很少，是因为它们只是底层存储（字符串或切片底层的数组的真实数据）的一些部分的引用；创建一个字符串做的操作就是创建了一个新的引用。但是 Go（目前）不会对字符串数据或数组进行部分的垃圾回收，所以即使它一个很小的 bit 被其它元素引用，整个对象也会一直保持在内存中。换句话说，一个单字符的字符串（目前）足够让一个巨大的字符串不被 GC 回收。</p>
 <p>当然，不会有很多人遇到这个问题。为了遇到它，你需要处理一个非常庞大的原字符串，或造成大量的内存消耗（或者两者都做），在这个基础上，你必须创建那些不持久的字符串的持久的小子字符串（好吧，你是多么希望它是非持久的）。很多使用场景不会复现这个问题；要么你的原字符串不够大，要么你的子集获取了大部分原字符串（例如你把原字符串进行了分词处理），要么子字符串生命周期不够长。简而言之，如果你是一个普通的 Go 开发者，你可以忽略这个问题。处理长字符串并且长时间维持原字符串的很小部分的人才会关注这个问题。</p>
 <p>（我之所以关注到这个问题，是因为一次我花了大量精力用尽可能少的内存写 Python 程序，尽管它是从一个大的配置文件解析结果然后分块储存。这让我联想到了一些其他的事，如字符串的生命周期、限制字符串只复制一次，等等。然后我用 Go 语言写了一个解析器，这让我由重新考虑了一下这些问题，我意识到由于我的解析器截取出和维持的 bit 一直存在于内存中，从输入文件解析出的庞大字符串也会一直存在与内存中。）</p>
 <p>顺便说一下，我认为这是 Go 做了权衡之后的正确结果。大部分使用字符串的开发者不会遇到这个问题，而且截取子字符串开销很小对于开发者来说用处很大。这种低开销的截取操作也减轻了 GC 的负担；当代码使用大量的子字符串截取（像 Python 中那样）时，你只需要处理固定长度的字符串引用就可以了，而不是需要处理长度变化的字符串。</p>
 <p>当你的代码遇到这个问题时，当然有明显的解决方法：创建一个函数，通过把字符串转换成 <code>[]byte</code> 来 ”最小化“ 字符串，然后返回。这种方法生成了一个最小化的字符串，内存开销是理论上最完美实现的只复制一次，而 Go 现在很容易就可以实现。</p>
-<h2><span id="附加问题stringstoupper-等怎样规避没有必要的复制">附加问题：<code>strings.ToUpper()</code> 等怎样规避没有必要的复制</span></h2><p>所有的主动转换函数像 <code>ToUpper()</code> 和 <code>ToTitle()</code> 是用 <code>strings.Map()</code> 和 <a href="http://golang.org/pkg/unicode/" target="_blank" rel="noopener">unicode 包</a> 中的函数实现的。<code>Map()</code> 足够智能，在映射的函数返回一个与已存在的 <code>rune</code> 不同的结果之前不会创建新的字符串。因此，你代码中所有类似的直接使用 <code>Map()</code> 的地方都不会有内存开销。</p>
+<h2><span id="附加问题stringstoupper-等怎样规避没有必要的复制">附加问题：<code>strings.ToUpper()</code> 等怎样规避没有必要的复制</span></h2><p>所有的主动转换函数像 <code>ToUpper()</code> 和 <code>ToTitle()</code> 是用 <code>strings.Map()</code> 和 <a target="_blank" rel="noopener" href="http://golang.org/pkg/unicode/">unicode 包</a> 中的函数实现的。<code>Map()</code> 足够智能，在映射的函数返回一个与已存在的 <code>rune</code> 不同的结果之前不会创建新的字符串。因此，你代码中所有类似的直接使用 <code>Map()</code> 的地方都不会有内存开销。</p>
 <hr>
-<p>via: <a href="https://utcc.utoronto.ca/~cks/space/blog/programming/GoStringsMemoryHolding" target="_blank" rel="noopener">https://utcc.utoronto.ca/~cks/space/blog/programming/GoStringsMemoryHolding</a></p>
-<p>作者：<a href="https://utcc.utoronto.ca/~cks/space/People/ChrisSiebenmann" target="_blank" rel="noopener">Chris Siebenmann</a><br>译者：<a href="https://github.com/lxbwolf" target="_blank" rel="noopener">lxbwolf</a><br>校对：<a href="https://github.com/校对者ID" target="_blank" rel="noopener">校对者ID</a></p>
-<p>本文由 <a href="https://github.com/studygolang/GCTT" target="_blank" rel="noopener">GCTT</a> 原创编译，<a href="https://studygolang.com/" target="_blank" rel="noopener">Go 中文网</a> 荣誉推出</p>
+<p>via: <a target="_blank" rel="noopener" href="https://utcc.utoronto.ca/~cks/space/blog/programming/GoStringsMemoryHolding">https://utcc.utoronto.ca/~cks/space/blog/programming/GoStringsMemoryHolding</a></p>
+<p>作者：<a target="_blank" rel="noopener" href="https://utcc.utoronto.ca/~cks/space/People/ChrisSiebenmann">Chris Siebenmann</a><br>译者：<a target="_blank" rel="noopener" href="https://github.com/lxbwolf">lxbwolf</a><br>校对：<a target="_blank" rel="noopener" href="https://github.com/校对者ID">校对者ID</a></p>
+<p>本文由 <a target="_blank" rel="noopener" href="https://github.com/studygolang/GCTT">GCTT</a> 原创编译，<a target="_blank" rel="noopener" href="https://studygolang.com/">Go 中文网</a> 荣誉推出</p>
 
       
     </div>
@@ -472,8 +474,12 @@
 <script>
 window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 </script>
+
 <script src="/js/plugin.min.js"></script>
+
+
 <script src="/js/application.js"></script>
+
 
     <script>
 (function (window) {
@@ -491,7 +497,9 @@ window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
     window.INSIGHT_CONFIG = INSIGHT_CONFIG;
 })(window);
 </script>
+
 <script src="/js/insight.js"></script>
+
 
 
 

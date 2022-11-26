@@ -1,33 +1,32 @@
 <!DOCTYPE html>
 <html lang=zh>
-<head><meta name="generator" content="Hexo 3.9.0">
+<head>
   <meta charset="utf-8">
   
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
   <meta name="renderer" content="webkit">
-  <meta http-equiv="Cache-Control" content="no-transform">
-  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="format-detection" content="telephone=no,email=no,adress=no">
   <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
   <!-- Color theme for statusbar -->
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#000000" />
   <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
-  <meta http-equiv="window-target" content="_top">
+  <meta http-equiv="window-target" content="_top" />
   
 
   
   <title>[译]Go GC 怎么标记内存 | Xiaobin&#39;s Blog</title>
   <meta name="description" content="ℹ️ 本文基于 Go 1.13。关于内存管理的概念的讨论在我的文章 Go 中的内存管理和分配 中有详细的解释。 Go GC 的作用是回收不再使用的内存。实现的算法是并发的三色标记和清除回收法。本中文，我们研究三色标记法，以及各个颜色的不同用处。 你可以在 Ken Fox 的 解读垃圾回收算法 中了解更多关于不同垃圾回收机制的信息。 标记阶段这个阶段浏览内存来了解哪些块儿是在被我们的代码使用和哪些">
-<meta name="keywords" content="Go,GC">
 <meta property="og:type" content="article">
 <meta property="og:title" content="[译]Go GC 怎么标记内存">
 <meta property="og:url" content="https://lxb.wiki/b3baee92/index.html">
 <meta property="og:site_name" content="Xiaobin&#39;s Blog">
 <meta property="og:description" content="ℹ️ 本文基于 Go 1.13。关于内存管理的概念的讨论在我的文章 Go 中的内存管理和分配 中有详细的解释。 Go GC 的作用是回收不再使用的内存。实现的算法是并发的三色标记和清除回收法。本中文，我们研究三色标记法，以及各个颜色的不同用处。 你可以在 Ken Fox 的 解读垃圾回收算法 中了解更多关于不同垃圾回收机制的信息。 标记阶段这个阶段浏览内存来了解哪些块儿是在被我们的代码使用和哪些">
-<meta property="og:locale" content="zh-CN">
+<meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/00.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/01.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/02.png">
@@ -40,10 +39,12 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/09.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/10.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/11.png">
-<meta property="og:updated_time" content="2022-02-07T00:44:00.380Z">
+<meta property="article:published_time" content="2020-01-13T16:06:31.000Z">
+<meta property="article:modified_time" content="2022-02-07T00:44:00.380Z">
+<meta property="article:author" content="Xiaobin.Liu">
+<meta property="article:tag" content="Go">
+<meta property="article:tag" content="GC">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="[译]Go GC 怎么标记内存">
-<meta name="twitter:description" content="ℹ️ 本文基于 Go 1.13。关于内存管理的概念的讨论在我的文章 Go 中的内存管理和分配 中有详细的解释。 Go GC 的作用是回收不再使用的内存。实现的算法是并发的三色标记和清除回收法。本中文，我们研究三色标记法，以及各个颜色的不同用处。 你可以在 Ken Fox 的 解读垃圾回收算法 中了解更多关于不同垃圾回收机制的信息。 标记阶段这个阶段浏览内存来了解哪些块儿是在被我们的代码使用和哪些">
 <meta name="twitter:image" content="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/00.png">
   <!-- Canonical links  把后面的 index.html 去掉-->
   <link rel="canonical" href="https://lxb.wiki/b3baee92/">
@@ -53,7 +54,9 @@
   
     <link rel="icon" href="/favicon.png" type="image/x-icon">
   
-  <link rel="stylesheet" href="/css/style.css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
   
   
   
@@ -71,7 +74,7 @@
 
       gtag('config', 'G-JZ2PWLT6JY');
     </script>
-</head>
+<meta name="generator" content="Hexo 6.0.0"></head>
 
 
 <body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
@@ -219,7 +222,7 @@
   <div class="widget">
     <h3 class="widget-title">标签云</h3>
     <div class="widget-body tagcloud">
-      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.11px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/业务/" style="font-size: 13px;">业务</a> <a href="/tags/事故/" style="font-size: 13px;">事故</a> <a href="/tags/代码/" style="font-size: 13px;">代码</a> <a href="/tags/优化/" style="font-size: 13.11px;">优化</a> <a href="/tags/分布式/" style="font-size: 13.11px;">分布式</a> <a href="/tags/博客/" style="font-size: 13px;">博客</a> <a href="/tags/工具/" style="font-size: 13.78px;">工具</a> <a href="/tags/架构/" style="font-size: 13.22px;">架构</a> <a href="/tags/树莓派/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/破解/" style="font-size: 13px;">破解</a> <a href="/tags/稳定性/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/端口/" style="font-size: 13px;">端口</a> <a href="/tags/算法/" style="font-size: 13.33px;">算法</a> <a href="/tags/编译器/" style="font-size: 13.33px;">编译器</a> <a href="/tags/网络/" style="font-size: 13.11px;">网络</a> <a href="/tags/翻译/" style="font-size: 13.89px;">翻译</a> <a href="/tags/解决/" style="font-size: 13.11px;">解决</a> <a href="/tags/跳表/" style="font-size: 13.11px;">跳表</a> <a href="/tags/进程/" style="font-size: 13.11px;">进程</a> <a href="/tags/邮件/" style="font-size: 13.11px;">邮件</a> <a href="/tags/链表/" style="font-size: 13px;">链表</a> <a href="/tags/锚点失效/" style="font-size: 13px;">锚点失效</a> <a href="/tags/陷阱/" style="font-size: 13px;">陷阱</a>
+      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.11px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/%E4%B8%9A%E5%8A%A1/" style="font-size: 13px;">业务</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E4%BB%A3%E7%A0%81/" style="font-size: 13px;">代码</a> <a href="/tags/%E4%BC%98%E5%8C%96/" style="font-size: 13.11px;">优化</a> <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" style="font-size: 13.11px;">分布式</a> <a href="/tags/%E5%8D%9A%E5%AE%A2/" style="font-size: 13px;">博客</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.78px;">工具</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.22px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/%E7%AB%AF%E5%8F%A3/" style="font-size: 13px;">端口</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.33px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91%E5%99%A8/" style="font-size: 13.33px;">编译器</a> <a href="/tags/%E7%BD%91%E7%BB%9C/" style="font-size: 13.11px;">网络</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.89px;">翻译</a> <a href="/tags/%E8%A7%A3%E5%86%B3/" style="font-size: 13.11px;">解决</a> <a href="/tags/%E8%B7%B3%E8%A1%A8/" style="font-size: 13.11px;">跳表</a> <a href="/tags/%E8%BF%9B%E7%A8%8B/" style="font-size: 13.11px;">进程</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.11px;">邮件</a> <a href="/tags/%E9%93%BE%E8%A1%A8/" style="font-size: 13px;">链表</a> <a href="/tags/%E9%94%9A%E7%82%B9%E5%A4%B1%E6%95%88/" style="font-size: 13px;">锚点失效</a> <a href="/tags/%E9%99%B7%E9%98%B1/" style="font-size: 13px;">陷阱</a>
     </div>
   </div>
 
@@ -356,7 +359,7 @@
         
   <span class="article-tag">
     <i class="icon icon-tags"></i>
-	<a class="article-tag-link" href="/tags/GC/">GC</a>, <a class="article-tag-link" href="/tags/Go/">Go</a>
+	<a class="article-tag-link-link" href="/tags/GC/" rel="tag">GC</a>, <a class="article-tag-link-link" href="/tags/Go/" rel="tag">Go</a>
   </span>
 
 
@@ -365,7 +368,7 @@
         <span class="post-comment"><i class="icon icon-comment"></i> <a href="/b3baee92/#comments" class="article-comment-link">评论</a></span>
         
 	
-		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 1.3k(字)</span>
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 1.4k(字)</span>
 	
 	
 		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 4(分)</span>
@@ -376,16 +379,16 @@
     <div class="article-entry marked-body" itemprop="articleBody">
       
         <p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/00.png" alt="Illustration created for “A Journey With Go”, made from the original Go Gopher, created by Renee French"></p>
-<p>ℹ️ 本文基于 <em>Go 1.13</em>。关于内存管理的概念的讨论在我的文章 <a href="https://medium.com/a-journey-with-go/go-memory-management-and-allocation-a7396d430f44" target="_blank" rel="noopener">Go 中的内存管理和分配</a> 中有详细的解释。</p>
+<p>ℹ️ 本文基于 <em>Go 1.13</em>。关于内存管理的概念的讨论在我的文章 <a target="_blank" rel="noopener" href="https://medium.com/a-journey-with-go/go-memory-management-and-allocation-a7396d430f44">Go 中的内存管理和分配</a> 中有详细的解释。</p>
 <p>Go GC 的作用是回收不再使用的内存。实现的算法是并发的三色标记和清除回收法。本中文，我们研究三色标记法，以及各个颜色的不同用处。</p>
-<p>你可以在 Ken Fox 的 <a href="https://spin.atomicobject.com/2014/09/03/visualizing-garbage-collection-algorithms/" target="_blank" rel="noopener">解读垃圾回收算法</a> 中了解更多关于不同垃圾回收机制的信息。</p>
+<p>你可以在 Ken Fox 的 <a target="_blank" rel="noopener" href="https://spin.atomicobject.com/2014/09/03/visualizing-garbage-collection-algorithms/">解读垃圾回收算法</a> 中了解更多关于不同垃圾回收机制的信息。</p>
 <h2><span id="标记阶段">标记阶段</span></h2><p>这个阶段浏览内存来了解哪些块儿是在被我们的代码使用和哪些块儿应该被回收。</p>
-<p>然而，因为 GC 和我们的 Go 程序并行，GC 扫描期间内存中某些对象的状态可能被改变，所以需要一个检测这种可能的变化的方法。为了解决这个潜在的问题，实现了 <a href="https://en.wikipedia.org/wiki/Write_barrier" target="_blank" rel="noopener">写屏障</a> 算法，GC 可以追踪到任何的指针修改。使写屏障生效的唯一条件是短暂终止程序，又名 “Stop the World”。</p>
+<p>然而，因为 GC 和我们的 Go 程序并行，GC 扫描期间内存中某些对象的状态可能被改变，所以需要一个检测这种可能的变化的方法。为了解决这个潜在的问题，实现了 <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Write_barrier">写屏障</a> 算法，GC 可以追踪到任何的指针修改。使写屏障生效的唯一条件是短暂终止程序，又名 “Stop the World”。</p>
 <p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/01.png" alt></p>
 <p>在进程启动时，Go 也在每个 processor 起了一个标记 worker 来辅助标记内存。</p>
 <p>然后，当 root 被加入到处理队列中后，标记阶段就开始遍历和用颜色标记内存。</p>
 <p>为了了解在标记阶段的每一步，我们来看一个简单的程序示例：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> struct1 <span class="keyword">struct</span> &#123;</span><br><span class="line">	a, b <span class="keyword">int64</span></span><br><span class="line">	c, d <span class="keyword">float64</span></span><br><span class="line">	e *struct2</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> struct2 <span class="keyword">struct</span> &#123;</span><br><span class="line">	f, g <span class="keyword">int64</span></span><br><span class="line">	h, i <span class="keyword">float64</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	s1 := allocStruct1()</span><br><span class="line">	s2 := allocStruct2()</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">func</span> <span class="params">()</span></span> &#123;</span><br><span class="line">		_ = allocStruct2()</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	runtime.GC()</span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">"s1 = %X, s2 = %X\n"</span>, &amp;s1, &amp;s2)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//go:noinline</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">allocStruct1</span><span class="params">()</span> *<span class="title">struct1</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;struct1&#123;</span><br><span class="line">		e: allocStruct2(),</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//go:noinline</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">allocStruct2</span><span class="params">()</span> *<span class="title">struct2</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;struct2&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> struct1 <span class="keyword">struct</span> &#123;</span><br><span class="line">	a, b <span class="type">int64</span></span><br><span class="line">	c, d <span class="type">float64</span></span><br><span class="line">	e *struct2</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> struct2 <span class="keyword">struct</span> &#123;</span><br><span class="line">	f, g <span class="type">int64</span></span><br><span class="line">	h, i <span class="type">float64</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	s1 := allocStruct1()</span><br><span class="line">	s2 := allocStruct2()</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">func</span> <span class="params">()</span></span> &#123;</span><br><span class="line">		_ = allocStruct2()</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	runtime.GC()</span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">&quot;s1 = %X, s2 = %X\n&quot;</span>, &amp;s1, &amp;s2)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//go:noinline</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">allocStruct1</span><span class="params">()</span></span> *struct1 &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;struct1&#123;</span><br><span class="line">		e: allocStruct2(),</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//go:noinline</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">allocStruct2</span><span class="params">()</span></span> *struct2 &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;struct2&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p><code>struct2</code> 不包含指针，因此它被储存在一个专门存放不被其他对象引用的对象的 span 中。</p>
 <p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/02.png" alt="不包含指针的结构体储存在专有的 span 中"></p>
@@ -394,7 +397,7 @@
 <p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/03.png" alt="扫描内存"></p>
 <p>GC 从栈开始，递归地顺着指针找指针指向的对象，遍历内存。扫描到被标记为 <code>no scan</code> 的 span 时，停止扫描。然而，这个工作是在多个协程中完成的，每个指针被加入到一个 work pool 中的队列。然后，后台运行的标记 worker 从这个 work pool 中拿到前面出列的 work，扫描这个对象然后把在这个对象里找到的指针加入到队列。</p>
 <p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/04.png" alt="garbage collector work pool"></p>
-<h2><span id="颜色标记">颜色标记</span></h2><p>worker 需要一种记录哪些内存需要扫描的方法。GC 使用一种 <a href="https://en.wikipedia.org/wiki/Tracing_garbage_collection#Tri-color_marking" target="_blank" rel="noopener">三色标记算法</a>，工作流程如下：</p>
+<h2><span id="颜色标记">颜色标记</span></h2><p>worker 需要一种记录哪些内存需要扫描的方法。GC 使用一种 <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Tracing_garbage_collection#Tri-color_marking">三色标记算法</a>，工作流程如下：</p>
 <ul>
 <li>开始时，所有对象都被认为是<strong>白色</strong></li>
 <li>root 对象（栈，堆，全局变量）被标记为<strong>灰色</strong></li>
@@ -418,15 +421,15 @@
 <p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/09.png" alt></p>
 <p>我们可以看到，黑色和灰色表示的意义相同。处理的不同之处在于，标记为灰色时是把对象加入到扫描队列，而标记为黑色时，不再扫描。</p>
 <p>GC 最终 STW，清除每一次写屏障对 work pool 做的改变，继续后续的标记。</p>
-<p><em>你可以在我的文章 <a href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-watch-your-application-dbef99be2c35" target="_blank" rel="noopener">Go GC 怎样监控你的应用</a> 中找到关于并发处理和 GC 的标记阶段更详细的描述</em>。</p>
+<p><em>你可以在我的文章 <a target="_blank" rel="noopener" href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-watch-your-application-dbef99be2c35">Go GC 怎样监控你的应用</a> 中找到关于并发处理和 GC 的标记阶段更详细的描述</em>。</p>
 <h2><span id="runtime-分析器">runtime 分析器</span></h2><p>Go 提供的工具使我们可以对每一步进行可视化，观察 GC 在我们的程序中的影响。开启 tracing 运行我们的代码，可以看到前面所有步骤的一个概览。下面是追踪结果：</p>
 <p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/10.png" alt="traces of the garbage collector"></p>
 <p>标记 worker 的生命周期也可以在追踪结果中以协程等级可视化。下面是在启动之前先在后台等待标记内存的 goroutine #33 的例子。</p>
 <p><img src="https://raw.githubusercontent.com/studygolang/gctt-images2/master/20191103-Go-How-Does-the-Garbage-Collector-Mark-the-Memory/11.png" alt="marking worker"></p>
 <hr>
-<p>via: <a href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976" target="_blank" rel="noopener">https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976</a></p>
-<p>作者：<a href="https://medium.com/@blanchon.vincent" target="_blank" rel="noopener">Vincent Blanchon</a> 译者：<a href="https://github.com/lxbwolf" target="_blank" rel="noopener">lxbwolf</a> 校对：<a href="https://github.com/polaris1119" target="_blank" rel="noopener">polaris1119</a></p>
-<p>本文由 <a href="https://github.com/studygolang/GCTT" target="_blank" rel="noopener">GCTT</a> 原创编译，<a href="https://studygolang.com/" target="_blank" rel="noopener">Go 中文网</a> 荣誉推出</p>
+<p>via: <a target="_blank" rel="noopener" href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976">https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976</a></p>
+<p>作者：<a target="_blank" rel="noopener" href="https://medium.com/@blanchon.vincent">Vincent Blanchon</a> 译者：<a target="_blank" rel="noopener" href="https://github.com/lxbwolf">lxbwolf</a> 校对：<a target="_blank" rel="noopener" href="https://github.com/polaris1119">polaris1119</a></p>
+<p>本文由 <a target="_blank" rel="noopener" href="https://github.com/studygolang/GCTT">GCTT</a> 原创编译，<a target="_blank" rel="noopener" href="https://studygolang.com/">Go 中文网</a> 荣誉推出</p>
 
       
     </div>
@@ -525,8 +528,12 @@
 <script>
 window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 </script>
+
 <script src="/js/plugin.min.js"></script>
+
+
 <script src="/js/application.js"></script>
+
 
     <script>
 (function (window) {
@@ -544,7 +551,9 @@ window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
     window.INSIGHT_CONFIG = INSIGHT_CONFIG;
 })(window);
 </script>
+
 <script src="/js/insight.js"></script>
+
 
 
 

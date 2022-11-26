@@ -1,41 +1,41 @@
 <!DOCTYPE html>
 <html lang=zh>
-<head><meta name="generator" content="Hexo 3.9.0">
+<head>
   <meta charset="utf-8">
   
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
   <meta name="renderer" content="webkit">
-  <meta http-equiv="Cache-Control" content="no-transform">
-  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="format-detection" content="telephone=no,email=no,adress=no">
   <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
   <!-- Color theme for statusbar -->
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#000000" />
   <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
-  <meta http-equiv="window-target" content="_top">
+  <meta http-equiv="window-target" content="_top" />
   
 
   
   <title>Redis-Sorted-Set底层数据结构 | Xiaobin&#39;s Blog</title>
   <meta name="description" content="Sortedset底层存储结构 1 跳跃表 2 跳跃表的结构 3 压缩列表 连锁更新   4 quicklist 数据压缩        Sortedset底层存储结构sortedset同时会由两种数据结构支持,ziplist和skiplist. 只有同时满足如下条件是,使用的是ziplist,其他时候则是使用skiplist  有序集合保存的元素数量小于128个 有序集合保存的所有元素的长">
-<meta name="keywords" content="redis">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Redis-Sorted-Set底层数据结构">
 <meta property="og:url" content="https://lxb.wiki/f1113725/index.html">
 <meta property="og:site_name" content="Xiaobin&#39;s Blog">
 <meta property="og:description" content="Sortedset底层存储结构 1 跳跃表 2 跳跃表的结构 3 压缩列表 连锁更新   4 quicklist 数据压缩        Sortedset底层存储结构sortedset同时会由两种数据结构支持,ziplist和skiplist. 只有同时满足如下条件是,使用的是ziplist,其他时候则是使用skiplist  有序集合保存的元素数量小于128个 有序集合保存的所有元素的长">
-<meta property="og:locale" content="zh-CN">
+<meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210023.png">
 <meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210219.png">
 <meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210255.png">
 <meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210432.png">
-<meta property="og:updated_time" content="2022-02-12T13:05:54.216Z">
+<meta property="article:published_time" content="2021-06-22T14:56:12.000Z">
+<meta property="article:modified_time" content="2022-02-12T13:05:54.216Z">
+<meta property="article:author" content="Xiaobin.Liu">
+<meta property="article:tag" content="redis">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Redis-Sorted-Set底层数据结构">
-<meta name="twitter:description" content="Sortedset底层存储结构 1 跳跃表 2 跳跃表的结构 3 压缩列表 连锁更新   4 quicklist 数据压缩        Sortedset底层存储结构sortedset同时会由两种数据结构支持,ziplist和skiplist. 只有同时满足如下条件是,使用的是ziplist,其他时候则是使用skiplist  有序集合保存的元素数量小于128个 有序集合保存的所有元素的长">
 <meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210023.png">
   <!-- Canonical links  把后面的 index.html 去掉-->
   <link rel="canonical" href="https://lxb.wiki/f1113725/">
@@ -45,7 +45,9 @@
   
     <link rel="icon" href="/favicon.png" type="image/x-icon">
   
-  <link rel="stylesheet" href="/css/style.css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
   
   
   
@@ -63,7 +65,7 @@
 
       gtag('config', 'G-JZ2PWLT6JY');
     </script>
-</head>
+<meta name="generator" content="Hexo 6.0.0"></head>
 
 
 <body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
@@ -211,7 +213,7 @@
   <div class="widget">
     <h3 class="widget-title">标签云</h3>
     <div class="widget-body tagcloud">
-      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.11px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/业务/" style="font-size: 13px;">业务</a> <a href="/tags/事故/" style="font-size: 13px;">事故</a> <a href="/tags/代码/" style="font-size: 13px;">代码</a> <a href="/tags/优化/" style="font-size: 13.11px;">优化</a> <a href="/tags/分布式/" style="font-size: 13.11px;">分布式</a> <a href="/tags/博客/" style="font-size: 13px;">博客</a> <a href="/tags/工具/" style="font-size: 13.78px;">工具</a> <a href="/tags/架构/" style="font-size: 13.22px;">架构</a> <a href="/tags/树莓派/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/破解/" style="font-size: 13px;">破解</a> <a href="/tags/稳定性/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/端口/" style="font-size: 13px;">端口</a> <a href="/tags/算法/" style="font-size: 13.33px;">算法</a> <a href="/tags/编译器/" style="font-size: 13.33px;">编译器</a> <a href="/tags/网络/" style="font-size: 13.11px;">网络</a> <a href="/tags/翻译/" style="font-size: 13.89px;">翻译</a> <a href="/tags/解决/" style="font-size: 13.11px;">解决</a> <a href="/tags/跳表/" style="font-size: 13.11px;">跳表</a> <a href="/tags/进程/" style="font-size: 13.11px;">进程</a> <a href="/tags/邮件/" style="font-size: 13.11px;">邮件</a> <a href="/tags/链表/" style="font-size: 13px;">链表</a> <a href="/tags/锚点失效/" style="font-size: 13px;">锚点失效</a> <a href="/tags/陷阱/" style="font-size: 13px;">陷阱</a>
+      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.11px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/%E4%B8%9A%E5%8A%A1/" style="font-size: 13px;">业务</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E4%BB%A3%E7%A0%81/" style="font-size: 13px;">代码</a> <a href="/tags/%E4%BC%98%E5%8C%96/" style="font-size: 13.11px;">优化</a> <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" style="font-size: 13.11px;">分布式</a> <a href="/tags/%E5%8D%9A%E5%AE%A2/" style="font-size: 13px;">博客</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.78px;">工具</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.22px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/%E7%AB%AF%E5%8F%A3/" style="font-size: 13px;">端口</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.33px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91%E5%99%A8/" style="font-size: 13.33px;">编译器</a> <a href="/tags/%E7%BD%91%E7%BB%9C/" style="font-size: 13.11px;">网络</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.89px;">翻译</a> <a href="/tags/%E8%A7%A3%E5%86%B3/" style="font-size: 13.11px;">解决</a> <a href="/tags/%E8%B7%B3%E8%A1%A8/" style="font-size: 13.11px;">跳表</a> <a href="/tags/%E8%BF%9B%E7%A8%8B/" style="font-size: 13.11px;">进程</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.11px;">邮件</a> <a href="/tags/%E9%93%BE%E8%A1%A8/" style="font-size: 13px;">链表</a> <a href="/tags/%E9%94%9A%E7%82%B9%E5%A4%B1%E6%95%88/" style="font-size: 13px;">锚点失效</a> <a href="/tags/%E9%99%B7%E9%98%B1/" style="font-size: 13px;">陷阱</a>
     </div>
   </div>
 
@@ -348,7 +350,7 @@
         
   <span class="article-tag">
     <i class="icon icon-tags"></i>
-	<a class="article-tag-link" href="/tags/redis/">redis</a>
+	<a class="article-tag-link-link" href="/tags/redis/" rel="tag">redis</a>
   </span>
 
 
@@ -412,7 +414,7 @@
 <p>zset在转为跳跃表之后，即使元素被逐渐删除，也不会重新转为压缩列表。</p>
 </blockquote>
 <h2><span id="2-跳跃表的结构">2 跳跃表的结构</span></h2><p>其c语言代码如下：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> &#123;</span></span><br><span class="line">	<span class="comment">//成员对象</span></span><br><span class="line">    robj *obj;</span><br><span class="line">    <span class="keyword">double</span> score;<span class="comment">//分值</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">backward</span>;</span><span class="comment">//回退指针</span></span><br><span class="line">    <span class="comment">//层</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistLevel</span> &#123;</span></span><br><span class="line">    	<span class="comment">//前进指针</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">forward</span>;</span></span><br><span class="line">        <span class="comment">//跨度</span></span><br><span class="line">        <span class="keyword">unsigned</span> <span class="keyword">int</span> span;</span><br><span class="line">    &#125; level[];</span><br><span class="line">&#125; zskiplistNode;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> &#123;</span></span><br><span class="line">	<span class="comment">//成员对象</span></span><br><span class="line">    robj *obj;</span><br><span class="line">    <span class="type">double</span> score;<span class="comment">//分值</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">backward</span>;</span><span class="comment">//回退指针</span></span><br><span class="line">    <span class="comment">//层</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistLevel</span> &#123;</span></span><br><span class="line">    	<span class="comment">//前进指针</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">forward</span>;</span></span><br><span class="line">        <span class="comment">//跨度</span></span><br><span class="line">        <span class="type">unsigned</span> <span class="type">int</span> span;</span><br><span class="line">    &#125; level[];</span><br><span class="line">&#125; zskiplistNode;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
 <p>1）obj：用于存储字符串类型的数据。<br>2）score：用于存储排序的分值。<br>3）backward：后退指针，只能指向当前节点最底层的前一个节点，头节点和第一个节点——backward指向NULL，从后向前遍历跳跃表时使用。<br>4）level：为柔性数组。每个节点的数组长度不一样，在生成跳跃表节点时，随机生成一个1～64的值，值越大出现的概率越低。<br>level数组的每项包含以下两个元素。</p>
 <ul>
@@ -420,7 +422,9 @@
 <li>span:forward指向的节点与本节点之间的元素个数。span值越大，跳过的节点个数越多。</li>
 </ul>
 <p>除了跳跃表节点外，还需要一个跳跃表结构来管理节点，Redis使用zskiplist结构体，定义如下：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">zskiplist</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">header</span>, *<span class="title">tail</span>;</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> length;</span><br><span class="line">    <span class="keyword">int</span> level;</span><br><span class="line">&#125; zskiplist;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">zskiplist</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">header</span>, *<span class="title">tail</span>;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> length;</span><br><span class="line">    <span class="type">int</span> level;</span><br><span class="line">&#125; zskiplist;</span><br></pre></td></tr></table></figure>
+
+
 
 <p>1）header：指向跳跃表头节点。头节点是跳跃表的一个特殊节点，它的level数组元素个数为64。头节点在有序集合中不存储任何member和score值，ele值为NULL, score值为0；也不计入跳跃表的总长度。头节点在初始化时，64个元素的forward都指向NULL, span值都为0。<br>2）tail：指向跳跃表尾节点。<br>3）length：跳跃表长度，表示除头节点之外的节点总数。<br>4）level：跳跃表的高度。</p>
 <p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210023.png" alt></p>
@@ -453,12 +457,16 @@
 <p>这么做的主要原因是，当元素长度较小时，采用ziplist可以有效节省存储空间，但ziplist的存储空间是连续的，当元素个数比较多时，修改元素时，必须重新分配存储空间，这无疑会影响Redis的执行效率，故而采用一般的双向链表。</p>
 <p>结构如下：<br><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210432.png" alt></p>
 <p>代码如下</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">quicklist</span>&#123;</span></span><br><span class="line">	quicklistNode *head;</span><br><span class="line">	quicklistNode *tail;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span> count;<span class="comment">//quicklist中元素总数</span></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span> len;<span class="comment">//quicklist Node（节点）个数</span></span><br><span class="line">	<span class="keyword">int</span> <span class="built_in">fill</span> : <span class="number">16</span>;<span class="comment">//每个quicklistNode中ziplist长度</span></span><br><span class="line">&#125;quicklist;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">quicklist</span>&#123;</span></span><br><span class="line">	quicklistNode *head;</span><br><span class="line">	quicklistNode *tail;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> count;<span class="comment">//quicklist中元素总数</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> len;<span class="comment">//quicklist Node（节点）个数</span></span><br><span class="line">	<span class="type">int</span> fill : <span class="number">16</span>;<span class="comment">//每个quicklistNode中ziplist长度</span></span><br><span class="line">&#125;quicklist;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">quicklistNode</span>&#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">quicklistNode</span> *<span class="title">prev</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">quicklistNode</span> *<span class="title">next</span>;</span></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">char</span> *zl;<span class="comment">//zl指向该节点对应的ziplist结构；</span></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span> sz;<span class="comment">//整个ziplist结构的大小</span></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span> count:<span class="number">16</span>;<span class="comment">//ziplist的个数</span></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span> coding：<span class="number">2</span>;<span class="comment">//1代表是原生的，2代表使用LZF进行压缩；</span></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span> containnr：<span class="number">2</span>;<span class="comment">//container为quicklistNode节点zl指向的容器类型：1代表none,2代表使用ziplist存储数据；</span></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span> recompress:<span class="number">1</span>;<span class="comment">//recompress代表这个节点之前是否是压缩节点</span></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span> extra:<span class="number">10</span>;<span class="comment">//extra为预留</span></span><br><span class="line">&#125;quicklistNode;</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">quicklistNode</span>&#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">quicklistNode</span> *<span class="title">prev</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">quicklistNode</span> *<span class="title">next</span>;</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span> *zl;<span class="comment">//zl指向该节点对应的ziplist结构；</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> sz;<span class="comment">//整个ziplist结构的大小</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> count:<span class="number">16</span>;<span class="comment">//ziplist的个数</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> coding：<span class="number">2</span>;<span class="comment">//1代表是原生的，2代表使用LZF进行压缩；</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> containnr：<span class="number">2</span>;<span class="comment">//container为quicklistNode节点zl指向的容器类型：1代表none,2代表使用ziplist存储数据；</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> recompress:<span class="number">1</span>;<span class="comment">//recompress代表这个节点之前是否是压缩节点</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> extra:<span class="number">10</span>;<span class="comment">//extra为预留</span></span><br><span class="line">&#125;quicklistNode;</span><br></pre></td></tr></table></figure>
+
+
 
 <h3><span id="数据压缩">数据压缩</span></h3><p>quicklist每个节点的实际数据存储结构为ziplist，这种结构的主要优势在于节省存储空间。为了进一步降低ziplist所占用的空间，Redis允许对ziplist进一步压缩，Redis采用的压缩算法是LZF，压缩过后的数据可以分成多个片段，每个片段有2部分：一部分是解释字段，另一部分是存放具体的数据字段。<br>解释字段可以占用1～3个字节，数据字段可能不存在。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">quicklistLZF</span>&#123;</span></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">int</span> sz;<span class="comment">//sz表示compressed所占字节大小</span></span><br><span class="line">	<span class="keyword">char</span> compress[];</span><br><span class="line">&#125;quicklistLZF;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">quicklistLZF</span>&#123;</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> sz;<span class="comment">//sz表示compressed所占字节大小</span></span><br><span class="line">	<span class="type">char</span> compress[];</span><br><span class="line">&#125;quicklistLZF;</span><br></pre></td></tr></table></figure>
 
 <p>解释字段有3种:<br>1）字面型，解释字段占用1个字节，数据字段长度由解释字段后5位决定。<br>2）简短重复型，解释字段占用2个字节，没有数据字段，数据内容与前面数据内容重复，重复长度小于8。<br>3）批量重复型，解释字段占3个字节，没有数据字段，数据内容与前面内容重复。</p>
 <p>压缩：<br>数据与前面重复的，记录重复位置以及重复长度，否则直接记录原始数据内容。压缩算法的流程如下：遍历输入字符串，对当前字符及其后面2个字符进行散列运算，如果在Hash表中找到曾经出现的记录，则计算重复字节的长度以及位置，反之直接输出数据。<br>解压：<br>可能存在重复数据与当前位置重叠的情况，例如在当前位置前的15个字节处，重复了20个字节，此时需要按位逐个复制。</p>
@@ -560,8 +568,12 @@
 <script>
 window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 </script>
+
 <script src="/js/plugin.min.js"></script>
+
+
 <script src="/js/application.js"></script>
+
 
     <script>
 (function (window) {
@@ -579,7 +591,9 @@ window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
     window.INSIGHT_CONFIG = INSIGHT_CONFIG;
 })(window);
 </script>
+
 <script src="/js/insight.js"></script>
+
 
 
 

@@ -1,37 +1,37 @@
 <!DOCTYPE html>
 <html lang=zh>
-<head><meta name="generator" content="Hexo 3.9.0">
+<head>
   <meta charset="utf-8">
   
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
   <meta name="renderer" content="webkit">
-  <meta http-equiv="Cache-Control" content="no-transform">
-  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="format-detection" content="telephone=no,email=no,adress=no">
   <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
   <!-- Color theme for statusbar -->
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#000000" />
   <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
-  <meta http-equiv="window-target" content="_top">
+  <meta http-equiv="window-target" content="_top" />
   
 
   
   <title>STL 的 erase( ) 陷阱-迭代器失效总结 | Xiaobin&#39;s Blog</title>
-  <meta name="description" content="STL中的容器按存储方式分为两类，一类是按以数组形式存储的容器（如：vector 、deque)；另一类是以不连续的节点形式存储的容器（如：list、set、map）。在使用erase方法来删除元素时，需要注意一些问题。 1.list,set,map容器在使用 list、set 或 map遍历删除某些元素时可以这样使用： 1.1 正确写法 1 std::list&amp;lt;int&amp;gt; list;">
-<meta name="keywords" content="STL">
+  <meta name="description" content="STL中的容器按存储方式分为两类，一类是按以数组形式存储的容器（如：vector 、deque)；另一类是以不连续的节点形式存储的容器（如：list、set、map）。在使用erase方法来删除元素时，需要注意一些问题。 1.list,set,map容器在使用 list、set 或 map遍历删除某些元素时可以这样使用： 1.1 正确写法 1 std::list&lt;int&gt; list;">
 <meta property="og:type" content="article">
 <meta property="og:title" content="STL 的 erase( ) 陷阱-迭代器失效总结">
 <meta property="og:url" content="https://lxb.wiki/b12cd95a/index.html">
 <meta property="og:site_name" content="Xiaobin&#39;s Blog">
-<meta property="og:description" content="STL中的容器按存储方式分为两类，一类是按以数组形式存储的容器（如：vector 、deque)；另一类是以不连续的节点形式存储的容器（如：list、set、map）。在使用erase方法来删除元素时，需要注意一些问题。 1.list,set,map容器在使用 list、set 或 map遍历删除某些元素时可以这样使用： 1.1 正确写法 1 std::list&amp;lt;int&amp;gt; list;">
-<meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-10-28T16:30:18.723Z">
+<meta property="og:description" content="STL中的容器按存储方式分为两类，一类是按以数组形式存储的容器（如：vector 、deque)；另一类是以不连续的节点形式存储的容器（如：list、set、map）。在使用erase方法来删除元素时，需要注意一些问题。 1.list,set,map容器在使用 list、set 或 map遍历删除某些元素时可以这样使用： 1.1 正确写法 1 std::list&lt;int&gt; list;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2017-03-02T15:10:19.000Z">
+<meta property="article:modified_time" content="2020-10-28T16:30:18.723Z">
+<meta property="article:author" content="Xiaobin.Liu">
+<meta property="article:tag" content="STL">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="STL 的 erase( ) 陷阱-迭代器失效总结">
-<meta name="twitter:description" content="STL中的容器按存储方式分为两类，一类是按以数组形式存储的容器（如：vector 、deque)；另一类是以不连续的节点形式存储的容器（如：list、set、map）。在使用erase方法来删除元素时，需要注意一些问题。 1.list,set,map容器在使用 list、set 或 map遍历删除某些元素时可以这样使用： 1.1 正确写法 1 std::list&amp;lt;int&amp;gt; list;">
   <!-- Canonical links  把后面的 index.html 去掉-->
   <link rel="canonical" href="https://lxb.wiki/b12cd95a/">
   
@@ -40,7 +40,9 @@
   
     <link rel="icon" href="/favicon.png" type="image/x-icon">
   
-  <link rel="stylesheet" href="/css/style.css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
   
   
   
@@ -58,7 +60,7 @@
 
       gtag('config', 'G-JZ2PWLT6JY');
     </script>
-</head>
+<meta name="generator" content="Hexo 6.0.0"></head>
 
 
 <body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
@@ -206,7 +208,7 @@
   <div class="widget">
     <h3 class="widget-title">标签云</h3>
     <div class="widget-body tagcloud">
-      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.11px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/业务/" style="font-size: 13px;">业务</a> <a href="/tags/事故/" style="font-size: 13px;">事故</a> <a href="/tags/代码/" style="font-size: 13px;">代码</a> <a href="/tags/优化/" style="font-size: 13.11px;">优化</a> <a href="/tags/分布式/" style="font-size: 13.11px;">分布式</a> <a href="/tags/博客/" style="font-size: 13px;">博客</a> <a href="/tags/工具/" style="font-size: 13.78px;">工具</a> <a href="/tags/架构/" style="font-size: 13.22px;">架构</a> <a href="/tags/树莓派/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/破解/" style="font-size: 13px;">破解</a> <a href="/tags/稳定性/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/端口/" style="font-size: 13px;">端口</a> <a href="/tags/算法/" style="font-size: 13.33px;">算法</a> <a href="/tags/编译器/" style="font-size: 13.33px;">编译器</a> <a href="/tags/网络/" style="font-size: 13.11px;">网络</a> <a href="/tags/翻译/" style="font-size: 13.89px;">翻译</a> <a href="/tags/解决/" style="font-size: 13.11px;">解决</a> <a href="/tags/跳表/" style="font-size: 13.11px;">跳表</a> <a href="/tags/进程/" style="font-size: 13.11px;">进程</a> <a href="/tags/邮件/" style="font-size: 13.11px;">邮件</a> <a href="/tags/链表/" style="font-size: 13px;">链表</a> <a href="/tags/锚点失效/" style="font-size: 13px;">锚点失效</a> <a href="/tags/陷阱/" style="font-size: 13px;">陷阱</a>
+      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.11px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/%E4%B8%9A%E5%8A%A1/" style="font-size: 13px;">业务</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E4%BB%A3%E7%A0%81/" style="font-size: 13px;">代码</a> <a href="/tags/%E4%BC%98%E5%8C%96/" style="font-size: 13.11px;">优化</a> <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" style="font-size: 13.11px;">分布式</a> <a href="/tags/%E5%8D%9A%E5%AE%A2/" style="font-size: 13px;">博客</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.78px;">工具</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.22px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/%E7%AB%AF%E5%8F%A3/" style="font-size: 13px;">端口</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.33px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91%E5%99%A8/" style="font-size: 13.33px;">编译器</a> <a href="/tags/%E7%BD%91%E7%BB%9C/" style="font-size: 13.11px;">网络</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.89px;">翻译</a> <a href="/tags/%E8%A7%A3%E5%86%B3/" style="font-size: 13.11px;">解决</a> <a href="/tags/%E8%B7%B3%E8%A1%A8/" style="font-size: 13.11px;">跳表</a> <a href="/tags/%E8%BF%9B%E7%A8%8B/" style="font-size: 13.11px;">进程</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.11px;">邮件</a> <a href="/tags/%E9%93%BE%E8%A1%A8/" style="font-size: 13px;">链表</a> <a href="/tags/%E9%94%9A%E7%82%B9%E5%A4%B1%E6%95%88/" style="font-size: 13px;">锚点失效</a> <a href="/tags/%E9%99%B7%E9%98%B1/" style="font-size: 13px;">陷阱</a>
     </div>
   </div>
 
@@ -317,7 +319,7 @@
   <div class="slimContent">
     <nav id="toc" class="article-toc">
       <h3 class="toc-title">文章目录</h3>
-      <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#null"><span class="toc-number">1.</span> <span class="toc-text">1.list,set,map容器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#null"><span class="toc-number">2.</span> <span class="toc-text">3. 其他</span></a></li></ol>
+      <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">1.</span> <span class="toc-text">1.list,set,map容器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">2.</span> <span class="toc-text">3. 其他</span></a></li></ol>
     </nav>
   </div>
 </aside>
@@ -352,7 +354,7 @@
         
   <span class="article-tag">
     <i class="icon icon-tags"></i>
-	<a class="article-tag-link" href="/tags/STL/">STL</a>
+	<a class="article-tag-link-link" href="/tags/STL/" rel="tag">STL</a>
   </span>
 
 
@@ -377,52 +379,67 @@
 <pre><code>std::list&lt;int&gt; list;
 std::list&lt;int&gt;::iterator it_list;
 for (it_list = list.begin(); it_list != list.end();)
-{
+&#123;
 if (willDelete(*it_list))
-{
+&#123;
 it_list = list.erase(it_list);
-}
+&#125;
 else
-{
+&#123;
 ++it_list;
-}
-}</code></pre><p><strong>Note:</strong> 以上方法仅适用于standard sequence container, 因为对于standard associative container, erase()的返回类型为void. (查阅Effective STL Item 9)以下为原文:</p>
+&#125;
+&#125;</code></pre><p><strong>Note:</strong> 以上方法仅适用于standard sequence container, 因为对于standard associative container, erase()的返回类型为void. (查阅Effective STL Item 9)以下为原文:</p>
 <pre><code>This works wonderfully, but only for the standard sequence containers. Due to reasoning one might question, erase()&apos;s return type for the standard associative containers is void. For those containers, you have to use the postincrement-the-iterator-you-pass-to-erase technique.</code></pre><p><strong>1.2 正确写法2</strong> 查阅原版Effctive STL Item 9, 证实, 下面这种写法不能用于标准序列容器, 而适用于标准关联容器, 而List也可以使用这种方法.</p>
 <pre><code>std::list&lt;int&gt; list;
 std::list&lt;int&gt;::iterator it_list;
 for (it_list = list.begin(); it_list != list.end();)
-{
+&#123;
 if (willDelete(*it_list))
-{
+&#123;
 list.erase(it_list++); // 必须使用后缀自增, 不能使用前缀自增
-}
+&#125;
 else
-{
+&#123;
 ++it_list;
-}
-}
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">    </span><br><span class="line">    **1.3 错误写法 1**</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">std::list&lt; int&gt; List; std::list&lt; int&gt;::iterator itList; for( itList = List.begin(); itList != List.end(); itList++) &#123; if( WillDelete( *itList) ) &#123; List.erase( itList); &#125; &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    **1.4 错误写法 2**</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">std::list&lt; int&gt; List; std::list&lt; int&gt;::iterator itList; for( itList = List.begin(); itList != List.end(); ) &#123; if( WillDelete( *itList) ) &#123; itList = List.erase( ++itList); &#125; else itList++; &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    **1.5 分析**</span><br><span class="line">    </span><br><span class="line">    正确方法1: 通过erase()方法的返回值来获取下一个元素的位置;</span><br><span class="line">    正确方法2: 在调用erase()方法之前先使用&quot;++&quot; 来获取下一个元素的位置;</span><br><span class="line">    错误使用方法1: 在调用erase()方法之后使用&quot;++&quot; 来获取下一个元素的位置, 由于在调用erase()方法之后, 该元素的位置已经被删除, 如果再根据这个旧的位置来获取下一个位置, 则会出现异常;</span><br><span class="line">    错误使用方法2: 同上</span><br><span class="line">    </span><br><span class="line">    ####**2. vector,deque 容器**</span><br><span class="line">    在使用 vector、deque遍历删除元素时，也可以通过erase的返回值来获取下一个元素的位置：</span><br><span class="line">    </span><br><span class="line">    **2.1 正确写法:**</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">std::vector vec; std::vector::iterator it\_vec; for (it\_vec = vec.begin(); it\_vec != vec.end();) &#123; if (willDelete(*it\_vec)) &#123; it\_vec = vec.erase(it\_vec); &#125; else &#123; ++it_vec; &#125; &#125;</span><br></pre></td></tr></table></figure></code></pre><p><strong>2.2 注意</strong></p>
+&#125;
+&#125;
+```&lt;/int&gt;&lt;/int&gt;
+
+**1.3 错误写法 1**</code></pre><p>std::list&lt; int&gt; List; std::list&lt; int&gt;::iterator itList; for( itList = List.begin(); itList != List.end(); itList++) { if( WillDelete( *itList) ) { List.erase( itList); } }</p>
+<pre><code>**1.4 错误写法 2**</code></pre><p>std::list&lt; int&gt; List; std::list&lt; int&gt;::iterator itList; for( itList = List.begin(); itList != List.end(); ) { if( WillDelete( *itList) ) { itList = List.erase( ++itList); } else itList++; }</p>
+<pre><code>**1.5 分析**
+
+正确方法1: 通过erase()方法的返回值来获取下一个元素的位置;
+正确方法2: 在调用erase()方法之前先使用&quot;++&quot; 来获取下一个元素的位置;
+错误使用方法1: 在调用erase()方法之后使用&quot;++&quot; 来获取下一个元素的位置, 由于在调用erase()方法之后, 该元素的位置已经被删除, 如果再根据这个旧的位置来获取下一个位置, 则会出现异常;
+错误使用方法2: 同上
+
+####**2. vector,deque 容器**
+在使用 vector、deque遍历删除元素时，也可以通过erase的返回值来获取下一个元素的位置：
+
+**2.1 正确写法:**</code></pre><p>std::vector vec; std::vector::iterator it_vec; for (it_vec = vec.begin(); it_vec != vec.end();) { if (willDelete(*it_vec)) { it_vec = vec.erase(it_vec); } else { ++it_vec; } } ```</p>
+<p><strong>2.2 注意</strong></p>
 <p>vector, deque 不能像上面的”正确方法2” 的办法来遍历删除. 原因请参考Effective STL条款9。摘录到下面： 1) 对于关联容器(如map, set, multimap, multiset)，删除当前的iterator，仅仅会使当前的iterator失效，只要在erase时，递增当前iterator即可。这是因为map之类的容器，使用了红黑树来实现，插入、删除一个结点不会对其他结点造成影响。</p>
 <pre><code>for (iter = cont.begin(); it != cont.end();)
-{
+&#123;
 (*iter)-&amp;gt;doSomething();
 if (shouldDelete(*iter))
 cont.erase(iter++);
 else
 ++iter;
-}</code></pre><p>因为iter传给erase方法的是一个副本，iter++会指向下一个元素。</p>
+&#125;</code></pre><p>因为iter传给erase方法的是一个副本，iter++会指向下一个元素。</p>
 <p>2) 对于序列式容器(如vector, deque)，删除当前的iterator会使后面所有元素的iterator都失效。这是因为vetor, deque使用了连续分配的内存，删除一个元素导致后面所有的元素会向前移动一个位置。还好erase()方法可以返回下一个有效的iterator。</p>
 <pre><code>for (iter = cont.begin(); iter != cont.end();)
-{
+&#123;
 (*it)-&amp;gt;doSomething();
 if (shouldDelete(*iter))
 iter = cont.erase(iter);
 else
 ++iter;
-}</code></pre><p>3)对于list来说，它使用了不连续分配的内存，并且它的erase()方法也会返回下一个有效的iterator，因此上面两种方法都可以使用。</p>
+&#125;</code></pre><p>3)对于list来说，它使用了不连续分配的内存，并且它的erase()方法也会返回下一个有效的iterator，因此上面两种方法都可以使用。</p>
 <h4><span id="3-其他"><strong>3. 其他</strong></span></h4><p><strong>set</strong> 键和值相等。 键唯一。 元素默认按升序排列。 如果迭代器所指向的元素被删除，则该迭代器失效。其它任何增加、删除元素的操作都不会使迭代器失效</p>
 <p><strong>map</strong> 键唯一。 元素默认按键的升序排列。 如果迭代器所指向的元素被删除，则该迭代器失效。其它任何增加、删除元素的操作都不会使迭代器失效。</p>
-<p><a href="http://mp.weixin.qq.com/s/qonNrKKZLladvIwvurQCTA" target="_blank" rel="noopener">作成参考地址</a></p>
+<p><a target="_blank" rel="noopener" href="http://mp.weixin.qq.com/s/qonNrKKZLladvIwvurQCTA">作成参考地址</a></p>
 
       
     </div>
@@ -530,8 +547,12 @@ else
 <script>
 window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 </script>
+
 <script src="/js/plugin.min.js"></script>
+
+
 <script src="/js/application.js"></script>
+
 
     <script>
 (function (window) {
@@ -549,7 +570,9 @@ window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
     window.INSIGHT_CONFIG = INSIGHT_CONFIG;
 })(window);
 </script>
+
 <script src="/js/insight.js"></script>
+
 
 
 
