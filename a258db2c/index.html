@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+
+  
+  <title>【译】域名末尾带个点 | Xiaobin&#39;s Blog</title>
+  <meta name="description" content="在 DNS 的请求&#x2F;响应中，域名的末尾并没有 “.” 区域文件中域名末尾的 “.” 你也可以不通过区域文件来使用 DNS dig 命令输出中末尾的 “.” curl 命令输出中末尾的 “.” 初识搜索域 什么时候搜索域被使用? 我的计算机怎么知道使用哪个搜索域呢？ 所以为什么要在域名末尾加一个点呢？ 什么时候在末尾添加 “.”？ 我认为相对域名在过去是比较常见的    大家好！今年早些时候，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【译】域名末尾带个点">
+<meta property="og:url" content="https://lxb.wiki/a258db2c/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Blog">
+<meta property="og:description" content="在 DNS 的请求&#x2F;响应中，域名的末尾并没有 “.” 区域文件中域名末尾的 “.” 你也可以不通过区域文件来使用 DNS dig 命令输出中末尾的 “.” curl 命令输出中末尾的 “.” 初识搜索域 什么时候搜索域被使用? 我的计算机怎么知道使用哪个搜索域呢？ 所以为什么要在域名末尾加一个点呢？ 什么时候在末尾添加 “.”？ 我认为相对域名在过去是比较常见的    大家好！今年早些时候，">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-11-16T14:20:00.000Z">
+<meta property="article:modified_time" content="2023-01-26T14:50:28.984Z">
+<meta property="article:author" content="Xiaobin.Liu">
+<meta property="article:tag" content="domain">
+<meta name="twitter:card" content="summary">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/a258db2c/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+<meta name="generator" content="Hexo 6.0.0"></head>
+
+
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin.Liu</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">49</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">27</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">17</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/fossil/" style="font-size: 13px;"> fossil</a> <a href="/tags/Chrome/" style="font-size: 13px;">Chrome</a> <a href="/tags/DevOps/" style="font-size: 13px;">DevOps</a> <a href="/tags/GC/" style="font-size: 13px;">GC</a> <a href="/tags/GDB/" style="font-size: 13px;">GDB</a> <a href="/tags/GIF/" style="font-size: 13px;">GIF</a> <a href="/tags/GitHub/" style="font-size: 13.11px;">GitHub</a> <a href="/tags/Go/" style="font-size: 14px;">Go</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pic/" style="font-size: 13.22px;">Pic</a> <a href="/tags/Python/" style="font-size: 13px;">Python</a> <a href="/tags/STL/" style="font-size: 13.56px;">STL</a> <a href="/tags/Shell/" style="font-size: 13.22px;">Shell</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/core/" style="font-size: 13px;">core</a> <a href="/tags/daemon/" style="font-size: 13px;">daemon</a> <a href="/tags/dirs/" style="font-size: 13px;">dirs</a> <a href="/tags/domain/" style="font-size: 13px;">domain</a> <a href="/tags/gif/" style="font-size: 13px;">gif</a> <a href="/tags/git/" style="font-size: 13px;">git</a> <a href="/tags/gosec/" style="font-size: 13px;">gosec</a> <a href="/tags/hexo/" style="font-size: 13.22px;">hexo</a> <a href="/tags/hexo-toc/" style="font-size: 13px;">hexo-toc</a> <a href="/tags/http/" style="font-size: 13px;">http</a> <a href="/tags/https/" style="font-size: 13px;">https</a> <a href="/tags/iTerm/" style="font-size: 13px;">iTerm</a> <a href="/tags/joplin/" style="font-size: 13.11px;">joplin</a> <a href="/tags/kafka/" style="font-size: 13.11px;">kafka</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.22px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.44px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.22px;">nginx</a> <a href="/tags/popd/" style="font-size: 13px;">popd</a> <a href="/tags/postman/" style="font-size: 13px;">postman</a> <a href="/tags/pushd/" style="font-size: 13px;">pushd</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.67px;">redis</a> <a href="/tags/root/" style="font-size: 13px;">root</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/sed/" style="font-size: 13px;">sed</a> <a href="/tags/signal/" style="font-size: 13px;">signal</a> <a href="/tags/symbol/" style="font-size: 13px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/thunder/" style="font-size: 13px;">thunder</a> <a href="/tags/tmux/" style="font-size: 13px;">tmux</a> <a href="/tags/torrent/" style="font-size: 13.11px;">torrent</a> <a href="/tags/tree/" style="font-size: 13px;">tree</a> <a href="/tags/wordpress/" style="font-size: 13px;">wordpress</a> <a href="/tags/zk/" style="font-size: 13.11px;">zk</a> <a href="/tags/%E4%B8%9A%E5%8A%A1/" style="font-size: 13px;">业务</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E4%BB%A3%E7%A0%81/" style="font-size: 13px;">代码</a> <a href="/tags/%E4%BC%98%E5%8C%96/" style="font-size: 13.11px;">优化</a> <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" style="font-size: 13.11px;">分布式</a> <a href="/tags/%E5%8D%9A%E5%AE%A2/" style="font-size: 13px;">博客</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.78px;">工具</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.22px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.11px;">树莓派</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/" style="font-size: 13.11px;">稳定性</a> <a href="/tags/%E7%AB%AF%E5%8F%A3/" style="font-size: 13px;">端口</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.33px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91%E5%99%A8/" style="font-size: 13.33px;">编译器</a> <a href="/tags/%E7%BD%91%E7%BB%9C/" style="font-size: 13.11px;">网络</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.89px;">翻译</a> <a href="/tags/%E8%A7%A3%E5%86%B3/" style="font-size: 13.11px;">解决</a> <a href="/tags/%E8%B7%B3%E8%A1%A8/" style="font-size: 13.11px;">跳表</a> <a href="/tags/%E8%BF%9B%E7%A8%8B/" style="font-size: 13.22px;">进程</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.11px;">邮件</a> <a href="/tags/%E9%93%BE%E8%A1%A8/" style="font-size: 13px;">链表</a> <a href="/tags/%E9%94%9A%E7%82%B9%E5%A4%B1%E6%95%88/" style="font-size: 13px;">锚点失效</a> <a href="/tags/%E9%99%B7%E9%98%B1/" style="font-size: 13px;">陷阱</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Design/">Design</a>
+              </p>
+              <p class="item-title">
+                <a href="/12428ad2/" class="title">【译】构建高效的 DevOps 文化的 6 个技巧</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-01-30T13:58:33.000Z" itemprop="datePublished">2023-01-30</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/a258db2c/" class="title">【译】域名末尾带个点</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-11-16T14:20:00.000Z" itemprop="datePublished">2022-11-16</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/852e4155/" class="title">Hexo pure主题配置utteranc评论</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-05-11T14:15:38.000Z" itemprop="datePublished">2022-05-11</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/446d3604/" class="title">Mac上移除EasyConnect常驻后台进程</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-05-01T12:04:28.000Z" itemprop="datePublished">2022-05-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/ea5f4ef1/" class="title">【译】如何把WordPress网站迁移到新主机</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2022-04-24T13:36:34.000Z" itemprop="datePublished">2022-04-24</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-域名末尾带个点" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      【译】域名末尾带个点
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/a258db2c/" class="article-date">
+	  <time datetime="2022-11-16T14:20:00.000Z" itemprop="datePublished">2022-11-16</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Web/">Web</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/domain/" rel="tag">domain</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/a258db2c/#comments" class="article-comment-link">评论</a></span> 
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 2.7k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 10(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#在-dns-的请求响应中域名的末尾并没有">在 DNS 的请求/响应中，域名的末尾并没有 “.”</a></li>
+<li><a href="#区域文件中域名末尾的">区域文件中域名末尾的 “.”</a></li>
+<li><a href="#你也可以不通过区域文件来使用-dns">你也可以不通过区域文件来使用 DNS</a></li>
+<li><a href="#dig-命令输出中末尾的">dig 命令输出中末尾的 “.”</a></li>
+<li><a href="#curl-命令输出中末尾的">curl 命令输出中末尾的 “.”</a></li>
+<li><a href="#初识搜索域">初识搜索域</a></li>
+<li><a href="#什么时候搜索域被使用">什么时候搜索域被使用?</a></li>
+<li><a href="#我的计算机怎么知道使用哪个搜索域呢">我的计算机怎么知道使用哪个搜索域呢？</a></li>
+<li><a href="#所以为什么要在域名末尾加一个点呢">所以为什么要在域名末尾加一个点呢？</a></li>
+<li><a href="#什么时候在末尾添加">什么时候在末尾添加 “.”？</a></li>
+<li><a href="#我认为相对域名在过去是比较常见的">我认为相对域名在过去是比较常见的</a></li>
+</ul>
+<!-- tocstop -->
+
+<p>大家好！今年早些时候，我在写《[DNS 是如何工作的][1]》 时，有人问我——为什么人们有时在域名的末尾加一个点？例如，如果你通过运行 <code>dig example.com</code> 查询 <code>example.com</code> 的 IP，你会看到一下内容：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">$ dig example.com</span><br><span class="line">example.com.        5678    IN  A   93.184.216.34</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>执行完 <code>dig</code> 命令后，<code>example.com</code> 有一个 <code>.</code> ——变成了 <code>example.com.</code>！发生了什么？</p>
+<p>有些 DNS 工具也要求传给它的域名后加一个 <code>.</code>：如果你在使用 [miekg/dns][2] 时传给它 <code>example.com</code>，它会报错：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">// trying to send this message will return an error</span><br><span class="line">m := new(dns.Msg)</span><br><span class="line">m.SetQuestion(&quot;example.com&quot;, dns.TypeA)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>最初我以为我知道这个问题的答案（“呃，末尾的点意味着域名是完全限定的？”）。这是对的 —— 一个<ruby>完全限定域名<rt>fully qualified domain name</rt></ruby>（FQDN）是一个末尾有 <code>.</code> 的域名！</p>
+<p>但是<em>为什么</em>末尾的点是有用且重要的呢？</p>
+<h3><span id="在-dns-的请求响应中域名的末尾并没有">在 DNS 的请求/响应中，域名的末尾并没有 “.”</span></h3><p>我曾经（错误地）认为 “为什么末尾有一个点？”的答案可能是 “在 DNS 请求/响应中，域名末尾有一个 <code>.</code>，所以我们把它放进去，以匹配你的计算机实际发送/接收的内容”。但事实并不是这样！</p>
+<p>当计算机发送 DNS 请求/响应时，域名的末尾并没有点。实际上，域名中<em>没有</em>点。</p>
+<p>域名会被编码成一系列的长度/字符串对。例如，域名 <code>example.com</code> 被编码为这 13 个字节。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">7example3com0</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>编码后的内容一个点也没有。一个 ASCII 域名（如 <code>example.com</code>）被转成了各种 DNS 软件的 DNS 请求/响应中使用的格式。</p>
+<p>今天我们来讨论域名被转成 DNS 响应的一个地方：区域文件。</p>
+<h3><span id="区域文件中域名末尾的">区域文件中域名末尾的 “.”</span></h3><p>一些人管理域名的 DNS 记录的方法是创建一个被称为 “区域文件” 的文本文件，然后配置一些 DNS 服务器软件（如 <code>nsd</code> 或 <code>bind</code>）来为该区域文件中指定的 DNS 记录提供服务。</p>
+<p>下面是一个对应 <code>example.com</code> 的示例区域文件：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">orange  300   IN    A     1.2.3.4</span><br><span class="line">fruit   300   IN    CNAME orange</span><br><span class="line">grape   3000  IN    CNAME example.com.</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>在这个文件中，任何不以 <code>.</code> 结尾的域名（比如 <code>orange</code>）后都会自动加上 <code>.example.com</code>。所以 <code>orange</code> 成了 <code>orange.example.com</code> 的简称。DNS 服务器从它的配置中得知这是一个 <code>example.com</code> 的区域文件，所以它知道在所有不以点结尾的名字后面自动添加 <code>example.com</code>。</p>
+<p>我想这里的想法只是为了少打几个字符——如果要打出全称，区域文件会是这样：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">orange.example.com.  300   IN    A     1.2.3.4</span><br><span class="line">fruit.example.com.   300   IN    CNAME orange.example.com.</span><br><span class="line">grape.example.com.   3000  IN    CNAME example.com.</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>确实多了很多字符。</p>
+<h3><span id="你也可以不通过区域文件来使用-dns">你也可以不通过区域文件来使用 DNS</span></h3><p>尽管官方的 DNS RFC（[RFC 1035][3]）中定义了区域文件格式，但你也可以不通过区域文件来使用 DNS。例如，AWS Route 53 就不用区域文件来存储 DNS 记录！你可以通过 Web 界面或 API 来创建记录，我猜他们是用某种数据库而不是一堆文本文件来存储记录。</p>
+<p>不过，Route 53（像许多其他 DNS 工具一样）确实支持导入和导出区域文件，这个功能或许在你更换 DNS 提供商时很有用。</p>
+<h3><span id="dig-命令输出中末尾的">dig 命令输出中末尾的 “.”</span></h3><p>现在我们来讨论下 <code>dig</code> 命令的输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">$ dig example.com</span><br><span class="line">; &lt;&lt;&gt;&gt; DiG 9.18.1-1ubuntu1.1-Ubuntu &lt;&lt;&gt;&gt; +all example.com</span><br><span class="line">;; global options: +cmd</span><br><span class="line">;; Got answer:</span><br><span class="line">;; -&gt;&gt;HEADER&lt;&lt;- opcode: QUERY, status: NOERROR, id: 10712</span><br><span class="line">;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1</span><br><span class="line"></span><br><span class="line">;; OPT PSEUDOSECTION:</span><br><span class="line">; EDNS: version: 0, flags:; udp: 65494</span><br><span class="line">;; QUESTION SECTION:</span><br><span class="line">;example.com.           IN  A</span><br><span class="line"></span><br><span class="line">;; ANSWER SECTION:</span><br><span class="line">example.com.        81239   IN  A   93.184.216.34</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>有一件奇怪的事是，几乎每一行都以 <code>;;</code> 开头，这是怎么回事？<code>;</code> 是区域文件中的注释字符！</p>
+<p>我想 <code>dig</code> 以这种奇怪的方式输出的原因可能是为了方便你粘贴这些内容到区域文件时，不用修改就可以直接用。</p>
+<p>这也是 <code>example.com</code> 末尾有个 <code>.</code> 的原因 —— 区域文件要求域名末尾必须有点（否则它们会被解释为是相对于该区域的）。因此 <code>dig</code> 也这么处理了。</p>
+<p>我真的希望 dig 有一个 <code>+human</code> 选项，以更人性化的方式打印出这些信息，但现在我太懒了，懒得花工夫去实际贡献代码来做这件事（而且我并不擅长 C），所以我只能在我的博客上抱怨一下 :)</p>
+<h3><span id="curl-命令输出中末尾的">curl 命令输出中末尾的 “.”</span></h3><p>我们来看下另一个末尾有 <code>.</code> 的例子：<code>curl</code>！</p>
+<p>我家里有台计算机名为 <code>grapefruit</code>，其上运行着 Web 服务器。当我执行 <code>curl grapefruit</code> 时，会输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">$ curl grapefruit</span><br><span class="line"></span><br><span class="line">&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.01//EN&quot; &quot;http://www.w3.org/TR/html4/strict.dtd&quot;&gt;</span><br><span class="line"></span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;head&gt;</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>这样运行没问题！但是如果我在域名后加一个 <code>.</code> 会怎样呢？它报错了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl grapefruit.</span><br><span class="line">curl: (6) Could not resolve host: grapefruit.</span><br></pre></td></tr></table></figure>
+
+<p>发生了什么？为了搞清楚，我们需要先来学习下搜索域：</p>
+<h3><span id="初识搜索域">初识搜索域</span></h3><p>当我执行 <code>curl grapefrult</code> 时，它是怎么被转成一个 DNS 请求的？你可能会认为我的计算机会向域名 <code>grapefruit</code> 发送一个请求，对吗？但事实并不是这样。</p>
+<p>让我们用 <code>tcpdump</code> 来看看到底是什么域名在被查询。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ sudo tcpdump -i any port 53</span><br><span class="line">[...] A? grapefruit.lan. (32)</span><br></pre></td></tr></table></figure>
+
+<p>实际上是向 <code>grapefruit.lan.</code> 发送的请求。为什么呢？</p>
+<p>解释一下：</p>
+<ol>
+<li><code>curl</code> 调用函数 <code>getaddrinfo</code> 来查询 <code>grapefruit</code></li>
+<li><code>getaddrinfo</code> 查询了我计算机上的文件 <code>/etc/resolv.conf</code></li>
+<li><code>/etc/resolv.conf</code> 包含两行内容：<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">nameserver 127.0.0.53</span><br><span class="line">search lan</span><br></pre></td></tr></table></figure></li>
+<li>因为有 <code>search lan</code> 这行内容，所以 <code>getaddrinfo</code> 在 <code>grapefruit</code> 的末尾添加了一个 <code>lan</code>，去查询 <code>grapefruit.lan</code></li>
+</ol>
+<h3><span id="什么时候搜索域被使用">什么时候搜索域被使用?</span></h3><p>现在我们知道了一些奇怪的事情：当我们查询一个域名时，有时会有一个额外的东西（如 <code>lan</code>）被加到最后。但是什么时候会发生这种情况呢？</p>
+<ol>
+<li>如果我们在域名<strong>末尾</strong>添加一个 <code>.</code>，那么这时不会用到搜索域</li>
+<li>如果域名<strong>中间包含</strong>一个 <code>.</code>（如 <code>example.com</code>），那么默认也不会用到搜索域。但是可以通过修改配置来改变处理逻辑（在 [ndots][4] 里有更详细的说明）</li>
+</ol>
+<p>我们现在知道了 <code>curl grapefruit.</code> 与 <code>curl grapefruit</code> 结果不一样的原因——因为一个查询的是 <code>grapefruit.</code>，而另一个查询的是 <code>grapefruit.lan.</code>。</p>
+<h3><span id="我的计算机怎么知道使用哪个搜索域呢">我的计算机怎么知道使用哪个搜索域呢？</span></h3><p>当我连接路由时，它会通过 DHCP 告诉我它的搜索域是 <code>lan</code> —— 它也是通过这个方式给我的计算机分配 IP。</p>
+<h3><span id="所以为什么要在域名末尾加一个点呢">所以为什么要在域名末尾加一个点呢？</span></h3><p>现在我们已经了解了区域文件和搜索域，下面是我认为的人们要在域名末尾加点的原因：</p>
+<p>有两种情况下，域名会被修改，并在末尾添加其他东西。</p>
+<ul>
+<li>在 <code>example.com</code> 的区域文件中，<code>grapefruit</code> 会被转为 <code>grapefruit.example.com</code></li>
+<li>在我的本地网络（我的计算机已经配置了使用搜索域 <code>lan</code>），<code>grapefruit</code> 被转为 <code>grapefruit.lan</code></li>
+</ul>
+<p>因此，由于域名在某些情况下实际上可能被转成其他名字，人们就在结尾处加一个 <code>.</code>，以此来表示 “<strong>这是域名，末尾不需要添加任何东西，这就是全部内容</strong>”。否则会引起混乱。</p>
+<p>“这就是全部内容”的技术术语是<strong>“完全限定域名”</strong>，简称为<strong>“FQDN”</strong>。所以 <code>google.com.</code> 是一个完全限定域名，而 <code>google.com</code> 不是。</p>
+<p>我总是要提醒自己这样做的原因，因为我很少使用区域文件和搜索域，所以我经常觉得——“我当然是指 <code>google.com</code> 而不是 <code>google.com.something.else</code>! 我为什么要指其他东西？那太傻了！”</p>
+<p>但是有些人确实在使用区域文件和搜索域（例如 Kubernetes 中使用了搜索域！），所以结尾的 <code>.</code> 很有用，可以让人确切的知道，不应该再添加其他东西。</p>
+<h3><span id="什么时候在末尾添加">什么时候在末尾添加 “.”？</span></h3><p>以下是关于何时在域名末尾加 “. “ 的几个简单说明：</p>
+<p><strong>需要添加：配置 DNS 时</strong></p>
+<p>在配置 DNS 时，使用完全限定域名从来都不是坏事。你不一定要这样做：非完全限定域名通常也能正常工作，但我从来没有遇到过不接受完全限定域名的 DNS 软件。</p>
+<p>有些 DNS 软件需要这样做：现在我为 <code>jvns.ca</code> 使用的 DNS 服务器让我在域名的末尾加上 <code>.</code>（例如在 CNAME 记录中），并提示如果我不添加，它将在我输入的内容末尾加上 <code>.jvns.ca</code>。我不同意这个设计决定，但这不是什么大问题，我只是在最后加一个 <code>.</code>。</p>
+<p><strong>不需要加：在浏览器中</strong></p>
+<p>令人困惑的是，在浏览器中，在域名结尾处加一个 <code>.</code> <em>不能</em>正常运行。例如，如果我在浏览器中输入 <code>https://twitter.com.</code>，它就会报错。它会返回 404。</p>
+<p>我认为这里发生的事情是，它将 HTTP <code>Host</code> 标头设置为 <code>Host：twitter.com.</code>，而对端的 Web 服务器则期望 <code>Host：twitter.com</code>。</p>
+<p>同样地，<code>https://jvns.ca.</code> 由于某种原因，返回了一个 SSL 错误。</p>
+<h3><span id="我认为相对域名在过去是比较常见的">我认为相对域名在过去是比较常见的</span></h3><p>最后一件事：我认为“相对”域名（比如我用 <code>grapefruit</code> 来指代我家的另一台计算机 <code>grapefruit.lan</code>）在过去更常用，因为 DNS 是在大学或其他有大型内部网络的大机构中开发的。</p>
+<p>在今天的互联网上，使用“绝对”域名（如 <code>example.com</code>）似乎更为普遍。</p>
+<hr>
+<p>via: <a target="_blank" rel="noopener" href="https://jvns.ca/blog/2022/09/12/why-do-domain-names-end-with-a-dot-/">https://jvns.ca/blog/2022/09/12/why-do-domain-names-end-with-a-dot-/</a></p>
+<p>作者：<a target="_blank" rel="noopener" href="https://jvns.ca/">Julia Evans</a><br>选题：<a target="_blank" rel="noopener" href="https://github.com/lujun9972">lujun9972</a><br>译者：<a target="_blank" rel="noopener" href="https://github.com/lxbwolf">lxbwolf</a><br>校对：<a target="_blank" rel="noopener" href="https://github.com/wxy">wxy</a></p>
+<p>本文由 <a target="_blank" rel="noopener" href="https://github.com/LCTT/TranslateProject">LCTT</a> 原创编译，<a target="_blank" rel="noopener" href="https://linux.cn/">Linux中国</a> 荣誉推出</p>
+<pre><code></code></pre>
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/a258db2c/" title="【译】域名末尾带个点" target="_blank" rel="external">https://lxb.wiki/a258db2c/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      
+        <section id="comments" class="comments">
+          <style>
+            .utterances{max-width: 100%;}
+          </style>
+          <script src="https://utteranc.es/client.js"
+                repo="lxbwolf/lxbwolf.github.io"
+                issue-term="title"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+          </script>
+        </section>
+      
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/12428ad2/" title="【译】构建高效的 DevOps 文化的 6 个技巧"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/852e4155/" title="Hexo pure主题配置utteranc评论"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> lxbwolf </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+
+
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
+</html>
