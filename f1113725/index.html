@@ -1,394 +1,283 @@
 <!DOCTYPE html>
-<html lang=zh>
-<head>
-  <meta charset="utf-8">
-  
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
-  <meta name="renderer" content="webkit">
-  <meta http-equiv="Cache-Control" content="no-transform" />
-  <meta http-equiv="Cache-Control" content="no-siteapp" />
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="format-detection" content="telephone=no,email=no,adress=no">
-  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
-  <!-- Color theme for statusbar -->
-  <meta name="theme-color" content="#000000" />
-  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
-  <meta http-equiv="window-target" content="_top" />
-  
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Sortedset底层存储结构 sortedset同时会由两种数据结构支持,ziplist和skiplist. 只有同时满足如下条件是,使用的是'>
+<title>Redis-Sorted-Set底层数据结构</title>
 
-  
-  <title>Redis-Sorted-Set底层数据结构 | Xiaobin&#39;s Blog</title>
-  <meta name="description" content="Sortedset底层存储结构 1 跳跃表 2 跳跃表的结构 3 压缩列表 连锁更新   4 quicklist 数据压缩        Sortedset底层存储结构sortedset同时会由两种数据结构支持,ziplist和skiplist. 只有同时满足如下条件是,使用的是ziplist,其他时候则是使用skiplist  有序集合保存的元素数量小于128个 有序集合保存的所有元素的长">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Redis-Sorted-Set底层数据结构">
-<meta property="og:url" content="https://lxb.wiki/f1113725/index.html">
-<meta property="og:site_name" content="Xiaobin&#39;s Blog">
-<meta property="og:description" content="Sortedset底层存储结构 1 跳跃表 2 跳跃表的结构 3 压缩列表 连锁更新   4 quicklist 数据压缩        Sortedset底层存储结构sortedset同时会由两种数据结构支持,ziplist和skiplist. 只有同时满足如下条件是,使用的是ziplist,其他时候则是使用skiplist  有序集合保存的元素数量小于128个 有序集合保存的所有元素的长">
-<meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210023.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210219.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210255.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210432.png">
-<meta property="article:published_time" content="2021-06-22T14:56:12.000Z">
-<meta property="article:modified_time" content="2022-02-12T13:05:54.216Z">
-<meta property="article:author" content="Xiaobin.Liu">
-<meta property="article:tag" content="redis">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210023.png">
-  <!-- Canonical links  把后面的 index.html 去掉-->
-  <link rel="canonical" href="https://lxb.wiki/f1113725/">
-  
-    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
-  
-  
-    <link rel="icon" href="/favicon.png" type="image/x-icon">
-  
-  
-<link rel="stylesheet" href="/css/style.css">
+<link rel='canonical' href='http://lxb.wiki/f1113725/'>
 
-  
-  
-  
-  
+<link rel="stylesheet" href="/scss/style.min.bc5bb6e306c354a2f5d5bfd1e65a5f3996962fb9b4a3546b748aee7daee4f258.css"><meta property='og:title' content='Redis-Sorted-Set底层数据结构'>
+<meta property='og:description' content='Sortedset底层存储结构 sortedset同时会由两种数据结构支持,ziplist和skiplist. 只有同时满足如下条件是,使用的是'>
+<meta property='og:url' content='http://lxb.wiki/f1113725/'>
+<meta property='og:site_name' content='Xiaobin&#39;s Blog'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='redis' /><meta property='article:published_time' content='2021-06-22T22:56:12&#43;00:00'/><meta property='article:modified_time' content='2021-06-22T22:56:12&#43;00:00'/>
+<meta name="twitter:title" content="Redis-Sorted-Set底层数据结构">
+<meta name="twitter:description" content="Sortedset底层存储结构 sortedset同时会由两种数据结构支持,ziplist和skiplist. 只有同时满足如下条件是,使用的是">
+<link rel="shortcut icon" href="/favicon.png" />
 
-    <!-- google adsense -->
-    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
+<script data-ad-client="ca-pub-5708899526501350" async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-JZ2PWLT6JY');
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
 
-      gtag('config', 'G-JZ2PWLT6JY');
-    </script>
-<meta name="generator" content="Hexo 6.0.0"></head>
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
 
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
 
-<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
-  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-  <div class="slimContent">
-    <div class="navbar-header">
-      
-      
-      <div class="profile-block text-center">
-        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
-          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
-        </a>
-        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin.Liu</h2>
-        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
-        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
-      </div>
-      
-      <div class="search" id="search-form-wrap">
-
-    <form class="search-form sidebar-form">
-        <div class="input-group">
-            <input type="text" class="search-form-input form-control" placeholder="搜索" />
-            <span class="input-group-btn">
-                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
-            </span>
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
+                            height="298" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">Xiaobin&#39;s Blog</a></h1>
+            <h2 class="site-description"></h2>
         </div>
-    </form>
-    <div class="ins-search">
-  <div class="ins-search-mask"></div>
-  <div class="ins-search-container">
-    <div class="ins-input-wrapper">
-      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
-      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
-    </div>
-    <div class="ins-section-wrapper">
-      <div class="ins-section-container"></div>
-    </div>
-  </div>
-</div>
-
-
-</div>
-      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-    </div>
-    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
-      <ul class="nav navbar-nav main-nav menu-highlight">
+    </header><ol class="menu" id="main-menu">
         
         
-        <li class="menu-item menu-item-home">
-          <a href="/.">
-            
-            <i class="icon icon-home-fill"></i>
-            
-            <span class="menu-title">首页</span>
-          </a>
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-archives">
-          <a href="/archives">
-            
-            <i class="icon icon-archives-fill"></i>
-            
-            <span class="menu-title">归档</span>
-          </a>
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                <span>归档</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-categories">
-          <a href="/categories">
-            
-            <i class="icon icon-folder"></i>
-            
-            <span class="menu-title">分类</span>
-          </a>
+        <li >
+            <a href='/categories/' >
+                
+                
+                
+                <span>分类</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-tags">
-          <a href="/tags">
-            
-            <i class="icon icon-tags"></i>
-            
-            <span class="menu-title">标签</span>
-          </a>
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>标签</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-links">
-          <a href="/links">
-            
-            <i class="icon icon-friendship"></i>
-            
-            <span class="menu-title">友链</span>
-          </a>
+        <li >
+            <a href='/links/' >
+                
+                
+                
+                <span>友链</span>
+            </a>
         </li>
         
-        
-        <li class="menu-item menu-item-about">
-          <a href="/about">
+
+        <div class="menu-bottom-section">
             
-            <i class="icon icon-cup-fill"></i>
             
-            <span class="menu-title">关于</span>
-          </a>
-        </li>
-        
-      </ul>
-      
-	
-    <ul class="social-links">
-    	
-        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
-        
-        <li><a href="mailto:me@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
-        
-        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
-        
-    </ul>
-
-    </nav>
-  </div>
-</header>
-
-  
-    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
-  <div class="slimContent">
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">分类</h3>
-    <div class="widget-body">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">48</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">22</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">28</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">18</span></li></ul>
-    </div>
-  </div>
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
 
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">标签云</h3>
-    <div class="widget-body tagcloud">
-      <a href="/tags/GitHub/" style="font-size: 13.09px;">GitHub</a> <a href="/tags/STL/" style="font-size: 13.45px;">STL</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.27px;">blog</a> <a href="/tags/c/" style="font-size: 13.64px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.09px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.09px;">devops</a> <a href="/tags/docker/" style="font-size: 13px;">docker</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.36px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.18px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.09px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.18px;">hexo</a> <a href="/tags/http/" style="font-size: 13.36px;">http</a> <a href="/tags/joplin/" style="font-size: 13.09px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/mac/" style="font-size: 13.27px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.09px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.18px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.36px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.18px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.18px;">pic</a> <a href="/tags/qt/" style="font-size: 13.36px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.55px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.91px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.09px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/zk/" style="font-size: 13.09px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.45px;">工具</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.73px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.45px;">树莓派</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.55px;">算法</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.82px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.09px;">邮件</a>
-    </div>
-  </div>
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">归档</h3>
-    <div class="widget-body">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
-    </div>
-  </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
 
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">最新文章</h3>
-    <div class="widget-body">
-      <ul class="recent-post-list list-unstyled no-thumbnail">
-        
-          <li>
+
+                    <span>暗色模式</span>
+                </li>
             
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Design/">Design</a>
-              </p>
-              <p class="item-title">
-                <a href="/12428ad2/" class="title">【译】构建高效的 DevOps 文化的 6 个技巧</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2023-01-30T13:58:33.000Z" itemprop="datePublished">2023-01-30</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Web/">Web</a>
-              </p>
-              <p class="item-title">
-                <a href="/a258db2c/" class="title">【译】域名末尾带个点</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-11-16T14:20:00.000Z" itemprop="datePublished">2022-11-16</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Tools/">Tools</a>
-              </p>
-              <p class="item-title">
-                <a href="/690c8418/" class="title">【译】10大静态网站生成工具</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-10-02T10:26:55.000Z" itemprop="datePublished">2022-10-02</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Tools/">Tools</a>
-              </p>
-              <p class="item-title">
-                <a href="/62afdbe0/" class="title">mermaid画流程图语法</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-06-20T12:34:38.000Z" itemprop="datePublished">2022-06-20</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Linux/">Linux</a>
-              </p>
-              <p class="item-title">
-                <a href="/f54357bf/" class="title">流编辑器sed</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-06-10T14:28:34.000Z" itemprop="datePublished">2022-06-10</time>
-              </p>
-            </div>
-          </li>
-          
-      </ul>
-    </div>
-  </div>
-  
-
-    
-  </div>
+        </div>
+    </ol>
 </aside>
 
-  
-  
-<main class="main" role="main">
-  <div class="content">
-  <article id="post-Redis-Sorted-Set底层数据结构" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+<section class="widget archives">
     
-    <div class="article-header">
-      
-        
-  
-    <h1 class="article-title" itemprop="name">
-      Redis-Sorted-Set底层数据结构
-    </h1>
-  
+    <h2 class="widget-title section-title">目录</h2>
 
-      
-      <div class="article-meta">
-        <span class="article-date">
-    <i class="icon icon-calendar-check"></i>
-	<a href="/f1113725/" class="article-date">
-	  <time datetime="2021-06-22T14:56:12.000Z" itemprop="datePublished">2021-06-22</time>
-	</a>
-</span>
-        
-  <span class="article-category">
-    <i class="icon icon-folder"></i>
-    <a class="article-category-link" href="/categories/DB/">DB</a>
-  </span>
-
-        
-  <span class="article-tag">
-    <i class="icon icon-tags"></i>
-	<a class="article-tag-link-link" href="/tags/redis/" rel="tag">redis</a>
-  </span>
-
-
-<!--        
- -->
-        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/f1113725/#comments" class="article-comment-link">评论</a></span> 
-        
-	
-		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 3.2k(字)</span>
-	
-	
-		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 11(分)</span>
-	
-
-      </div>
+    <div class="widget--toc">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#1-跳跃表">1 跳跃表</a></li>
+    <li><a href="#2-跳跃表的结构">2 跳跃表的结构</a></li>
+    <li><a href="#3-压缩列表">3 压缩列表</a>
+      <ul>
+        <li><a href="#连锁更新">连锁更新</a></li>
+      </ul>
+    </li>
+    <li><a href="#4-quicklist">4 quicklist</a>
+      <ul>
+        <li><a href="#数据压缩">数据压缩</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
     </div>
-    <div class="article-entry marked-body" itemprop="articleBody">
-      
-        <!-- toc -->
+</section>
 
-<ul>
-<li><a href="#sortedset底层存储结构">Sortedset底层存储结构</a><ul>
-<li><a href="#1-跳跃表">1 跳跃表</a></li>
-<li><a href="#2-跳跃表的结构">2 跳跃表的结构</a></li>
-<li><a href="#3-压缩列表">3 压缩列表</a><ul>
-<li><a href="#连锁更新">连锁更新</a></li>
-</ul>
-</li>
-<li><a href="#4-quicklist">4 quicklist</a><ul>
-<li><a href="#数据压缩">数据压缩</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<!-- tocstop -->
+            
+        
+    </aside>
 
-<h1><span id="sortedset底层存储结构">Sortedset底层存储结构</span></h1><p>sortedset同时会由两种数据结构支持,ziplist和skiplist.</p>
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+        <a href="/categories/DB/" >
+            DB
+        </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/f1113725/">Redis-Sorted-Set底层数据结构</a>
+        </h2>
+
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+            <time class="article-time--published">Jun 22, 2021</time>
+        </div>
+        
+
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+            <time class="article-time--reading">
+                阅读时长: 10 分钟
+            </time>
+        </div>
+        
+        <small>
+    <section class="article-tags">
+        
+            <a href="/tags/redis/">redis</a>
+        
+    </section>
+</small>
+    </footer>
+    
+
+    
+</div>
+</header>
+
+    <section class="article-content">
+    
+    
+    <!-- raw HTML omitted -->
+<h1 id="sortedset底层存储结构">Sortedset底层存储结构</h1>
+<p>sortedset同时会由两种数据结构支持,ziplist和skiplist.</p>
 <p>只有同时满足如下条件是,使用的是ziplist,其他时候则是使用skiplist</p>
 <ul>
 <li>有序集合保存的元素数量小于128个</li>
@@ -396,11 +285,15 @@
 </ul>
 <p>当ziplist作为存储结构时候,每个集合元素使用两个紧挨在一起的压缩列表结点来保存,第一个节点保存元素的成员,第二个元素保存元素的分值.</p>
 <p>当使用skiplist作为存储结构时,使用skiplist按序保存元素分值,使用dict来保存元素和分值的对应关系</p>
-<h2><span id="1-跳跃表">1 跳跃表</span></h2><p>跳跃表（skiplist）是一种有序数据结构，它通过在每个节点中维持多个指向其他节点的指针，从而达到快速访问节点的目的。跳跃表支持平均O（logN）、最坏O（N）复杂度的节点查找，还可以通过顺序性操作来批量处理节点。</p>
+<h2 id="1-跳跃表">1 跳跃表</h2>
+<p>跳跃表（skiplist）是一种有序数据结构，它通过在每个节点中维持多个指向其他节点的指针，从而达到快速访问节点的目的。跳跃表支持平均O（logN）、最坏O（N）复杂度的节点查找，还可以通过顺序性操作来批量处理节点。</p>
 <p>在大部分情况下，跳跃表的效率可以和平衡树相媲美，并且因为跳跃表的实现比平衡树要来得更为简单。</p>
 <p><strong>Redis使用跳跃表作为有序集合键的底层实现之一，如果一个有序集合包含的元素数量比较多，又或者有序集合中元素的成员（member）是比较长的字符串时，Redis就会使用跳跃表来作为有序集合键的底层实现。</strong></p>
 <p>Redis只在两个地方用到了跳跃表，一个是实现有序集合键，另一个是在集群节点中用作内部数据结构，除此之外，跳跃表在Redis里面没有其他用途。</p>
-<p>Redis的配置文件中关于有序集合底层实现的两个配置。<br>1）zset-max-ziplist-entries 128:zset采用压缩列表时，元素个数最大值。默认值为128。<br>2）zset-max-ziplist-value 64:zset采用压缩列表时，每个元素的字符串长度最大值。默认值为64。<br>zset插入第一个元素时，会判断下面两种条件：</p>
+<p>Redis的配置文件中关于有序集合底层实现的两个配置。
+1）zset-max-ziplist-entries 128:zset采用压缩列表时，元素个数最大值。默认值为128。
+2）zset-max-ziplist-value 64:zset采用压缩列表时，每个元素的字符串长度最大值。默认值为64。
+zset插入第一个元素时，会判断下面两种条件：</p>
 <ul>
 <li>zset-max-ziplist-entries的值是否等于0；</li>
 <li>zset-max-ziplist-value小于要插入元素的字符串长度。满足任一条件Redis就会采用跳跃表作为底层实现，否则采用压缩列表作为底层实现方式。</li>
@@ -413,242 +306,399 @@
 <blockquote>
 <p>zset在转为跳跃表之后，即使元素被逐渐删除，也不会重新转为压缩列表。</p>
 </blockquote>
-<h2><span id="2-跳跃表的结构">2 跳跃表的结构</span></h2><p>其c语言代码如下：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> &#123;</span></span><br><span class="line">	<span class="comment">//成员对象</span></span><br><span class="line">    robj *obj;</span><br><span class="line">    <span class="type">double</span> score;<span class="comment">//分值</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">backward</span>;</span><span class="comment">//回退指针</span></span><br><span class="line">    <span class="comment">//层</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistLevel</span> &#123;</span></span><br><span class="line">    	<span class="comment">//前进指针</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">forward</span>;</span></span><br><span class="line">        <span class="comment">//跨度</span></span><br><span class="line">        <span class="type">unsigned</span> <span class="type">int</span> span;</span><br><span class="line">    &#125; level[];</span><br><span class="line">&#125; zskiplistNode;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>1）obj：用于存储字符串类型的数据。<br>2）score：用于存储排序的分值。<br>3）backward：后退指针，只能指向当前节点最底层的前一个节点，头节点和第一个节点——backward指向NULL，从后向前遍历跳跃表时使用。<br>4）level：为柔性数组。每个节点的数组长度不一样，在生成跳跃表节点时，随机生成一个1～64的值，值越大出现的概率越低。<br>level数组的每项包含以下两个元素。</p>
+<h2 id="2-跳跃表的结构">2 跳跃表的结构</h2>
+<p>其c语言代码如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> zskiplistNode {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//成员对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    robj <span style="color:#f92672">*</span>obj;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">double</span> score;<span style="color:#75715e">//分值
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">struct</span> zskiplistNode <span style="color:#f92672">*</span>backward;<span style="color:#75715e">//回退指针
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">//层
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">struct</span> zskiplistLevel {
+</span></span><span style="display:flex;"><span>    	<span style="color:#75715e">//前进指针
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">struct</span> zskiplistNode <span style="color:#f92672">*</span>forward;
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//跨度
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> span;
+</span></span><span style="display:flex;"><span>    } level[];
+</span></span><span style="display:flex;"><span>} zskiplistNode;
+</span></span></code></pre></div><p>1）obj：用于存储字符串类型的数据。
+2）score：用于存储排序的分值。
+3）backward：后退指针，只能指向当前节点最底层的前一个节点，头节点和第一个节点——backward指向NULL，从后向前遍历跳跃表时使用。
+4）level：为柔性数组。每个节点的数组长度不一样，在生成跳跃表节点时，随机生成一个1～64的值，值越大出现的概率越低。
+level数组的每项包含以下两个元素。</p>
 <ul>
 <li>forward：指向本层下一个节点，尾节点的forward指向NULL。</li>
 <li>span:forward指向的节点与本节点之间的元素个数。span值越大，跳过的节点个数越多。</li>
 </ul>
 <p>除了跳跃表节点外，还需要一个跳跃表结构来管理节点，Redis使用zskiplist结构体，定义如下：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">zskiplist</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">header</span>, *<span class="title">tail</span>;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> length;</span><br><span class="line">    <span class="type">int</span> level;</span><br><span class="line">&#125; zskiplist;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>1）header：指向跳跃表头节点。头节点是跳跃表的一个特殊节点，它的level数组元素个数为64。头节点在有序集合中不存储任何member和score值，ele值为NULL, score值为0；也不计入跳跃表的总长度。头节点在初始化时，64个元素的forward都指向NULL, span值都为0。<br>2）tail：指向跳跃表尾节点。<br>3）length：跳跃表长度，表示除头节点之外的节点总数。<br>4）level：跳跃表的高度。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210023.png" alt></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> zskiplist {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">struct</span> zskiplistNode <span style="color:#f92672">*</span>header, <span style="color:#f92672">*</span>tail;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> length;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> level;
+</span></span><span style="display:flex;"><span>} zskiplist;
+</span></span></code></pre></div><p>1）header：指向跳跃表头节点。头节点是跳跃表的一个特殊节点，它的level数组元素个数为64。头节点在有序集合中不存储任何member和score值，ele值为NULL, score值为0；也不计入跳跃表的总长度。头节点在初始化时，64个元素的forward都指向NULL, span值都为0。
+2）tail：指向跳跃表尾节点。
+3）length：跳跃表长度，表示除头节点之外的节点总数。
+4）level：跳跃表的高度。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210023.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <blockquote>
 <p>查找从最高层开始，如果本层的next节点大于要查找的值或next节点为NULL，则从本节点开始，降低一层继续向后查找，依次类推，如果找到则返回节点；否则返回NULL。采用该原理查找节点，在节点数量比较多时，可以跳过一些节点，查询效率大大提升，这就是跳跃表的基本思想。</p>
 </blockquote>
-<p>1）跳跃表由很多层构成。<br>2）跳跃表有一个头（header）节点，头节点中有一个64层的结构，每层的结构包含指向本层的下个节点的指针，指向本层下个节点中间所跨越的节点个数为本层的跨度（span）。<br>3）除头节点外，层数最多的节点的层高为跳跃表的高度（level）<br>4）每层都是一个有序链表，数据递增。<br>5）除header节点外，一个元素在上层有序链表中出现，则它一定会在下层有序链表中出现。<br>6）跳跃表每层最后一个节点指向NULL，表示本层有序链表的结束。<br>7）跳跃表拥有一个tail指针，指向跳跃表最后一个节点。<br>8）最底层的有序链表包含所有节点，最底层的节点个数为跳跃表的长度（length）（不包括头节点）。<br>9）每个节点包含一个后退指针，头节点和第一个节点指向NULL；其他节点指向最底层的前一个节点。</p>
+<p>1）跳跃表由很多层构成。
+2）跳跃表有一个头（header）节点，头节点中有一个64层的结构，每层的结构包含指向本层的下个节点的指针，指向本层下个节点中间所跨越的节点个数为本层的跨度（span）。
+3）除头节点外，层数最多的节点的层高为跳跃表的高度（level）
+4）每层都是一个有序链表，数据递增。
+5）除header节点外，一个元素在上层有序链表中出现，则它一定会在下层有序链表中出现。
+6）跳跃表每层最后一个节点指向NULL，表示本层有序链表的结束。
+7）跳跃表拥有一个tail指针，指向跳跃表最后一个节点。
+8）最底层的有序链表包含所有节点，最底层的节点个数为跳跃表的长度（length）（不包括头节点）。
+9）每个节点包含一个后退指针，头节点和第一个节点指向NULL；其他节点指向最底层的前一个节点。</p>
 <blockquote>
 <p>Redis通过zslRandomLevel函数随机生成一个1～64的值作为新建节点的高度</p>
 </blockquote>
-<h2><span id="3-压缩列表">3 压缩列表</span></h2><p>压缩列表ziplist本质上就是一个字节数组，是Redis为了节约内存而设计的一种线性数据结构，可以包含多个元素，每个元素可以是一个字节数组或一个整数。</p>
+<h2 id="3-压缩列表">3 压缩列表</h2>
+<p>压缩列表ziplist本质上就是一个字节数组，是Redis为了节约内存而设计的一种线性数据结构，可以包含多个元素，每个元素可以是一个字节数组或一个整数。</p>
 <blockquote>
 <p>Redis的有序集合、散列和列表都直接或者间接使用了压缩列表。当有序集合或散列表的元素个数比较少，且元素都是短字符串时，Redis便使用压缩列表作为其底层数据存储结构。列表使用快速链表（quicklist）数据结构存储，而快速链表就是双向链表与压缩列表的组合。</p>
 </blockquote>
 <p>一个压缩列表可以包含任意多个节点（entry），<strong>每个节点可以保存一个字节数组或者一个整数值。</strong></p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210219.png" alt></p>
-<p>1）zlbytes：压缩列表的字节长度，占4个字节，因此压缩列表最多有232-1个字节。<br>2）zltail：压缩列表尾元素相对于压缩列表起始地址的偏移量，占4个字节。3）zllen：压缩列表的元素个数，占2个字节。zllen无法存储元素个数超过65535（216-1）的压缩列表，必须遍历整个压缩列表才能获取到元素个数。4）entryX：压缩列表存储的元素，可以是字节数组或者整数，长度不限。entry的编码结构将在后面详细介绍。<br>5）zlend：压缩列表的结尾，占1个字节，恒为0xFF。</p>
-<p>而压缩列表元素(entry)的编码结构：<br><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210255.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210219.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>1）zlbytes：压缩列表的字节长度，占4个字节，因此压缩列表最多有232-1个字节。
+2）zltail：压缩列表尾元素相对于压缩列表起始地址的偏移量，占4个字节。3）zllen：压缩列表的元素个数，占2个字节。zllen无法存储元素个数超过65535（216-1）的压缩列表，必须遍历整个压缩列表才能获取到元素个数。4）entryX：压缩列表存储的元素，可以是字节数组或者整数，长度不限。entry的编码结构将在后面详细介绍。
+5）zlend：压缩列表的结尾，占1个字节，恒为0xFF。</p>
+<p>而压缩列表元素(entry)的编码结构：
+<img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210255.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <ul>
-<li>previous_entry_length字段表示前一个元素的字节长度<br>  占1个或者5个字节，当前一个元素的长度小于254字节时，用1个字节表示；当前一个元素的长度大于或等于254字节时，用5个字节来表示。</li>
+<li>previous_entry_length字段表示前一个元素的字节长度
+占1个或者5个字节，当前一个元素的长度小于254字节时，用1个字节表示；当前一个元素的长度大于或等于254字节时，用5个字节来表示。</li>
 <li>encoding字段表示当前元素的编码</li>
 <li>数据内容存储在content字段</li>
 </ul>
 <p>其中包含了很多复杂的解码运算，想详细了解的可以找对应的书来看。</p>
-<h3><span id="连锁更新">连锁更新</span></h3><p>每个节点的previous_entry_length属性都记录了前一个节点的长度，添加新节点可能会引发连锁更新之外，删除节点也可能会引发连锁更新。<br>因为某个可能的结点previous_entry_length属性仅长1字节，它没办法保存新节点new的长度，所以程序将对压缩列表执行空间重分配操作，并将则个节点的previous_entry_length属性从原来的1字节长扩展为5字节长。进而引发后面的连锁更新。<br>其最坏复杂度是O（N 2）。</p>
+<h3 id="连锁更新">连锁更新</h3>
+<p>每个节点的previous_entry_length属性都记录了前一个节点的长度，添加新节点可能会引发连锁更新之外，删除节点也可能会引发连锁更新。
+因为某个可能的结点previous_entry_length属性仅长1字节，它没办法保存新节点new的长度，所以程序将对压缩列表执行空间重分配操作，并将则个节点的previous_entry_length属性从原来的1字节长扩展为5字节长。进而引发后面的连锁更新。
+其最坏复杂度是O（N 2）。</p>
 <p>尽管连锁更新的复杂度较高，但它真正造成性能问题的几率是很低的：</p>
-<p>压缩列表里要恰好有多个连续的、长度介于250字节至253字节之间的节点，连锁更新才有可能被引发，在实际中，这种情况并不多见；<br>即使出现连锁更新，但只要被更新的节点数量不多，就不会对性能造成任何影响：比如说，对三五个节点进行连锁更新是绝对不会影响性能的；</p>
-<h2><span id="4-quicklist">4 quicklist</span></h2><p>quicklist是Redis底层最重要的数据结构之一，它是Redis对外提供的6种基本数据结构中List的底层实现，在Redis 3.2版本中引入。</p>
+<p>压缩列表里要恰好有多个连续的、长度介于250字节至253字节之间的节点，连锁更新才有可能被引发，在实际中，这种情况并不多见；
+即使出现连锁更新，但只要被更新的节点数量不多，就不会对性能造成任何影响：比如说，对三五个节点进行连锁更新是绝对不会影响性能的；</p>
+<h2 id="4-quicklist">4 quicklist</h2>
+<p>quicklist是Redis底层最重要的数据结构之一，它是Redis对外提供的6种基本数据结构中List的底层实现，在Redis 3.2版本中引入。</p>
 <p>在引入quicklist之前，Redis采用压缩链表（ziplist）以及双向链表（adlist）作为List的底层实现。当元素个数比较少并且元素长度比较小时，Redis采用ziplist作为其底层存储；当任意一个条件不满足时，Redis采用adlist作为底层存储结构。</p>
 <p>这么做的主要原因是，当元素长度较小时，采用ziplist可以有效节省存储空间，但ziplist的存储空间是连续的，当元素个数比较多时，修改元素时，必须重新分配存储空间，这无疑会影响Redis的执行效率，故而采用一般的双向链表。</p>
-<p>结构如下：<br><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210432.png" alt></p>
+<p>结构如下：
+<img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210432.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>代码如下</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">quicklist</span>&#123;</span></span><br><span class="line">	quicklistNode *head;</span><br><span class="line">	quicklistNode *tail;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> count;<span class="comment">//quicklist中元素总数</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> len;<span class="comment">//quicklist Node（节点）个数</span></span><br><span class="line">	<span class="type">int</span> fill : <span class="number">16</span>;<span class="comment">//每个quicklistNode中ziplist长度</span></span><br><span class="line">&#125;quicklist;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> quicklist{
+</span></span><span style="display:flex;"><span>	quicklistNode <span style="color:#f92672">*</span>head;
+</span></span><span style="display:flex;"><span>	quicklistNode <span style="color:#f92672">*</span>tail;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> count;<span style="color:#75715e">//quicklist中元素总数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> len;<span style="color:#75715e">//quicklist Node（节点）个数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">int</span> fill : <span style="color:#ae81ff">16</span>;<span style="color:#75715e">//每个quicklistNode中ziplist长度
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}quicklist;
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> quicklistNode{
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">struct</span> quicklistNode <span style="color:#f92672">*</span>prev;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">struct</span> quicklistNode <span style="color:#f92672">*</span>next;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>zl;<span style="color:#75715e">//zl指向该节点对应的ziplist结构；
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> sz;<span style="color:#75715e">//整个ziplist结构的大小
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> count:<span style="color:#ae81ff">16</span>;<span style="color:#75715e">//ziplist的个数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> coding<span style="color:#960050;background-color:#1e0010">：</span><span style="color:#ae81ff">2</span>;<span style="color:#75715e">//1代表是原生的，2代表使用LZF进行压缩；
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> containnr<span style="color:#960050;background-color:#1e0010">：</span><span style="color:#ae81ff">2</span>;<span style="color:#75715e">//container为quicklistNode节点zl指向的容器类型：1代表none,2代表使用ziplist存储数据；
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> recompress:<span style="color:#ae81ff">1</span>;<span style="color:#75715e">//recompress代表这个节点之前是否是压缩节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> extra:<span style="color:#ae81ff">10</span>;<span style="color:#75715e">//extra为预留
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}quicklistNode;
+</span></span></code></pre></div><h3 id="数据压缩">数据压缩</h3>
+<p>quicklist每个节点的实际数据存储结构为ziplist，这种结构的主要优势在于节省存储空间。为了进一步降低ziplist所占用的空间，Redis允许对ziplist进一步压缩，Redis采用的压缩算法是LZF，压缩过后的数据可以分成多个片段，每个片段有2部分：一部分是解释字段，另一部分是存放具体的数据字段。
+解释字段可以占用1～3个字节，数据字段可能不存在。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> quicklistLZF{
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> sz;<span style="color:#75715e">//sz表示compressed所占字节大小
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">char</span> compress[];
+</span></span><span style="display:flex;"><span>}quicklistLZF;
+</span></span></code></pre></div><p>解释字段有3种:
+1）字面型，解释字段占用1个字节，数据字段长度由解释字段后5位决定。
+2）简短重复型，解释字段占用2个字节，没有数据字段，数据内容与前面数据内容重复，重复长度小于8。
+3）批量重复型，解释字段占3个字节，没有数据字段，数据内容与前面内容重复。</p>
+<p>压缩：
+数据与前面重复的，记录重复位置以及重复长度，否则直接记录原始数据内容。压缩算法的流程如下：遍历输入字符串，对当前字符及其后面2个字符进行散列运算，如果在Hash表中找到曾经出现的记录，则计算重复字节的长度以及位置，反之直接输出数据。
+解压：
+可能存在重复数据与当前位置重叠的情况，例如在当前位置前的15个字节处，重复了20个字节，此时需要按位逐个复制。</p>
+
+</section>
 
 
-
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">quicklistNode</span>&#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">quicklistNode</span> *<span class="title">prev</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">quicklistNode</span> *<span class="title">next</span>;</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span> *zl;<span class="comment">//zl指向该节点对应的ziplist结构；</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> sz;<span class="comment">//整个ziplist结构的大小</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> count:<span class="number">16</span>;<span class="comment">//ziplist的个数</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> coding：<span class="number">2</span>;<span class="comment">//1代表是原生的，2代表使用LZF进行压缩；</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> containnr：<span class="number">2</span>;<span class="comment">//container为quicklistNode节点zl指向的容器类型：1代表none,2代表使用ziplist存储数据；</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> recompress:<span class="number">1</span>;<span class="comment">//recompress代表这个节点之前是否是压缩节点</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> extra:<span class="number">10</span>;<span class="comment">//extra为预留</span></span><br><span class="line">&#125;quicklistNode;</span><br></pre></td></tr></table></figure>
-
-
-
-<h3><span id="数据压缩">数据压缩</span></h3><p>quicklist每个节点的实际数据存储结构为ziplist，这种结构的主要优势在于节省存储空间。为了进一步降低ziplist所占用的空间，Redis允许对ziplist进一步压缩，Redis采用的压缩算法是LZF，压缩过后的数据可以分成多个片段，每个片段有2部分：一部分是解释字段，另一部分是存放具体的数据字段。<br>解释字段可以占用1～3个字节，数据字段可能不存在。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">quicklistLZF</span>&#123;</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> sz;<span class="comment">//sz表示compressed所占字节大小</span></span><br><span class="line">	<span class="type">char</span> compress[];</span><br><span class="line">&#125;quicklistLZF;</span><br></pre></td></tr></table></figure>
-
-<p>解释字段有3种:<br>1）字面型，解释字段占用1个字节，数据字段长度由解释字段后5位决定。<br>2）简短重复型，解释字段占用2个字节，没有数据字段，数据内容与前面数据内容重复，重复长度小于8。<br>3）批量重复型，解释字段占3个字节，没有数据字段，数据内容与前面内容重复。</p>
-<p>压缩：<br>数据与前面重复的，记录重复位置以及重复长度，否则直接记录原始数据内容。压缩算法的流程如下：遍历输入字符串，对当前字符及其后面2个字符进行散列运算，如果在Hash表中找到曾经出现的记录，则计算重复字节的长度以及位置，反之直接输出数据。<br>解压：<br>可能存在重复数据与当前位置重叠的情况，例如在当前位置前的15个字节处，重复了20个字节，此时需要按位逐个复制。</p>
-
-      
-    </div>
-    <div class="article-footer">
-      <blockquote class="mt-2x">
-  <ul class="post-copyright list-unstyled">
+    <footer class="article-footer">
     
-    <li class="post-copyright-link hidden-xs">
-      <strong>本文链接：</strong>
-      <a href="https://lxb.wiki/f1113725/" title="Redis-Sorted-Set底层数据结构" target="_blank" rel="external">https://lxb.wiki/f1113725/</a>
-    </li>
-    
-    <li class="post-copyright-license">
-      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
-    </li>
-  </ul>
-</blockquote>
-
-    </div>
-  </article>
-  
-    
-  <section id="comments">
-  	
-      
-        <section id="comments" class="comments">
-          <style>
-            .utterances{max-width: 100%;}
-          </style>
-          <script src="https://utteranc.es/client.js"
-                repo="lxbwolf/lxbwolf.github.io"
-                issue-term="title"
-                theme="github-light"
-                crossorigin="anonymous"
-                async>
-          </script>
-        </section>
-      
-    
-  </section>
-
-
-  
-</div>
-
-  <nav class="bar bar-footer clearfix" data-stick-bottom>
-  <div class="bar-inner">
-  
-  <ul class="pager pull-left">
-    
-    <li class="prev">
-      <a href="/17ced2c4/" title="B树和B+树"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
-    </li>
-    
-    
-    <li class="next">
-      <a href="/9106c914/" title="Redis的线程模型"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
-    </li>
-    
-    
-  </ul>
-  
-  
-  
-  <div class="bar-right">
-    
-    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
-    
-  </div>
-  </div>
-</nav>
-  
-
-
-
-</main>
-
-  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
-	
-	
-    <ul class="social-links">
-    	
-        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+    <section class="article-tags">
         
-        <li><a href="mailto:me@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+            <a href="/tags/redis/">redis</a>
         
-        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
-        
-    </ul>
+    </section>
 
-    <div class="copyright">
-    	
-        <div class="publishby">
-        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> Xiaobin.Liu </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/9106c914/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Redis的线程模型</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/f885fe0f/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Redis持久化机制</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/e98e0a2b/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">redis 跳表分析并用 Go 实现</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/7db296fb/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">分布式锁高并发优化</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/9f188831/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Redis 笔记</h2>
+        </div>
+    </a>
+</article>
+
+            
         </div>
     </div>
+</aside>
 
+     
+    
+        
+    <div class="disqus-container">
+    
+</div>
 
-  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
-  <script>
-    if (window.mermaid) {
-      mermaid.initialize({theme: 'forest'});
+<style>
+    .disqus-container {
+        background-color: var(--card-background);
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--shadow-l1);
+        padding: var(--card-padding);
     }
-  </script>
+</style>
 
+<script>
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (typeof DISQUS == 'object') {
+            DISQUS.reset({
+                reload: true
+            });
+        }
+    })
+</script>
 
+    
 
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2023 Xiaobin&#39;s Blog
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
 </footer>
 
-  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
 <script>
-window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
 </script>
 
-<script src="/js/plugin.min.js"></script>
-
-
-<script src="/js/application.js"></script>
-
-
-    <script>
-(function (window) {
-    var INSIGHT_CONFIG = {
-        TRANSLATION: {
-            POSTS: '文章',
-            PAGES: '页面',
-            CATEGORIES: '分类',
-            TAGS: '标签',
-            UNTITLED: '(未命名)',
-        },
-        ROOT_URL: '/',
-        CONTENT_URL: '/content.json',
-    };
-    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
-})(window);
-</script>
-
-<script src="/js/insight.js"></script>
-
-
-
-
-
-
-   
-
-
-
-
-   
-
-
-
-
-
-    <script defer type="text/javascript">
-(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'G-JZ2PWLT6JY', 'auto');
-ga('send', 'pageview');
-
-</script>
-
-
-    <script defer>
-var _hmt = _hmt || [];
-(function() {
-    var hm = document.createElement("script");
-    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
-    var s = document.getElementsByTagName("script")[0];
-    s.parentNode.insertBefore(hm, s);
-})();
-</script>
-
-
-
-
-</body>
+    </body>
 </html>

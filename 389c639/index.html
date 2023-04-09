@@ -1,392 +1,276 @@
 <!DOCTYPE html>
-<html lang=zh>
-<head>
-  <meta charset="utf-8">
-  
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
-  <meta name="renderer" content="webkit">
-  <meta http-equiv="Cache-Control" content="no-transform" />
-  <meta http-equiv="Cache-Control" content="no-siteapp" />
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="format-detection" content="telephone=no,email=no,adress=no">
-  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
-  <!-- Color theme for statusbar -->
-  <meta name="theme-color" content="#000000" />
-  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
-  <meta http-equiv="window-target" content="_top" />
-  
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='语法 rewrite regex replacement flag flag有如下: last break 中止 rewrite, 不再继续匹配 redirect 返回临时重定向的 HTTP 状态302 permanet 返回永久重定向的 HTTP 状态301 last 和 break 的不同: break 是终止当前lo'>
+<title>nginx 配置中的rewrite</title>
 
-  
-  <title>nginx 配置中的rewrite | Xiaobin&#39;s Blog</title>
-  <meta name="description" content="语法  rewrite regex replacement flag  flag有如下:   last   break 中止 rewrite, 不再继续匹配   redirect 返回临时重定向的 HTTP 状态302    permanet 返回永久重定向的 HTTP 状态301   last 和 break 的不同:   break 是终止当前location 的 rewrite">
-<meta property="og:type" content="article">
-<meta property="og:title" content="nginx 配置中的rewrite">
-<meta property="og:url" content="https://lxb.wiki/389c639/index.html">
-<meta property="og:site_name" content="Xiaobin&#39;s Blog">
-<meta property="og:description" content="语法  rewrite regex replacement flag  flag有如下:   last   break 中止 rewrite, 不再继续匹配   redirect 返回临时重定向的 HTTP 状态302    permanet 返回永久重定向的 HTTP 状态301   last 和 break 的不同:   break 是终止当前location 的 rewrite">
-<meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2018-06-02T14:35:47.000Z">
-<meta property="article:modified_time" content="2020-12-06T17:17:20.875Z">
-<meta property="article:author" content="Xiaobin.Liu">
-<meta property="article:tag" content="nginx">
-<meta name="twitter:card" content="summary">
-  <!-- Canonical links  把后面的 index.html 去掉-->
-  <link rel="canonical" href="https://lxb.wiki/389c639/">
-  
-    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
-  
-  
-    <link rel="icon" href="/favicon.png" type="image/x-icon">
-  
-  
-<link rel="stylesheet" href="/css/style.css">
+<link rel='canonical' href='http://lxb.wiki/389c639/'>
 
-  
-  
-  
-  
+<link rel="stylesheet" href="/scss/style.min.bc5bb6e306c354a2f5d5bfd1e65a5f3996962fb9b4a3546b748aee7daee4f258.css"><meta property='og:title' content='nginx 配置中的rewrite'>
+<meta property='og:description' content='语法 rewrite regex replacement flag flag有如下: last break 中止 rewrite, 不再继续匹配 redirect 返回临时重定向的 HTTP 状态302 permanet 返回永久重定向的 HTTP 状态301 last 和 break 的不同: break 是终止当前lo'>
+<meta property='og:url' content='http://lxb.wiki/389c639/'>
+<meta property='og:site_name' content='Xiaobin&#39;s Blog'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='nginx' /><meta property='article:published_time' content='2018-06-02T22:35:47&#43;00:00'/><meta property='article:modified_time' content='2018-06-02T22:35:47&#43;00:00'/>
+<meta name="twitter:title" content="nginx 配置中的rewrite">
+<meta name="twitter:description" content="语法 rewrite regex replacement flag flag有如下: last break 中止 rewrite, 不再继续匹配 redirect 返回临时重定向的 HTTP 状态302 permanet 返回永久重定向的 HTTP 状态301 last 和 break 的不同: break 是终止当前lo">
+<link rel="shortcut icon" href="/favicon.png" />
 
-    <!-- google adsense -->
-    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
+<script data-ad-client="ca-pub-5708899526501350" async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-JZ2PWLT6JY');
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
 
-      gtag('config', 'G-JZ2PWLT6JY');
-    </script>
-<meta name="generator" content="Hexo 6.0.0"></head>
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
 
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
 
-<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
-  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-  <div class="slimContent">
-    <div class="navbar-header">
-      
-      
-      <div class="profile-block text-center">
-        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
-          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
-        </a>
-        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin.Liu</h2>
-        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
-        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
-      </div>
-      
-      <div class="search" id="search-form-wrap">
-
-    <form class="search-form sidebar-form">
-        <div class="input-group">
-            <input type="text" class="search-form-input form-control" placeholder="搜索" />
-            <span class="input-group-btn">
-                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
-            </span>
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
+                            height="298" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">Xiaobin&#39;s Blog</a></h1>
+            <h2 class="site-description"></h2>
         </div>
-    </form>
-    <div class="ins-search">
-  <div class="ins-search-mask"></div>
-  <div class="ins-search-container">
-    <div class="ins-input-wrapper">
-      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
-      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
-    </div>
-    <div class="ins-section-wrapper">
-      <div class="ins-section-container"></div>
-    </div>
-  </div>
-</div>
-
-
-</div>
-      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-    </div>
-    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
-      <ul class="nav navbar-nav main-nav menu-highlight">
+    </header><ol class="menu" id="main-menu">
         
         
-        <li class="menu-item menu-item-home">
-          <a href="/.">
-            
-            <i class="icon icon-home-fill"></i>
-            
-            <span class="menu-title">首页</span>
-          </a>
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-archives">
-          <a href="/archives">
-            
-            <i class="icon icon-archives-fill"></i>
-            
-            <span class="menu-title">归档</span>
-          </a>
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                <span>归档</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-categories">
-          <a href="/categories">
-            
-            <i class="icon icon-folder"></i>
-            
-            <span class="menu-title">分类</span>
-          </a>
+        <li >
+            <a href='/categories/' >
+                
+                
+                
+                <span>分类</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-tags">
-          <a href="/tags">
-            
-            <i class="icon icon-tags"></i>
-            
-            <span class="menu-title">标签</span>
-          </a>
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>标签</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-links">
-          <a href="/links">
-            
-            <i class="icon icon-friendship"></i>
-            
-            <span class="menu-title">友链</span>
-          </a>
+        <li >
+            <a href='/links/' >
+                
+                
+                
+                <span>友链</span>
+            </a>
         </li>
         
-        
-        <li class="menu-item menu-item-about">
-          <a href="/about">
+
+        <div class="menu-bottom-section">
             
-            <i class="icon icon-cup-fill"></i>
             
-            <span class="menu-title">关于</span>
-          </a>
-        </li>
-        
-      </ul>
-      
-	
-    <ul class="social-links">
-    	
-        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
-        
-        <li><a href="mailto:me@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
-        
-        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
-        
-    </ul>
-
-    </nav>
-  </div>
-</header>
-
-  
-    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
-  <div class="slimContent">
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">分类</h3>
-    <div class="widget-body">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">48</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">22</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">28</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">18</span></li></ul>
-    </div>
-  </div>
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
 
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">标签云</h3>
-    <div class="widget-body tagcloud">
-      <a href="/tags/GitHub/" style="font-size: 13.09px;">GitHub</a> <a href="/tags/STL/" style="font-size: 13.45px;">STL</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.27px;">blog</a> <a href="/tags/c/" style="font-size: 13.64px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.09px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.09px;">devops</a> <a href="/tags/docker/" style="font-size: 13px;">docker</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.36px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.18px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.09px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.18px;">hexo</a> <a href="/tags/http/" style="font-size: 13.36px;">http</a> <a href="/tags/joplin/" style="font-size: 13.09px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/mac/" style="font-size: 13.27px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.09px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.18px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.36px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.18px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.18px;">pic</a> <a href="/tags/qt/" style="font-size: 13.36px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.55px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.91px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.09px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/zk/" style="font-size: 13.09px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.45px;">工具</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.73px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.45px;">树莓派</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.55px;">算法</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.82px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.09px;">邮件</a>
-    </div>
-  </div>
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">归档</h3>
-    <div class="widget-body">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
-    </div>
-  </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
 
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">最新文章</h3>
-    <div class="widget-body">
-      <ul class="recent-post-list list-unstyled no-thumbnail">
-        
-          <li>
+
+                    <span>暗色模式</span>
+                </li>
             
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Design/">Design</a>
-              </p>
-              <p class="item-title">
-                <a href="/12428ad2/" class="title">【译】构建高效的 DevOps 文化的 6 个技巧</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2023-01-30T13:58:33.000Z" itemprop="datePublished">2023-01-30</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Web/">Web</a>
-              </p>
-              <p class="item-title">
-                <a href="/a258db2c/" class="title">【译】域名末尾带个点</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-11-16T14:20:00.000Z" itemprop="datePublished">2022-11-16</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Tools/">Tools</a>
-              </p>
-              <p class="item-title">
-                <a href="/690c8418/" class="title">【译】10大静态网站生成工具</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-10-02T10:26:55.000Z" itemprop="datePublished">2022-10-02</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Tools/">Tools</a>
-              </p>
-              <p class="item-title">
-                <a href="/62afdbe0/" class="title">mermaid画流程图语法</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-06-20T12:34:38.000Z" itemprop="datePublished">2022-06-20</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Linux/">Linux</a>
-              </p>
-              <p class="item-title">
-                <a href="/f54357bf/" class="title">流编辑器sed</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-06-10T14:28:34.000Z" itemprop="datePublished">2022-06-10</time>
-              </p>
-            </div>
-          </li>
-          
-      </ul>
-    </div>
-  </div>
-  
-
-    
-  </div>
+        </div>
+    </ol>
 </aside>
 
-  
-  
-<main class="main" role="main">
-  <div class="content">
-  <article id="post-nginx 配置中的rewrite" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
     
-    <div class="article-header">
-      
-        
-  
-    <h1 class="article-title" itemprop="name">
-      nginx 配置中的rewrite
-    </h1>
-  
 
-      
-      <div class="article-meta">
-        <span class="article-date">
-    <i class="icon icon-calendar-check"></i>
-	<a href="/389c639/" class="article-date">
-	  <time datetime="2018-06-02T14:35:47.000Z" itemprop="datePublished">2018-06-02</time>
-	</a>
-</span>
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
         
-  <span class="article-category">
-    <i class="icon icon-folder"></i>
-    <a class="article-category-link" href="/categories/Web/">Web</a>
-  </span>
+        <a href="/categories/Web/" >
+            Web
+        </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/389c639/">nginx 配置中的rewrite</a>
+        </h2>
 
         
-  <span class="article-tag">
-    <i class="icon icon-tags"></i>
-	<a class="article-tag-link-link" href="/tags/nginx/" rel="tag">nginx</a>
-  </span>
-
-
-<!--        
- -->
-        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/389c639/#comments" class="article-comment-link">评论</a></span> 
-        
-	
-		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 1.5k(字)</span>
-	
-	
-		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 6(分)</span>
-	
-
-      </div>
     </div>
-    <div class="article-entry marked-body" itemprop="articleBody">
-      
-        <!-- toc -->
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+            <time class="article-time--published">Jun 02, 2018</time>
+        </div>
+        
+
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
 
 
 
-<!-- tocstop -->
+            <time class="article-time--reading">
+                阅读时长: 4 分钟
+            </time>
+        </div>
+        
+        <small>
+    <section class="article-tags">
+        
+            <a href="/tags/nginx/">nginx</a>
+        
+    </section>
+</small>
+    </footer>
+    
 
+    
+</div>
+</header>
+
+    <section class="article-content">
+    
+    
+    <!-- raw HTML omitted -->
 <p><strong>语法</strong></p>
-<p> <code>rewrite regex replacement flag</code> </p>
-<p>flag有如下: </p>
+<p><code>rewrite regex replacement flag</code></p>
+<p>flag有如下:</p>
 <ul>
-<li><p>last </p>
+<li>
+<p>last</p>
 </li>
-<li><p>break 中止 rewrite, 不再继续匹配 </p>
+<li>
+<p>break 中止 rewrite, 不再继续匹配</p>
 </li>
-<li><p>redirect 返回临时重定向的 HTTP 状态302  </p>
+<li>
+<p>redirect 返回临时重定向的 HTTP 状态302</p>
 </li>
-<li><p>permanet 返回永久重定向的 HTTP 状态301</p>
+<li>
+<p>permanet 返回永久重定向的 HTTP 状态301</p>
+<p>last 和 break 的不同:<br>
+break 是终止当前location 的 rewrite 检测, 且不再进行 location 匹配;<br>
+last是终止当前location的rewrite检测,但会继续重试location匹配并处理区块中的rewrite规则</p>
 </li>
 </ul>
-<pre><code>last 和 break 的不同:  
-break 是终止当前location 的 rewrite 检测, 且不再进行 location 匹配;  
-last是终止当前location的rewrite检测,但会继续重试location匹配并处理区块中的rewrite规则</code></pre><ol>
-<li>下面是可以用来判断的表达式:<br> <code>-f</code> 和<code>!-f</code> 判断是否存在文件<br> <code>-d</code> 和<code>!-d</code> 判断是否存在目录<br> <code>-e</code> 和<code>!-e</code> 判断是否存在文件或目录<br> <code>-x</code> 和<code>!-x</code> 判断文件是否可执行</li>
+<ol>
+<li>下面是可以用来判断的表达式:
+<code>-f</code> 和<code>!-f</code> 判断是否存在文件
+<code>-d</code> 和<code>!-d</code> 判断是否存在目录
+<code>-e</code> 和<code>!-e</code> 判断是否存在文件或目录
+<code>-x</code> 和<code>!-x</code> 判断文件是否可执行</li>
 </ol>
 <p>2.下面是可以用作判断的全局变量</p>
 <ul>
@@ -415,294 +299,378 @@ last是终止当前location的rewrite检测,但会继续重试location匹配并�
 <li><code>$document_uri</code> #与<code>$uri</code>相同</li>
 </ul>
 <p>例:</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">http://localhost:88/test1/test2/test.<span class="attribute">php</span></span><br><span class="line"></span><br><span class="line"><span class="variable">$host</span>: localhost</span><br><span class="line"><span class="variable">$server_post</span>: <span class="number">88</span></span><br><span class="line"><span class="variable">$request_uri</span>: http://localhost:88/test1/test2/test.php</span><br><span class="line"><span class="variable">$document_uri</span>: /test1/test2/test.php</span><br><span class="line"><span class="variable">$document_root</span>: /usr/share/nginx/html (在nginx.conf里配置的)</span><br><span class="line"><span class="variable">$request_filename</span>: /usr/share/nginx/html/test1/test2/test.php (在nginx.conf里配置的)</span><br></pre></td></tr></table></figure>
-
-
-<p><strong>详例:</strong><br><em>多目录转成参数</em><br><code>abc.domain.com/sort/2</code> =&gt; <code>abc.domain.com/index.php?act=sort&amp;name=abc&amp;id=2</code></p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">if</span> (<span class="variable">$host</span> <span class="regexp">~* (.*)\.domain\.com)</span> &#123;</span><br><span class="line">    <span class="attribute">set</span> <span class="variable">$sub_name</span> <span class="variable">$1</span>;</span><br><span class="line">    <span class="attribute">rewrite</span><span class="regexp"> ^/sort\/(\d+)\/?$</span> /index.php?act=sort&amp;cid=<span class="variable">$sub_name</span>&amp;id=<span class="variable">$1</span> <span class="literal">last</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-<p><em>目录对换</em><br><code>/123456/xxxx</code> =&gt; <code>/xxxx?id=123456</code></p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">rewrite</span><span class="regexp"> ^/(\d+)\/(.+)/</span> /<span class="variable">$2</span>?id=<span class="variable">$1</span> <span class="literal">last</span>;</span><br><span class="line">// <span class="attribute">rewrite</span><span class="regexp"> ^/\/(\d+)\/(\w+)\/?</span> /<span class="variable">$2</span>?id=<span class="variable">$1</span> <span class="literal">last</span>;</span><br></pre></td></tr></table></figure>
-
-
-<p><em>如果使用IE浏览器, 则重定向到/nginx-ie 目录下</em></p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">if</span> (<span class="variable">$http_user_agent</span> <span class="regexp">~ MSIE)</span> &#123;</span><br><span class="line">    <span class="attribute">rewrite</span><span class="regexp"> ^(.*)$</span> /nginx-ie/<span class="variable">$1</span> <span class="literal">break</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<p><em>目录自动加 /</em></p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">if</span> (-d <span class="variable">$request_filename</span>)&#123;</span><br><span class="line">	<span class="attribute">rewrite</span><span class="regexp"> ^/(.*)([^/])$</span> http://<span class="variable">$host</span>/<span class="variable">$1</span><span class="variable">$2</span>/ <span class="literal">permanent</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-<p><em>禁止htaccess</em></p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> ~/\.ht &#123;</span><br><span class="line">	<span class="attribute">deny</span> all;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-<p><em>禁止多个目录</em></p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> <span class="regexp">~ ^/(cron|templates)/</span> &#123;</span><br><span class="line">	<span class="attribute">deny</span> all;</span><br><span class="line">	break;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-<p><em>禁止以/data开头的文件</em></p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">可以禁止/data/下多级目录下.log.txt等请求;</span><br><span class="line"><span class="section">location</span> <span class="regexp">~ ^/data</span> &#123;</span><br><span class="line">	<span class="attribute">deny</span> all;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-<p><em>禁止单个目录</em></p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">不能禁止.log.txt能请求</span><br><span class="line"><span class="section">location</span> /searchword/cron/ &#123;</span><br><span class="line">	<span class="attribute">deny</span> all;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-<p><em>禁止单个文件</em></p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> <span class="regexp">~ /data/sql/data.sql</span> &#123;</span><br><span class="line">	<span class="attribute">deny</span> all;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-<p><em>给 favicon.ico和 robots.txt设置过期时间;</em><br>这里为 favicon.ico为99 天,robots.txt 为 7 天并不记录 404 错误日志</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">1.     <span class="section">location</span> ~(favicon.ico) &#123;</span><br><span class="line">2.                      <span class="attribute">log_not_found</span> <span class="literal">off</span>;</span><br><span class="line">3.     <span class="attribute">expires</span> <span class="number">99d</span>;</span><br><span class="line">4.     break;</span><br><span class="line">5.          &#125;</span><br><span class="line">6.      </span><br><span class="line">7.          <span class="section">location</span> ~(robots.txt) &#123;</span><br><span class="line">8.                      <span class="attribute">log_not_found</span> <span class="literal">off</span>;</span><br><span class="line">9.     <span class="attribute">expires</span> <span class="number">7d</span>;</span><br><span class="line">10. break;</span><br><span class="line">11.      &#125;</span><br></pre></td></tr></table></figure>
-
-
-<p><em>设定某个文件的过期时间;这里为600秒，并不记录访问日志</em></p>
-<pre><code>1.     location ^~ /html/scripts/loadhead_1.js &#123;
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nginx" data-lang="nginx"><span style="display:flex;"><span><span style="color:#66d9ef">http://localhost:88/test1/test2/test.php</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$host: <span style="color:#e6db74">localhost</span>
+</span></span><span style="display:flex;"><span>$server_post: <span style="color:#ae81ff">88</span>
+</span></span><span style="display:flex;"><span>$request_uri: <span style="color:#e6db74">http://localhost:88/test1/test2/test.php</span>
+</span></span><span style="display:flex;"><span>$document_uri: <span style="color:#e6db74">/test1/test2/test.php</span>
+</span></span><span style="display:flex;"><span>$document_root: <span style="color:#e6db74">/usr/share/nginx/html</span> <span style="color:#e6db74">(在nginx.conf里配置的)</span>
+</span></span><span style="display:flex;"><span>$request_filename: <span style="color:#e6db74">/usr/share/nginx/html/test1/test2/test.php</span> <span style="color:#e6db74">(在nginx.conf里配置的)</span>
+</span></span></code></pre></div><p><strong>详例:</strong><br>
+<em>多目录转成参数</em><br>
+<code>abc.domain.com/sort/2</code> =&gt; <code>abc.domain.com/index.php?act=sort&amp;name=abc&amp;id=2</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nginx" data-lang="nginx"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#e6db74">(</span>$host ~<span style="color:#e6db74">*</span> <span style="color:#e6db74">(.*)\.domain\.com)</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">set</span> $sub_name $1;
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">rewrite</span> <span style="color:#e6db74">^/sort\/(\d+)\/?</span>$ <span style="color:#e6db74">/index.php?act=sort&amp;cid=</span>$sub_name&amp;id=$1 <span style="color:#e6db74">last</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><em>目录对换</em><br>
+<code>/123456/xxxx</code> =&gt; <code>/xxxx?id=123456</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nginx" data-lang="nginx"><span style="display:flex;"><span><span style="color:#66d9ef">rewrite</span> <span style="color:#e6db74">^/(\d+)\/(.+)/</span> <span style="color:#e6db74">/</span>$2?id=$1 <span style="color:#e6db74">last</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">//</span> <span style="color:#e6db74">rewrite</span> <span style="color:#e6db74">^/\/(\d+)\/(\w+)\/?</span> <span style="color:#e6db74">/</span>$2?id=$1 <span style="color:#e6db74">last</span>;
+</span></span></code></pre></div><p><em>如果使用IE浏览器, 则重定向到/nginx-ie 目录下</em></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nginx" data-lang="nginx"><span style="display:flex;"><span> <span style="color:#66d9ef">if</span> <span style="color:#e6db74">(</span>$http_user_agent ~ <span style="color:#e6db74">MSIE)</span> {
+</span></span><span style="display:flex;"><span>     <span style="color:#f92672">rewrite</span> <span style="color:#e6db74">^(.*)</span>$ <span style="color:#e6db74">/nginx-ie/</span>$1 <span style="color:#e6db74">break</span>;
+</span></span><span style="display:flex;"><span> }
+</span></span></code></pre></div><p><em>目录自动加 /</em></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nginx" data-lang="nginx"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#e6db74">(-d</span> $request_filename<span style="color:#e6db74">)</span>{
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">rewrite</span> <span style="color:#e6db74">^/(.*)([^/])</span>$ <span style="color:#e6db74">http://</span>$host/$1$2/ <span style="color:#e6db74">permanent</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><em>禁止htaccess</em></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nginx" data-lang="nginx"><span style="display:flex;"><span><span style="color:#66d9ef">location</span> ~<span style="color:#e6db74">/\.ht</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">deny</span> <span style="color:#e6db74">all</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><em>禁止多个目录</em></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nginx" data-lang="nginx"><span style="display:flex;"><span><span style="color:#66d9ef">location</span> ~ <span style="color:#e6db74">^/(cron|templates)/</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">deny</span> <span style="color:#e6db74">all</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">break</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><em>禁止以/data开头的文件</em></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nginx" data-lang="nginx"><span style="display:flex;"><span><span style="color:#66d9ef">可以禁止/data/下多级目录下.log.txt等请求</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">location</span> ~ <span style="color:#e6db74">^/data</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">deny</span> <span style="color:#e6db74">all</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><em>禁止单个目录</em></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nginx" data-lang="nginx"><span style="display:flex;"><span><span style="color:#66d9ef">不能禁止.log.txt能请求</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">location</span> <span style="color:#e6db74">/searchword/cron/</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">deny</span> <span style="color:#e6db74">all</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><em>禁止单个文件</em></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nginx" data-lang="nginx"><span style="display:flex;"><span><span style="color:#66d9ef">location</span> ~ <span style="color:#e6db74">/data/sql/data.sql</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">deny</span> <span style="color:#e6db74">all</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><em>给 favicon.ico和 robots.txt设置过期时间;</em><br>
+这里为 favicon.ico为99 天,robots.txt 为 7 天并不记录 404 错误日志</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nginx" data-lang="nginx"><span style="display:flex;"><span><span style="color:#66d9ef">1.</span>     <span style="color:#e6db74">location</span> ~<span style="color:#e6db74">(favicon.ico)</span> {
+</span></span><span style="display:flex;"><span><span style="color:#f92672">2.</span>                      <span style="color:#e6db74">log_not_found</span> <span style="color:#66d9ef">off</span>;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">3.</span>     <span style="color:#e6db74">expires</span> <span style="color:#e6db74">99d</span>;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">4.</span>     <span style="color:#e6db74">break</span>;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">5.</span>          <span style="color:#960050;background-color:#1e0010">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">6</span><span style="color:#e6db74">.</span>      
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">7</span><span style="color:#e6db74">.</span>          <span style="color:#e6db74">location</span> ~<span style="color:#e6db74">(robots.txt)</span> {
+</span></span><span style="display:flex;"><span><span style="color:#f92672">8.</span>                      <span style="color:#e6db74">log_not_found</span> <span style="color:#66d9ef">off</span>;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">9.</span>     <span style="color:#e6db74">expires</span> <span style="color:#e6db74">7d</span>;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">10.</span> <span style="color:#e6db74">break</span>;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">11.</span>      <span style="color:#960050;background-color:#1e0010">}</span>
+</span></span></code></pre></div><p><em>设定某个文件的过期时间;这里为600秒，并不记录访问日志</em></p>
+<pre><code>1.     location ^~ /html/scripts/loadhead_1.js {
 2.                      access_log   off;
 3.                      root /opt/lampp/htdocs/web;
 4.     expires 600;
 5.     break;
-6.            &#125;</code></pre><p><em>文件反盗链并设置过期时间</em><br>这里的return 412 为自定义的http状态码，默认为403，方便找出正确的盗链的请求<br>“rewrite ^/ <a target="_blank" rel="noopener" href="http://leech.c1gstudio.com/leech.gif;”显示一张防盗链图片">http://leech.c1gstudio.com/leech.gif;”显示一张防盗链图片</a><br>“access_log off;”不记录访问日志，减轻压力<br>“expires 3d”所有文件3天的浏览器缓存</p>
-<pre><code>1.     location ~* ^.+\.(jpg|jpeg|gif|png|swf|rar|zip|css|js)$ &#123;
+6.            }
+</code></pre>
+<p><em>文件反盗链并设置过期时间</em><br>
+这里的return 412 为自定义的http状态码，默认为403，方便找出正确的盗链的请求<br>
+“rewrite ^/ <a class="link" href="http://leech.c1gstudio.com/leech.gif;"  target="_blank" rel="noopener"
+    >http://leech.c1gstudio.com/leech.gif;</a>”显示一张防盗链图片<br>
+“access_log off;”不记录访问日志，减轻压力<br>
+“expires 3d”所有文件3天的浏览器缓存</p>
+<pre><code>1.     location ~* ^.+\.(jpg|jpeg|gif|png|swf|rar|zip|css|js)$ {
 2.     valid_referers none blocked *.c1gstudio.com *.c1gstudio.net localhost 208.97.167.194;
-3.     if ($invalid_referer) &#123;
+3.     if ($invalid_referer) {
 4.         rewrite ^/ http://leech.c1gstudio.com/leech.gif;
 5.         return 412;
 6.         break;
-7.     &#125;
+7.     }
 8.                      access_log   off;
 9.                      root /opt/lampp/htdocs/web;
 10. expires 3d;
 11. break;
-12.      &#125;</code></pre><p><em>只充许固定ip访问网站，并加上密码</em></p>
+12.      }
+</code></pre>
+<p><em>只充许固定ip访问网站，并加上密码</em></p>
 <pre><code>1.     root  /opt/htdocs/www;
 2.     allow   208.97.167.194;
 3.     allow   222.33.1.2;
 4.     allow   231.152.49.4;
 5.     deny    all;
 6.     auth_basic &quot;C1G_ADMIN&quot;;
-7.     auth_basic_user_file htpasswd;</code></pre><p><em>将多级目录下的文件转成一个文件，增强seo效果</em><br><code>/job-123-456-789.html</code> 指向 <code>/job/123/456/789.html</code></p>
-<pre><code>1.     rewrite ^/job-([0-9]+)-([0-9]+)-([0-9]+)\.html$ /job/$1/$2/jobshow_$3.html last;</code></pre><p><em>将根目录下某个文件夹指向2级目录</em><br>如<code>/shanghaijob/</code> 指向 <code>/area/shanghai/</code> 如果你将last改成permanent，那么浏览器地址栏显是 <code>/location/shanghai/</code></p>
-<pre><code>1.     rewrite ^/([0-9a-z]+)job/(.*)$ /area/$1/$2 last;</code></pre><p>上面例子有个问题是访问/shanghai 时将不会匹配</p>
+7.     auth_basic_user_file htpasswd;
+</code></pre>
+<p><em>将多级目录下的文件转成一个文件，增强seo效果</em><br>
+<code>/job-123-456-789.html</code> 指向 <code>/job/123/456/789.html</code></p>
+<pre><code>1.     rewrite ^/job-([0-9]+)-([0-9]+)-([0-9]+)\.html$ /job/$1/$2/jobshow_$3.html last;
+</code></pre>
+<p><em>将根目录下某个文件夹指向2级目录</em><br>
+如<code>/shanghaijob/</code> 指向 <code>/area/shanghai/</code> 如果你将last改成permanent，那么浏览器地址栏显是 <code>/location/shanghai/</code></p>
+<pre><code>1.     rewrite ^/([0-9a-z]+)job/(.*)$ /area/$1/$2 last;
+</code></pre>
+<p>上面例子有个问题是访问/shanghai 时将不会匹配</p>
 <pre><code>1.     rewrite ^/([0-9a-z]+)job$ /area/$1/ last;
-2.     rewrite ^/([0-9a-z]+)job/(.*)$ /area/$1/$2 last;</code></pre><p>这样/shanghai 也可以访问了，但页面中的相对链接无法使用， 如<code>./list_1.html</code>真实地址是<code>/area /shanghia/list_1.html</code>会变成<code>/list_1.html</code>,导至无法访问。<br>那我加上自动跳转也是不行咯 <code>(-d $request_filename)</code>它有个条件是必需为真实目录，而我的rewrite不是的，所以没有效果</p>
-<pre><code>1.     if (-d $request_filename)&#123;
+2.     rewrite ^/([0-9a-z]+)job/(.*)$ /area/$1/$2 last;
+</code></pre>
+<p>这样/shanghai 也可以访问了，但页面中的相对链接无法使用， 如<code>./list_1.html</code>真实地址是<code>/area /shanghia/list_1.html</code>会变成<code>/list_1.html</code>,导至无法访问。<br>
+那我加上自动跳转也是不行咯 <code>(-d $request_filename)</code>它有个条件是必需为真实目录，而我的rewrite不是的，所以没有效果</p>
+<pre><code>1.     if (-d $request_filename){
 2.     rewrite ^/(.*)([^/])$ http://$host/$1$2/ permanent;
-3.     &#125;</code></pre><p>知道原因后就好办了，让我手动跳转吧</p>
+3.     }
+</code></pre>
+<p>知道原因后就好办了，让我手动跳转吧</p>
 <pre><code>1.     rewrite ^/([0-9a-z]+)job$ /$1job/ permanent;
-2.     rewrite ^/([0-9a-z]+)job/(.*)$ /area/$1/$2 last;</code></pre><p><em>文件和目录不存在的时候重定向：</em></p>
-<pre><code>1.     if (!-e $request_filename) &#123;
+2.     rewrite ^/([0-9a-z]+)job/(.*)$ /area/$1/$2 last;
+</code></pre>
+<p><em>文件和目录不存在的时候重定向：</em></p>
+<pre><code>1.     if (!-e $request_filename) {
 2.     proxy_pass http://127.0.0.1;
-3.     &#125;</code></pre><p><em>域名跳转</em></p>
+3.     }
+</code></pre>
+<p><em>域名跳转</em></p>
 <pre><code>1.     server
-2.          &#123;
+2.          {
 3.                  listen       80;
 4.                  server_name  jump.c1gstudio.com;
 5.                  index index.html index.htm index.php;
 6.                  root  /opt/lampp/htdocs/www;
 7.                  rewrite ^/ http://www.c1gstudio.com/;
 8.                  access_log  off;
-9.          &#125;</code></pre><p><em>多域名转向</em></p>
+9.          }
+</code></pre>
+<p><em>多域名转向</em></p>
 <pre><code>1.     server_name  www.c1gstudio.com www.c1gstudio.net;
 2.                  index index.html index.htm index.php;
 3.                  root  /opt/lampp/htdocs;
-4.     if ($host ~ &quot;c1gstudio\.net&quot;) &#123;
+4.     if ($host ~ &quot;c1gstudio\.net&quot;) {
 5.     rewrite ^(.*) http://www.c1gstudio.com$1 permanent;
-6.     &#125;</code></pre><p><em>三级域名跳转</em></p>
-<pre><code>1.     if ($http_host ~* &quot;^(.*)\.i\.c1gstudio\.com$&quot;) &#123;
+6.     }
+</code></pre>
+<p><em>三级域名跳转</em></p>
+<pre><code>1.     if ($http_host ~* &quot;^(.*)\.i\.c1gstudio\.com$&quot;) {
 2.     rewrite ^(.*) http://top.yingjiesheng.com$1;
 3.     break;
-4.     &#125;</code></pre><p><em>域名镜向</em></p>
+4.     }
+</code></pre>
+<p><em>域名镜向</em></p>
 <pre><code>1.     server
-2.          &#123;
+2.          {
 3.                  listen       80;
 4.                  server_name  mirror.c1gstudio.com;
 5.                  index index.html index.htm index.php;
 6.                  root  /opt/lampp/htdocs/www;
 7.                  rewrite ^/(.*) http://www.c1gstudio.com/$1 last;
 8.                  access_log  off;
-9.          &#125;</code></pre>
-      
-    </div>
-    <div class="article-footer">
-      <blockquote class="mt-2x">
-  <ul class="post-copyright list-unstyled">
-    
-    <li class="post-copyright-link hidden-xs">
-      <strong>本文链接：</strong>
-      <a href="https://lxb.wiki/389c639/" title="nginx 配置中的rewrite" target="_blank" rel="external">https://lxb.wiki/389c639/</a>
-    </li>
-    
-    <li class="post-copyright-license">
-      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
-    </li>
-  </ul>
-</blockquote>
+9.          }
+</code></pre>
 
-    </div>
-  </article>
-  
-    
-  <section id="comments">
-  	
-      
-        <section id="comments" class="comments">
-          <style>
-            .utterances{max-width: 100%;}
-          </style>
-          <script src="https://utteranc.es/client.js"
-                repo="lxbwolf/lxbwolf.github.io"
-                issue-term="title"
-                theme="github-light"
-                crossorigin="anonymous"
-                async>
-          </script>
-        </section>
-      
-    
-  </section>
+</section>
 
 
-  
-</div>
-
-  <nav class="bar bar-footer clearfix" data-stick-bottom>
-  <div class="bar-inner">
-  
-  <ul class="pager pull-left">
+    <footer class="article-footer">
     
-    <li class="prev">
-      <a href="/8f5b70d0/" title="Linux 安装samba"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
-    </li>
-    
-    
-    <li class="next">
-      <a href="/a209000e/" title="nginx配置中的location"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
-    </li>
-    
-    
-  </ul>
-  
-  
-  
-  <div class="bar-right">
-    
-    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
-    
-  </div>
-  </div>
-</nav>
-  
-
-
-
-</main>
-
-  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
-	
-	
-    <ul class="social-links">
-    	
-        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+    <section class="article-tags">
         
-        <li><a href="mailto:me@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+            <a href="/tags/nginx/">nginx</a>
         
-        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
-        
-    </ul>
+    </section>
 
-    <div class="copyright">
-    	
-        <div class="publishby">
-        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> Xiaobin.Liu </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/a209000e/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">nginx配置中的location</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/ab14d5fa/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">nginx 寻找index 原理</h2>
+        </div>
+    </a>
+</article>
+
+            
         </div>
     </div>
+</aside>
 
+     
+    
+        
+    <div class="disqus-container">
+    
+</div>
 
-  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
-  <script>
-    if (window.mermaid) {
-      mermaid.initialize({theme: 'forest'});
+<style>
+    .disqus-container {
+        background-color: var(--card-background);
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--shadow-l1);
+        padding: var(--card-padding);
     }
-  </script>
+</style>
 
+<script>
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (typeof DISQUS == 'object') {
+            DISQUS.reset({
+                reload: true
+            });
+        }
+    })
+</script>
 
+    
 
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2023 Xiaobin&#39;s Blog
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
 </footer>
 
-  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
 <script>
-window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
 </script>
 
-<script src="/js/plugin.min.js"></script>
-
-
-<script src="/js/application.js"></script>
-
-
-    <script>
-(function (window) {
-    var INSIGHT_CONFIG = {
-        TRANSLATION: {
-            POSTS: '文章',
-            PAGES: '页面',
-            CATEGORIES: '分类',
-            TAGS: '标签',
-            UNTITLED: '(未命名)',
-        },
-        ROOT_URL: '/',
-        CONTENT_URL: '/content.json',
-    };
-    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
-})(window);
-</script>
-
-<script src="/js/insight.js"></script>
-
-
-
-
-
-
-   
-
-
-
-
-   
-
-
-
-
-
-    <script defer type="text/javascript">
-(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'G-JZ2PWLT6JY', 'auto');
-ga('send', 'pageview');
-
-</script>
-
-
-    <script defer>
-var _hmt = _hmt || [];
-(function() {
-    var hm = document.createElement("script");
-    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
-    var s = document.getElementsByTagName("script")[0];
-    s.parentNode.insertBefore(hm, s);
-})();
-</script>
-
-
-
-
-</body>
+    </body>
 </html>

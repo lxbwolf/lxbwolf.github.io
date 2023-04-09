@@ -1,382 +1,252 @@
 <!DOCTYPE html>
-<html lang=zh>
-<head>
-  <meta charset="utf-8">
-  
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
-  <meta name="renderer" content="webkit">
-  <meta http-equiv="Cache-Control" content="no-transform" />
-  <meta http-equiv="Cache-Control" content="no-siteapp" />
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="format-detection" content="telephone=no,email=no,adress=no">
-  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
-  <!-- Color theme for statusbar -->
-  <meta name="theme-color" content="#000000" />
-  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
-  <meta http-equiv="window-target" content="_top" />
-  
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='一 B树 **1.B树的定义：**B树（B-tree）是一种树状数据结构，它能够存储数据、对其进行排序并允许以O(log n)的时间复杂度运行进行'>
+<title>B树和B&#43;树</title>
 
-  
-  <title>B树和B+树 | Xiaobin&#39;s Blog</title>
-  <meta name="description" content="一 B树 1.B树的定义：B树（B-tree）是一种树状数据结构，它能够存储数据、对其进行排序并允许以O(log n)的时间复杂度运行进行查找、顺序读取、插入和删除的数据结构。B树，概括来说是一个节点可以拥有多于2个子节点的二叉查找树。 2.B树的特征：  根节点至少有两个子节点 每个中间节点都包含k-1个元素和k个孩子，其中 m&#x2F;2 ≤ k ≤ m （m为树的阶） 每个叶子节点都包含">
-<meta property="og:type" content="article">
-<meta property="og:title" content="B树和B+树">
-<meta property="og:url" content="https://lxb.wiki/17ced2c4/index.html">
-<meta property="og:site_name" content="Xiaobin&#39;s Blog">
-<meta property="og:description" content="一 B树 1.B树的定义：B树（B-tree）是一种树状数据结构，它能够存储数据、对其进行排序并允许以O(log n)的时间复杂度运行进行查找、顺序读取、插入和删除的数据结构。B树，概括来说是一个节点可以拥有多于2个子节点的二叉查找树。 2.B树的特征：  根节点至少有两个子节点 每个中间节点都包含k-1个元素和k个孩子，其中 m&#x2F;2 ≤ k ≤ m （m为树的阶） 每个叶子节点都包含">
-<meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210837.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212211015.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212211040.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212211103.png">
-<meta property="article:published_time" content="2021-07-11T13:07:59.000Z">
-<meta property="article:modified_time" content="2023-02-18T02:36:37.688Z">
-<meta property="article:author" content="Xiaobin.Liu">
-<meta property="article:tag" content="算法">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210837.png">
-  <!-- Canonical links  把后面的 index.html 去掉-->
-  <link rel="canonical" href="https://lxb.wiki/17ced2c4/">
-  
-    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
-  
-  
-    <link rel="icon" href="/favicon.png" type="image/x-icon">
-  
-  
-<link rel="stylesheet" href="/css/style.css">
+<link rel='canonical' href='http://lxb.wiki/17ced2c4/'>
 
-  
-  
-  
-  
+<link rel="stylesheet" href="/scss/style.min.bc5bb6e306c354a2f5d5bfd1e65a5f3996962fb9b4a3546b748aee7daee4f258.css"><meta property='og:title' content='B树和B&#43;树'>
+<meta property='og:description' content='一 B树 **1.B树的定义：**B树（B-tree）是一种树状数据结构，它能够存储数据、对其进行排序并允许以O(log n)的时间复杂度运行进行'>
+<meta property='og:url' content='http://lxb.wiki/17ced2c4/'>
+<meta property='og:site_name' content='Xiaobin&#39;s Blog'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='算法' /><meta property='article:published_time' content='2021-07-11T21:07:59&#43;00:00'/><meta property='article:modified_time' content='2021-07-11T21:07:59&#43;00:00'/>
+<meta name="twitter:title" content="B树和B&#43;树">
+<meta name="twitter:description" content="一 B树 **1.B树的定义：**B树（B-tree）是一种树状数据结构，它能够存储数据、对其进行排序并允许以O(log n)的时间复杂度运行进行">
+<link rel="shortcut icon" href="/favicon.png" />
 
-    <!-- google adsense -->
-    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
+<script data-ad-client="ca-pub-5708899526501350" async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-JZ2PWLT6JY');
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
 
-      gtag('config', 'G-JZ2PWLT6JY');
-    </script>
-<meta name="generator" content="Hexo 6.0.0"></head>
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
 
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
 
-<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
-  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-  <div class="slimContent">
-    <div class="navbar-header">
-      
-      
-      <div class="profile-block text-center">
-        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
-          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
-        </a>
-        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin.Liu</h2>
-        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
-        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
-      </div>
-      
-      <div class="search" id="search-form-wrap">
-
-    <form class="search-form sidebar-form">
-        <div class="input-group">
-            <input type="text" class="search-form-input form-control" placeholder="搜索" />
-            <span class="input-group-btn">
-                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
-            </span>
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
+                            height="298" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">Xiaobin&#39;s Blog</a></h1>
+            <h2 class="site-description"></h2>
         </div>
-    </form>
-    <div class="ins-search">
-  <div class="ins-search-mask"></div>
-  <div class="ins-search-container">
-    <div class="ins-input-wrapper">
-      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
-      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
-    </div>
-    <div class="ins-section-wrapper">
-      <div class="ins-section-container"></div>
-    </div>
-  </div>
-</div>
-
-
-</div>
-      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-    </div>
-    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
-      <ul class="nav navbar-nav main-nav menu-highlight">
+    </header><ol class="menu" id="main-menu">
         
         
-        <li class="menu-item menu-item-home">
-          <a href="/.">
-            
-            <i class="icon icon-home-fill"></i>
-            
-            <span class="menu-title">首页</span>
-          </a>
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-archives">
-          <a href="/archives">
-            
-            <i class="icon icon-archives-fill"></i>
-            
-            <span class="menu-title">归档</span>
-          </a>
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                <span>归档</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-categories">
-          <a href="/categories">
-            
-            <i class="icon icon-folder"></i>
-            
-            <span class="menu-title">分类</span>
-          </a>
+        <li >
+            <a href='/categories/' >
+                
+                
+                
+                <span>分类</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-tags">
-          <a href="/tags">
-            
-            <i class="icon icon-tags"></i>
-            
-            <span class="menu-title">标签</span>
-          </a>
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>标签</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-links">
-          <a href="/links">
-            
-            <i class="icon icon-friendship"></i>
-            
-            <span class="menu-title">友链</span>
-          </a>
+        <li >
+            <a href='/links/' >
+                
+                
+                
+                <span>友链</span>
+            </a>
         </li>
         
-        
-        <li class="menu-item menu-item-about">
-          <a href="/about">
+
+        <div class="menu-bottom-section">
             
-            <i class="icon icon-cup-fill"></i>
             
-            <span class="menu-title">关于</span>
-          </a>
-        </li>
-        
-      </ul>
-      
-	
-    <ul class="social-links">
-    	
-        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
-        
-        <li><a href="mailto:me@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
-        
-        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
-        
-    </ul>
-
-    </nav>
-  </div>
-</header>
-
-  
-    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
-  <div class="slimContent">
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">分类</h3>
-    <div class="widget-body">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">48</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">22</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">28</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">18</span></li></ul>
-    </div>
-  </div>
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
 
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">标签云</h3>
-    <div class="widget-body tagcloud">
-      <a href="/tags/GitHub/" style="font-size: 13.09px;">GitHub</a> <a href="/tags/STL/" style="font-size: 13.45px;">STL</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.27px;">blog</a> <a href="/tags/c/" style="font-size: 13.64px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.09px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.09px;">devops</a> <a href="/tags/docker/" style="font-size: 13px;">docker</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.36px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.18px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.09px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.18px;">hexo</a> <a href="/tags/http/" style="font-size: 13.36px;">http</a> <a href="/tags/joplin/" style="font-size: 13.09px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/mac/" style="font-size: 13.27px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.09px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.18px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.36px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.18px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.18px;">pic</a> <a href="/tags/qt/" style="font-size: 13.36px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.55px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.91px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.09px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/zk/" style="font-size: 13.09px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.45px;">工具</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.73px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.45px;">树莓派</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.55px;">算法</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.82px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.09px;">邮件</a>
-    </div>
-  </div>
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">归档</h3>
-    <div class="widget-body">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
-    </div>
-  </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
 
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">最新文章</h3>
-    <div class="widget-body">
-      <ul class="recent-post-list list-unstyled no-thumbnail">
-        
-          <li>
+
+                    <span>暗色模式</span>
+                </li>
             
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Design/">Design</a>
-              </p>
-              <p class="item-title">
-                <a href="/12428ad2/" class="title">【译】构建高效的 DevOps 文化的 6 个技巧</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2023-01-30T13:58:33.000Z" itemprop="datePublished">2023-01-30</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Web/">Web</a>
-              </p>
-              <p class="item-title">
-                <a href="/a258db2c/" class="title">【译】域名末尾带个点</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-11-16T14:20:00.000Z" itemprop="datePublished">2022-11-16</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Tools/">Tools</a>
-              </p>
-              <p class="item-title">
-                <a href="/690c8418/" class="title">【译】10大静态网站生成工具</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-10-02T10:26:55.000Z" itemprop="datePublished">2022-10-02</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Tools/">Tools</a>
-              </p>
-              <p class="item-title">
-                <a href="/62afdbe0/" class="title">mermaid画流程图语法</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-06-20T12:34:38.000Z" itemprop="datePublished">2022-06-20</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Linux/">Linux</a>
-              </p>
-              <p class="item-title">
-                <a href="/f54357bf/" class="title">流编辑器sed</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-06-10T14:28:34.000Z" itemprop="datePublished">2022-06-10</time>
-              </p>
-            </div>
-          </li>
-          
-      </ul>
-    </div>
-  </div>
-  
-
-    
-  </div>
+        </div>
+    </ol>
 </aside>
 
-  
-  
-<main class="main" role="main">
-  <div class="content">
-  <article id="post-B树和B-树" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
     
-    <div class="article-header">
-      
-        
-  
-    <h1 class="article-title" itemprop="name">
-      B树和B+树
-    </h1>
-  
 
-      
-      <div class="article-meta">
-        <span class="article-date">
-    <i class="icon icon-calendar-check"></i>
-	<a href="/17ced2c4/" class="article-date">
-	  <time datetime="2021-07-11T13:07:59.000Z" itemprop="datePublished">2021-07-11</time>
-	</a>
-</span>
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
         
-  <span class="article-category">
-    <i class="icon icon-folder"></i>
-    <a class="article-category-link" href="/categories/DB/">DB</a>
-  </span>
+        <a href="/categories/DB/" >
+            DB
+        </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/17ced2c4/">B树和B&#43;树</a>
+        </h2>
 
         
-  <span class="article-tag">
-    <i class="icon icon-tags"></i>
-	<a class="article-tag-link-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a>
-  </span>
-
-
-<!--        
- -->
-        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/17ced2c4/#comments" class="article-comment-link">评论</a></span> 
-        
-	
-		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 1k(字)</span>
-	
-	
-		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 3(分)</span>
-	
-
-      </div>
     </div>
-    <div class="article-entry marked-body" itemprop="articleBody">
-      
-        <!-- toc -->
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+            <time class="article-time--published">Jul 11, 2021</time>
+        </div>
+        
+
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
 
 
 
-<!-- tocstop -->
+            <time class="article-time--reading">
+                阅读时长: 3 分钟
+            </time>
+        </div>
+        
+        <small>
+    <section class="article-tags">
+        
+            <a href="/tags/%E7%AE%97%E6%B3%95/">算法</a>
+        
+    </section>
+</small>
+    </footer>
+    
 
+    
+</div>
+</header>
+
+    <section class="article-content">
+    
+    
+    <!-- raw HTML omitted -->
 <p><strong>一 B树</strong></p>
-<p><strong>1.B树的定义：</strong>B树（B-tree）是一种树状数据结构，它能够存储数据、对其进行排序并允许以O(log n)的时间复杂度运行进行查找、顺序读取、插入和删除的数据结构。B树，概括来说是一个节点可以拥有多于2个子节点的二叉查找树。</p>
+<p>**1.B树的定义：**B树（B-tree）是一种树状数据结构，它能够存储数据、对其进行排序并允许以O(log n)的时间复杂度运行进行查找、顺序读取、插入和删除的数据结构。B树，概括来说是一个节点可以拥有多于2个子节点的二叉查找树。</p>
 <p><strong>2.B树的特征：</strong></p>
 <ul>
 <li>根节点至少有两个子节点</li>
@@ -385,214 +255,313 @@
 <li>每个节点中的元素从小到大排列，节点当中k-1个元素正好是k个孩子包含的元素的值域划分（一个结点有k个孩子时，必有k-1个元素才能将子树中所有元素划分为k个子集）</li>
 </ul>
 <p><strong>3.B树的操作</strong></p>
-<p><strong>3.1 B树的查找：</strong>如下图，查询元素8</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210837.png" alt></p>
+<p>**3.1 B树的查找：**如下图，查询元素8</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210837.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>第一次磁盘IO：把15所在节点读到内存中，然后与8做比较，小于15，找到下一个节点（5和9对应的节点）</p>
 <p>第二次磁盘IO：把5和9所在的节点读到内存中，然后与8做比较，5&lt;8&lt;9，找到下一个节点（6和8对应的节点）</p>
 <p>第三次磁盘IO：把6和8所在节点读到内存中，然后与8做比较，找到了元素8</p>
 <p><strong>3.1 B树的插入：</strong> 将元素7插入下图中的B树</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212211015.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212211015.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>步骤一：自顶向下查找元素7应该在的位置，即在6和8之间</p>
 <p>步骤二：三阶B树中的节点最多有两个元素，把6 7 8里面的中间元素上移（中间元素上移是插入操作的关键）</p>
 <p>步骤三：上移之后，上一层节点元素也超载了，5 7 9中间元素上移，现在根节点变为了 7 15</p>
 <p>步骤四：要对B树进行调整，使其满足B树的特性，最终如下图：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212211040.png" alt></p>
-<p><strong>二 B+树</strong> </p>
-<p> B+树是B树的一种变形体，它与B树的差异在于：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212211040.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p><strong>二 B+树</strong></p>
+<p>B+树是B树的一种变形体，它与B树的差异在于：</p>
 <ul>
-<li><p>有K个子节点的节点必然有K个关键码</p>
-</li>
-<li><p>非叶节点仅具有索引作用，元素信息均存放在叶节点中</p>
-</li>
-<li><p>树的所有叶节点构成一个有序链表，可以按照关键码排序的次序遍历全部记录</p>
+<li>有K个子节点的节点必然有K个关键码</li>
+<li>非叶节点仅具有索引作用，元素信息均存放在叶节点中</li>
+<li>树的所有叶节点构成一个有序链表，可以按照关键码排序的次序遍历全部记录</li>
+</ul>
 <p>B+树的优势：</p>
+<ul>
+<li>
+<p>由于B+树在内部节点上不包含数据信息，因此在内存页中能够存放更多的key。 数据存放的更加紧密，具有更好的空间局部性。因此访问叶子节点上关联的数据也具有更好的缓存命中率。</p>
 </li>
-<li><p>由于B+树在内部节点上不包含数据信息，因此在内存页中能够存放更多的key。 数据存放的更加紧密，具有更好的空间局部性。因此访问叶子节点上关联的数据也具有更好的缓存命中率。</p>
-</li>
-<li><p>B+树的叶子节点都是相连的，因此对整棵树的遍历只需要一次线性遍历叶子节点即可。而且由于数据顺序排列并且相连，所以便于区间查找和搜索。而B树则需要进行每一层的递归遍历。相邻的元素可能在内存中不相邻，所以缓存命中性没有B+树好。</p>
+<li>
+<p>B+树的叶子节点都是相连的，因此对整棵树的遍历只需要一次线性遍历叶子节点即可。而且由于数据顺序排列并且相连，所以便于区间查找和搜索。而B树则需要进行每一层的递归遍历。相邻的元素可能在内存中不相邻，所以缓存命中性没有B+树好。</p>
 </li>
 </ul>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212211103.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212211103.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>总结：我们知道二叉查找树的时间复杂度是Ｏ(logN)，效率已经足够高。为什么出现B树和B+树呢？当大量数据存储在磁盘上，进行查询操作时，需要先将数据加载到内存中（磁盘IO操作），而数据并不能一次性全部加载到内存中，只能逐一加载每个磁盘页（对应树的一个节点），并且磁盘IO操作很慢，平衡二叉树由于树深度过大而造成磁盘IO读写过于频繁，进而导致效率低下。为了减少磁盘IO的次数，就需要降低树的深度，那么就引出了B树和B+树：每个节点存储多个元素，采用多叉树结构。这样就提高了效率，比如数据库索引，就是存储在磁盘上，采用的就是B+树的数据结构。</p>
 
-      
-    </div>
-    <div class="article-footer">
-      <blockquote class="mt-2x">
-  <ul class="post-copyright list-unstyled">
-    
-    <li class="post-copyright-link hidden-xs">
-      <strong>本文链接：</strong>
-      <a href="https://lxb.wiki/17ced2c4/" title="B树和B+树" target="_blank" rel="external">https://lxb.wiki/17ced2c4/</a>
-    </li>
-    
-    <li class="post-copyright-license">
-      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
-    </li>
-  </ul>
-</blockquote>
-
-    </div>
-  </article>
-  
-    
-  <section id="comments">
-  	
-      
-        <section id="comments" class="comments">
-          <style>
-            .utterances{max-width: 100%;}
-          </style>
-          <script src="https://utteranc.es/client.js"
-                repo="lxbwolf/lxbwolf.github.io"
-                issue-term="title"
-                theme="github-light"
-                crossorigin="anonymous"
-                async>
-          </script>
-        </section>
-      
-    
-  </section>
+</section>
 
 
-  
-</div>
-
-  <nav class="bar bar-footer clearfix" data-stick-bottom>
-  <div class="bar-inner">
-  
-  <ul class="pager pull-left">
+    <footer class="article-footer">
     
-    <li class="prev">
-      <a href="/ff873094/" title="消息队列中的问题| 丢消息| 重复消费| 消息积压"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
-    </li>
-    
-    
-    <li class="next">
-      <a href="/f1113725/" title="Redis-Sorted-Set底层数据结构"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
-    </li>
-    
-    
-  </ul>
-  
-  
-  
-  <div class="bar-right">
-    
-    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
-    
-  </div>
-  </div>
-</nav>
-  
-
-
-
-</main>
-
-  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
-	
-	
-    <ul class="social-links">
-    	
-        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+    <section class="article-tags">
         
-        <li><a href="mailto:me@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+            <a href="/tags/%E7%AE%97%E6%B3%95/">算法</a>
         
-        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
-        
-    </ul>
+    </section>
 
-    <div class="copyright">
-    	
-        <div class="publishby">
-        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> Xiaobin.Liu </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/3d118e3a/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">raft 算法</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/942c23ec/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">跳表的增删改查</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/a2b71d73/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">合并区间56</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/fb68a62c/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">环形链表142</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/6a0b412d/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">删除排序数组中的重复项</h2>
+        </div>
+    </a>
+</article>
+
+            
         </div>
     </div>
+</aside>
 
+     
+    
+        
+    <div class="disqus-container">
+    
+</div>
 
-  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
-  <script>
-    if (window.mermaid) {
-      mermaid.initialize({theme: 'forest'});
+<style>
+    .disqus-container {
+        background-color: var(--card-background);
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--shadow-l1);
+        padding: var(--card-padding);
     }
-  </script>
+</style>
 
+<script>
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (typeof DISQUS == 'object') {
+            DISQUS.reset({
+                reload: true
+            });
+        }
+    })
+</script>
 
+    
 
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2023 Xiaobin&#39;s Blog
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
 </footer>
 
-  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
 <script>
-window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
 </script>
 
-<script src="/js/plugin.min.js"></script>
-
-
-<script src="/js/application.js"></script>
-
-
-    <script>
-(function (window) {
-    var INSIGHT_CONFIG = {
-        TRANSLATION: {
-            POSTS: '文章',
-            PAGES: '页面',
-            CATEGORIES: '分类',
-            TAGS: '标签',
-            UNTITLED: '(未命名)',
-        },
-        ROOT_URL: '/',
-        CONTENT_URL: '/content.json',
-    };
-    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
-})(window);
-</script>
-
-<script src="/js/insight.js"></script>
-
-
-
-
-
-
-   
-
-
-
-
-   
-
-
-
-
-
-    <script defer type="text/javascript">
-(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'G-JZ2PWLT6JY', 'auto');
-ga('send', 'pageview');
-
-</script>
-
-
-    <script defer>
-var _hmt = _hmt || [];
-(function() {
-    var hm = document.createElement("script");
-    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
-    var s = document.getElementsByTagName("script")[0];
-    s.parentNode.insertBefore(hm, s);
-})();
-</script>
-
-
-
-
-</body>
+    </body>
 </html>

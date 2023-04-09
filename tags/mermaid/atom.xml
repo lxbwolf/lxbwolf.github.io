@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>mermaid on Xiaobin&#39;s Blog</title>
+        <link>http://lxb.wiki/tags/mermaid/</link>
+        <description>Recent content in mermaid on Xiaobin&#39;s Blog</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <lastBuildDate>Mon, 20 Jun 2022 20:34:38 +0000</lastBuildDate><atom:link href="http://lxb.wiki/tags/mermaid/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <title>mermaid画流程图语法</title>
+        <link>http://lxb.wiki/62afdbe0/</link>
+        <pubDate>Mon, 20 Jun 2022 20:34:38 +0000</pubDate>
+        
+        <guid>http://lxb.wiki/62afdbe0/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Mermaid 是一个基于 Javascript 的图表绘制工具，通过解析类 Markdown 的文本语法来实现图表的创建和动态修改。Mermaid 诞生的主要目的是让文档的更新能够及时跟上开发进度。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;流程图分类&#34;&gt;流程图分类&lt;/h3&gt;
+&lt;p&gt;有两种流程图&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;flowchart&lt;/li&gt;
+&lt;li&gt;graph&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;flowchart 语法过于复杂，不赘述。下面内容只保留 graph 语法。&lt;/p&gt;
+&lt;h4 id=&#34;示例&#34;&gt;示例&lt;/h4&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code class=&#34;language-mermaid&#34; data-lang=&#34;mermaid&#34;&gt;graph TD
+
+start(程序开始)
+--&amp;gt; 随机选取K个样本作为均值向量
+--&amp;gt; id1([划分簇开始])
+--&amp;gt; 计算样本与各均值向量之间的距离
+--&amp;gt; 根据距离最近的均值向量确定每个样本的簇标记
+--&amp;gt; 将样本划入相应的簇
+--&amp;gt; id2{遍历完成?}
+id2 -- NO --&amp;gt; id1
+id2 -- YES --&amp;gt; id3([更新簇均值向量开始])
+--&amp;gt; id4[计算各簇新均值向量μ]
+--&amp;gt; id5{所有计算完成?}
+id5 -- YES --&amp;gt; 保留μ集合为簇新中心点 --&amp;gt; id6{所有μ是否更新?}
+id5 -- NO --&amp;gt; id3
+id6 -- NO --&amp;gt; endd(结束, 输出均值向量)
+id6 == YES ==&amp;gt;id1
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;方向&#34;&gt;方向&lt;/h3&gt;
+&lt;p&gt;在 &lt;code&gt;graph&lt;/code&gt; 之后加上空格可以传入参数，可以定义流程图方向。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;参数值&lt;/th&gt;
+&lt;th&gt;TB&lt;/th&gt;
+&lt;th&gt;TD&lt;/th&gt;
+&lt;th&gt;BT&lt;/th&gt;
+&lt;th&gt;RL&lt;/th&gt;
+&lt;th&gt;LR&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;说明&lt;/td&gt;
+&lt;td&gt;从上到下&lt;/td&gt;
+&lt;td&gt;从上到下&lt;/td&gt;
+&lt;td&gt;从下到上&lt;/td&gt;
+&lt;td&gt;从右到左&lt;/td&gt;
+&lt;td&gt;从左到右&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3 id=&#34;节点&#34;&gt;节点&lt;/h3&gt;
+&lt;p&gt;每一行输入任意字符都会被识别为一个新节点。输入的字符将被作为节点的ID，同时默认作为节点名称显示。默认形状是矩形。&lt;/p&gt;
+&lt;h4 id=&#34;形状&#34;&gt;形状&lt;/h4&gt;
+&lt;p&gt;除了矩形还有多种形状可选，在节点后面增加符号对即可。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20230320000056.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h4 id=&#34;名称&#34;&gt;名称&lt;/h4&gt;
+&lt;p&gt;形状符号中输入字符作为展示的名称。&lt;/p&gt;
+&lt;p&gt;默认可以不用引号，但如果需要使用转义符、或者括号，则需要用引号包裹。&lt;/p&gt;
+&lt;h3 id=&#34;连接线&#34;&gt;连接线&lt;/h3&gt;
+&lt;p&gt;语法结构大致是：&lt;code&gt;节点ID 连接线符号 节点ID&lt;/code&gt;（
+例如 &lt;code&gt;NodeA &amp;lt;--&amp;gt; NodeB&lt;/code&gt;）。&lt;/p&gt;
+&lt;p&gt;如果一行末尾没有节点ID，则会找到下一行第一个节点ID连接，也就意味着连接线的语法是可以换行的。&lt;/p&gt;
+&lt;p&gt;如果节点ID是前文没有出现过的，会当做一个新的节点处理。所以节点的创建与连接是可以一次性书写的。&lt;/p&gt;
+&lt;h4 id=&#34;线的定义&#34;&gt;线的定义&lt;/h4&gt;
+&lt;p&gt;连接线由三个字符组成，末尾符号代表端点图形，第一二个符号代表线的样式。&lt;/p&gt;
+&lt;p&gt;绘制双向箭头的话，需要在头部增加一个符号，一共是四个字符。&lt;/p&gt;
+&lt;p&gt;中间符号可以重复，重复会渲染出更长的连接线。&lt;/p&gt;
+&lt;p&gt;如&lt;code&gt;NodeA &amp;lt;--&amp;gt; NodeB&lt;/code&gt;就是双箭头符号，中间代表线段形状，头尾代表箭头形状。&lt;/p&gt;
+&lt;h4 id=&#34;线的形状&#34;&gt;线的形状&lt;/h4&gt;
+&lt;p&gt;线条有三种：
+&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20230320000338.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h4 id=&#34;箭头形状&#34;&gt;箭头形状&lt;/h4&gt;
+&lt;p&gt;箭头形状有三种：
+&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20230320000410.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;双向箭头：
+&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20230320000438.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h4 id=&#34;多个节点连接&#34;&gt;多个节点连接&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;&amp;amp;&lt;/code&gt; 符号可以让图形一次性连接多个节点：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20230320000522.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h4 id=&#34;连接线上的文字注释&#34;&gt;连接线上的文字注释&lt;/h4&gt;
+&lt;p&gt;可以在连接线上增加连接线的注释。注释有两种写法：&lt;/p&gt;
+&lt;p&gt;写在末尾：||符号，只需要在连接线符号末尾增加—&amp;gt;|文字|即可展示。&lt;/p&gt;
+&lt;p&gt;写在中间：类似—文字—&amp;gt;、-. 文字 .-&amp;gt;，等于是重复连接符号，前半部分是定义上一个图形到文字的连接线样式，后半部分是定义文字到图形的连接线样式。&lt;/p&gt;
+&lt;p&gt;通常来说写在末尾会比较方便点。
+&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20230320000703.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;注释&#34;&gt;注释&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;%%&lt;/code&gt; 号为注释符，会将符号之后到此行结束都视为注释。&lt;/p&gt;
+&lt;h3 id=&#34;子图分组&#34;&gt;子图（分组）&lt;/h3&gt;
+&lt;p&gt;子图实际上就是给图形分组，增加一个背景色块，使用subgraph ID、end包裹，中间图语法与此前一样。&lt;/p&gt;
+&lt;p&gt;subgraph ID之后用方括号包裹可以定义显示名称。其中元素可以任意连接，用子图ID可以定义子图与子图的连接线。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code class=&#34;language-mermaid&#34; data-lang=&#34;mermaid&#34;&gt;graph TB
+
+subgraph one
+a --&amp;gt; b
+end
+
+subgraph tow
+c --&amp;gt; d
+end
+
+c --&amp;gt; b
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;另一种用法：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code class=&#34;language-mermaid&#34; data-lang=&#34;mermaid&#34;&gt;graph LR
+subgraph submo
+D[&amp;#34;DDD&amp;#34;]
+E[&amp;#34;EEE&amp;#34;]
+F[&amp;#34;FFF&amp;#34;]
+end
+
+Start --&amp;gt; D
+D --&amp;gt; E
+D --&amp;gt; F
+
+E &amp;amp; F --&amp;gt; End
+&lt;/code&gt;&lt;/pre&gt;</description>
+        </item>
+        <item>
+        <title>hexo支持mermaid</title>
+        <link>http://lxb.wiki/6541b31d/</link>
+        <pubDate>Wed, 15 Sep 2021 21:34:12 +0000</pubDate>
+        
+        <guid>http://lxb.wiki/6541b31d/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;p&gt;一定要参考[官网](&lt;a class=&#34;link&#34; href=&#34;https://mermaid-js.github.io/mermaid/#/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;mermaid - Markdownish syntax for generating flowcharts, sequence diagrams, class diagrams, gantt charts and git graphs. (mermaid-js.github.io)&lt;/a&gt;)&lt;/p&gt;
+&lt;p&gt;不要相信垃圾 CSDN&lt;/p&gt;
+&lt;h2 id=&#34;安装插件&#34;&gt;安装插件&lt;/h2&gt;
+&lt;p&gt;npm 安装&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;npm install hexo-filter-mermaid-diagrams
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;项目 [GitHub 主页]&lt;a class=&#34;link&#34; href=&#34;https://github.com/webappdevelp/hexo-filter-mermaid-diagrams&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;webappdevelp/hexo-filter-mermaid-diagrams: mermaid diagrams for hexo (github.com)&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;编辑配置文件&#34;&gt;编辑配置文件&lt;/h2&gt;
+&lt;p&gt;修改文件 &lt;code&gt;themes/pure/_config.yml&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;文件最好添加以下内容：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# mermaid chart&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;mermaid&lt;/span&gt;: &lt;span style=&#34;color:#75715e&#34;&gt;## mermaid url https://github.com/knsv/mermaid&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;enable&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;# default true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;version&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;7.1.2&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;# default v7.1.2&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;options&lt;/span&gt;:  &lt;span style=&#34;color:#75715e&#34;&gt;# find more api options from https://github.com/knsv/mermaid/blob/master/src/mermaidAPI.js&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;#startOnload: true  // default true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;在-ejs-中引入-mermaidjs&#34;&gt;在 ejs 中引入 mermaid.js&lt;/h2&gt;
+&lt;p&gt;修改 &lt;code&gt;themes/pure/layout/_common/footer.ejs&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;添加以下内容&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;%&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;theme&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;mermaid&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;enable&lt;/span&gt;) { &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;script&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;src&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/script&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;script&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (window.&lt;span style=&#34;color:#a6e22e&#34;&gt;mermaid&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;mermaid&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;initialize&lt;/span&gt;({&lt;span style=&#34;color:#a6e22e&#34;&gt;theme&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;forest&amp;#39;&lt;/span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/script&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;%&lt;/span&gt; } &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;qa&#34;&gt;Q&amp;amp;A&lt;/h2&gt;
+&lt;p&gt;如果加载完后，显示的图不正确，那么很有可能是因为引入 &lt;code&gt;mermaid.min.js&lt;/code&gt; 的链接不正确&lt;/p&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>

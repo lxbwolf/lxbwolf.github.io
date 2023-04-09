@@ -1,0 +1,603 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>STL on Xiaobin&#39;s Blog</title>
+        <link>http://lxb.wiki/tags/STL/</link>
+        <description>Recent content in STL on Xiaobin&#39;s Blog</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <lastBuildDate>Wed, 29 Mar 2017 19:01:51 +0000</lastBuildDate><atom:link href="http://lxb.wiki/tags/STL/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <title>【译】Custom comparison, equality and equivalence with the STL</title>
+        <link>http://lxb.wiki/55f488ad/</link>
+        <pubDate>Wed, 29 Mar 2017 19:01:51 +0000</pubDate>
+        
+        <guid>http://lxb.wiki/55f488ad/</guid>
+        <description>&lt;p&gt;从一段代码引用开始:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;std::vector&amp;amp;lt; std::pair&amp;lt;int, std::string=&amp;quot;&amp;quot;&amp;gt; &amp;amp;gt; v1 = ... // v1 is filled with data
+std::vector&amp;amp;lt; std::pair&amp;lt;int, std::string=&amp;quot;&amp;quot;&amp;gt; &amp;amp;gt; v2 = ... // v2 is filled with data
+std::vector&amp;amp;lt; std::pair&amp;lt;int, std::string=&amp;quot;&amp;quot;&amp;gt; &amp;amp;gt; results;&amp;lt;/int,&amp;gt;&amp;lt;/int,&amp;gt;&amp;lt;/int,&amp;gt;
+
+std::sort(v1.begin(), v1.end());
+std::sort(v2.begin(), v2.end());
+
+std::set_difference(v1.begin(), v1.end(),
+v2.begin(), v2.end(),
+std::back_inserter(result),
+compareFirst);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;我们在两个排好序的vector v1 和 v2上调用&lt;code&gt;std::set_difference&lt;/code&gt;. &lt;code&gt;std::set_difference&lt;/code&gt; 把结果写入 &lt;code&gt;result&lt;/code&gt;, &lt;code&gt;std::back_inserter&lt;/code&gt; 确保输出的结果从&lt;code&gt;result&lt;/code&gt; 的后面添入. 自定义的&lt;code&gt;compareFirst&lt;/code&gt; 作为比较函数提供给&lt;code&gt;std::set_difference&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;默认地, &lt;code&gt;std::set_difference&lt;/code&gt; 通过 &lt;code&gt;std::pair&lt;/code&gt; 默认的比较函数来比较里面的元素(比较pair的first和second), 我们自定义了&lt;code&gt;compareFirst&lt;/code&gt;, 希望只比较pair的first. &lt;code&gt;compareFirst&lt;/code&gt;不是STL的函数, 需要我们自己实现.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;std::set_difference&lt;/code&gt; 使用的前提是input已经排好序, 倘若我们自定义比较函数C, 而通过C我们能把元素排好序, 那么我们使用这个C代替sort的默认排序也是可以的.&lt;/p&gt;
+&lt;p&gt;在此例中, 我们使用&lt;code&gt;std::set_difference&lt;/code&gt; 只对pair的first进行排序, 尽管它们已经通过&amp;quot;first + second&amp;quot;的方式排序完了.&lt;/p&gt;
+&lt;p&gt;下面来实现&lt;code&gt;compareFirst&lt;/code&gt;. 初版:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;bool compareFirst(const std::pair&amp;lt;int, std::string=&amp;quot;&amp;quot;&amp;gt;&amp;amp;amp; p1, const std::pair&amp;lt;int, std::string=&amp;quot;&amp;quot;&amp;gt;&amp;amp;amp; p2)
+{
+return p1.first == p2.first; // not final code, bug lurking here!
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;实际上, 上面的代码不会得到我们预期的结果. 为什么? 毕竟&lt;code&gt;std::set_difference&lt;/code&gt; 会检查元素跟另一个容器的元素是否相等(equal), 不是吗?&amp;lt;/int,&amp;gt;&amp;lt;/int,&amp;gt;&lt;/p&gt;
+&lt;p&gt;为了理解上面的内容, 我们把STL大概地分为两类: 操作排序元素的 和操作乱序元素的.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Comparing elements&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;C++中描述&amp;quot;a is the same as b&amp;quot; 有两种方法&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;- the natural way: a == b. This is called equality. Equality is based on operator==.
+- the other way: a is not smaller than b and b is not smaller than a, so !(a&amp;lt;b) &amp;amp;&amp;amp;=&amp;quot;&amp;quot; !(b&amp;lt;a).=&amp;quot;&amp;quot; this=&amp;quot;&amp;quot; is=&amp;quot;&amp;quot; called=&amp;quot;&amp;quot; equivalence.=&amp;quot;&amp;quot; equivalence=&amp;quot;&amp;quot; based=&amp;quot;&amp;quot; on=&amp;quot;&amp;quot; operator&amp;lt;.=&amp;quot;&amp;quot; ```=&amp;quot;&amp;quot; 这两个问题涉及到另一个名词:=&amp;quot;&amp;quot; `equivalence`=&amp;quot;&amp;quot; &amp;lt;u=&amp;quot;&amp;quot;&amp;gt;How is it different from equality?&amp;lt;/b)&amp;gt;
+
+对于基本类型如int, 甚至实践中大多数类型, `equivalence` 和`quality` 是相通的. 但是正如*Scott Meyers* 在&amp;amp;lt;&amp;amp;lt; Effective STL&amp;amp;gt;&amp;amp;gt;  一书条目19中指出的, 对于有一些类型, 即使&amp;quot;并非罕见&amp;quot;, `equivalence` 和 `equality` 是不同的, 如 大小写不敏感的string类型.
+
+&amp;lt;u&amp;gt;Why such a far-fetched way to express a simple thing?&amp;lt;/u&amp;gt;
+
+当我们使用算法对容器内元素进行排序时, 很容易理解必须有独一无二的排序方法(如有多种排序方法, 会很笨重, 并可能产生不一致的结果). 所以对于一个特定的容器, 排序时, &amp;quot;==&amp;quot; 和&amp;quot;&amp;amp;lt;&amp;quot; 只能选一个. 
+
+对于STL中排序的部分, 我们别无选择: 排序时必须使用&amp;quot;&amp;amp;lt;&amp;quot;;
+而乱序部分, 则没有这个约束, 我们可以使用&amp;quot;==&amp;quot;.
+
+**Implementing the comparator**
+
+STL的乱序部分使用&amp;quot;==&amp;quot;, 而排序部分使用&amp;quot;&amp;amp;lt;&amp;quot;. 我们自定义的比较函数也必须遵循这种逻辑. 
+
+现在我们可以理解怎么自定义实现`std::set_difference` 的比较函数`compareFirst` 了.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;​&lt;/p&gt;
+&lt;p&gt;bool compareFirst(const std::pair&amp;lt;int, std::string=&amp;quot;&amp;quot;&amp;gt;&amp;amp; p1, const std::pair&amp;lt;int, std::string=&amp;quot;&amp;quot;&amp;gt;&amp;amp; p2) { return p1.first &amp;lt; p2.first; // correct, STL-compatible code. } ```&lt;/p&gt;
+&lt;p&gt;原文地址: &lt;a class=&#34;link&#34; href=&#34;http://www.fluentcpp.com/2017/02/16/custom-comparison-equality-equivalence-stl/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;http://www.fluentcpp.com/2017/02/16/custom-comparison-equality-equivalence-stl/&lt;/a&gt; &amp;lt;/int,&amp;gt;&amp;lt;/int,&amp;gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>【译】How to (std::)find something efficiently with the STL</title>
+        <link>http://lxb.wiki/56dc57bb/</link>
+        <pubDate>Thu, 16 Mar 2017 22:07:59 +0000</pubDate>
+        
+        <guid>http://lxb.wiki/56dc57bb/</guid>
+        <description>&lt;p&gt;本文分3部分: 1. 怎么使用STL进行高效的查找: 借用传统STL算法对元素进行范围搜索 2. 搜索STL容器: 当你有直接读取STL容器里元素的权限时, 怎么进行高效准确的搜索(与简单的范围搜索相比较) 3. STL搜索算法的秘密: 向公众展示不为人知的算法, 这些算法在已经学习过的人眼里确实是很有用的&lt;/p&gt;
+&lt;p&gt;STL根据查看方式的不同, 一共分为两种: 排序的和不排序的. * 排序集合的遍历, 通常需要对数时长, 而乱序集合的遍历, 需要线性时长 * 排序容器中比较元素大小的函数根据equivalence(comparing with &amp;lt;), 而乱序容器中的函数根据equality(comparing with ==).&lt;/p&gt;
+&lt;p&gt;本文将展示对于在一个范围内搜索一个给定的值, C++怎么样去阐述下面3个问题: * 它存在否 * 它在哪 * 它应该在什么位置(排序容器)&lt;/p&gt;
+&lt;h3 id=&#34;is-it-there&#34;&gt;Is it there?&lt;/h3&gt;
+&lt;h4 id=&#34;乱序容器的元素&#34;&gt;乱序容器的元素&lt;/h4&gt;
+&lt;p&gt;这个问题可以用std::find来表达(需要和与范围的终点值的比较相结合):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; v = ... // v filled with values
+if (std::find(v.begin(), v.end(), 42) != v.end())
+{
+...
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;ldquo;Is it there&amp;quot;这个问题也可以用std::count来表达:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; v = ... // v filled with values
+if (std::count(v.begin(), v.end(), 42))
+{
+...
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;std::count()的返回值会被隐式地转换成if条件里的bool值: 如果该范围里有至少一个值为42, 则返回true.&lt;/p&gt;
+&lt;p&gt;与std::find相比, std::count的优劣: 优势:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;std::count避免了与范围的end值相比较&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;弊端:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;std::count遍历整个集合, 而std::find在第一个与要查找的值相等的位置停下&lt;/li&gt;
+&lt;li&gt;可以证明, 对于&amp;quot;想要查找某个值&amp;quot;这件事, std::find 表达得更明确 基于以上, std::find用得更多.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Note&lt;/strong&gt; 若要确认某个值存在而非是与要搜索的值相等, 请使用&lt;code&gt;std::count_if, std::find_if, std::find_if_not&lt;/code&gt;&lt;/p&gt;
+&lt;h4 id=&#34;排序容器的元素&#34;&gt;排序容器的元素&lt;/h4&gt;
+&lt;p&gt;使用的算法是&lt;code&gt;std::binary_search&lt;/code&gt;, 此函数返回一个bool值, 此bool值表示在集合中是否存在与搜索的值相等的元素.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;std::set&amp;lt;int&amp;gt; numbers = // sorted elements
+bool is42InThere = std::binary_search(numbers.begin(), numbers.end(), 42);
+```&amp;lt;/int&amp;gt;
+
+### Where is it?
+(当确定了要搜索的值存在后,) 我们想更进一步, 得到指向那个元素的迭代器.
+
+#### 乱序容器的元素
+
+使用std::find. 返回指向第一个与搜索的值相等的元素的迭代器, 如果找不到, 则返回集合的终点.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;​&lt;/p&gt;
+&lt;p&gt;std::vector numbers = &amp;hellip; auto searchResult = std::find(numbers.begin(), numbers.end(), 42);&lt;/p&gt;
+&lt;p&gt;if (searchResult != numbers.end()) { &amp;hellip;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;#### 排序容器的元素
+
+对于排序集合, STL并没有像std::find一样直接的算法. std::find并不是为排序容器设计的, 因为它依据的是&amp;quot;==&amp;quot;而不是&amp;quot;&amp;amp;lt;&amp;quot;, 消耗的时间为线性时长而不是对数时长.
+对于一个给定的容器, 如果容器内元素的&amp;quot;equality&amp;quot;和&amp;quot;equivalence&amp;quot;是相同的, 且你能接受消耗的线性时长, 那么std::find会为你返回正确的结果, 你也能从它简单直接的接口中获益. **但是,** 不能忘记, std::find并不是为排序容器设计的.
+
+这里推荐使用`std::equal_range`. (并非`std::lower_bound`)
+函数原型: 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;​&lt;/p&gt;
+&lt;p&gt;template&amp;lt; class ForwardIt, class T &amp;gt; std::pair&amp;lt;forwardit,forwardit&amp;gt; equal_range( ForwardIt first, ForwardIt last, const T&amp;amp; value );&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;`std::equal_range` 返回与搜索值相等的元素的范围, 这个范围用一对集合内的迭代器表示. 这两个迭代器分别指向 与搜索值相等的范围里第一个元素和最后一个元素的下一个位置.&amp;lt;/forwardit,forwardit&amp;gt;
+
+然而, 它的接口有些笨重:
+例A:
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;std::vector v = {3, 7, 3, 11, 3, 3, 2}; sort(v.begin(), v.end());&lt;/p&gt;
+&lt;p&gt;// equal_range, attempt 1: natively clumsy std::pair&amp;lt;std::vector::iterator, std::vector::iterator&amp;gt; range1 = equal_range(v.begin(), v.end(), 3); std::for_each(range1.first, range1.second, doSomething);&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;用一个`typedef` 或者`using`让它更简洁:
+例B:
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;std::vector v = {3, 7, 3, 11, 3, 3, 2}; sort(v.begin(), v.end());&amp;lt;/std::vector&lt;/p&gt;
+&lt;p&gt;using IteratorPair = std::pair&amp;lt;std::vector::iterator, std::vector::iterator&amp;gt;;&amp;lt;/std::vector&lt;/p&gt;
+&lt;p&gt;// equal_range, attempt 2: with the classical typedef IteratorPair range2 = equal_range(v.begin(), v.end(), 3); std::for_each(range2.first, range2.second, doSomething);&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;例B确实简洁了很多, 但是仍有一个根本问题: 没有考虑 抽象等级.
+尽管返回的是一个范围, 但这对迭代器强迫我们在操作返回的范围时必须按照&amp;quot;第一&amp;quot;&amp;quot;第二&amp;quot;这种方式来写代码. 范围就应该用&amp;quot;首&amp;quot;&amp;quot;尾&amp;quot;这种方式来表达. 这不仅给我们在其他地方使用这个返回值时造成很大的麻烦, 而且使代码很别扭.
+
+为了解决这个问题, 我么可以把`std::equal_range` 返回的迭代器对封装进一个有&amp;quot;范围&amp;quot;这种语义的`object`
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;​&lt;/p&gt;
+&lt;p&gt;template&lt;/p&gt;
+&lt;p&gt;class Range&lt;/p&gt;
+&lt;p&gt;{&lt;/p&gt;
+&lt;p&gt;public:&lt;/p&gt;
+&lt;p&gt;Range(std::pair range)&lt;/p&gt;
+&lt;p&gt;m_begin(range.first), m_end(range.second) {} typename Container::iterator begin() { return m_begin; } typename Container::iterator end() { return m_end; }&lt;/p&gt;
+&lt;p&gt;private: typename Container::iterator m_begin; typename Container::iterator m_end; };&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;注意: 尽管`std::equal_range` 返回的结果是一个&amp;quot;范围&amp;quot;, 但是`std::begin` 和 `std::end` 不能用在这个结果上. 而上面的封装解决了这个问题.
+可以像下面这样使用:
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;​&lt;/p&gt;
+&lt;p&gt;std::vector v = {3, 7, 3, 11, 3, 3, 2}; sort(v.begin(), v.end());&lt;/p&gt;
+&lt;p&gt;// equal_range, attempt 3: natural al last Range&lt;a class=&#34;link&#34; href=&#34;std::vector%5c&#34; &gt;std::vector\&lt;/a&gt; range3 = equal_range(v.begin(), v.end(), 3); std::for_each(range3.begin(), range3.end(), doSomething);&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;不管你使用上面的哪种方式, `std::equal_range` 都会返回一个范围, 要确定它是否为空, 可以通过检查那两个迭代器(是否相等)或者使用`std::distance` 检查它的大小. &amp;lt;/std::vector&amp;lt;int&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;​&lt;/p&gt;
+&lt;p&gt;bool noElementFound = range3.begin() == range3.end(); size_t numberOfElementFound = std::distance(range3.begin(), range3.end()) ```&lt;/p&gt;
+&lt;h3 id=&#34;where-should-it-be&#34;&gt;Where should it be?&lt;/h3&gt;
+&lt;p&gt;这个问题仅仅针对排序的范围, 因为对于乱序的范围, 某个元素可能会存在任何位置.&lt;/p&gt;
+&lt;p&gt;对于排序的范围, 这个问题可以简化为: 如果它存在, 那么它在哪儿? 如果它不存在, 那么它应该在哪儿?&lt;/p&gt;
+&lt;p&gt;这个问题可以用算法&lt;code&gt;std::lower_bound&lt;/code&gt; 和&lt;code&gt;std::upper_bound&lt;/code&gt; 来解释.&lt;/p&gt;
+&lt;p&gt;当你理解了&lt;code&gt;std::equal_range&lt;/code&gt; 后, 上面这句话就很容易理解了: &lt;code&gt;std::lower_bound&lt;/code&gt; 和&lt;code&gt;std::upper_bound&lt;/code&gt; 都会返回 &lt;code&gt;std::equal_range&lt;/code&gt; 返回的那个迭代器对的第一个和第二个迭代器.&lt;/p&gt;
+&lt;p&gt;要插入某个值x, 使用&lt;code&gt;std::lower_bound&lt;/code&gt; 得到指向 在范围里与x相等的元素之前的位置的迭代器, 使用&lt;code&gt;std::upper_bound&lt;/code&gt; 得到指向 在范围里与x相等的元素之后的位置的迭代器.&lt;/p&gt;
+&lt;p&gt;注意: 如果仅仅是搜索某个元素, 永远不要使用&lt;code&gt;std::lower_bound&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;与&lt;code&gt;std::find&lt;/code&gt; 相反, 你不能根据 判断&lt;code&gt;std::lower_bound&lt;/code&gt; 返回的迭代器是否与终点的迭代器相等 来判断要搜索的值是否存在于这个集合. 事实上, 如果这个值在集合里不存在, 则&lt;code&gt;std::lower_bound&lt;/code&gt; 返回它应该在的位置, 而不是终点的迭代器. 所以, 你不仅需要确认返回的迭代器不是终点的迭代器, 还要确认它指向的元素跟要搜索的值是相等的.&lt;/p&gt;
+&lt;h3 id=&#34;总结&#34;&gt;总结&lt;/h3&gt;
+&lt;p&gt;Question to express in C++&lt;/p&gt;
+&lt;p&gt;NOT SORTED&lt;/p&gt;
+&lt;p&gt;SORTED&lt;/p&gt;
+&lt;p&gt;Is it there?&lt;/p&gt;
+&lt;p&gt;std::find != end&lt;/p&gt;
+&lt;p&gt;std::binary_search&lt;/p&gt;
+&lt;p&gt;Where is it?&lt;/p&gt;
+&lt;p&gt;std::find&lt;/p&gt;
+&lt;p&gt;std::equal_range&lt;/p&gt;
+&lt;p&gt;Where should it be?&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;std::lower_bound / std::upper_bound&lt;/p&gt;
+&lt;p&gt;原文地址: &lt;a class=&#34;link&#34; href=&#34;http://www.fluentcpp.com/2017/01/16/how-to-stdfind-something-efficiently-with-the-stl/?hmsr=toutiao.io&amp;amp;utm&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;http://www.fluentcpp.com/2017/01/16/how-to-stdfind-something-efficiently-with-the-stl/?hmsr=toutiao.io&amp;utm&lt;/a&gt;_medium=toutiao.io&amp;amp;utm_source=toutiao.io&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>【译】Effective STL 9</title>
+        <link>http://lxb.wiki/978f4b48/</link>
+        <pubDate>Thu, 09 Mar 2017 21:09:09 +0000</pubDate>
+        
+        <guid>http://lxb.wiki/978f4b48/</guid>
+        <description>&lt;p&gt;条款9：在删除选项中仔细选择 假定你有一个标准STL容器，c，容纳int， &lt;code&gt;Container&amp;lt;int&amp;gt; c;&lt;/code&gt; 而你想把c中所有值为&lt;code&gt;1963&lt;/code&gt;的对象都去掉。令人吃惊的是，完成这项任务的方法因不同的容 器类型而不同：没有一种方法是通用的。&lt;/p&gt;
+&lt;p&gt;如果你有一个连续内存容器（vector、deque或string——参见条款1），最好的方法是erase-remove惯用法（参见条款32）：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;c.erase(remove(c.begin(), c.end(), &lt;span style=&#34;color:#ae81ff&#34;&gt;1963&lt;/span&gt;),       &lt;span style=&#34;color:#75715e&#34;&gt;// 当c是vector、string
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;c.end());                               &lt;span style=&#34;color:#75715e&#34;&gt;// 或deque时，
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// erase-remove惯用法
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 是去除特定值的元素
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 的最佳方法
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这方法也适合于list，但是，正如条款44解释的，list的成员函数remove更高效：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;c.remove(&lt;span style=&#34;color:#ae81ff&#34;&gt;1963&lt;/span&gt;);     &lt;span style=&#34;color:#75715e&#34;&gt;// 当c是list时，
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// remove成员函数是去除
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 特定值的元素的最佳方法
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;当c是标准关联容器（即，set、multiset、map或multimap）时，使用任何叫做remove的东 西都是完全错误的。这样的容器没有叫做remove的成员函数，而且使用remove算法可能覆 盖容器值（参见条款32），潜在地破坏容器。（关于这样的破坏的细节，参考条款22，那 个条款也解释了为什么试图在map和multimap上使用remove肯定不能编译，而试图在set和 multiset上使用可能不能编译。）&lt;/p&gt;
+&lt;p&gt;不，对于关联容器，解决问题的适当方法是调用erase：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;c.erase(&lt;span style=&#34;color:#ae81ff&#34;&gt;1963&lt;/span&gt;);      &lt;span style=&#34;color:#75715e&#34;&gt;// 当c是标准关联容器时
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// erase成员函数是去除
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 特定值的元素的最佳方法
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这不仅是正确的，而且很高效，只花费对数时间。（序列容器的基于删除的技术需要线性 时间。）并且，关联容器的erase成员函数有基于等价而不是相等的优势，条款19解释了这 一区别的重要性。&lt;/p&gt;
+&lt;p&gt;让我们现在稍微修改一下这个问题。不是从c中除去每个有特定值的物体，让我们消除下面 判断式（参见条款39）返回真的每个对象：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;bool&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;badValue&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; x);   &lt;span style=&#34;color:#75715e&#34;&gt;// 返回x是否是“bad”
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;对于序列容器（&lt;/span&gt;vector&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;、&lt;/span&gt;string&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;、&lt;/span&gt;deque&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;和&lt;/span&gt;list&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;），我们要做的只是把每个&lt;/span&gt;remove()&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;替换为&lt;/span&gt;remove_if()&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;，然后就完成了：&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;c.erase(remove_if(c.begin(), c.end(), badValue),    &lt;span style=&#34;color:#75715e&#34;&gt;// 当c是vector、string
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;c.end());           &lt;span style=&#34;color:#75715e&#34;&gt;// 或deque时这是去掉
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// badValue返回真
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 的对象的最佳方法
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;c.remove_if(badValue);              &lt;span style=&#34;color:#75715e&#34;&gt;// 当c是list时这是去掉
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// badValue返回真
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 的对象的最佳方法
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;对于标准关联容器，它不是很直截了当。有两种方法处理该问题，一个更容易编码，另一 个更高效。“更容易但效率较低”的解决方案用&lt;code&gt;remove_copy_if()&lt;/code&gt;把我们需要的值拷贝到一 个新容器中，然后把原容器的内容和新的交换：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;AssocContainer&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; c;              &lt;span style=&#34;color:#75715e&#34;&gt;// c现在是一种
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;...                                 &lt;span style=&#34;color:#75715e&#34;&gt;// 标准关联容器
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;AssocContainer&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; goodValues;         &lt;span style=&#34;color:#75715e&#34;&gt;// 用于容纳不删除
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 的值的临时容器
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;remove_copy_if(c.begin(), c.end(),          &lt;span style=&#34;color:#75715e&#34;&gt;// 从c拷贝不删除
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;inserter(goodValues,        &lt;span style=&#34;color:#75715e&#34;&gt;// 的值到
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;goodValues.end()),          &lt;span style=&#34;color:#75715e&#34;&gt;// goodValues
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;badValue);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;c.swap(goodValues);             &lt;span style=&#34;color:#75715e&#34;&gt;// 交换c和goodValues
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 的内容
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这种方法的缺点是它拷贝了所有不删除的元素，而这样的拷贝开销可能大于我们期望的底线。&lt;/p&gt;
+&lt;p&gt;我们可以通过直接从原容器删除元素来避开拷贝的开销。不过，因为关联容器没有提供类似&lt;code&gt;remove_if()&lt;/code&gt;的成员函数，所以我们必须写一个循环来迭代c中的元素，和原来一样删除元素.&lt;/p&gt;
+&lt;p&gt;看起来，这个任务很简单，而且实际上，代码也很简单。不幸的是，那些正确工作的代码 很少是跃出脑海的代码。例如，这是很多程序员首先想到的：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;AssocContainer&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; c;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (AssocContainer&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;::&lt;/span&gt;iterator i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; c.begin();   &lt;span style=&#34;color:#75715e&#34;&gt;// 清晰，直截了当
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;i&lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; c.end();                                &lt;span style=&#34;color:#75715e&#34;&gt;// 而漏洞百出的用于
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;i) {                                      &lt;span style=&#34;color:#75715e&#34;&gt;// 删除c中badValue返回真
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (badValue(&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;i)) c.erase(i);                   &lt;span style=&#34;color:#75715e&#34;&gt;// 的每个元素的代码
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}                                                   &lt;span style=&#34;color:#75715e&#34;&gt;// 不要这么做！&amp;lt;/int&amp;gt;&amp;lt;/int&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;​&lt;/p&gt;
+&lt;p&gt;唉，这有未定义的行为。当容器的一个元素被删时，指向那个元素的所有迭代器都失效了 。当c.erase(i)返回时，i已经失效。那对于这个循环是个坏消息，因为在erase()返回后， i通过for循环的++i部分自增。&lt;/p&gt;
+&lt;p&gt;为了避免这个问题，我们必须保证在调用erase之前就得到了c中下一元素的迭代器。最容 易的方法是当我们调用时在i上使用后置递增：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;AssocContainer&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; c;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (AssocContainer&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;::&lt;/span&gt;iterator i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; c.begin();   &lt;span style=&#34;color:#75715e&#34;&gt;// for循环的第三部分
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;i &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; c.end();                                   &lt;span style=&#34;color:#75715e&#34;&gt;// 是空的；i现在在下面
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/*nothing*/&lt;/span&gt; ){                                 &lt;span style=&#34;color:#75715e&#34;&gt;// 自增
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (badValue(&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;i)) c.erase(i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;);     &lt;span style=&#34;color:#75715e&#34;&gt;// 对于坏的值，把当前的
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;i;                           &lt;span style=&#34;color:#75715e&#34;&gt;// i传给erase，然后
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}                                       &lt;span style=&#34;color:#75715e&#34;&gt;// 作为副作用增加i；
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 对于好的值，
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 只增加i
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这种调用erase()的解决方法可以工作，因为表达式i++的值是i的旧值，但作为副作用，i增 加了。因此，我们把i的旧值（没增加的）传给erase，但在erase开始执行前i已经自增了 。那正好是我们想要的。正如我所说的，代码很简单，只不过不是大多数程序员在第一次 尝试时想到的。&lt;/p&gt;
+&lt;p&gt;现在让我们进一步修改该问题。不仅删除badValue返回真的每个元素，而且每当一个元素 被删掉时，我们也想把一条消息写到日志文件中。&lt;/p&gt;
+&lt;p&gt;对于关联容器，这说多容易就有多容易，因为只需要对我们刚才开发的循环做一个微不足 道的修改就行了：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ofstream logFile;                   &lt;span style=&#34;color:#75715e&#34;&gt;// 要写入的日志文件
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;AssocContainer&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; c;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (AssocContainer&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;::&lt;/span&gt;iterator i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; c.begin();   &lt;span style=&#34;color:#75715e&#34;&gt;// 循环条件和前面一样
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;i &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt;c.end();){
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (badValue(&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;i)){
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;logFile &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;lt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;lt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Erasing &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;lt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;lt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;lt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;lt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\n&amp;#39;&lt;/span&gt;;   &lt;span style=&#34;color:#75715e&#34;&gt;// 写日志文件 
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        c.erase(i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;);           &lt;span style=&#34;color:#75715e&#34;&gt;// 删除元素
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;i;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;现在是vector、string和deque给我们带来麻烦。我们不能再使用&lt;code&gt;erase-remove&lt;/code&gt;惯用法，因为没有办法让erase()或remove()写日志文件。而且，我们不能使用刚刚为关联容器开发的循环, 因为它为vector、string和deque产生未定义的行为！要记得对于那样的容器，调用erase不仅使所有指向被删元素的迭代器失效，也使被删元素之后的所有迭代器失效。在我们的情况里，那包括所有i之后的迭代器。我们写i++，++i或你能想起的其它任何东西都没有用，因为没有能导致迭代器有效的。&lt;/p&gt;
+&lt;p&gt;我们必须对vector、string和deque采用不同的战略。特别是，我们必须利用erase()的返回值。那个返回值正是我们需要的：一旦删除完成，它就是指向紧接在被删元素之后的元素的有效迭代器。换句话说，我们这么写：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (SeqContainer&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;::&lt;/span&gt;iterator i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; c.begin();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;i &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; c.end();){
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (badValue(&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;i)){
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;logFile &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;lt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;lt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Erasing &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;lt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;lt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;lt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;lt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\n&amp;#39;&lt;/span&gt;; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; c.erase(i);         &lt;span style=&#34;color:#75715e&#34;&gt;// 通过把erase的返回值
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    }                   &lt;span style=&#34;color:#75715e&#34;&gt;// 赋给i来保持i有效
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;i;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这可以很好地工作，但只用于标准序列容器。由于论证一个可能的问题（条款5做了），标准关联容器的erase()的返回类型是void[1]。对于那些容器，你必须使用“后置递增你要传给erase()的迭代器”技术。（顺便说说，在为序列容器编码和为关联容器编码之间的这种差别是为什么写容器无关代码一般缺乏考虑的一个例子——参见条款2。)&lt;/p&gt;
+&lt;p&gt;为了避免你奇怪list的适当方法是什么，事实表明对于迭代和删除，你可以像vector/str ing/deque一样或像关联容器一样对待list；两种方法都可以为list工作。&lt;/p&gt;
+&lt;p&gt;如果我们观察在本条款中提到的所有东西，我们得出下列结论：&lt;/p&gt;
+&lt;p&gt;去除一个容器中有特定值的所有对象： 如果容器是vector、string或deque，使用erase-remove惯用法。&lt;/p&gt;
+&lt;p&gt;如果容器是list，使用list::remove。&lt;/p&gt;
+&lt;p&gt;如果容器是标准关联容器，使用它的erase成员函数。&lt;/p&gt;
+&lt;p&gt;去除一个容器中满足一个特定判定式的所有对象： 如果容器是vector、string或deque，使用&lt;code&gt;erase-remove_if&lt;/code&gt;惯用法。&lt;/p&gt;
+&lt;p&gt;如果容器是list，使用list::remove_if。&lt;/p&gt;
+&lt;p&gt;如果容器是标准关联容器，使用&lt;code&gt;remove_copy_if&lt;/code&gt;和&lt;code&gt;swap&lt;/code&gt;，或写一个循环来遍历容器元素， 当你把迭代器传给erase时记得后置递增它。&lt;/p&gt;
+&lt;p&gt;在循环内做某些事情（除了删除对象之外）： 如果容器是标准序列容器，写一个循环来遍历容器元素，每当调用erase时记得都用它的返回值更新你的迭代器。 如果容器是标准关联容器，写一个循环来遍历容器元素，当你把迭代器传给erase时记得后置递增它。&lt;/p&gt;
+&lt;p&gt;如你所见，与仅仅调用erase相比，有效地删除容器元素有更多的东西。解决问题的最好方法取决于你是怎样鉴别出哪个对象是要被去掉的，储存它们的容器的类型，和当你删除它们的时候你还想要做什么（如果有的话）。只要你小心而且注意了本条款的建议，你将毫不费力。如果你不小心，你将冒着产生不必要低效的代码或未定义行为的危险。&lt;/p&gt;
+&lt;h2 id=&#34;------------------------------------------------------------------------------&#34;&gt;------------------------------------------------------------------------------&lt;/h2&gt;
+&lt;p&gt;[1] 这仅对带有迭代器实参的erase()形式是正确的。关联容器也提供一个带有一个值的实参 的erase()形式，而那种形式返回被删掉的元素个数。但这里，我们只关心通过迭代器删除东 西。&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://bbs.sjtu.edu.cn/bbsanc,path,%2Fgroups%2FGROUP_3%2FC%2Fnetres%2Feffstl%2Ffile10.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;参考地址&lt;/a&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>STL 的 erase( ) 陷阱-迭代器失效总结</title>
+        <link>http://lxb.wiki/b12cd95a/</link>
+        <pubDate>Thu, 02 Mar 2017 23:10:19 +0000</pubDate>
+        
+        <guid>http://lxb.wiki/b12cd95a/</guid>
+        <description>&lt;p&gt;STL中的容器按存储方式分为两类，一类是按以数组形式存储的容器（如：vector 、deque)；另一类是以不连续的节点形式存储的容器（如：list、set、map）。在使用erase方法来删除元素时，需要注意一些问题。&lt;/p&gt;
+&lt;h4 id=&#34;1listsetmap容器&#34;&gt;&lt;strong&gt;1.list,set,map容器&lt;/strong&gt;&lt;/h4&gt;
+&lt;p&gt;在使用 list、set 或 map遍历删除某些元素时可以这样使用：&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;del&gt;1.1 正确写法 1&lt;/del&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;std::list&amp;lt;int&amp;gt; list;
+std::list&amp;lt;int&amp;gt;::iterator it_list;
+for (it_list = list.begin(); it_list != list.end();)
+{
+if (willDelete(*it_list))
+{
+it_list = list.erase(it_list);
+}
+else
+{
+++it_list;
+}
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; 以上方法仅适用于standard sequence container, 因为对于standard associative container, erase()的返回类型为void. (查阅Effective STL Item 9)以下为原文:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;This works wonderfully, but only for the standard sequence containers. Due to reasoning one might question, erase()&#39;s return type for the standard associative containers is void. For those containers, you have to use the postincrement-the-iterator-you-pass-to-erase technique.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;1.2 正确写法2&lt;/strong&gt; 查阅原版Effctive STL Item 9, 证实, 下面这种写法不能用于标准序列容器, 而适用于标准关联容器, 而List也可以使用这种方法.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;std::list&amp;lt;int&amp;gt; list;
+std::list&amp;lt;int&amp;gt;::iterator it_list;
+for (it_list = list.begin(); it_list != list.end();)
+{
+if (willDelete(*it_list))
+{
+list.erase(it_list++); // 必须使用后缀自增, 不能使用前缀自增
+}
+else
+{
+++it_list;
+}
+}
+```&amp;lt;/int&amp;gt;&amp;lt;/int&amp;gt;
+
+**1.3 错误写法 1**
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;std::list&amp;lt; int&amp;gt; List; std::list&amp;lt; int&amp;gt;::iterator itList; for( itList = List.begin(); itList != List.end(); itList++) { if( WillDelete( *itList) ) { List.erase( itList); } }&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;**1.4 错误写法 2**
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;std::list&amp;lt; int&amp;gt; List; std::list&amp;lt; int&amp;gt;::iterator itList; for( itList = List.begin(); itList != List.end(); ) { if( WillDelete( *itList) ) { itList = List.erase( ++itList); } else itList++; }&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;**1.5 分析**
+
+正确方法1: 通过erase()方法的返回值来获取下一个元素的位置;
+正确方法2: 在调用erase()方法之前先使用&amp;quot;++&amp;quot; 来获取下一个元素的位置;
+错误使用方法1: 在调用erase()方法之后使用&amp;quot;++&amp;quot; 来获取下一个元素的位置, 由于在调用erase()方法之后, 该元素的位置已经被删除, 如果再根据这个旧的位置来获取下一个位置, 则会出现异常;
+错误使用方法2: 同上
+
+####**2. vector,deque 容器**
+在使用 vector、deque遍历删除元素时，也可以通过erase的返回值来获取下一个元素的位置：
+
+**2.1 正确写法:**
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;std::vector vec; std::vector::iterator it_vec; for (it_vec = vec.begin(); it_vec != vec.end();) { if (willDelete(*it_vec)) { it_vec = vec.erase(it_vec); } else { ++it_vec; } } ```&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;2.2 注意&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;vector, deque 不能像上面的&amp;quot;正确方法2&amp;quot; 的办法来遍历删除. 原因请参考Effective STL条款9。摘录到下面： 1) 对于关联容器(如map, set, multimap, multiset)，删除当前的iterator，仅仅会使当前的iterator失效，只要在erase时，递增当前iterator即可。这是因为map之类的容器，使用了红黑树来实现，插入、删除一个结点不会对其他结点造成影响。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;for (iter = cont.begin(); it != cont.end();)
+{
+(*iter)-&amp;amp;gt;doSomething();
+if (shouldDelete(*iter))
+cont.erase(iter++);
+else
+++iter;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;因为iter传给erase方法的是一个副本，iter++会指向下一个元素。&lt;/p&gt;
+&lt;ol start=&#34;2&#34;&gt;
+&lt;li&gt;
+&lt;p&gt;对于序列式容器(如vector, deque)，删除当前的iterator会使后面所有元素的iterator都失效。这是因为vetor, deque使用了连续分配的内存，删除一个元素导致后面所有的元素会向前移动一个位置。还好erase()方法可以返回下一个有效的iterator。&lt;/p&gt;
+&lt;p&gt;for (iter = cont.begin(); iter != cont.end();)
+{
+(*it)-&amp;gt;doSomething();
+if (shouldDelete(*iter))
+iter = cont.erase(iter);
+else
+++iter;
+}&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;3)对于list来说，它使用了不连续分配的内存，并且它的erase()方法也会返回下一个有效的iterator，因此上面两种方法都可以使用。&lt;/p&gt;
+&lt;h4 id=&#34;3-其他&#34;&gt;&lt;strong&gt;3. 其他&lt;/strong&gt;&lt;/h4&gt;
+&lt;p&gt;&lt;strong&gt;set&lt;/strong&gt; 键和值相等。 键唯一。 元素默认按升序排列。 如果迭代器所指向的元素被删除，则该迭代器失效。其它任何增加、删除元素的操作都不会使迭代器失效&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;map&lt;/strong&gt; 键唯一。 元素默认按键的升序排列。 如果迭代器所指向的元素被删除，则该迭代器失效。其它任何增加、删除元素的操作都不会使迭代器失效。&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;http://mp.weixin.qq.com/s/qonNrKKZLladvIwvurQCTA&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;作成参考地址&lt;/a&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>unordered_map笔记</title>
+        <link>http://lxb.wiki/d97ca7/</link>
+        <pubDate>Thu, 12 Jan 2017 20:05:01 +0000</pubDate>
+        
+        <guid>http://lxb.wiki/d97ca7/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;unordered_map与map的区别 boost::unordered_map， 它与 stl::map的区别就是，stl::map是按照operator&amp;lt;比较判断元素是否相同，以及比较元素的大小，然后选择合适的位置插入到树中。所以，如果对map进行遍历（中序遍历）的话，输出的结果是有序的。顺序就是按照operator&amp;lt; 定义的大小排序。 而boost::unordered_map是计算元素的Hash值，根据Hash值判断元素是否相同。所以，对unordered_map进行遍历，结果是无序的。 用法的区别就是，stl::map 的key需要定义operator&amp;lt; 。 而boost::unordered_map需要定义hash_value函数并且重载operator==。对于内置类型，如string，这些都不用操心。对于自定义的类型做key，就需要自己重载operator== 或者hash_value()了。 最后，说，当不需要结果排好序时，最好用unordered_map。&lt;/p&gt;
+&lt;p&gt;linux下使用 普通的key就不说了和map一样 看一下用sockaddr_in 作为key的方法&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;#ifndef CSESSION_H  
+#define CSESSION_H  
+
+#include &amp;lt;netinet in.h=&amp;quot;&amp;quot;&amp;gt;
+#include &amp;lt;time.h&amp;gt;
+#include &amp;lt;/time.h&amp;gt;&amp;lt;/netinet&amp;gt;
+
+&amp;lt;map&amp;gt;
+#include &amp;lt;string.h&amp;gt;
+#include &amp;lt;tr1 unordered_map=&amp;quot;&amp;quot;&amp;gt;  //头文件
+#include &amp;lt;iostream&amp;gt;
+
+using namespace std;
+using namespace std::tr1;
+
+struct Terminal
+{
+int             nid ; //id  the key for terminal
+sockaddr_in     addr; //ip  the key for Client
+time_t          tm;   //last alive time
+enTerminalStat  enStat;//status
+Terminal();
+~Terminal();
+Terminal &amp;amp;amp;operator =(const Terminal&amp;amp;amp; term);
+};
+
+struct hash_func  //hash 函数
+{
+size_t operator()(const sockaddr_in &amp;amp;amp;addr) const
+{
+return addr.sin_port*9999 + addr.sin_addr.s_addr;
+}
+};
+struct cmp_fun //比较函数 ==
+{
+bool operator()(const sockaddr_in &amp;amp;amp;addr1, const sockaddr_in &amp;amp;amp;addr2) const
+{
+return memcmp(&amp;amp;amp;addr1, &amp;amp;amp;addr2, sizeof(sockaddr_in)) == 0 ? true:false;
+}
+};
+
+//typedef unordered_map&amp;lt;int,terminal*&amp;gt; MapTerminal; // Terminal socket 作为key
+//typedef unordered_map&amp;lt;int,terminal*&amp;gt;::iterator MapTerminal_It; //  &amp;lt;/int,terminal*&amp;gt;&amp;lt;/int,terminal*&amp;gt;
+
+typedef unordered_map&amp;lt;sockaddr_in, terminal*,hash_func,=&amp;quot;&amp;quot; cmp_fun=&amp;quot;&amp;quot;&amp;gt; MapClientSession; // sockaddr_in作为key
+typedef unordered_map&amp;lt;sockaddr_in, terminal*,hash_func,=&amp;quot;&amp;quot; cmp_fun=&amp;quot;&amp;quot;&amp;gt;::iterator MapClientSession_It; //  &amp;lt;/sockaddr_in,&amp;gt;&amp;lt;/sockaddr_in,&amp;gt;
+
+#endif // CSESSION_H
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;operator==&lt;/code&gt;有两种方式 一种是&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;struct st
+{
+bool operator==(const st &amp;amp;amp;s) const
+...
+}；
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;另一种就是自定义函数体，代码中&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;struct cmp_fun
+{
+bool operator()(...)
+...
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;必须要自定义&lt;code&gt;operator==&lt;/code&gt;和&lt;code&gt;hash_value&lt;/code&gt;。 重载&lt;code&gt;operator==&lt;/code&gt;是因为，如果两个元素的&lt;code&gt;hash_value&lt;/code&gt;的值相同，并不能断定这两个元素就相同，必须再调用&lt;code&gt;operator==&lt;/code&gt;。 当然，如果&lt;code&gt;hash_value&lt;/code&gt;的值不同，就不需要调用&lt;code&gt;operator==&lt;/code&gt;了。&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>unordered_set笔记</title>
+        <link>http://lxb.wiki/14decfad/</link>
+        <pubDate>Thu, 05 Jan 2017 23:14:47 +0000</pubDate>
+        
+        <guid>http://lxb.wiki/14decfad/</guid>
+        <description>&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;http://www.cplusplus.com/reference/unordered_set/unordered_set/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;http://www.cplusplus.com/reference/unordered_set/unordered_set/&lt;/a&gt;&lt;/p&gt;
+&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;&lt;strong&gt;unordered_set&lt;/strong&gt; 模板原型:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;template&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Key&lt;/span&gt;,  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Hash&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; hash&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;key&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Pred&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; equal_to&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;key&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Alloc&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; allocator&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;key&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unordered_set&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;当比较unordered_set中某两个元素时, 先调用&lt;code&gt;hash&amp;lt;key&amp;gt;&lt;/code&gt;, 如果&lt;code&gt;hash&amp;lt;key&amp;gt;&lt;/code&gt;  不相等, 说明两个元素不同, 如果&lt;code&gt;hash&amp;lt;key&amp;gt;&lt;/code&gt; 值相等, 则调用&lt;code&gt;equal_to&amp;lt;key&amp;gt;&lt;/code&gt;, 判断两个元素是否完全相等. (Hash函数和Compare函数都可以自定义)&lt;/p&gt;
+&lt;p&gt;C++ 11中对unordered_set描述大体如下：无序集合容器（unordered_set）是一个存储唯一(unique，即无重复）的关联容器（Associative container），容器中的元素无特别的秩序关系，该容器允许基于值的快速元素检索，同时也支持正向迭代。
+在一个unordered_set内部，元素不会按任何顺序排序，而是通过元素值的hash值将元素分组放置到各个槽(Bucker，也可以译为“桶”），这样就能通过元素值快速访问各个对应的元素（均摊耗时为O（1））。
+原型中的Key代表要存储的类型，而hash&lt;!-- raw HTML omitted --&gt;也就是你的hash函数，equal_to&lt;!-- raw HTML omitted --&gt;用来判断两个元素是否相等，allocator&lt;!-- raw HTML omitted --&gt;是内存的分配策略。一般情况下，我们只关心hash&lt;!-- raw HTML omitted --&gt;和equal_to&lt;!-- raw HTML omitted --&gt;参数，下面将介绍这两部分。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;hash&amp;lt;key&amp;gt;&lt;/code&gt;&lt;/strong&gt;
+&lt;code&gt; hash&amp;lt;key&amp;gt;&lt;/code&gt;通过相应的hash函数，将传入的参数转换为一个size_t类型值，然后用该值对当前hashtable的bucket取模算得其对应的hash值。而C++标准库，为我们提供了基本数据类型的hash函数：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/// Primary class template hash. template struct hash;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/// Partial specializations for pointer types. template struct hash&amp;lt;\_Tp*&amp;gt; : public \_\_hash\_base&amp;lt;size\_t, \_tp*=&amp;#34;&amp;#34;&amp;gt; { size\_t operator()(\_Tp* \_\_p) const noexcept { return reinterpret_cast(__p); } }; &amp;lt;/size_t,&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Explicit specializations for integer types.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;define &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt;_Cxx&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt;_hashtable&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt;_define&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt;_trivial&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt;_hash(&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt;_Tp) \
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;======================================================&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;template&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;hash&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt;_Tp&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt;_&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt;_hash&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt;_base&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;size&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt;_t, &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt;_tp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt; { &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt; size&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt;_t &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;operator&lt;/span&gt;()(&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt;_Tp &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt;_&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt;_val) &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;noexcept&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;static_cast&lt;/span&gt;(__val); } &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&lt;/span&gt; }; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/&lt;/span&gt;size_t,&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/// Explicit specialization for bool. \_Cxx\_hashtable\_define\_trivial_hash(bool)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/// Explicit specialization for char. \_Cxx\_hashtable\_define\_trivial_hash(char)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/// Explicit specialization for signed char. \_Cxx\_hashtable\_define\_trivial_hash(signed char)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/// Explicit specialization for unsigned char. \_Cxx\_hashtable\_define\_trivial_hash(unsigned char)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/// Explicit specialization for wchar\_t. \_Cxx\_hashtable\_define\_trivial\_hash(wchar_t)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/// Explicit specialization for char16\_t. \_Cxx\_hashtable\_define\_trivial\_hash(char16_t)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/// Explicit specialization for char32\_t. \_Cxx\_hashtable\_define\_trivial\_hash(char32_t)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/// Explicit specialization for short. \_Cxx\_hashtable\_define\_trivial_hash(short)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/// Explicit specialization for int. \_Cxx\_hashtable\_define\_trivial_hash(int)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/// Explicit specialization for long. \_Cxx\_hashtable\_define\_trivial_hash(long)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/// Explicit specialization for long long. \_Cxx\_hashtable\_define\_trivial_hash(long long)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/// Explicit specialization for unsigned short. \_Cxx\_hashtable\_define\_trivial_hash(unsigned short)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/// Explicit specialization for unsigned int. \_Cxx\_hashtable\_define\_trivial_hash(unsigned int)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/// Explicit specialization for unsigned long. \_Cxx\_hashtable\_define\_trivial_hash(unsigned long)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/// Explicit specialization for unsigned long long. \_Cxx\_hashtable\_define\_trivial_hash(unsigned long long)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;对于指针类型，标准库只是单一将地址转换为一个size_t值作为hash值，这里特别需要注意的是&lt;code&gt;char *&lt;/code&gt;类型的指针，其标准库提供的hash函数只是将指针所指地址转换为一个sieze_t值，如果，你需要用&lt;code&gt;char *&lt;/code&gt;所指的内容做hash，那么，你需要自己写hash函数或者调用系统提供的&lt;code&gt;hash&amp;lt;string&amp;gt;&lt;/code&gt;。
+标准库为string类型对象提供了一个hash函数，即：Murmur hash，。对于float、double、long double标准库也有相应的hash函数，这里，不做过多的解释，相应的可以参看functional_hash.h头文件。
+上述只是介绍了基本数据类型，而在实际应用中，有时，我们需要使用自己写的hash函数，那怎么自定义hash函数？参考标准库基本数据类型的hash函数，我们会发现这些hash函数有个共同的特点：通过定义函数对象，实现相应的hash函数，这也就意味我们可以通过自定义相应的函数对象，来实现自定义hash函数。比如：已知平面上有N，每个点的x轴、y轴范围为[0，100]，现在需要统计有多少个不同点？hash函数设计为：将每个点的x、y值看成是101进制，如下所示:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;bits\stdc++.h&amp;gt;  &lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;using&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;namespace&lt;/span&gt; std;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;myHash&lt;/span&gt;   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    size_t &lt;span style=&#34;color:#a6e22e&#34;&gt;operator&lt;/span&gt;()(pair&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; __val) &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static_cast&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;size_t&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;(__val.first &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;101&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; __val.second);  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;()  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    unordered_set&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;pair&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;, myHash&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; S;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; x, y;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (cin &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&lt;/span&gt; x &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&lt;/span&gt; y)  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        S.insert(make_pair(x, y));  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;auto&lt;/span&gt; it &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; S.begin(); it &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; S.end(); &lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;it)  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; it&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;first &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; it&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;second &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; endl;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;} 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;&lt;code&gt;equal_to&amp;lt;key&amp;gt;&lt;/code&gt;&lt;/strong&gt;
+该参数用于实现比较两个关键字是否相等，至于为什么需要这个参数？这里做点解释，前面我们说过，当不同关键字，通过hash函数，可能会得到相同的关键字值，每当我们在unordered_set里面做数据插入、删除时，由于unordered_set关键字唯一性，所以我们得确保唯一性。标准库定义了基本类型的比较函数，而对于自定义的数据类型，我们需要自定义比较函数。这里有两种方法:重载==操作符和使用函数对象，下面是STL中实现&lt;code&gt;equal_to&amp;lt;key&amp;gt;&lt;/code&gt;的源代码：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;template&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;typename&lt;/span&gt; _Arg, &lt;span style=&#34;color:#66d9ef&#34;&gt;typename&lt;/span&gt; _Result&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;unary_function&lt;/span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;/// @c argument_type is the type of the argument  
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;      &lt;span style=&#34;color:#66d9ef&#34;&gt;typedef&lt;/span&gt; _Arg  argument_type;     
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;/// @c result_type is the return type  
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;      &lt;span style=&#34;color:#66d9ef&#34;&gt;typedef&lt;/span&gt; _Result   result_type;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    };  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;template&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;typename&lt;/span&gt; _Tp&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;equal_to&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; binary_function&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;_Tp, _Tp, &lt;span style=&#34;color:#66d9ef&#34;&gt;bool&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#66d9ef&#34;&gt;bool&lt;/span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;operator&lt;/span&gt;()(&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; _Tp&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; __x, &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; _Tp&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; __y) &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; __x &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; __y; }  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }; 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;扩容与缩容&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;在vector中，每当我们插入一个新元素时，如果当前的容量（capacity)已不足，需要向系统申请一个更大的空间，然后将原始数据拷贝到新空间中。这种现象在unordered_set中也存在，比如当前的表长为100，而真实存在表中的数据已经大于1000个元素，此时，每个bucker均摊有10个元素，这样就会影响到unordered_set的存取效率，而标准库通过采用某种策略来对当前空间进行扩容，以此来提高存取效率。当然，这里也存在缩容，原理和扩容类似，不过，需要注意的是，每当unordered_set内部进行一次扩容或者缩容，都需要对表中的数据重新计算，也就是说，扩容或者缩容的时间复杂度至少为。&lt;/p&gt;
+&lt;p&gt;code：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;// unordered_set::find
+#include &amp;lt;iostream&amp;gt;
+#include &amp;lt;string&amp;gt;
+#include &amp;lt;unordered_set&amp;gt;  &amp;lt;/unordered_set&amp;gt;&amp;lt;/string&amp;gt;&amp;lt;/iostream&amp;gt;
+
+int main ()
+{
+std::unordered_set&amp;lt;std::string&amp;gt; myset = { &amp;quot;red&amp;quot;,&amp;quot;green&amp;quot;,&amp;quot;blue&amp;quot; };  &amp;lt;/std::string&amp;gt;
+
+std::string input;
+std::cout &amp;amp;lt;&amp;amp;lt; &amp;quot;color? &amp;quot;;  
+  getline (std::cin,input);  
+
+  std::unordered_set&amp;lt;std::string&amp;gt;::const_iterator got = myset.find (input);  &amp;lt;/std::string&amp;gt;
+
+if ( got == myset.end() )
+std::cout &amp;amp;lt;&amp;amp;lt; &amp;quot;not found in myset&amp;quot;;  
+  else  
+    std::cout &amp;amp;lt;&amp;amp;lt; *got &amp;amp;lt;&amp;amp;lt; &amp;quot; is in myset&amp;quot;;  
+
+  std::cout &amp;amp;lt;&amp;amp;lt; std::endl;  
+
+  return 0;  
+}
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>

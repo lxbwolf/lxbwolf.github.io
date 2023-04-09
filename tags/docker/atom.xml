@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>docker on Xiaobin&#39;s Blog</title>
+        <link>http://lxb.wiki/tags/docker/</link>
+        <description>Recent content in docker on Xiaobin&#39;s Blog</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <lastBuildDate>Tue, 23 Jul 2019 17:32:38 +0000</lastBuildDate><atom:link href="http://lxb.wiki/tags/docker/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <title>docker挂载目录失败/权限拒绝</title>
+        <link>http://lxb.wiki/498654c2/</link>
+        <pubDate>Tue, 23 Jul 2019 17:32:38 +0000</pubDate>
+        
+        <guid>http://lxb.wiki/498654c2/</guid>
+        <description>&lt;p&gt;把宿主机的一个目录挂载到容器中的一个目录，当访问容器中的这个目录时，出现如下问题：
+&lt;code&gt;ls: cannot open directory .: Permission denied&lt;/code&gt;
+无法访问目录，权限拒绝。
+该问题通常在centos7下出现。或者一个容器启动成功后，里面的服务无法成功访问，这是因为centos7中的安全模块selinux把权限禁掉了，一般的解决方案有以下两种：
+（1）临时关闭selinux
+直接在centos服务器上执行以下命令即可。执行完成以后建议重新&lt;code&gt;docker run&lt;/code&gt;。 &lt;code&gt;setenforce 0&lt;/code&gt;
+（2）给容器加权限
+在&lt;code&gt;docker run&lt;/code&gt;时给该容器加权限，加上以下参数即可：
+&lt;code&gt;--privileged=true&lt;/code&gt;
+一般都推荐使用这种方式。
+按上述方法修改后, 如果执行下面命令失败
+&lt;code&gt;docker run --name rookie-nginx-test -d -p 8082:80 -v ~/nginx/www:/usr/share/nginx/html -v ~/nginx/conf/nginx.conf:/etc/nginx/nginx.conf -v ~/nginx/logs:/var/log/nginx -v ~/nginx/conf/conf.d:/etc/nginx/conf.d --link php7-fpm:php nginx&lt;/code&gt;
+则是因为&lt;code&gt;~/nginx/www/&lt;/code&gt; 目录下没有index 文件导致. 手动创建&lt;code&gt;index.php&lt;/code&gt; 文件解决&lt;/p&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>

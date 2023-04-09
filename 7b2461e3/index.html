@@ -1,450 +1,373 @@
 <!DOCTYPE html>
-<html lang=zh>
-<head>
-  <meta charset="utf-8">
-  
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
-  <meta name="renderer" content="webkit">
-  <meta http-equiv="Cache-Control" content="no-transform" />
-  <meta http-equiv="Cache-Control" content="no-siteapp" />
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="format-detection" content="telephone=no,email=no,adress=no">
-  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
-  <!-- Color theme for statusbar -->
-  <meta name="theme-color" content="#000000" />
-  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
-  <meta http-equiv="window-target" content="_top" />
-  
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Section1 channel 使用 1.1 make channel 一种是带缓冲的channel一种是不带缓冲的channel。创建方式分别如下： // buffered ch := make(chan Task, 3) // unbuffered ch := make(chan int) buffered channel 如果我们创建一个带'>
+<title>Go channel 原理</title>
 
-  
-  <title>Go channel 原理 | Xiaobin&#39;s Blog</title>
-  <meta name="description" content="Section1 channel 使用 1.1 make channel 1.2 sends and receives   Section2 channel源码 2.1 channel数据存储结构 2.2 环形队列 2.3 等待队列 2.4 类型信息 2.5 锁   Section3 channel读写 3.1 创建channel 3.2 协程向channel写入数据(goroutine s">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Go channel 原理">
-<meta property="og:url" content="https://lxb.wiki/7b2461e3/index.html">
-<meta property="og:site_name" content="Xiaobin&#39;s Blog">
-<meta property="og:description" content="Section1 channel 使用 1.1 make channel 1.2 sends and receives   Section2 channel源码 2.1 channel数据存储结构 2.2 环形队列 2.3 等待队列 2.4 类型信息 2.5 锁   Section3 channel读写 3.1 创建channel 3.2 协程向channel写入数据(goroutine s">
-<meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170000.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170039.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170108.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170236.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170342.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170423.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170525.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170644.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173326.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173420.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173537.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173614.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173709.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173855.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173959.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312174357.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312174513.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312175238.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312175356.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312175531.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312175628.png">
-<meta property="article:published_time" content="2021-11-10T13:56:56.000Z">
-<meta property="article:modified_time" content="2023-02-18T02:03:17.772Z">
-<meta property="article:author" content="Xiaobin.Liu">
-<meta property="article:tag" content="go">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170000.png">
-  <!-- Canonical links  把后面的 index.html 去掉-->
-  <link rel="canonical" href="https://lxb.wiki/7b2461e3/">
-  
-    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
-  
-  
-    <link rel="icon" href="/favicon.png" type="image/x-icon">
-  
-  
-<link rel="stylesheet" href="/css/style.css">
+<link rel='canonical' href='http://lxb.wiki/7b2461e3/'>
 
-  
-  
-  
-  
+<link rel="stylesheet" href="/scss/style.min.bc5bb6e306c354a2f5d5bfd1e65a5f3996962fb9b4a3546b748aee7daee4f258.css"><meta property='og:title' content='Go channel 原理'>
+<meta property='og:description' content='Section1 channel 使用 1.1 make channel 一种是带缓冲的channel一种是不带缓冲的channel。创建方式分别如下： // buffered ch := make(chan Task, 3) // unbuffered ch := make(chan int) buffered channel 如果我们创建一个带'>
+<meta property='og:url' content='http://lxb.wiki/7b2461e3/'>
+<meta property='og:site_name' content='Xiaobin&#39;s Blog'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='go' /><meta property='article:published_time' content='2021-11-10T21:56:56&#43;00:00'/><meta property='article:modified_time' content='2021-11-10T21:56:56&#43;00:00'/>
+<meta name="twitter:title" content="Go channel 原理">
+<meta name="twitter:description" content="Section1 channel 使用 1.1 make channel 一种是带缓冲的channel一种是不带缓冲的channel。创建方式分别如下： // buffered ch := make(chan Task, 3) // unbuffered ch := make(chan int) buffered channel 如果我们创建一个带">
+<link rel="shortcut icon" href="/favicon.png" />
 
-    <!-- google adsense -->
-    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
+<script data-ad-client="ca-pub-5708899526501350" async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-JZ2PWLT6JY');
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
 
-      gtag('config', 'G-JZ2PWLT6JY');
-    </script>
-<meta name="generator" content="Hexo 6.0.0"></head>
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
 
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
 
-<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
-  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-  <div class="slimContent">
-    <div class="navbar-header">
-      
-      
-      <div class="profile-block text-center">
-        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
-          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
-        </a>
-        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin.Liu</h2>
-        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
-        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
-      </div>
-      
-      <div class="search" id="search-form-wrap">
-
-    <form class="search-form sidebar-form">
-        <div class="input-group">
-            <input type="text" class="search-form-input form-control" placeholder="搜索" />
-            <span class="input-group-btn">
-                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
-            </span>
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
+                            height="298" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">Xiaobin&#39;s Blog</a></h1>
+            <h2 class="site-description"></h2>
         </div>
-    </form>
-    <div class="ins-search">
-  <div class="ins-search-mask"></div>
-  <div class="ins-search-container">
-    <div class="ins-input-wrapper">
-      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
-      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
-    </div>
-    <div class="ins-section-wrapper">
-      <div class="ins-section-container"></div>
-    </div>
-  </div>
-</div>
-
-
-</div>
-      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-    </div>
-    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
-      <ul class="nav navbar-nav main-nav menu-highlight">
+    </header><ol class="menu" id="main-menu">
         
         
-        <li class="menu-item menu-item-home">
-          <a href="/.">
-            
-            <i class="icon icon-home-fill"></i>
-            
-            <span class="menu-title">首页</span>
-          </a>
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-archives">
-          <a href="/archives">
-            
-            <i class="icon icon-archives-fill"></i>
-            
-            <span class="menu-title">归档</span>
-          </a>
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                <span>归档</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-categories">
-          <a href="/categories">
-            
-            <i class="icon icon-folder"></i>
-            
-            <span class="menu-title">分类</span>
-          </a>
+        <li >
+            <a href='/categories/' >
+                
+                
+                
+                <span>分类</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-tags">
-          <a href="/tags">
-            
-            <i class="icon icon-tags"></i>
-            
-            <span class="menu-title">标签</span>
-          </a>
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>标签</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-links">
-          <a href="/links">
-            
-            <i class="icon icon-friendship"></i>
-            
-            <span class="menu-title">友链</span>
-          </a>
+        <li >
+            <a href='/links/' >
+                
+                
+                
+                <span>友链</span>
+            </a>
         </li>
         
-        
-        <li class="menu-item menu-item-about">
-          <a href="/about">
+
+        <div class="menu-bottom-section">
             
-            <i class="icon icon-cup-fill"></i>
             
-            <span class="menu-title">关于</span>
-          </a>
-        </li>
-        
-      </ul>
-      
-	
-    <ul class="social-links">
-    	
-        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
-        
-        <li><a href="mailto:me@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
-        
-        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
-        
-    </ul>
-
-    </nav>
-  </div>
-</header>
-
-  
-    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
-  <div class="slimContent">
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">分类</h3>
-    <div class="widget-body">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">48</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">22</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">28</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">18</span></li></ul>
-    </div>
-  </div>
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
 
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">标签云</h3>
-    <div class="widget-body tagcloud">
-      <a href="/tags/GitHub/" style="font-size: 13.09px;">GitHub</a> <a href="/tags/STL/" style="font-size: 13.45px;">STL</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.27px;">blog</a> <a href="/tags/c/" style="font-size: 13.64px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.09px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.09px;">devops</a> <a href="/tags/docker/" style="font-size: 13px;">docker</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.36px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.18px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.09px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.18px;">hexo</a> <a href="/tags/http/" style="font-size: 13.36px;">http</a> <a href="/tags/joplin/" style="font-size: 13.09px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/mac/" style="font-size: 13.27px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.09px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.18px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.36px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.18px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.18px;">pic</a> <a href="/tags/qt/" style="font-size: 13.36px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.55px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.91px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.09px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/zk/" style="font-size: 13.09px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.45px;">工具</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.73px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.45px;">树莓派</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.55px;">算法</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.82px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.09px;">邮件</a>
-    </div>
-  </div>
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">归档</h3>
-    <div class="widget-body">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
-    </div>
-  </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
 
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">最新文章</h3>
-    <div class="widget-body">
-      <ul class="recent-post-list list-unstyled no-thumbnail">
-        
-          <li>
+
+                    <span>暗色模式</span>
+                </li>
             
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Design/">Design</a>
-              </p>
-              <p class="item-title">
-                <a href="/12428ad2/" class="title">【译】构建高效的 DevOps 文化的 6 个技巧</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2023-01-30T13:58:33.000Z" itemprop="datePublished">2023-01-30</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Web/">Web</a>
-              </p>
-              <p class="item-title">
-                <a href="/a258db2c/" class="title">【译】域名末尾带个点</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-11-16T14:20:00.000Z" itemprop="datePublished">2022-11-16</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Tools/">Tools</a>
-              </p>
-              <p class="item-title">
-                <a href="/690c8418/" class="title">【译】10大静态网站生成工具</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-10-02T10:26:55.000Z" itemprop="datePublished">2022-10-02</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Tools/">Tools</a>
-              </p>
-              <p class="item-title">
-                <a href="/62afdbe0/" class="title">mermaid画流程图语法</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-06-20T12:34:38.000Z" itemprop="datePublished">2022-06-20</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Linux/">Linux</a>
-              </p>
-              <p class="item-title">
-                <a href="/f54357bf/" class="title">流编辑器sed</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-06-10T14:28:34.000Z" itemprop="datePublished">2022-06-10</time>
-              </p>
-            </div>
-          </li>
-          
-      </ul>
-    </div>
-  </div>
-  
-
-    
-  </div>
+        </div>
+    </ol>
 </aside>
 
-  
-  
-<main class="main" role="main">
-  <div class="content">
-  <article id="post-Go-channel-原理" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+<section class="widget archives">
     
-    <div class="article-header">
-      
-        
-  
-    <h1 class="article-title" itemprop="name">
-      Go channel 原理
-    </h1>
-  
+    <h2 class="widget-title section-title">目录</h2>
 
-      
-      <div class="article-meta">
-        <span class="article-date">
-    <i class="icon icon-calendar-check"></i>
-	<a href="/7b2461e3/" class="article-date">
-	  <time datetime="2021-11-10T13:56:56.000Z" itemprop="datePublished">2021-11-10</time>
-	</a>
-</span>
-        
-  <span class="article-category">
-    <i class="icon icon-folder"></i>
-    <a class="article-category-link" href="/categories/Lang/">Lang</a>
-  </span>
+    <div class="widget--toc">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#11-make-channel">1.1 make channel</a></li>
+    <li><a href="#12-sends-and-receives">1.2 sends and receives</a></li>
+  </ul>
 
-        
-  <span class="article-tag">
-    <i class="icon icon-tags"></i>
-	<a class="article-tag-link-link" href="/tags/go/" rel="tag">go</a>
-  </span>
+  <ul>
+    <li><a href="#21-channel数据存储结构">2.1 channel数据存储结构</a></li>
+    <li><a href="#22-环形队列">2.2 环形队列</a></li>
+    <li><a href="#23-等待队列">2.3 等待队列</a></li>
+    <li><a href="#24-类型信息">2.4 类型信息</a></li>
+    <li><a href="#25-锁">2.5 锁</a></li>
+  </ul>
 
+  <ul>
+    <li><a href="#31-创建channel">3.1 创建channel</a></li>
+    <li><a href="#32-协程向channel写入数据goroutine-sender-data">3.2 协程向channel写入数据(goroutine sender data)</a></li>
+    <li><a href="#33-协程从channel接收数据goroutine-receive-data">3.3 协程从channel接收数据(goroutine receive data)</a></li>
+    <li><a href="#34-关闭channel">3.4 关闭channel</a></li>
+  </ul>
 
-<!--        
- -->
-        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/7b2461e3/#comments" class="article-comment-link">评论</a></span> 
-        
-	
-		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 4.1k(字)</span>
-	
-	
-		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 16(分)</span>
-	
-
-      </div>
+  <ul>
+    <li><a href="#41-单向channel">4.1 单向channel</a></li>
+    <li><a href="#42-select">4.2 select</a></li>
+    <li><a href="#43-range">4.3 range</a></li>
+  </ul>
+</nav>
     </div>
-    <div class="article-entry marked-body" itemprop="articleBody">
-      
-        <!-- toc -->
+</section>
 
-<ul>
-<li><a href="#section1-channel-使用">Section1 channel 使用</a><ul>
-<li><a href="#11-make-channel">1.1 make channel</a></li>
-<li><a href="#12-sends-and-receives">1.2 sends and receives</a></li>
-</ul>
-</li>
-<li><a href="#section2-channel源码">Section2 channel源码</a><ul>
-<li><a href="#21-channel数据存储结构">2.1 channel数据存储结构</a></li>
-<li><a href="#22-环形队列">2.2 环形队列</a></li>
-<li><a href="#23-等待队列">2.3 等待队列</a></li>
-<li><a href="#24-类型信息">2.4 类型信息</a></li>
-<li><a href="#25-锁">2.5 锁</a></li>
-</ul>
-</li>
-<li><a href="#section3-channel读写">Section3 channel读写</a><ul>
-<li><a href="#31-创建channel">3.1 创建channel</a></li>
-<li><a href="#32-协程向channel写入数据goroutine-sender-data">3.2 协程向channel写入数据(goroutine sender data)</a></li>
-<li><a href="#33-协程从channel接收数据goroutine-receive-data">3.3 协程从channel接收数据(goroutine receive data)</a></li>
-<li><a href="#34-关闭channel">3.4 关闭channel</a></li>
-</ul>
-</li>
-<li><a href="#section4-常见用法">Section4 常见用法</a><ul>
-<li><a href="#41-单向channel">4.1 单向channel</a></li>
-<li><a href="#42-select">4.2 select</a></li>
-<li><a href="#43-range">4.3 range</a></li>
-</ul>
-</li>
-</ul>
-<!-- tocstop -->
+            
+        
+    </aside>
 
-<h1><span id="section1-channel-使用">Section1 channel 使用</span></h1><h2><span id="11-make-channel">1.1 make channel</span></h2><p>一种是带缓冲的channel一种是不带缓冲的channel。创建方式分别如下：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// buffered</span></span><br><span class="line">ch := <span class="built_in">make</span>(<span class="keyword">chan</span> Task, <span class="number">3</span>)</span><br><span class="line"><span class="comment">// unbuffered</span></span><br><span class="line">ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>)</span><br></pre></td></tr></table></figure>
 
-<p><strong>buffered channel</strong></p>
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+        <a href="/categories/Lang/" >
+            Lang
+        </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/7b2461e3/">Go channel 原理</a>
+        </h2>
+
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+            <time class="article-time--published">Nov 10, 2021</time>
+        </div>
+        
+
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+            <time class="article-time--reading">
+                阅读时长: 13 分钟
+            </time>
+        </div>
+        
+        <small>
+    <section class="article-tags">
+        
+            <a href="/tags/go/">go</a>
+        
+    </section>
+</small>
+    </footer>
+    
+
+    
+</div>
+</header>
+
+    <section class="article-content">
+    
+    
+    <!-- raw HTML omitted -->
+<h1 id="section1-channel-使用">Section1 channel 使用</h1>
+<h2 id="11-make-channel">1.1 make channel</h2>
+<p>一种是带缓冲的channel一种是不带缓冲的channel。创建方式分别如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// buffered
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">ch</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">Task</span>, <span style="color:#ae81ff">3</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// unbuffered
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">ch</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>)
+</span></span></code></pre></div><p><strong>buffered channel</strong></p>
 <p>如果我们创建一个带buffer的channel，底层的数据模型如下图：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170000.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170000.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>当我们向channel里面写入数据时候，会直接把数据存入circular queue(send)。当Queue存满了之后就会是如下的状态：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170039.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170039.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>当dequeue一个元素时候，如下所示：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170108.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170108.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>从上图可知，recvx自增加一，表示出队了一个元素，其实也就是循环数组实现FIFO语义。</p>
 <p>那么还有一个问题，当我们新建channel的时候，底层创建的hchan数据结构是在哪里分配内存的呢？其实Section2里面源码分析时候已经做了分析，hchan是在heap里面分配的。</p>
 <p>如下图所示：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170236.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170236.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>当我们使用make去创建一个channel的时候，实际上返回的是一个指向channel的pointer，所以我们能够在不同的function之间直接传递channel对象，而不用通过指向channel的指针。</p>
-<h2><span id="12-sends-and-receives">1.2 sends and receives</span></h2><p>不同goroutine在channel上面进行读写时，涉及到的过程比较复杂，比如下图：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170342.png" alt></p>
+<h2 id="12-sends-and-receives">1.2 sends and receives</h2>
+<p>不同goroutine在channel上面进行读写时，涉及到的过程比较复杂，比如下图：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170342.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>上图中G1会往channel里面写入数据，G2会从channel里面读取数据。</p>
 <p>G1作用于底层hchan的流程如下图：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170423.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170423.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <ol>
 <li>先获取全局锁；</li>
 <li>然后enqueue元素(通过移动拷贝的方式)；</li>
 <li>释放锁；</li>
 </ol>
 <p>G2读取时候作用于底层数据结构流程如下图所示：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170525.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170525.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <ol>
 <li>先获取全局锁；</li>
 <li>然后dequeue元素(通过移动拷贝的方式)；</li>
@@ -453,20 +376,67 @@
 <p>上面的读写思路其实很简单，除了hchan数据结构外，不要通过共享内存去通信；而是通过通信(复制)实现共享内存。</p>
 <p><strong>写入满channel的场景</strong></p>
 <p>如下图所示：channel写入3个task之后队列已经满了，这时候G1再写入第四个task的时候会发生什么呢？</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170644.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312170644.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>G1这时候会暂停直到出现一个receiver。</p>
 <p>这个地方需要介绍一下Golang的scheduler的。我们知道goroutine是用户空间的线程，创建和管理协程都是通过Go的runtime，而不是通过OS的thread。</p>
-<p>但是Go的runtime调度执行goroutine却是基于OS thread的。如下图：<br><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173326.png" alt></p>
+<p>但是Go的runtime调度执行goroutine却是基于OS thread的。如下图：
+<img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173326.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>当向已经满的channel里面写入数据时候，会发生什么呢？如下图：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173420.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173420.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>上图流程大概如下：</p>
-<p>当前goroutine（G1）会调用gopark函数，将当前协程置为waiting状态；<br>将M和G1绑定关系断开；<br>scheduler会调度另外一个就绪态的goroutine与M建立绑定关系，然后M 会运行另外一个G。<br>所以整个过程中，OS thread会一直处于运行状态，不会因为协程G1的阻塞而阻塞。最后当前的G1的引用会存入channel的sender队列(队列元素是持有G1的sudog)。</p>
+<p>当前goroutine（G1）会调用gopark函数，将当前协程置为waiting状态；
+将M和G1绑定关系断开；
+scheduler会调度另外一个就绪态的goroutine与M建立绑定关系，然后M 会运行另外一个G。
+所以整个过程中，OS thread会一直处于运行状态，不会因为协程G1的阻塞而阻塞。最后当前的G1的引用会存入channel的sender队列(队列元素是持有G1的sudog)。</p>
 <p>那么blocked的G1怎么恢复呢？<strong>当有一个receiver接收channel数据的时候，会恢复 G1。</strong></p>
-<p>实际上hchan数据结构也存储了channel的sender和receiver的等待队列。数据原型如下：<br><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173537.png" alt></p>
+<p>实际上hchan数据结构也存储了channel的sender和receiver的等待队列。数据原型如下：
+<img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173537.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>等待队列里面是sudog的单链表，sudog持有一个G代表goroutine对象引用，elem代表channel里面保存的元素。当G1执行<code>ch&lt;-task4</code>的时候，G1会创建一个sudog然后保存进入sendq队列，实际上hchan结构如下图：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173614.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173614.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>这个时候，如果G2进行一个读取channel操作，读取前和读取后的变化图如下图：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173709.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173709.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>整个过程如下：</p>
 <ol>
 <li>G2调用 t:=&lt;-ch 获取一个元素；</li>
@@ -476,7 +446,14 @@
 <li>这时候需要将G1置为Runable状态，表示G1可以恢复运行；</li>
 </ol>
 <p>这个时候将G1恢复到可运行状态需要scheduler的参与。G2会调用goready(G1)来唤醒G1。流程如下图所示：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173855.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173855.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <ol>
 <li>首先G2会调用goready(G1)，唤起scheduler的调度；</li>
 <li>将G1设置成Runable状态；</li>
@@ -484,26 +461,83 @@
 </ol>
 <p><strong>读取空channel的场景</strong></p>
 <p>当channel的buffer里面为空时，这时候如果G2首先发起了读取操作。如下图：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173959.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312173959.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>会创建一个sudog，将代表G2的sudog存入recvq等待队列。然后G2会调用gopark函数进入等待状态，让出OS thread，然后G2进入阻塞态。</p>
 <p>这个时候，如果有一个G1执行写入操作，最直观的流程就是：</p>
 <ol>
-<li><p>将recvq中的task存入buffer；</p>
+<li>
+<p>将recvq中的task存入buffer；</p>
 </li>
-<li><p>goready(G2) 唤醒G2；</p>
+<li>
+<p>goready(G2) 唤醒G2；</p>
+<p><strong>但是</strong>我们有更加智能的方法：direct send; 其实也就是G1直接把数据写入到G2中的elem中，这样就不用走G2中的elem复制到buffer中，再从buffer复制给G1。如下图：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312174123.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>具体过程就是G1直接把数据写入到G2的栈中。这样 G2 不需要去获取channel的全局锁和操作缓冲。</p>
 </li>
 </ol>
-<pre><code>**但是**我们有更加智能的方法：direct send; 其实也就是G1直接把数据写入到G2中的elem中，这样就不用走G2中的elem复制到buffer中，再从buffer复制给G1。如下图：
-
-![](https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312174123.png)
-
-具体过程就是G1直接把数据写入到G2的栈中。这样 G2 不需要去获取channel的全局锁和操作缓冲。</code></pre><h1><span id="section2-channel源码">Section2 channel源码</span></h1><h2><span id="21-channel数据存储结构">2.1 channel数据存储结构</span></h2><p>在源码<code>runtime/chan.go</code> 里面定义了channel的数据模型，channel可以理解成一个缓冲队列，这个缓冲队列用来存储元素，并且提供FIFO的语义。源码如下：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> hchan <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">//channel队列里面总的数据量</span></span><br><span class="line">	qcount   <span class="type">uint</span>           <span class="comment">// total data in the queue</span></span><br><span class="line">	<span class="comment">// 循环队列的容量，如果是非缓冲的channel就是0</span></span><br><span class="line">	dataqsiz <span class="type">uint</span>           <span class="comment">// size of the circular queue</span></span><br><span class="line">	<span class="comment">// 缓冲队列，数组类型。</span></span><br><span class="line">	buf      unsafe.Pointer <span class="comment">// points to an array of dataqsiz elements</span></span><br><span class="line">	<span class="comment">// 元素占用字节的size</span></span><br><span class="line">	elemsize <span class="type">uint16</span></span><br><span class="line">	<span class="comment">// 当前队列关闭标志位，非零表示关闭</span></span><br><span class="line">	closed   <span class="type">uint32</span></span><br><span class="line">	<span class="comment">// 队列里面元素类型</span></span><br><span class="line">	elemtype *_type <span class="comment">// element type</span></span><br><span class="line">	<span class="comment">// 队列send索引</span></span><br><span class="line">	sendx    <span class="type">uint</span>   <span class="comment">// send index</span></span><br><span class="line">	<span class="comment">// 队列索引</span></span><br><span class="line">	recvx    <span class="type">uint</span>   <span class="comment">// receive index</span></span><br><span class="line">	<span class="comment">// 等待channel的G队列。</span></span><br><span class="line">	recvq    waitq  <span class="comment">// list of recv waiters</span></span><br><span class="line">	<span class="comment">// 向channel发送数据的G队列。</span></span><br><span class="line">	sendq    waitq  <span class="comment">// list of send waiters</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// lock protects all fields in hchan, as well as several</span></span><br><span class="line">	<span class="comment">// fields in sudogs blocked on this channel.</span></span><br><span class="line">	<span class="comment">//</span></span><br><span class="line">	<span class="comment">// Do not change another G&#x27;s status while holding this lock</span></span><br><span class="line">	<span class="comment">// (in particular, do not ready a G), as this can deadlock</span></span><br><span class="line">	<span class="comment">// with stack shrinking.</span></span><br><span class="line">	<span class="comment">// 全局锁</span></span><br><span class="line">	lock mutex</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>channel的数据结构相对比较简单，主要是两个结构：<br>1）一个数组实现的环形队列，数组有两个下标索引分别表示读写的索引，用于保存channel缓冲区数据。<br>2）channel的send和recv队列，队列里面都是持有goroutine的sudog元素，队列都是双链表实现的。<br>3）channel的全局锁。</p>
-<h2><span id="22-环形队列">2.2 环形队列</span></h2><p>chan内部实现了一个环形队列作为其缓冲区，队列的长度是创建chan时指定的。</p>
+<h1 id="section2-channel源码">Section2 channel源码</h1>
+<h2 id="21-channel数据存储结构">2.1 channel数据存储结构</h2>
+<p>在源码<code>runtime/chan.go</code> 里面定义了channel的数据模型，channel可以理解成一个缓冲队列，这个缓冲队列用来存储元素，并且提供FIFO的语义。源码如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">hchan</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//channel队列里面总的数据量
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">qcount</span>   <span style="color:#66d9ef">uint</span>           <span style="color:#75715e">// total data in the queue
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 循环队列的容量，如果是非缓冲的channel就是0
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">dataqsiz</span> <span style="color:#66d9ef">uint</span>           <span style="color:#75715e">// size of the circular queue
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 缓冲队列，数组类型。
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">buf</span>      <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span> <span style="color:#75715e">// points to an array of dataqsiz elements
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 元素占用字节的size
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">elemsize</span> <span style="color:#66d9ef">uint16</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 当前队列关闭标志位，非零表示关闭
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">closed</span>   <span style="color:#66d9ef">uint32</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 队列里面元素类型
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">elemtype</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">_type</span> <span style="color:#75715e">// element type
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 队列send索引
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">sendx</span>    <span style="color:#66d9ef">uint</span>   <span style="color:#75715e">// send index
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 队列索引
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">recvx</span>    <span style="color:#66d9ef">uint</span>   <span style="color:#75715e">// receive index
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 等待channel的G队列。
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">recvq</span>    <span style="color:#a6e22e">waitq</span>  <span style="color:#75715e">// list of recv waiters
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 向channel发送数据的G队列。
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">sendq</span>    <span style="color:#a6e22e">waitq</span>  <span style="color:#75715e">// list of send waiters
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// lock protects all fields in hchan, as well as several
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// fields in sudogs blocked on this channel.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Do not change another G&#39;s status while holding this lock
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// (in particular, do not ready a G), as this can deadlock
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// with stack shrinking.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 全局锁
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">lock</span> <span style="color:#a6e22e">mutex</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>channel的数据结构相对比较简单，主要是两个结构：
+1）一个数组实现的环形队列，数组有两个下标索引分别表示读写的索引，用于保存channel缓冲区数据。
+2）channel的send和recv队列，队列里面都是持有goroutine的sudog元素，队列都是双链表实现的。
+3）channel的全局锁。</p>
+<h2 id="22-环形队列">2.2 环形队列</h2>
+<p>chan内部实现了一个环形队列作为其缓冲区，队列的长度是创建chan时指定的。</p>
 <p>下图展示了一个可缓存6个元素的channel示意图：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312174357.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312174357.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <ul>
 <li>dataqsiz指示了队列长度为6，即可缓存6个元素；</li>
 <li>buf指向队列的内存，队列中还剩余两个元素；</li>
@@ -511,27 +545,85 @@
 <li>sendx指示后续写入的数据存储的位置，取值[0, 6)；</li>
 <li>recvx指示从该位置读取数据, 取值[0, 6)；</li>
 </ul>
-<h2><span id="23-等待队列">2.3 等待队列</span></h2><p>从channel读数据，如果channel缓冲区为空或者没有缓冲区，当前goroutine会被阻塞。<br>向channel写数据，如果channel缓冲区已满或者没有缓冲区，当前goroutine会被阻塞。</p>
+<h2 id="23-等待队列">2.3 等待队列</h2>
+<p>从channel读数据，如果channel缓冲区为空或者没有缓冲区，当前goroutine会被阻塞。
+向channel写数据，如果channel缓冲区已满或者没有缓冲区，当前goroutine会被阻塞。</p>
 <p>被阻塞的goroutine将会挂在channel的等待队列中：</p>
 <ul>
 <li>因读阻塞的goroutine会被向channel写入数据的goroutine唤醒；</li>
 <li>因写阻塞的goroutine会被从channel读数据的goroutine唤醒；</li>
 </ul>
 <p>下图展示了一个没有缓冲区的channel，有几个goroutine阻塞等待读数据：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312174513.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312174513.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>注意，一般情况下recvq和sendq至少有一个为空。只有一个例外，那就是同一个goroutine使用select语句向channel一边写数据，一边读数据。</p>
-<h2><span id="24-类型信息">2.4 类型信息</span></h2><p>一个channel只能传递一种类型的值，类型信息存储在hchan数据结构中。</p>
+<h2 id="24-类型信息">2.4 类型信息</h2>
+<p>一个channel只能传递一种类型的值，类型信息存储在hchan数据结构中。</p>
 <ul>
 <li>elemtype代表类型，用于数据传递过程中的赋值；</li>
 <li>elemsize代表类型大小，用于在buf中定位元素位置。</li>
 </ul>
-<h2><span id="25-锁">2.5 锁</span></h2><p>一个channel同时仅允许被一个goroutine读写，为简单起见，本章后续部分说明读写过程时不再涉及加锁和解锁。</p>
-<h1><span id="section3-channel读写">Section3 channel读写</span></h1><h2><span id="31-创建channel">3.1 创建channel</span></h2><p>我们新建一个channel的时候一般使用 <code>make(chan, n)</code> 语句，这个语句的执行编译器会重写然后执行 chan.go里面的 makechan函数。函数源码如下：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">makechan</span><span class="params">(t *chantype, size <span class="type">int</span>)</span></span> *hchan &#123;</span><br><span class="line">	elem := t.elem</span><br><span class="line"></span><br><span class="line">	<span class="comment">// compiler checks this but be safe.</span></span><br><span class="line">	<span class="keyword">if</span> elem.size &gt;= <span class="number">1</span>&lt;&lt;<span class="number">16</span> &#123;</span><br><span class="line">		throw(<span class="string">&quot;makechan: invalid channel element type&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> hchanSize%maxAlign != <span class="number">0</span> || elem.align &gt; maxAlign &#123;</span><br><span class="line">		throw(<span class="string">&quot;makechan: bad alignment&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> size &lt; <span class="number">0</span> || <span class="type">uintptr</span>(size) &gt; maxSliceCap(elem.size) || <span class="type">uintptr</span>(size)*elem.size &gt; maxAlloc-hchanSize &#123;</span><br><span class="line">		<span class="built_in">panic</span>(plainError(<span class="string">&quot;makechan: size out of range&quot;</span>))</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Hchan does not contain pointers interesting for GC when elements stored in buf do not contain pointers.</span></span><br><span class="line">	<span class="comment">// buf points into the same allocation, elemtype is persistent.</span></span><br><span class="line">	<span class="comment">// SudoG&#x27;s are referenced from their owning thread so they can&#x27;t be collected.</span></span><br><span class="line">	<span class="comment">// TODO(dvyukov,rlh): Rethink when collector can move allocated objects.</span></span><br><span class="line">	<span class="keyword">var</span> c *hchan</span><br><span class="line">	<span class="keyword">switch</span> &#123;</span><br><span class="line">	<span class="keyword">case</span> size == <span class="number">0</span> || elem.size == <span class="number">0</span>:</span><br><span class="line">		<span class="comment">// Queue or element size is zero.</span></span><br><span class="line">		c = (*hchan)(mallocgc(hchanSize, <span class="literal">nil</span>, <span class="literal">true</span>))</span><br><span class="line">		<span class="comment">// Race detector uses this location for synchronization.</span></span><br><span class="line">		c.buf = unsafe.Pointer(c)</span><br><span class="line">	<span class="keyword">case</span> elem.kind&amp;kindNoPointers != <span class="number">0</span>:</span><br><span class="line">		<span class="comment">// Elements do not contain pointers.</span></span><br><span class="line">		<span class="comment">// Allocate hchan and buf in one call.</span></span><br><span class="line">		c = (*hchan)(mallocgc(hchanSize+<span class="type">uintptr</span>(size)*elem.size, <span class="literal">nil</span>, <span class="literal">true</span>))</span><br><span class="line">		c.buf = add(unsafe.Pointer(c), hchanSize)</span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		<span class="comment">// Elements contain pointers.</span></span><br><span class="line">		c = <span class="built_in">new</span>(hchan)</span><br><span class="line">		c.buf = mallocgc(<span class="type">uintptr</span>(size)*elem.size, elem, <span class="literal">true</span>)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	c.elemsize = <span class="type">uint16</span>(elem.size)</span><br><span class="line">	c.elemtype = elem</span><br><span class="line">	c.dataqsiz = <span class="type">uint</span>(size)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> debugChan &#123;</span><br><span class="line">		<span class="built_in">print</span>(<span class="string">&quot;makechan: chan=&quot;</span>, c, <span class="string">&quot;; elemsize=&quot;</span>, elem.size, <span class="string">&quot;; elemalg=&quot;</span>, elem.alg, <span class="string">&quot;; dataqsiz=&quot;</span>, size, <span class="string">&quot;\n&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> c</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>函数接收两个参数，一个是channel里面保存的元素的数据类型，一个是缓冲的容量(如果为0表示是非缓冲buffer)，创建流程如下：</p>
+<h2 id="25-锁">2.5 锁</h2>
+<p>一个channel同时仅允许被一个goroutine读写，为简单起见，本章后续部分说明读写过程时不再涉及加锁和解锁。</p>
+<h1 id="section3-channel读写">Section3 channel读写</h1>
+<h2 id="31-创建channel">3.1 创建channel</h2>
+<p>我们新建一个channel的时候一般使用 <code>make(chan, n)</code> 语句，这个语句的执行编译器会重写然后执行 chan.go里面的 makechan函数。函数源码如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">makechan</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">chantype</span>, <span style="color:#a6e22e">size</span> <span style="color:#66d9ef">int</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">hchan</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">elem</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">elem</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// compiler checks this but be safe.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">elem</span>.<span style="color:#a6e22e">size</span> <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">16</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">throw</span>(<span style="color:#e6db74">&#34;makechan: invalid channel element type&#34;</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">hchanSize</span><span style="color:#f92672">%</span><span style="color:#a6e22e">maxAlign</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">elem</span>.<span style="color:#a6e22e">align</span> &gt; <span style="color:#a6e22e">maxAlign</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">throw</span>(<span style="color:#e6db74">&#34;makechan: bad alignment&#34;</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">size</span> &lt; <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> uintptr(<span style="color:#a6e22e">size</span>) &gt; <span style="color:#a6e22e">maxSliceCap</span>(<span style="color:#a6e22e">elem</span>.<span style="color:#a6e22e">size</span>) <span style="color:#f92672">||</span> uintptr(<span style="color:#a6e22e">size</span>)<span style="color:#f92672">*</span><span style="color:#a6e22e">elem</span>.<span style="color:#a6e22e">size</span> &gt; <span style="color:#a6e22e">maxAlloc</span><span style="color:#f92672">-</span><span style="color:#a6e22e">hchanSize</span> {
+</span></span><span style="display:flex;"><span>		panic(<span style="color:#a6e22e">plainError</span>(<span style="color:#e6db74">&#34;makechan: size out of range&#34;</span>))
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Hchan does not contain pointers interesting for GC when elements stored in buf do not contain pointers.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// buf points into the same allocation, elemtype is persistent.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// SudoG&#39;s are referenced from their owning thread so they can&#39;t be collected.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// TODO(dvyukov,rlh): Rethink when collector can move allocated objects.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">c</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">hchan</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">switch</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">size</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">elem</span>.<span style="color:#a6e22e">size</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// Queue or element size is zero.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">c</span> = (<span style="color:#f92672">*</span><span style="color:#a6e22e">hchan</span>)(<span style="color:#a6e22e">mallocgc</span>(<span style="color:#a6e22e">hchanSize</span>, <span style="color:#66d9ef">nil</span>, <span style="color:#66d9ef">true</span>))
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// Race detector uses this location for synchronization.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">buf</span> = <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>(<span style="color:#a6e22e">c</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">elem</span>.<span style="color:#a6e22e">kind</span><span style="color:#f92672">&amp;</span><span style="color:#a6e22e">kindNoPointers</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// Elements do not contain pointers.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#75715e">// Allocate hchan and buf in one call.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">c</span> = (<span style="color:#f92672">*</span><span style="color:#a6e22e">hchan</span>)(<span style="color:#a6e22e">mallocgc</span>(<span style="color:#a6e22e">hchanSize</span><span style="color:#f92672">+</span>uintptr(<span style="color:#a6e22e">size</span>)<span style="color:#f92672">*</span><span style="color:#a6e22e">elem</span>.<span style="color:#a6e22e">size</span>, <span style="color:#66d9ef">nil</span>, <span style="color:#66d9ef">true</span>))
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">buf</span> = <span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>(<span style="color:#a6e22e">c</span>), <span style="color:#a6e22e">hchanSize</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">default</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// Elements contain pointers.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">c</span> = new(<span style="color:#a6e22e">hchan</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">buf</span> = <span style="color:#a6e22e">mallocgc</span>(uintptr(<span style="color:#a6e22e">size</span>)<span style="color:#f92672">*</span><span style="color:#a6e22e">elem</span>.<span style="color:#a6e22e">size</span>, <span style="color:#a6e22e">elem</span>, <span style="color:#66d9ef">true</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">elemsize</span> = uint16(<span style="color:#a6e22e">elem</span>.<span style="color:#a6e22e">size</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">elemtype</span> = <span style="color:#a6e22e">elem</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">dataqsiz</span> = uint(<span style="color:#a6e22e">size</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">debugChan</span> {
+</span></span><span style="display:flex;"><span>		print(<span style="color:#e6db74">&#34;makechan: chan=&#34;</span>, <span style="color:#a6e22e">c</span>, <span style="color:#e6db74">&#34;; elemsize=&#34;</span>, <span style="color:#a6e22e">elem</span>.<span style="color:#a6e22e">size</span>, <span style="color:#e6db74">&#34;; elemalg=&#34;</span>, <span style="color:#a6e22e">elem</span>.<span style="color:#a6e22e">alg</span>, <span style="color:#e6db74">&#34;; dataqsiz=&#34;</span>, <span style="color:#a6e22e">size</span>, <span style="color:#e6db74">&#34;\n&#34;</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">c</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>函数接收两个参数，一个是channel里面保存的元素的数据类型，一个是缓冲的容量(如果为0表示是非缓冲buffer)，创建流程如下：</p>
 <ul>
-<li>根据传递的缓冲大小size是否为零，分别创建不带buffer的channel或则带size大小的缓冲channel：<ul>
+<li>根据传递的缓冲大小size是否为零，分别创建不带buffer的channel或则带size大小的缓冲channel：
+<ul>
 <li>对于不带缓冲channel，申请一个hchan数据结构的内存大小；</li>
 <li>对于带缓冲channel，new一个hchan对象，并初始化buffer内存</li>
 </ul>
@@ -540,18 +632,31 @@
 </ul>
 <p>创建channel的过程实际上是初始化hchan结构。其中类型信息和缓冲区长度由make语句传入，buf的大小则与元素大小和缓冲区长度共同决定。</p>
 <p>创建channel的伪代码如下所示：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">makechan</span><span class="params">(t *chantype, size <span class="type">int</span>)</span></span> *hchan &#123;</span><br><span class="line">	<span class="keyword">var</span> c *hchan</span><br><span class="line">	c = <span class="built_in">new</span>(hchan)</span><br><span class="line">	c.buf = malloc(元素类型大小*size)</span><br><span class="line">	c.elemsize = 元素类型大小</span><br><span class="line">	c.elemtype = 元素类型</span><br><span class="line">	c.dataqsiz = size</span><br><span class="line"> </span><br><span class="line">	<span class="keyword">return</span> c</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<h2><span id="32-协程向channel写入数据goroutine-sender-data">3.2 协程向channel写入数据(goroutine sender data)</span></h2><p>所有执行 c &lt; ep 将ep发送到channel的代码，最后都会调用到chan.go里面的 chansend函数。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">makechan</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">chantype</span>, <span style="color:#a6e22e">size</span> <span style="color:#66d9ef">int</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">hchan</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">c</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">hchan</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">c</span> = new(<span style="color:#a6e22e">hchan</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">buf</span> = <span style="color:#a6e22e">malloc</span>(<span style="color:#960050;background-color:#1e0010">元素类型大小</span><span style="color:#f92672">*</span><span style="color:#a6e22e">size</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">elemsize</span> = <span style="color:#960050;background-color:#1e0010">元素类型大小</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">elemtype</span> = <span style="color:#960050;background-color:#1e0010">元素类型</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">dataqsiz</span> = <span style="color:#a6e22e">size</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">c</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="32-协程向channel写入数据goroutine-sender-data">3.2 协程向channel写入数据(goroutine sender data)</h2>
+<p>所有执行 c &lt; ep 将ep发送到channel的代码，最后都会调用到chan.go里面的 chansend函数。</p>
 <p>函数的定义如下：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">chansend</span><span class="params">(c *hchan, ep unsafe.Pointer, block <span class="type">bool</span>, callerpc <span class="type">uintptr</span>)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>函数有三个参数，第一个代表channel的数据结构，第二个是要指向写入的数据的指针，第三个block代表写入操作是否阻塞。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312175238.png" alt></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">chansend</span>(<span style="color:#a6e22e">c</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">hchan</span>, <span style="color:#a6e22e">ep</span> <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>, <span style="color:#a6e22e">block</span> <span style="color:#66d9ef">bool</span>, <span style="color:#a6e22e">callerpc</span> <span style="color:#66d9ef">uintptr</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span><span style="color:#f92672">......</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>函数有三个参数，第一个代表channel的数据结构，第二个是要指向写入的数据的指针，第三个block代表写入操作是否阻塞。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312175238.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>向一个channel中写数据简单过程如下：</p>
 <ol>
 <li>如果等待接收队列recvq不为空，说明缓冲区中没有数据或者没有缓冲区，此时直接从recvq取出G,并把数据写入，最后把该G唤醒，结束发送过程；</li>
@@ -559,13 +664,30 @@
 <li>如果缓冲区中没有空余位置，将待发送数据写入G，将当前G加入sendq，进入睡眠，等待被读goroutine唤醒；</li>
 </ol>
 <p>流程图如下：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312175356.png" alt></p>
-<h2><span id="33-协程从channel接收数据goroutine-receive-data">3.3 协程从channel接收数据(goroutine receive data)</span></h2><p>所有执行 <code>ep &lt; c</code> 使用ep接收channel数据的代码，最后都会调用到chan.go里面的 <code>chanrecv函数</code>。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312175356.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<h2 id="33-协程从channel接收数据goroutine-receive-data">3.3 协程从channel接收数据(goroutine receive data)</h2>
+<p>所有执行 <code>ep &lt; c</code> 使用ep接收channel数据的代码，最后都会调用到chan.go里面的 <code>chanrecv函数</code>。</p>
 <p>函数的定义如下：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">chanrecv</span><span class="params">(c *hchan, ep unsafe.Pointer, block <span class="type">bool</span>)</span></span> (selected, received <span class="type">bool</span>) &#123;</span><br><span class="line">......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>从源码注释就可以知道，该函数从channel里面接收数据，然后将接收到的数据写入到ep指针指向的对象里面。</p>
-<p>还有一个参数block，表示当channel无法返回数据时是否阻塞等待。当block=false并且channel里面没有数据时候，函数直接返回(false,false)。<br><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312175531.png" alt></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">chanrecv</span>(<span style="color:#a6e22e">c</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">hchan</span>, <span style="color:#a6e22e">ep</span> <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>, <span style="color:#a6e22e">block</span> <span style="color:#66d9ef">bool</span>) (<span style="color:#a6e22e">selected</span>, <span style="color:#a6e22e">received</span> <span style="color:#66d9ef">bool</span>) {
+</span></span><span style="display:flex;"><span><span style="color:#f92672">......</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>从源码注释就可以知道，该函数从channel里面接收数据，然后将接收到的数据写入到ep指针指向的对象里面。</p>
+<p>还有一个参数block，表示当channel无法返回数据时是否阻塞等待。当block=false并且channel里面没有数据时候，函数直接返回(false,false)。
+<img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312175531.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>从一个channel读数据简单过程如下：</p>
 <ol>
 <li>如果等待发送队列sendq不为空，且没有缓冲区，直接从sendq中取出G，把G中数据读出，最后把G唤醒，结束读取过程；</li>
@@ -574,8 +696,16 @@
 <li>将当前goroutine加入recvq，进入睡眠，等待被写goroutine唤醒；</li>
 </ol>
 <p>简单流程图如下：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312175628.png" alt></p>
-<h2><span id="34-关闭channel">3.4 关闭channel</span></h2><p>当我们执行channel的close操作的时候会关闭channel。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312175628.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<h2 id="34-关闭channel">3.4 关闭channel</h2>
+<p>当我们执行channel的close操作的时候会关闭channel。</p>
 <p>关闭的主要流程如下所示：</p>
 <ol>
 <li>获取全局锁；</li>
@@ -592,209 +722,337 @@
 <li>关闭已经被关闭的channel</li>
 <li>向已经关闭的channel写数据</li>
 </ol>
-<h1><span id="section4-常见用法">Section4 常见用法</span></h1><h2><span id="41-单向channel">4.1 单向channel</span></h2><p>单向channel指只能用于发送或接收数据，实际上并没有单向channel。</p>
+<h1 id="section4-常见用法">Section4 常见用法</h1>
+<h2 id="41-单向channel">4.1 单向channel</h2>
+<p>单向channel指只能用于发送或接收数据，实际上并没有单向channel。</p>
 <p>我们知道channel可以通过参数传递，所谓单向channel只是对channel的一种使用限制，这跟C语言使用const修饰函数参数为只读是一个道理。</p>
 <ul>
 <li>func readChan(chanName &lt;-chan int)： 通过形参限定函数内部只能从channel中读取数据</li>
 <li>func writeChan(chanName chan&lt;- int)： 通过形参限定函数内部只能向channel中写入数据</li>
 </ul>
 <p>一个简单的示例程序如下：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">readChan</span><span class="params">(chanName &lt;-<span class="keyword">chan</span> <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">    &lt;- chanName</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">writeChan</span><span class="params">(chanName <span class="keyword">chan</span>&lt;- <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">    chanName &lt;- <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> mychan = <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>, <span class="number">10</span>)</span><br><span class="line"> </span><br><span class="line">    writeChan(mychan)</span><br><span class="line">    readChan(mychan)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>mychan是个正常的channel，而readChan()参数限制了传入的channel只能用来读，writeChan()参数限制了传入的channel只能用来写。</p>
-<h2><span id="42-select">4.2 select</span></h2><p>使用select可以监控多channel，比如监控多个channel，当其中某一个channel有数据时，就从其读出数据。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">readChan</span>(<span style="color:#a6e22e">chanName</span> <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">chanName</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">writeChan</span>(<span style="color:#a6e22e">chanName</span> <span style="color:#66d9ef">chan</span><span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">chanName</span> <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">mychan</span> = make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>, <span style="color:#ae81ff">10</span>)
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">writeChan</span>(<span style="color:#a6e22e">mychan</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">readChan</span>(<span style="color:#a6e22e">mychan</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>mychan是个正常的channel，而readChan()参数限制了传入的channel只能用来读，writeChan()参数限制了传入的channel只能用来写。</p>
+<h2 id="42-select">4.2 select</h2>
+<p>使用select可以监控多channel，比如监控多个channel，当其中某一个channel有数据时，就从其读出数据。</p>
 <p>一个简单的示例程序如下：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"> </span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;time&quot;</span></span><br><span class="line">)</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">addNumberToChan</span><span class="params">(chanName <span class="keyword">chan</span> <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        chanName &lt;- <span class="number">1</span></span><br><span class="line">        time.Sleep(<span class="number">1</span> * time.Second)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> chan1 = <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>, <span class="number">10</span>)</span><br><span class="line">    <span class="keyword">var</span> chan2 = <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>, <span class="number">10</span>)</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">go</span> addNumberToChan(chan1)</span><br><span class="line">    <span class="keyword">go</span> addNumberToChan(chan2)</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        <span class="keyword">select</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> e := &lt;- chan1 :</span><br><span class="line">            fmt.Printf(<span class="string">&quot;Get element from chan1: %d\n&quot;</span>, e)</span><br><span class="line">        <span class="keyword">case</span> e := &lt;- chan2 :</span><br><span class="line">            fmt.Printf(<span class="string">&quot;Get element from chan2: %d\n&quot;</span>, e)</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            fmt.Printf(<span class="string">&quot;No element in chan1 and chan2.\n&quot;</span>)</span><br><span class="line">            time.Sleep(<span class="number">1</span> * time.Second)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>程序中创建两个channel： chan1和chan2。函数addNumberToChan()函数会向两个channel中周期性写入数据。通过select可以监控两个channel，任意一个可读时就从其中读出数据。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;time&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">addNumberToChan</span>(<span style="color:#a6e22e">chanName</span> <span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">chanName</span> <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#ae81ff">1</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">chan1</span> = make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>, <span style="color:#ae81ff">10</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">chan2</span> = make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>, <span style="color:#ae81ff">10</span>)
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">go</span> <span style="color:#a6e22e">addNumberToChan</span>(<span style="color:#a6e22e">chan1</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">go</span> <span style="color:#a6e22e">addNumberToChan</span>(<span style="color:#a6e22e">chan2</span>)
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">select</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">e</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">chan1</span> :
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Get element from chan1: %d\n&#34;</span>, <span style="color:#a6e22e">e</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">e</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">chan2</span> :
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Get element from chan2: %d\n&#34;</span>, <span style="color:#a6e22e">e</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">default</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;No element in chan1 and chan2.\n&#34;</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#ae81ff">1</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>程序中创建两个channel： chan1和chan2。函数addNumberToChan()函数会向两个channel中周期性写入数据。通过select可以监控两个channel，任意一个可读时就从其中读出数据。</p>
 <p>程序输出如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">D:\SourceCode\GoExpert\src&gt;go run main.go</span><br><span class="line">Get element from chan1: 1</span><br><span class="line">Get element from chan2: 1</span><br><span class="line">No element <span class="keyword">in</span> chan1 and chan2.</span><br><span class="line">Get element from chan2: 1</span><br><span class="line">Get element from chan1: 1</span><br><span class="line">No element <span class="keyword">in</span> chan1 and chan2.</span><br><span class="line">Get element from chan2: 1</span><br><span class="line">Get element from chan1: 1</span><br><span class="line">No element <span class="keyword">in</span> chan1 and chan2.</span><br></pre></td></tr></table></figure>
-
-<p>从输出可见，从channel中读出数据的顺序是随机的，事实上select语句的多个case执行顺序是随机的，关于select的实现原理会有专门章节分析。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>D:<span style="color:#ae81ff">\S</span>ourceCode<span style="color:#ae81ff">\G</span>oExpert<span style="color:#ae81ff">\s</span>rc&gt;go run main.go
+</span></span><span style="display:flex;"><span>Get element from chan1: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>Get element from chan2: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>No element in chan1 and chan2.
+</span></span><span style="display:flex;"><span>Get element from chan2: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>Get element from chan1: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>No element in chan1 and chan2.
+</span></span><span style="display:flex;"><span>Get element from chan2: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>Get element from chan1: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>No element in chan1 and chan2.
+</span></span></code></pre></div><p>从输出可见，从channel中读出数据的顺序是随机的，事实上select语句的多个case执行顺序是随机的，关于select的实现原理会有专门章节分析。</p>
 <p>通过这个示例想说的是：<strong>select的case语句读channel不会阻塞</strong>，尽管channel中没有数据。这是由于case语句编译后调用读channel时会<strong>明确传入不阻塞的参数</strong>，此时读不到数据时不会将当前goroutine加入到等待队列，而是直接返回。</p>
-<h2><span id="43-range">4.3 range</span></h2><p>通过range可以持续从channel中读出数据，好像在遍历一个数组一样，当channel中没有数据时会阻塞当前goroutine，与读channel时阻塞处理机制一样。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">chanRange</span><span class="params">(chanName <span class="keyword">chan</span> <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> e := <span class="keyword">range</span> chanName &#123;</span><br><span class="line">        fmt.Printf(<span class="string">&quot;Get element from chan: %d\n&quot;</span>, e)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="43-range">4.3 range</h2>
+<p>通过range可以持续从channel中读出数据，好像在遍历一个数组一样，当channel中没有数据时会阻塞当前goroutine，与读channel时阻塞处理机制一样。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">chanRange</span>(<span style="color:#a6e22e">chanName</span> <span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">e</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">chanName</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Get element from chan: %d\n&#34;</span>, <span style="color:#a6e22e">e</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>注意：如果向此channel写数据的goroutine退出时，系统检测到这种情况后会panic，否则range将会永久阻塞。</p>
 
-<p>注意：如果向此channel写数据的goroutine退出时，系统检测到这种情况后会panic，否则range将会永久阻塞。</p>
-
-      
-    </div>
-    <div class="article-footer">
-      <blockquote class="mt-2x">
-  <ul class="post-copyright list-unstyled">
-    
-    <li class="post-copyright-link hidden-xs">
-      <strong>本文链接：</strong>
-      <a href="https://lxb.wiki/7b2461e3/" title="Go channel 原理" target="_blank" rel="external">https://lxb.wiki/7b2461e3/</a>
-    </li>
-    
-    <li class="post-copyright-license">
-      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
-    </li>
-  </ul>
-</blockquote>
-
-    </div>
-  </article>
-  
-    
-  <section id="comments">
-  	
-      
-        <section id="comments" class="comments">
-          <style>
-            .utterances{max-width: 100%;}
-          </style>
-          <script src="https://utteranc.es/client.js"
-                repo="lxbwolf/lxbwolf.github.io"
-                issue-term="title"
-                theme="github-light"
-                crossorigin="anonymous"
-                async>
-          </script>
-        </section>
-      
-    
-  </section>
+</section>
 
 
-  
-</div>
-
-  <nav class="bar bar-footer clearfix" data-stick-bottom>
-  <div class="bar-inner">
-  
-  <ul class="pager pull-left">
+    <footer class="article-footer">
     
-    <li class="prev">
-      <a href="/57be14fe/" title="Go 语言内存分配"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
-    </li>
-    
-    
-    <li class="next">
-      <a href="/abddb7fd/" title="Redis的底层数据结构 "><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
-    </li>
-    
-    
-  </ul>
-  
-  
-  
-  <div class="bar-right">
-    
-    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
-    
-  </div>
-  </div>
-</nav>
-  
-
-
-
-</main>
-
-  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
-	
-	
-    <ul class="social-links">
-    	
-        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+    <section class="article-tags">
         
-        <li><a href="mailto:me@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+            <a href="/tags/go/">go</a>
         
-        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
-        
-    </ul>
+    </section>
 
-    <div class="copyright">
-    	
-        <div class="publishby">
-        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> Xiaobin.Liu </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/30fc3293/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Go 八股</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/aaf3975f/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">go map数据结构</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/a59515fd/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">【译】使用 gosec 检查 Go 代码中的安全问题</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/8c9efcce/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">流量复制重放工具goreplay</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/ace0b2ab/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">【译】Go 1.14 中接口的菱形组合</h2>
+        </div>
+    </a>
+</article>
+
+            
         </div>
     </div>
+</aside>
 
+     
+    
+        
+    <div class="disqus-container">
+    
+</div>
 
-  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
-  <script>
-    if (window.mermaid) {
-      mermaid.initialize({theme: 'forest'});
+<style>
+    .disqus-container {
+        background-color: var(--card-background);
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--shadow-l1);
+        padding: var(--card-padding);
     }
-  </script>
+</style>
 
+<script>
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (typeof DISQUS == 'object') {
+            DISQUS.reset({
+                reload: true
+            });
+        }
+    })
+</script>
 
+    
 
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2023 Xiaobin&#39;s Blog
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
 </footer>
 
-  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
 <script>
-window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
 </script>
 
-<script src="/js/plugin.min.js"></script>
-
-
-<script src="/js/application.js"></script>
-
-
-    <script>
-(function (window) {
-    var INSIGHT_CONFIG = {
-        TRANSLATION: {
-            POSTS: '文章',
-            PAGES: '页面',
-            CATEGORIES: '分类',
-            TAGS: '标签',
-            UNTITLED: '(未命名)',
-        },
-        ROOT_URL: '/',
-        CONTENT_URL: '/content.json',
-    };
-    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
-})(window);
-</script>
-
-<script src="/js/insight.js"></script>
-
-
-
-
-
-
-   
-
-
-
-
-   
-
-
-
-
-
-    <script defer type="text/javascript">
-(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'G-JZ2PWLT6JY', 'auto');
-ga('send', 'pageview');
-
-</script>
-
-
-    <script defer>
-var _hmt = _hmt || [];
-(function() {
-    var hm = document.createElement("script");
-    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
-    var s = document.getElementsByTagName("script")[0];
-    s.parentNode.insertBefore(hm, s);
-})();
-</script>
-
-
-
-
-</body>
+    </body>
 </html>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>破解 on Xiaobin&#39;s Blog</title>
+        <link>http://lxb.wiki/tags/%E7%A0%B4%E8%A7%A3/</link>
+        <description>Recent content in 破解 on Xiaobin&#39;s Blog</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <lastBuildDate>Tue, 08 Oct 2019 18:07:13 +0000</lastBuildDate><atom:link href="http://lxb.wiki/tags/%E7%A0%B4%E8%A7%A3/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <title>网易云音乐破版权</title>
+        <link>http://lxb.wiki/c6996379/</link>
+        <pubDate>Tue, 08 Oct 2019 18:07:13 +0000</pubDate>
+        
+        <guid>http://lxb.wiki/c6996379/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;源码地址: &lt;a class=&#34;link&#34; href=&#34;https://github.com/lxbwolf/UnblockNeteaseMusic&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://github.com/lxbwolf/UnblockNeteaseMusic&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;原理:&lt;/strong&gt;
+使用其它音乐平台的歌曲替换网易云音乐无版权歌曲。
+目前备用的平台有：网易云旧链 、QQ 、 虾米 、 百度 、酷狗 、酷我 、咕咪 、JOOX 音源替换变灰歌曲链接 (默认仅启用前四)。&lt;/p&gt;
+&lt;p&gt;1、打开网易云音乐客户端的时候，客户端不再直接访问网易云服务器而是访问UnblockNeteaseMusic服务。&lt;/p&gt;
+&lt;p&gt;2、UnblockNeteaseMusic收到客户端的请求后，透传给网易云音乐的服务器，并再拿到相关的数据后进行检查，如果发现其中的歌曲没有版权，那么去其它平台查询此歌曲的相关信息。&lt;/p&gt;
+&lt;p&gt;3、将查到的数据返回给网易云客户端。&lt;/p&gt;
+&lt;p&gt;4、至此完成网易云音乐的解锁。&lt;/p&gt;
+&lt;p&gt;整个流程要解决两个重要的问题。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;核心工作:&lt;/strong&gt;
+1、将UnblockNeteaseMusic部署到服务器。可以是本地服务器也可以是云服务器。&lt;/p&gt;
+&lt;p&gt;2、为网易云客户端设置代理，以达到访问UnblockNeteaseMusic项目的目的。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;部署服务部分&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;安装node.js&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;git clone https://github.com/lxbwolf/UnblockNeteaseMusic.git&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;在&lt;code&gt;UnblockNeteaseMusic&lt;/code&gt; 目录下, 执行&lt;code&gt;npx @nondanee/unblockneteasemusic(官方)&lt;/code&gt; 或者 用docker 启动&lt;code&gt;docker run nondanee/unblockneteasemusic &amp;amp;&amp;amp; docker-compose up&lt;/code&gt;, 还有另一种方式:
+在&lt;code&gt;UnblockNeteaseMusic&lt;/code&gt; 目录下, 执行
+&lt;code&gt;node app.js -p 8080:443 -f 59.111.160.195&lt;/code&gt;
+其中&lt;code&gt;59.111.160.195&lt;/code&gt; 这个地址是通过
+&lt;code&gt;ping music.163.com&lt;/code&gt; 测出来的&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;正常情况下, 服务端启动进程, 客户端配置好IP Port, 就可以用了,&lt;/p&gt;
+&lt;p&gt;此时服务端接收到请求会有log, 如果服务端log一直卡在&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;HTTP Server running @ http://0.0.0.0:8080
+HTTPS Server running @ https://0.0.0.0:443
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;说明客户端的请求并没有打到服务器上, 可能原因是8080和443端口还没有开启&lt;/p&gt;
+&lt;p&gt;配置参数&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;$ unblockneteasemusic -h
+usage: unblockneteasemusic [-v] [-p port] [-a address] [-u url] [-f host]
+                           [-o source [source ...]] [-t token] [-e url] [-s]
+                           [-h]
+
+optional arguments:
+  -v, --version                   output the version number
+  -p port, --port port            specify server port
+  -a address, --address address   specify server host
+  -u url, --proxy-url url         request through upstream proxy
+  -f host, --force-host host      force the netease server ip
+  -o source [source ...], --match-order source [source ...]
+                                  set priority of sources
+  -t token, --token token         set up proxy authentication
+  -e url, --endpoint url          replace virtual endpoint with public host
+  -s, --strict                    enable proxy limitation
+  -h, --help                      output usage information
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;客户端配置&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;源码中的&lt;code&gt;README&lt;/code&gt; 有详细说明&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;平台&lt;/th&gt;
+&lt;th&gt;基础设置&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Windows&lt;/td&gt;
+&lt;td&gt;设置 &amp;gt; 工具 &amp;gt; 自定义代理 (客户端内)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;UWP&lt;/td&gt;
+&lt;td&gt;Windows 设置 &amp;gt; 网络和 Internet &amp;gt; 代理&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Linux&lt;/td&gt;
+&lt;td&gt;系统设置 &amp;gt; 网络 &amp;gt; 网络代理&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;macOS&lt;/td&gt;
+&lt;td&gt;系统偏好设置 &amp;gt; 网络 &amp;gt; 高级 &amp;gt; 代理&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Android&lt;/td&gt;
+&lt;td&gt;WLAN &amp;gt; 修改网络 &amp;gt; 高级选项 &amp;gt; 代理&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;iOS&lt;/td&gt;
+&lt;td&gt;无线局域网 &amp;gt; HTTP 代理 &amp;gt; 配置代理&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;Android 手机详细配置:&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;设置 &amp;gt; WLAN &amp;gt; 修改网络 &amp;gt; 高级选项 &amp;gt; 代理&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;IP: 106.13.86.198
+Port: 8080
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;破解前效果&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004909.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;pojieqian-163&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;破解后效果&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201004946.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;pojiehou-163&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201005015.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;tingge-163&#34;
+	
+	
+&gt;&lt;/p&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>

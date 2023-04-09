@@ -1,653 +1,726 @@
 <!DOCTYPE html>
-<html lang=zh>
-<head>
-  <meta charset="utf-8">
-  
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
-  <meta name="renderer" content="webkit">
-  <meta http-equiv="Cache-Control" content="no-transform" />
-  <meta http-equiv="Cache-Control" content="no-siteapp" />
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="format-detection" content="telephone=no,email=no,adress=no">
-  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
-  <!-- Color theme for statusbar -->
-  <meta name="theme-color" content="#000000" />
-  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
-  <meta http-equiv="window-target" content="_top" />
-  
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='redis的zset和set都使用跳表实现。跳表简单地说，就是在链表上构造多级索引，以加速查找，是用空间换时间。它比红黑树实现更简单，不需要'>
+<title>redis 跳表分析并用 Go 实现</title>
 
-  
-  <title>redis 跳表分析并用 Go 实现 | Xiaobin&#39;s Blog</title>
-  <meta name="description" content="1. 跳表结构 2. 节点的插入 2.1. 查找比s2.5小的最大节点 2.2. 插入节点s2.5   3. 删除节点 3.2. 查找比s3小的最大节点 2.3. 删除节点   总结    redis的zset和set都使用跳表实现。跳表简单地说，就是在链表上构造多级索引，以加速查找，是用空间换时间。它比红黑树实现更简单，不需要耗费大量的精力维护树的平衡。跳表的各个节点是有顺序的，可以进行范">
-<meta property="og:type" content="article">
-<meta property="og:title" content="redis 跳表分析并用 Go 实现">
-<meta property="og:url" content="https://lxb.wiki/e98e0a2b/index.html">
-<meta property="og:site_name" content="Xiaobin&#39;s Blog">
-<meta property="og:description" content="1. 跳表结构 2. 节点的插入 2.1. 查找比s2.5小的最大节点 2.2. 插入节点s2.5   3. 删除节点 3.2. 查找比s3小的最大节点 2.3. 删除节点   总结    redis的zset和set都使用跳表实现。跳表简单地说，就是在链表上构造多级索引，以加速查找，是用空间换时间。它比红黑树实现更简单，不需要耗费大量的精力维护树的平衡。跳表的各个节点是有顺序的，可以进行范">
-<meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210503231105.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210503231517.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210503231624.png">
-<meta property="article:published_time" content="2021-03-03T15:09:59.000Z">
-<meta property="article:modified_time" content="2023-02-18T02:19:50.057Z">
-<meta property="article:author" content="Xiaobin.Liu">
-<meta property="article:tag" content="redis">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210503231105.png">
-  <!-- Canonical links  把后面的 index.html 去掉-->
-  <link rel="canonical" href="https://lxb.wiki/e98e0a2b/">
-  
-    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
-  
-  
-    <link rel="icon" href="/favicon.png" type="image/x-icon">
-  
-  
-<link rel="stylesheet" href="/css/style.css">
+<link rel='canonical' href='http://lxb.wiki/e98e0a2b/'>
 
-  
-  
-  
-  
+<link rel="stylesheet" href="/scss/style.min.bc5bb6e306c354a2f5d5bfd1e65a5f3996962fb9b4a3546b748aee7daee4f258.css"><meta property='og:title' content='redis 跳表分析并用 Go 实现'>
+<meta property='og:description' content='redis的zset和set都使用跳表实现。跳表简单地说，就是在链表上构造多级索引，以加速查找，是用空间换时间。它比红黑树实现更简单，不需要'>
+<meta property='og:url' content='http://lxb.wiki/e98e0a2b/'>
+<meta property='og:site_name' content='Xiaobin&#39;s Blog'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='redis' /><meta property='article:published_time' content='2021-03-03T23:09:59&#43;00:00'/><meta property='article:modified_time' content='2021-03-03T23:09:59&#43;00:00'/>
+<meta name="twitter:title" content="redis 跳表分析并用 Go 实现">
+<meta name="twitter:description" content="redis的zset和set都使用跳表实现。跳表简单地说，就是在链表上构造多级索引，以加速查找，是用空间换时间。它比红黑树实现更简单，不需要">
+<link rel="shortcut icon" href="/favicon.png" />
 
-    <!-- google adsense -->
-    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
+<script data-ad-client="ca-pub-5708899526501350" async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-JZ2PWLT6JY');
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
 
-      gtag('config', 'G-JZ2PWLT6JY');
-    </script>
-<meta name="generator" content="Hexo 6.0.0"></head>
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
 
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
 
-<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
-  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-  <div class="slimContent">
-    <div class="navbar-header">
-      
-      
-      <div class="profile-block text-center">
-        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
-          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
-        </a>
-        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin.Liu</h2>
-        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
-        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
-      </div>
-      
-      <div class="search" id="search-form-wrap">
-
-    <form class="search-form sidebar-form">
-        <div class="input-group">
-            <input type="text" class="search-form-input form-control" placeholder="搜索" />
-            <span class="input-group-btn">
-                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
-            </span>
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
+                            height="298" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">Xiaobin&#39;s Blog</a></h1>
+            <h2 class="site-description"></h2>
         </div>
-    </form>
-    <div class="ins-search">
-  <div class="ins-search-mask"></div>
-  <div class="ins-search-container">
-    <div class="ins-input-wrapper">
-      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
-      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
-    </div>
-    <div class="ins-section-wrapper">
-      <div class="ins-section-container"></div>
-    </div>
-  </div>
-</div>
-
-
-</div>
-      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-    </div>
-    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
-      <ul class="nav navbar-nav main-nav menu-highlight">
+    </header><ol class="menu" id="main-menu">
         
         
-        <li class="menu-item menu-item-home">
-          <a href="/.">
-            
-            <i class="icon icon-home-fill"></i>
-            
-            <span class="menu-title">首页</span>
-          </a>
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-archives">
-          <a href="/archives">
-            
-            <i class="icon icon-archives-fill"></i>
-            
-            <span class="menu-title">归档</span>
-          </a>
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                <span>归档</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-categories">
-          <a href="/categories">
-            
-            <i class="icon icon-folder"></i>
-            
-            <span class="menu-title">分类</span>
-          </a>
+        <li >
+            <a href='/categories/' >
+                
+                
+                
+                <span>分类</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-tags">
-          <a href="/tags">
-            
-            <i class="icon icon-tags"></i>
-            
-            <span class="menu-title">标签</span>
-          </a>
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>标签</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-links">
-          <a href="/links">
-            
-            <i class="icon icon-friendship"></i>
-            
-            <span class="menu-title">友链</span>
-          </a>
+        <li >
+            <a href='/links/' >
+                
+                
+                
+                <span>友链</span>
+            </a>
         </li>
         
-        
-        <li class="menu-item menu-item-about">
-          <a href="/about">
+
+        <div class="menu-bottom-section">
             
-            <i class="icon icon-cup-fill"></i>
             
-            <span class="menu-title">关于</span>
-          </a>
-        </li>
-        
-      </ul>
-      
-	
-    <ul class="social-links">
-    	
-        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
-        
-        <li><a href="mailto:me@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
-        
-        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
-        
-    </ul>
-
-    </nav>
-  </div>
-</header>
-
-  
-    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
-  <div class="slimContent">
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">分类</h3>
-    <div class="widget-body">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">48</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">22</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">28</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">18</span></li></ul>
-    </div>
-  </div>
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
 
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">标签云</h3>
-    <div class="widget-body tagcloud">
-      <a href="/tags/GitHub/" style="font-size: 13.09px;">GitHub</a> <a href="/tags/STL/" style="font-size: 13.45px;">STL</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.27px;">blog</a> <a href="/tags/c/" style="font-size: 13.64px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.09px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.09px;">devops</a> <a href="/tags/docker/" style="font-size: 13px;">docker</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.36px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.18px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.09px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.18px;">hexo</a> <a href="/tags/http/" style="font-size: 13.36px;">http</a> <a href="/tags/joplin/" style="font-size: 13.09px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/mac/" style="font-size: 13.27px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.09px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.18px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.36px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.18px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.18px;">pic</a> <a href="/tags/qt/" style="font-size: 13.36px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.55px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.91px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.09px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/zk/" style="font-size: 13.09px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.45px;">工具</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.73px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.45px;">树莓派</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.55px;">算法</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.82px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.09px;">邮件</a>
-    </div>
-  </div>
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">归档</h3>
-    <div class="widget-body">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
-    </div>
-  </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
 
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">最新文章</h3>
-    <div class="widget-body">
-      <ul class="recent-post-list list-unstyled no-thumbnail">
-        
-          <li>
+
+                    <span>暗色模式</span>
+                </li>
             
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Design/">Design</a>
-              </p>
-              <p class="item-title">
-                <a href="/12428ad2/" class="title">【译】构建高效的 DevOps 文化的 6 个技巧</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2023-01-30T13:58:33.000Z" itemprop="datePublished">2023-01-30</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Web/">Web</a>
-              </p>
-              <p class="item-title">
-                <a href="/a258db2c/" class="title">【译】域名末尾带个点</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-11-16T14:20:00.000Z" itemprop="datePublished">2022-11-16</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Tools/">Tools</a>
-              </p>
-              <p class="item-title">
-                <a href="/690c8418/" class="title">【译】10大静态网站生成工具</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-10-02T10:26:55.000Z" itemprop="datePublished">2022-10-02</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Tools/">Tools</a>
-              </p>
-              <p class="item-title">
-                <a href="/62afdbe0/" class="title">mermaid画流程图语法</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-06-20T12:34:38.000Z" itemprop="datePublished">2022-06-20</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Linux/">Linux</a>
-              </p>
-              <p class="item-title">
-                <a href="/f54357bf/" class="title">流编辑器sed</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-06-10T14:28:34.000Z" itemprop="datePublished">2022-06-10</time>
-              </p>
-            </div>
-          </li>
-          
-      </ul>
-    </div>
-  </div>
-  
-
-    
-  </div>
+        </div>
+    </ol>
 </aside>
 
-  
-  
-<main class="main" role="main">
-  <div class="content">
-  <article id="post-redis-跳表分析并用-Go-实现" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+<section class="widget archives">
     
-    <div class="article-header">
-      
-        
-  
-    <h1 class="article-title" itemprop="name">
-      redis 跳表分析并用 Go 实现
-    </h1>
-  
+    <h2 class="widget-title section-title">目录</h2>
 
-      
-      <div class="article-meta">
-        <span class="article-date">
-    <i class="icon icon-calendar-check"></i>
-	<a href="/e98e0a2b/" class="article-date">
-	  <time datetime="2021-03-03T15:09:59.000Z" itemprop="datePublished">2021-03-03</time>
-	</a>
-</span>
-        
-  <span class="article-category">
-    <i class="icon icon-folder"></i>
-    <a class="article-category-link" href="/categories/DB/">DB</a>
-  </span>
-
-        
-  <span class="article-tag">
-    <i class="icon icon-tags"></i>
-	<a class="article-tag-link-link" href="/tags/redis/" rel="tag">redis</a>
-  </span>
-
-
-<!--        
- -->
-        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/e98e0a2b/#comments" class="article-comment-link">评论</a></span> 
-        
-	
-		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 2.7k(字)</span>
-	
-	
-		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 11(分)</span>
-	
-
-      </div>
+    <div class="widget--toc">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#1--跳表结构">1.  跳表结构</a></li>
+    <li><a href="#2--节点的插入">2.  节点的插入</a>
+      <ul>
+        <li><a href="#21--查找比s25小的最大节点">2.1.  查找比s2.5小的最大节点</a></li>
+        <li><a href="#22--插入节点s25">2.2.  插入节点s2.5</a></li>
+      </ul>
+    </li>
+    <li><a href="#3--删除节点">3.  删除节点</a>
+      <ul>
+        <li><a href="#32--查找比s3小的最大节点">3.2.  查找比s3小的最大节点</a></li>
+        <li><a href="#23--删除节点">2.3.  删除节点</a></li>
+      </ul>
+    </li>
+    <li><a href="#总结">总结</a></li>
+  </ul>
+</nav>
     </div>
-    <div class="article-entry marked-body" itemprop="articleBody">
-      
-        <!-- toc -->
+</section>
 
-<ul>
-<li><a href="#1-跳表结构">1. 跳表结构</a></li>
-<li><a href="#2-节点的插入">2. 节点的插入</a><ul>
-<li><a href="#21-查找比s25小的最大节点">2.1. 查找比s2.5小的最大节点</a></li>
-<li><a href="#22-插入节点s25">2.2. 插入节点s2.5</a></li>
-</ul>
-</li>
-<li><a href="#3-删除节点">3. 删除节点</a><ul>
-<li><a href="#32-查找比s3小的最大节点">3.2. 查找比s3小的最大节点</a></li>
-<li><a href="#23-删除节点">2.3. 删除节点</a></li>
-</ul>
-</li>
-<li><a href="#总结">总结</a></li>
-</ul>
-<!-- tocstop -->
+            
+        
+    </aside>
 
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+        <a href="/categories/DB/" >
+            DB
+        </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/e98e0a2b/">redis 跳表分析并用 Go 实现</a>
+        </h2>
+
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+            <time class="article-time--published">Mar 03, 2021</time>
+        </div>
+        
+
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+            <time class="article-time--reading">
+                阅读时长: 8 分钟
+            </time>
+        </div>
+        
+        <small>
+    <section class="article-tags">
+        
+            <a href="/tags/redis/">redis</a>
+        
+    </section>
+</small>
+    </footer>
+    
+
+    
+</div>
+</header>
+
+    <section class="article-content">
+    
+    
+    <!-- raw HTML omitted -->
 <p>redis的zset和set都使用跳表实现。跳表简单地说，就是在链表上构造多级索引，以加速查找，是用空间换时间。它比红黑树实现更简单，不需要耗费大量的精力维护树的平衡。跳表的各个节点是有顺序的，可以进行范围查询。</p>
 <p>本文将分析跳表的构成、插入、删除等操作，并使用go实现。</p>
-<h2><span id="1-跳表结构">1.  跳表结构</span></h2><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210503231105.png" alt></p>
+<h2 id="1--跳表结构">1.  跳表结构</h2>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210503231105.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>上图就是一个包含5个节点的跳表结构。跳表的结构包含一个又一个的节点，和header节点。header节点是查询的起始点。跳表定义如下，包含头结点、尾节点、长度以及跳表的索引层数。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">// skiplist 持有一个跳表的完整数据</span><br><span class="line">type skiplist struct &#123;</span><br><span class="line">  // header和tail表示跳表的头结点和尾节点</span><br><span class="line">  header, tail *skiplistNode</span><br><span class="line">  // length 表示跳表的长度</span><br><span class="line">  length int</span><br><span class="line">  // level 表示该跳表索引的层数</span><br><span class="line">  level int</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>从上面跳表的定义看不出什么，跳表每个节点的定义就有很多东西了。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">// skiplistLevel 表示skiplist每一节点在每一层持有的数据结构</span><br><span class="line">type skiplistLevel struct &#123;</span><br><span class="line">  // 该层节点的下一个节点，redis使用forward</span><br><span class="line">  next *skiplistNode</span><br><span class="line">  // 该层节点到下一节点中间间隔的跳数</span><br><span class="line">  span int</span><br><span class="line">&#125;</span><br><span class="line">// skiplistNode 表示skiplist的每一个节点</span><br><span class="line">type skiplistNode struct &#123;</span><br><span class="line">  // robj 代表该节点的数据</span><br><span class="line">  robj interface&#123;&#125;</span><br><span class="line">  // score 表示该节点的分数，以便排序</span><br><span class="line">  score float64</span><br><span class="line">  // prev 表示该节点的上一节点，redis 中使用backward</span><br><span class="line">  prev *skiplistNode</span><br><span class="line">  // levels 表示该节点在每一层索引中到下一节点的信息</span><br><span class="line">  levels []skiplistLevel</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>每一个节点中持有数据robj、该数据的分数score用来排序、上一节点的指针prev以便于反向遍历、各层索引信息levels。每一层的索引信息skiplistlevel包括该层索引中该节点指向的下一个节点的指针next、该节点到下一节点的间隔span。例如上图中，节点s2在第三层索引的下一节点是s4，而在第二层索引的下一节点是s3，而且间隔span分别是2和1。</p>
+<pre tabindex="0"><code>
+// skiplist 持有一个跳表的完整数据
+type skiplist struct {
+  // header和tail表示跳表的头结点和尾节点
+  header, tail *skiplistNode
+  // length 表示跳表的长度
+  length int
+  // level 表示该跳表索引的层数
+  level int
+}
+</code></pre><p>从上面跳表的定义看不出什么，跳表每个节点的定义就有很多东西了。</p>
+<pre tabindex="0"><code>
+// skiplistLevel 表示skiplist每一节点在每一层持有的数据结构
+type skiplistLevel struct {
+  // 该层节点的下一个节点，redis使用forward
+  next *skiplistNode
+  // 该层节点到下一节点中间间隔的跳数
+  span int
+}
+// skiplistNode 表示skiplist的每一个节点
+type skiplistNode struct {
+  // robj 代表该节点的数据
+  robj interface{}
+  // score 表示该节点的分数，以便排序
+  score float64
+  // prev 表示该节点的上一节点，redis 中使用backward
+  prev *skiplistNode
+  // levels 表示该节点在每一层索引中到下一节点的信息
+  levels []skiplistLevel
+}
+</code></pre><p>每一个节点中持有数据robj、该数据的分数score用来排序、上一节点的指针prev以便于反向遍历、各层索引信息levels。每一层的索引信息skiplistlevel包括该层索引中该节点指向的下一个节点的指针next、该节点到下一节点的间隔span。例如上图中，节点s2在第三层索引的下一节点是s4，而在第二层索引的下一节点是s3，而且间隔span分别是2和1。</p>
 <p>每个节点的索引层数通过随机数生成，redis设计的思路：使用第n级索引是使用第n-1级索引概率的1/4，最多使用32级索引，如果真用到了32级索引，这个跳表所持有的数据也是巨大的，因此不用担心索引不够用。</p>
- <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">func randomLevel() int &#123;</span><br><span class="line">  var level = 1</span><br><span class="line">    // SKIPLIST_P = 0.25</span><br><span class="line">  for rand.Float64() &lt; SKIPLIST_P &#123;</span><br><span class="line">    level ++</span><br><span class="line">  &#125;</span><br><span class="line">  if level &lt; SKIPLIST_MAXLEVEL &#123;</span><br><span class="line">    return level</span><br><span class="line">  &#125;</span><br><span class="line">  return SKIPLIST_MAXLEVEL</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>跳表按照score和robj从小到大进行排序，因此它的各个节点是有序的，可以进行范围查找。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">// compareObj 如果obj1&gt;obj2，返回true</span><br><span class="line">func compareObj(obj1, obj2 interface&#123;&#125;) bool &#123;</span><br><span class="line">  var t1, t2 reflect.Type</span><br><span class="line">  t1 = reflect.TypeOf(obj1)</span><br><span class="line">  t2 = reflect.TypeOf(obj2)</span><br><span class="line">  if t1.Kind() != t2.Kind() &#123;</span><br><span class="line">    compareObj(fmt.Sprint(obj1), fmt.Sprint(obj2))</span><br><span class="line">  &#125;</span><br><span class="line">  var v1, v2 reflect.Value</span><br><span class="line">  v1 = reflect.ValueOf(obj1)</span><br><span class="line">  v2 = reflect.ValueOf(obj2)</span><br><span class="line">  switch t1.Kind() &#123;</span><br><span class="line">  case reflect.Int:</span><br><span class="line">    return v1.Int() &gt; v2.Int()</span><br><span class="line">  case reflect.Float64, reflect.Float32:</span><br><span class="line">    return v1.Float() &gt; v2.Float()</span><br><span class="line">  case reflect.String:</span><br><span class="line">    return v1.String() &gt; v2.String()</span><br><span class="line">  &#125;</span><br><span class="line">  return compareObj(fmt.Sprint(obj1), fmt.Sprint(obj2))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2><span id="2-节点的插入">2.  节点的插入</span></h2><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210503231517.png" alt></p>
+<pre tabindex="0"><code>
+func randomLevel() int {
+ var level = 1
+   // SKIPLIST_P = 0.25
+ for rand.Float64() &lt; SKIPLIST_P {
+   level ++
+ }
+ if level &lt; SKIPLIST_MAXLEVEL {
+   return level
+ }
+ return SKIPLIST_MAXLEVEL
+}
+</code></pre><p>跳表按照score和robj从小到大进行排序，因此它的各个节点是有序的，可以进行范围查找。</p>
+<pre tabindex="0"><code>// compareObj 如果obj1&gt;obj2，返回true
+func compareObj(obj1, obj2 interface{}) bool {
+  var t1, t2 reflect.Type
+  t1 = reflect.TypeOf(obj1)
+  t2 = reflect.TypeOf(obj2)
+  if t1.Kind() != t2.Kind() {
+    compareObj(fmt.Sprint(obj1), fmt.Sprint(obj2))
+  }
+  var v1, v2 reflect.Value
+  v1 = reflect.ValueOf(obj1)
+  v2 = reflect.ValueOf(obj2)
+  switch t1.Kind() {
+  case reflect.Int:
+    return v1.Int() &gt; v2.Int()
+  case reflect.Float64, reflect.Float32:
+    return v1.Float() &gt; v2.Float()
+  case reflect.String:
+    return v1.String() &gt; v2.String()
+  }
+  return compareObj(fmt.Sprint(obj1), fmt.Sprint(obj2))
+}
+</code></pre><h2 id="2--节点的插入">2.  节点的插入</h2>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210503231517.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>在链表中如果要插入一个节点S，需要找到在链表中比S小的最大节点F，把S挂在F节点后面。那么在跳表中也是这样的套路，只不过更复杂一些。下面分几步将上图中s2.5节点挂在s2后面，已知s2.5的score或者obj比s2的score或obj要大，但是小于s3。</p>
-<h3><span id="21-查找比s25小的最大节点">2.1.  查找比s2.5小的最大节点</span></h3><p>在插入新节点之前，需要找到新节点可以插入的位置，就需要找出每一层索引中新节点的前一节点，这里就是比s2.5小的最大节点。跳表有五层索引，表示为0-4。跳表的起点是header，因此查找节点时需要从header的level 4开始进行，表示为header.levels[4]。代码中使用update[i]表示第i层索引中比s2.5小的最大节点指针。注意下面的代码还有一个rank数组，rank[i]就表示第i层索引中，update[i]节点到header的span，下面注意它是怎么增加的。</p>
+<h3 id="21--查找比s25小的最大节点">2.1.  查找比s2.5小的最大节点</h3>
+<p>在插入新节点之前，需要找到新节点可以插入的位置，就需要找出每一层索引中新节点的前一节点，这里就是比s2.5小的最大节点。跳表有五层索引，表示为0-4。跳表的起点是header，因此查找节点时需要从header的level 4开始进行，表示为header.levels[4]。代码中使用update[i]表示第i层索引中比s2.5小的最大节点指针。注意下面的代码还有一个rank数组，rank[i]就表示第i层索引中，update[i]节点到header的span，下面注意它是怎么增加的。</p>
 <ol>
 <li>从header.levels[4]开始向右遍历，此时rank[4]=0；header.levels[4]下一节点是s4比s2.5大，因此该层索引中s2.5的上一节点就是header，即update[4]=header，接下来向下进入第3层索引，即header.levels[3]</li>
 <li>第3层索引中，初始rank[3] =rank[4]=0，向右遍历搜索到header的下一节点s2。s2就是这一层s2.5需要插入的位置的前一节点，因此update[3]=s2，rank[3]=rank[3]+header.levels[3].span=2，然后向下进入s2.levels[2]</li>
 <li>依次遍历第2、1、0层索引，路径为s2.levels[2]-&gt;s2.levels[1]-&gt;s2.levels[0]，求得update[2]=update[1]=update[0]=s2，rank[2]=rank[1]=rank[0]=rank[3]=2。到这里，通过走楼梯的方式将s2.5需要插入的位置全找出来了</li>
 </ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">x = sl.header</span><br><span class="line"> for i := sl.level-1; i &gt;= 0; i -- &#123;</span><br><span class="line">   if i == sl.level-1 &#123;</span><br><span class="line">     rank[i] = 0</span><br><span class="line">   &#125; else &#123;</span><br><span class="line">     rank[i] = rank[i+1]</span><br><span class="line">   &#125;</span><br><span class="line">   // 寻找比score和robj小的最近节点</span><br><span class="line">   for x.levels[i].next != nil &amp;&amp; (x.levels[i].next.score &lt; score ||</span><br><span class="line">         (x.levels[i].next.score == score &amp;&amp; compareObj(robj, x.levels[i].next.robj))) &#123;</span><br><span class="line">     rank[i] += x.levels[i].span</span><br><span class="line">     x = x.levels[i].next</span><br><span class="line">   &#125;</span><br><span class="line">   update[i] = x</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<pre tabindex="0"><code> x = sl.header
+  for i := sl.level-1; i &gt;= 0; i -- {
+    if i == sl.level-1 {
+      rank[i] = 0
+    } else {
+      rank[i] = rank[i+1]
+    }
+    // 寻找比score和robj小的最近节点
+    for x.levels[i].next != nil &amp;&amp; (x.levels[i].next.score &lt; score ||
+          (x.levels[i].next.score == score &amp;&amp; compareObj(robj, x.levels[i].next.robj))) {
+      rank[i] += x.levels[i].span
+      x = x.levels[i].next
+    }
+    update[i] = x
+  }
+</code></pre><h3 id="22--插入节点s25">2.2.  插入节点s2.5</h3>
+<p>现在有了update数组表示各层索引中s2.5的上一节点位置，以及rank数组表示update各节点到header的距离，就可以进行s2.5的插入了。</p>
+<pre tabindex="0"><code>var level = randomLevel()
+  // 代码1
+  if level &gt; sl.level {
+    for i := sl.level; i &lt; level; i ++ {
+      rank[i] = 0
+      update[i] = sl.header
+      update[i].levels[i].span = sl.length
+    }
+    sl.level = level
+  }
+  //-----
+  x = createSkiplistNode(level, score, robj)
+  // 代码2
+  for i := 0; i &lt; level; i ++ {
+    x.levels[i].next = update[i].levels[i].next
+    update[i].levels[i].next = x
 
-<h3><span id="22-插入节点s25">2.2.  插入节点s2.5</span></h3><p>现在有了update数组表示各层索引中s2.5的上一节点位置，以及rank数组表示update各节点到header的距离，就可以进行s2.5的插入了。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">var level = randomLevel()</span><br><span class="line">  // 代码1</span><br><span class="line">  if level &gt; sl.level &#123;</span><br><span class="line">    for i := sl.level; i &lt; level; i ++ &#123;</span><br><span class="line">      rank[i] = 0</span><br><span class="line">      update[i] = sl.header</span><br><span class="line">      update[i].levels[i].span = sl.length</span><br><span class="line">    &#125;</span><br><span class="line">    sl.level = level</span><br><span class="line">  &#125;</span><br><span class="line">  //-----</span><br><span class="line">  x = createSkiplistNode(level, score, robj)</span><br><span class="line">  // 代码2</span><br><span class="line">  for i := 0; i &lt; level; i ++ &#123;</span><br><span class="line">    x.levels[i].next = update[i].levels[i].next</span><br><span class="line">    update[i].levels[i].next = x</span><br><span class="line"></span><br><span class="line">    x.levels[i].span = update[i].levels[i].span - (rank[0]-rank[i])</span><br><span class="line">    update[i].levels[i].span = rank[0] - rank[1] + 1</span><br><span class="line">  &#125;</span><br><span class="line">  // -----</span><br><span class="line">  // 代码3</span><br><span class="line">  for i := level-1; i &lt; sl.level; i ++ &#123;</span><br><span class="line">    update[i].levels[i].span ++</span><br><span class="line">  &#125;</span><br><span class="line">  //-----</span><br><span class="line">  // 如果当前节点是插入的第一个节点，它的prev是nil</span><br><span class="line">  if update[0] == sl.header &#123;</span><br><span class="line">    x.prev = nil</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    x.prev = update[0]</span><br><span class="line">  &#125;</span><br><span class="line">  if x.levels[0].next != nil &#123;</span><br><span class="line">    x.levels[0].next.prev = x</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    sl.tail = x</span><br><span class="line">  &#125;</span><br><span class="line">  sl.length ++</span><br></pre></td></tr></table></figure>
-
-
-
-<ol>
-<li><p>首先通过随机算法randomLevel()获取该节点的索引层数</p>
+    x.levels[i].span = update[i].levels[i].span - (rank[0]-rank[i])
+    update[i].levels[i].span = rank[0] - rank[1] + 1
+  }
+  // -----
+  // 代码3
+  for i := level-1; i &lt; sl.level; i ++ {
+    update[i].levels[i].span ++
+  }
+  //-----
+  // 如果当前节点是插入的第一个节点，它的prev是nil
+  if update[0] == sl.header {
+    x.prev = nil
+  } else {
+    x.prev = update[0]
+  }
+  if x.levels[0].next != nil {
+    x.levels[0].next.prev = x
+  } else {
+    sl.tail = x
+  }
+  sl.length ++
+</code></pre><ol>
+<li>
+<p>首先通过随机算法randomLevel()获取该节点的索引层数</p>
 </li>
-<li><p>现在有两种情况：level比跳表原来的层数sl.level要大或者level小于等于sl.level</p>
+<li>
+<p>现在有两种情况：level比跳表原来的层数sl.level要大或者level小于等于sl.level</p>
 </li>
-<li><ul>
-<li>首先处理level&gt;sl.level的情况（代码1）。高于sl.level小于level的索引i中，s2.5的前一节点就直接是header，因此设置update[i]=header，同时rank[i]=0。header.levels[i].span设置为跳表的长度。设置sl.level=level。<ul>
+<li>
+<ul>
+<li>首先处理level&gt;sl.level的情况（代码1）。高于sl.level小于level的索引i中，s2.5的前一节点就直接是header，因此设置update[i]=header，同时rank[i]=0。header.levels[i].span设置为跳表的长度。设置sl.level=level。</li>
 <li>现在只有level&lt;=sl.level的情况了（代码2）。当索引i&lt;level时，直接将s2.5挂在update[i].levels[i]的后面，并更新update[i].levels[i]和s2.5.levels[i]的span</li>
 <li>而在level&lt;=sl.level的情况（代码3），当level&lt;=索引i&lt;sl.level时，直接把update节点的span加一。因为此时新节点的索引层数level比跳表的层数少，那么新节点的插入对于比level高的索引节点来说就是将其与后面节点的距离增加了一个单位。</li>
 </ul>
 </li>
-</ul>
+<li>
+<p>处理s2.5的prev指针，由上面的图也可以知道prev指针和第0层的索引是反向的，但是并不会指向header。这里我认为是为了方便反向遍历，如果s1.prev指向header，在反向遍历时需要加一层header的判断。</p>
 </li>
-<li><p>处理s2.5的prev指针，由上面的图也可以知道prev指针和第0层的索引是反向的，但是并不会指向header。这里我认为是为了方便反向遍历，如果s1.prev指向header，在反向遍历时需要加一层header的判断。</p>
+<li>
+<p>处理跳表的tail指针，如果插入的节点在最后，则重新设置tail</p>
 </li>
-<li><p>处理跳表的tail指针，如果插入的节点在最后，则重新设置tail</p>
-</li>
-<li><p>更新跳表长度</p>
+<li>
+<p>更新跳表长度</p>
 </li>
 </ol>
-<h2><span id="3-删除节点">3.  删除节点</span></h2><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210503231624.png" alt></p>
+<h2 id="3--删除节点">3.  删除节点</h2>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210503231624.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>上图中，如果想删除s3节点，需要两步：找到s3节点在各层索引处的上一节点；删除s3节点。</p>
-<h3><span id="32-查找比s3小的最大节点">3.2.  查找比s3小的最大节点</span></h3><p>查找的算法依旧是从header的最高层索引开始下楼梯，并使用update数组保存每一层索引中s3的前一个节点。</p>
+<h3 id="32--查找比s3小的最大节点">3.2.  查找比s3小的最大节点</h3>
+<p>查找的算法依旧是从header的最高层索引开始下楼梯，并使用update数组保存每一层索引中s3的前一个节点。</p>
 <p>在上图中：</p>
 <ol>
 <li>从header.levels[4]开始向右遍历，找不到其他的节点小于s3，因此向下遍历header.levels[3]，第4层的最大节点是header，即update[4]=header</li>
 <li>依次类推，update[3]=s2，update[2]=s2，update[1]=update[0]=s2，遍历路径见图中的蓝色箭头。</li>
 </ol>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">// 查找最近节点</span><br><span class="line">  x = sl.header</span><br><span class="line">  for i := sl.level-1; i &gt;= 0; i -- &#123;</span><br><span class="line">    for x.levels[i].next != nil &amp;&amp; (x.levels[i].next.score &lt; score || </span><br><span class="line">      (x.levels[i].next.score == score &amp;&amp; compareObj(robj, x.levels[i].next.robj))) &#123;</span><br><span class="line">      x = x.levels[i].next</span><br><span class="line">    &#125;</span><br><span class="line">    update[i] = x</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-<h3><span id="23-删除节点">2.3.  删除节点</span></h3><p>删除节点就比较简单了，但是在这之前需要验证一下x指向的下一节点是不是需要删除的数据：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">// x之后的节点可能是需要删除的节点，也可能不是</span><br><span class="line">x = x.levels[0].next</span><br><span class="line">if x != nil &amp;&amp; x.score == score &amp;&amp; equalObj(x.robj, robj) &#123;</span><br><span class="line">  sl.deleteNode(update, x)</span><br><span class="line">  return true</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>在deleteNode中，进行如下删除步骤：</p>
+<pre tabindex="0"><code>
+// 查找最近节点
+  x = sl.header
+  for i := sl.level-1; i &gt;= 0; i -- {
+    for x.levels[i].next != nil &amp;&amp; (x.levels[i].next.score &lt; score || 
+      (x.levels[i].next.score == score &amp;&amp; compareObj(robj, x.levels[i].next.robj))) {
+      x = x.levels[i].next
+    }
+    update[i] = x
+  }
+</code></pre><h3 id="23--删除节点">2.3.  删除节点</h3>
+<p>删除节点就比较简单了，但是在这之前需要验证一下x指向的下一节点是不是需要删除的数据：</p>
+<pre tabindex="0"><code>
+  // x之后的节点可能是需要删除的节点，也可能不是
+  x = x.levels[0].next
+  if x != nil &amp;&amp; x.score == score &amp;&amp; equalObj(x.robj, robj) {
+    sl.deleteNode(update, x)
+    return true
+  }
+</code></pre><p>在deleteNode中，进行如下删除步骤：</p>
 <ol>
-<li><p>对每一层的update[i]进行：</p>
+<li>
+<p>对每一层的update[i]进行：</p>
 </li>
-<li><ul>
-<li>如果update[i].levels[i]的下一节点是x，则进行x的删除，包括节点指针和span的改变<ul>
+<li>
+<ul>
+<li>如果update[i].levels[i]的下一节点是x，则进行x的删除，包括节点指针和span的改变</li>
 <li>如果update[i].levels[i]的下一节点不是x，例如：删除s3节点，它的update[4].levels[4]下一节点是s4，此时直接将update[4].levels[4]的span减一</li>
 </ul>
 </li>
-</ul>
+<li>
+<p>将x的next节点（如果有的话）挂在x的prev节点后面</p>
 </li>
-<li><p>将x的next节点（如果有的话）挂在x的prev节点后面</p>
+<li>
+<p>更新跳表的level值。以删除s4节点为例，删除完该节点之后跳表实际层数应该调整为3。从第4层开始向下遍历，如果header.levels[i].next是nil，说明该层索引已经没必要存在了，就将跳表的level减一</p>
 </li>
-<li><p>更新跳表的level值。以删除s4节点为例，删除完该节点之后跳表实际层数应该调整为3。从第4层开始向下遍历，如果header.levels[i].next是nil，说明该层索引已经没必要存在了，就将跳表的level减一</p>
-</li>
-<li><p>别忘了把跳表的length减一</p>
+<li>
+<p>别忘了把跳表的length减一</p>
 </li>
 </ol>
-<h2><span id="总结">总结</span></h2><p>跳表听起来挺难，如果仔细研究它的代码的话还是挺简单的。跳表主要难的地方就在于节点的插入和删除，只要理解了跳表的多级索引是怎么使用的，其他的操作：范围查询、查询排名等都比较简单了。这块的代码可以看redis的源码，在它的t_zset.c和redis.h中有zsl开头的代码就是跳表相关内容。不过我觉得更难的是写文档，写文档的时候需要阅读完代码之后理清思路，这块我发现通过画图还是可以加深理解的。</p>
+<h2 id="总结">总结</h2>
+<p>跳表听起来挺难，如果仔细研究它的代码的话还是挺简单的。跳表主要难的地方就在于节点的插入和删除，只要理解了跳表的多级索引是怎么使用的，其他的操作：范围查询、查询排名等都比较简单了。这块的代码可以看redis的源码，在它的t_zset.c和redis.h中有zsl开头的代码就是跳表相关内容。不过我觉得更难的是写文档，写文档的时候需要阅读完代码之后理清思路，这块我发现通过画图还是可以加深理解的。</p>
 
-      
-    </div>
-    <div class="article-footer">
-      <blockquote class="mt-2x">
-  <ul class="post-copyright list-unstyled">
-    
-    <li class="post-copyright-link hidden-xs">
-      <strong>本文链接：</strong>
-      <a href="https://lxb.wiki/e98e0a2b/" title="redis 跳表分析并用 Go 实现" target="_blank" rel="external">https://lxb.wiki/e98e0a2b/</a>
-    </li>
-    
-    <li class="post-copyright-license">
-      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
-    </li>
-  </ul>
-</blockquote>
-
-    </div>
-  </article>
-  
-    
-  <section id="comments">
-  	
-      
-        <section id="comments" class="comments">
-          <style>
-            .utterances{max-width: 100%;}
-          </style>
-          <script src="https://utteranc.es/client.js"
-                repo="lxbwolf/lxbwolf.github.io"
-                issue-term="title"
-                theme="github-light"
-                crossorigin="anonymous"
-                async>
-          </script>
-        </section>
-      
-    
-  </section>
+</section>
 
 
-  
-</div>
-
-  <nav class="bar bar-footer clearfix" data-stick-bottom>
-  <div class="bar-inner">
-  
-  <ul class="pager pull-left">
+    <footer class="article-footer">
     
-    <li class="prev">
-      <a href="/f5496f4b/" title="Joplin+坚果云作为主力笔记工具"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
-    </li>
-    
-    
-    <li class="next">
-      <a href="/941edb97/" title="APNG与 GIF"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
-    </li>
-    
-    
-  </ul>
-  
-  
-  
-  <div class="bar-right">
-    
-    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
-    
-  </div>
-  </div>
-</nav>
-  
-
-
-
-</main>
-
-  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
-	
-	
-    <ul class="social-links">
-    	
-        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+    <section class="article-tags">
         
-        <li><a href="mailto:me@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+            <a href="/tags/redis/">redis</a>
         
-        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
-        
-    </ul>
+    </section>
 
-    <div class="copyright">
-    	
-        <div class="publishby">
-        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> Xiaobin.Liu </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/7db296fb/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">分布式锁高并发优化</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/9f188831/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Redis 笔记</h2>
+        </div>
+    </a>
+</article>
+
+            
         </div>
     </div>
+</aside>
 
+     
+    
+        
+    <div class="disqus-container">
+    
+</div>
 
-  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
-  <script>
-    if (window.mermaid) {
-      mermaid.initialize({theme: 'forest'});
+<style>
+    .disqus-container {
+        background-color: var(--card-background);
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--shadow-l1);
+        padding: var(--card-padding);
     }
-  </script>
+</style>
 
+<script>
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (typeof DISQUS == 'object') {
+            DISQUS.reset({
+                reload: true
+            });
+        }
+    })
+</script>
 
+    
 
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2023 Xiaobin&#39;s Blog
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
 </footer>
 
-  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
 <script>
-window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
 </script>
 
-<script src="/js/plugin.min.js"></script>
-
-
-<script src="/js/application.js"></script>
-
-
-    <script>
-(function (window) {
-    var INSIGHT_CONFIG = {
-        TRANSLATION: {
-            POSTS: '文章',
-            PAGES: '页面',
-            CATEGORIES: '分类',
-            TAGS: '标签',
-            UNTITLED: '(未命名)',
-        },
-        ROOT_URL: '/',
-        CONTENT_URL: '/content.json',
-    };
-    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
-})(window);
-</script>
-
-<script src="/js/insight.js"></script>
-
-
-
-
-
-
-   
-
-
-
-
-   
-
-
-
-
-
-    <script defer type="text/javascript">
-(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'G-JZ2PWLT6JY', 'auto');
-ga('send', 'pageview');
-
-</script>
-
-
-    <script defer>
-var _hmt = _hmt || [];
-(function() {
-    var hm = document.createElement("script");
-    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
-    var s = document.getElementsByTagName("script")[0];
-    s.parentNode.insertBefore(hm, s);
-})();
-</script>
-
-
-
-
-</body>
+    </body>
 </html>

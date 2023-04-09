@@ -1,615 +1,759 @@
 <!DOCTYPE html>
-<html lang=zh>
-<head>
-  <meta charset="utf-8">
-  
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
-  <meta name="renderer" content="webkit">
-  <meta http-equiv="Cache-Control" content="no-transform" />
-  <meta http-equiv="Cache-Control" content="no-siteapp" />
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="format-detection" content="telephone=no,email=no,adress=no">
-  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
-  <!-- Color theme for statusbar -->
-  <meta name="theme-color" content="#000000" />
-  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
-  <meta http-equiv="window-target" content="_top" />
-  
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='今天我们来讨论微服务架构中的自我恢复能力。通常情况下，服务间会通过同步或异步的方式进行通信。我们假定把一个庞大的系统分解成一个个的小块能将各'>
+<title>【译】微服务中的熔断器和重试</title>
 
-  
-  <title>【译】微服务中的熔断器和重试 | Xiaobin&#39;s Blog</title>
-  <meta name="description" content="今天我们来讨论微服务架构中的自我恢复能力。通常情况下，服务间会通过同步或异步的方式进行通信。我们假定把一个庞大的系统分解成一个个的小块能将各个服务解耦。管理服务内部的通信可能有点困难了。你可能听说过这两个著名的概念：熔断和重试。 熔断器 想象一个简单的场景：用户发出的请求访问服务 A 随后访问另一个服务 B。我们可以称 B 是 A 的依赖服务或下游服务。到服务 B 的请求在到达各个实例前会先通过负">
-<meta property="og:type" content="article">
-<meta property="og:title" content="【译】微服务中的熔断器和重试">
-<meta property="og:url" content="https://lxb.wiki/c9399f4/index.html">
-<meta property="og:site_name" content="Xiaobin&#39;s Blog">
-<meta property="og:description" content="今天我们来讨论微服务架构中的自我恢复能力。通常情况下，服务间会通过同步或异步的方式进行通信。我们假定把一个庞大的系统分解成一个个的小块能将各个服务解耦。管理服务内部的通信可能有点困难了。你可能听说过这两个著名的概念：熔断和重试。 熔断器 想象一个简单的场景：用户发出的请求访问服务 A 随后访问另一个服务 B。我们可以称 B 是 A 的依赖服务或下游服务。到服务 B 的请求在到达各个实例前会先通过负">
-<meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204010211.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204010301.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204011033.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204011142.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204111132.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204011245.png">
-<meta property="article:published_time" content="2019-12-12T15:02:17.000Z">
-<meta property="article:modified_time" content="2023-03-12T03:05:15.844Z">
-<meta property="article:author" content="Xiaobin.Liu">
-<meta property="article:tag" content="翻译">
-<meta property="article:tag" content="go">
-<meta property="article:tag" content="架构">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204010211.png">
-  <!-- Canonical links  把后面的 index.html 去掉-->
-  <link rel="canonical" href="https://lxb.wiki/c9399f4/">
-  
-    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
-  
-  
-    <link rel="icon" href="/favicon.png" type="image/x-icon">
-  
-  
-<link rel="stylesheet" href="/css/style.css">
+<link rel='canonical' href='http://lxb.wiki/c9399f4/'>
 
-  
-  
-  
-  
+<link rel="stylesheet" href="/scss/style.min.bc5bb6e306c354a2f5d5bfd1e65a5f3996962fb9b4a3546b748aee7daee4f258.css"><meta property='og:title' content='【译】微服务中的熔断器和重试'>
+<meta property='og:description' content='今天我们来讨论微服务架构中的自我恢复能力。通常情况下，服务间会通过同步或异步的方式进行通信。我们假定把一个庞大的系统分解成一个个的小块能将各'>
+<meta property='og:url' content='http://lxb.wiki/c9399f4/'>
+<meta property='og:site_name' content='Xiaobin&#39;s Blog'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='go' /><meta property='article:tag' content='翻译' /><meta property='article:tag' content='架构' /><meta property='article:published_time' content='2019-12-12T23:02:17&#43;00:00'/><meta property='article:modified_time' content='2019-12-12T23:02:17&#43;00:00'/>
+<meta name="twitter:title" content="【译】微服务中的熔断器和重试">
+<meta name="twitter:description" content="今天我们来讨论微服务架构中的自我恢复能力。通常情况下，服务间会通过同步或异步的方式进行通信。我们假定把一个庞大的系统分解成一个个的小块能将各">
+<link rel="shortcut icon" href="/favicon.png" />
 
-    <!-- google adsense -->
-    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
+<script data-ad-client="ca-pub-5708899526501350" async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-JZ2PWLT6JY');
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
 
-      gtag('config', 'G-JZ2PWLT6JY');
-    </script>
-<meta name="generator" content="Hexo 6.0.0"></head>
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
 
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
 
-<body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
-  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-  <div class="slimContent">
-    <div class="navbar-header">
-      
-      
-      <div class="profile-block text-center">
-        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
-          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
-        </a>
-        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin.Liu</h2>
-        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
-        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
-      </div>
-      
-      <div class="search" id="search-form-wrap">
-
-    <form class="search-form sidebar-form">
-        <div class="input-group">
-            <input type="text" class="search-form-input form-control" placeholder="搜索" />
-            <span class="input-group-btn">
-                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
-            </span>
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
+                            height="298" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">Xiaobin&#39;s Blog</a></h1>
+            <h2 class="site-description"></h2>
         </div>
-    </form>
-    <div class="ins-search">
-  <div class="ins-search-mask"></div>
-  <div class="ins-search-container">
-    <div class="ins-input-wrapper">
-      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
-      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
-    </div>
-    <div class="ins-section-wrapper">
-      <div class="ins-section-container"></div>
-    </div>
-  </div>
-</div>
-
-
-</div>
-      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-    </div>
-    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
-      <ul class="nav navbar-nav main-nav menu-highlight">
+    </header><ol class="menu" id="main-menu">
         
         
-        <li class="menu-item menu-item-home">
-          <a href="/.">
-            
-            <i class="icon icon-home-fill"></i>
-            
-            <span class="menu-title">首页</span>
-          </a>
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-archives">
-          <a href="/archives">
-            
-            <i class="icon icon-archives-fill"></i>
-            
-            <span class="menu-title">归档</span>
-          </a>
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                <span>归档</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-categories">
-          <a href="/categories">
-            
-            <i class="icon icon-folder"></i>
-            
-            <span class="menu-title">分类</span>
-          </a>
+        <li >
+            <a href='/categories/' >
+                
+                
+                
+                <span>分类</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-tags">
-          <a href="/tags">
-            
-            <i class="icon icon-tags"></i>
-            
-            <span class="menu-title">标签</span>
-          </a>
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>标签</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-links">
-          <a href="/links">
-            
-            <i class="icon icon-friendship"></i>
-            
-            <span class="menu-title">友链</span>
-          </a>
+        <li >
+            <a href='/links/' >
+                
+                
+                
+                <span>友链</span>
+            </a>
         </li>
         
-        
-        <li class="menu-item menu-item-about">
-          <a href="/about">
+
+        <div class="menu-bottom-section">
             
-            <i class="icon icon-cup-fill"></i>
             
-            <span class="menu-title">关于</span>
-          </a>
-        </li>
-        
-      </ul>
-      
-	
-    <ul class="social-links">
-    	
-        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
-        
-        <li><a href="mailto:me@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
-        
-        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
-        
-    </ul>
-
-    </nav>
-  </div>
-</header>
-
-  
-    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
-  <div class="slimContent">
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">分类</h3>
-    <div class="widget-body">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">48</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">22</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">28</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">18</span></li></ul>
-    </div>
-  </div>
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
 
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">标签云</h3>
-    <div class="widget-body tagcloud">
-      <a href="/tags/GitHub/" style="font-size: 13.09px;">GitHub</a> <a href="/tags/STL/" style="font-size: 13.45px;">STL</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.27px;">blog</a> <a href="/tags/c/" style="font-size: 13.64px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.09px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.09px;">devops</a> <a href="/tags/docker/" style="font-size: 13px;">docker</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.36px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.18px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.09px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.18px;">hexo</a> <a href="/tags/http/" style="font-size: 13.36px;">http</a> <a href="/tags/joplin/" style="font-size: 13.09px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/mac/" style="font-size: 13.27px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.09px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.18px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.36px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.18px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.18px;">pic</a> <a href="/tags/qt/" style="font-size: 13.36px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.55px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.91px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.09px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/zk/" style="font-size: 13.09px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.45px;">工具</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.73px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.45px;">树莓派</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.55px;">算法</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.82px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.09px;">邮件</a>
-    </div>
-  </div>
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">归档</h3>
-    <div class="widget-body">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
-    </div>
-  </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
 
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">最新文章</h3>
-    <div class="widget-body">
-      <ul class="recent-post-list list-unstyled no-thumbnail">
-        
-          <li>
+
+                    <span>暗色模式</span>
+                </li>
             
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Design/">Design</a>
-              </p>
-              <p class="item-title">
-                <a href="/12428ad2/" class="title">【译】构建高效的 DevOps 文化的 6 个技巧</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2023-01-30T13:58:33.000Z" itemprop="datePublished">2023-01-30</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Web/">Web</a>
-              </p>
-              <p class="item-title">
-                <a href="/a258db2c/" class="title">【译】域名末尾带个点</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-11-16T14:20:00.000Z" itemprop="datePublished">2022-11-16</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Tools/">Tools</a>
-              </p>
-              <p class="item-title">
-                <a href="/690c8418/" class="title">【译】10大静态网站生成工具</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-10-02T10:26:55.000Z" itemprop="datePublished">2022-10-02</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Tools/">Tools</a>
-              </p>
-              <p class="item-title">
-                <a href="/62afdbe0/" class="title">mermaid画流程图语法</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-06-20T12:34:38.000Z" itemprop="datePublished">2022-06-20</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Linux/">Linux</a>
-              </p>
-              <p class="item-title">
-                <a href="/f54357bf/" class="title">流编辑器sed</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-06-10T14:28:34.000Z" itemprop="datePublished">2022-06-10</time>
-              </p>
-            </div>
-          </li>
-          
-      </ul>
-    </div>
-  </div>
-  
-
-    
-  </div>
+        </div>
+    </ol>
 </aside>
 
-  
-  
-<main class="main" role="main">
-  <div class="content">
-  <article id="post-微服务中的熔断器和重试" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+<section class="widget archives">
     
-    <div class="article-header">
-      
-        
-  
-    <h1 class="article-title" itemprop="name">
-      【译】微服务中的熔断器和重试
-    </h1>
-  
+    <h2 class="widget-title section-title">目录</h2>
 
-      
-      <div class="article-meta">
-        <span class="article-date">
-    <i class="icon icon-calendar-check"></i>
-	<a href="/c9399f4/" class="article-date">
-	  <time datetime="2019-12-12T15:02:17.000Z" itemprop="datePublished">2019-12-12</time>
-	</a>
-</span>
-        
-  <span class="article-category">
-    <i class="icon icon-folder"></i>
-    <a class="article-category-link" href="/categories/Design/">Design</a>
-  </span>
-
-        
-  <span class="article-tag">
-    <i class="icon icon-tags"></i>
-	<a class="article-tag-link-link" href="/tags/go/" rel="tag">go</a>, <a class="article-tag-link-link" href="/tags/%E6%9E%B6%E6%9E%84/" rel="tag">架构</a>, <a class="article-tag-link-link" href="/tags/%E7%BF%BB%E8%AF%91/" rel="tag">翻译</a>
-  </span>
-
-
-<!--        
- -->
-        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/c9399f4/#comments" class="article-comment-link">评论</a></span> 
-        
-	
-		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 1.9k(字)</span>
-	
-	
-		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 7(分)</span>
-	
-
-      </div>
+    <div class="widget--toc">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#熔断器">熔断器</a></li>
+    <li><a href="#状态">状态</a></li>
+    <li><a href="#熔断器原理">熔断器原理</a></li>
+    <li><a href="#生产上的熔断器">生产上的熔断器</a></li>
+    <li><a href="#demo">Demo</a></li>
+    <li><a href="#重试问题">重试问题</a></li>
+    <li><a href="#重试模式">重试模式</a></li>
+    <li><a href="#两者结合">两者结合</a></li>
+    <li><a href="#参考文章">参考文章</a></li>
+  </ul>
+</nav>
     </div>
-    <div class="article-entry marked-body" itemprop="articleBody">
-      
-        <p>今天我们来讨论微服务架构中的自我恢复能力。通常情况下，服务间会通过同步或异步的方式进行通信。我们假定把一个庞大的系统分解成一个个的小块能将各个服务解耦。管理服务内部的通信可能有点困难了。你可能听说过这两个著名的概念：熔断和重试。</p>
-<h2><span id="熔断器">熔断器</span></h2><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204010211.png" alt></p>
+</section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+        <a href="/categories/Design/" >
+            Design
+        </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/c9399f4/">【译】微服务中的熔断器和重试</a>
+        </h2>
+
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+            <time class="article-time--published">Dec 12, 2019</time>
+        </div>
+        
+
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+            <time class="article-time--reading">
+                阅读时长: 5 分钟
+            </time>
+        </div>
+        
+        <small>
+    <section class="article-tags">
+        
+            <a href="/tags/go/">go</a>
+        
+            <a href="/tags/%E7%BF%BB%E8%AF%91/">翻译</a>
+        
+            <a href="/tags/%E6%9E%B6%E6%9E%84/">架构</a>
+        
+    </section>
+</small>
+    </footer>
+    
+
+    
+</div>
+</header>
+
+    <section class="article-content">
+    
+    
+    <p>今天我们来讨论微服务架构中的自我恢复能力。通常情况下，服务间会通过同步或异步的方式进行通信。我们假定把一个庞大的系统分解成一个个的小块能将各个服务解耦。管理服务内部的通信可能有点困难了。你可能听说过这两个著名的概念：熔断和重试。</p>
+<h2 id="熔断器">熔断器</h2>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204010211.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>想象一个简单的场景：用户发出的请求访问服务 A 随后访问另一个服务 B。我们可以称 B 是 A 的依赖服务或下游服务。到服务 B 的请求在到达各个实例前会先通过负载均衡器。</p>
 <p>后端服务发生系统错误的原因有很多，例如慢查询、network blip 和内存争用。在这种场景下，如果返回 A 的 response 是 timeout 和 server error，我们的用户会再试一次。在混乱的局面中我们怎样来保护下游服务呢？</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204010301.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204010301.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>熔断器可以让我们对失败率和资源有更好的控制。熔断器的设计思路是不等待 TCP 的连接 timeout 快速且优雅地处理 error。这种 fail fast 机制会保护下游的那一层。这种机制最重要的部分就是立刻向调用方返回 response。没有被 pending request 填充的线程池，没有 timeout，而且极有可能烦人的调用链中断者会更少。此外，下游服务也有了充足的时间来恢复服务能力。完全杜绝错误很难，但是减小失败的影响范围是有可能的。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204011033.png" alt></p>
-<p>通过 hystrix 熔断器，我们可以采用降级方案，对上游返回降级后的结果。例如，服务 B 可以访问一个备份服务或 cache，不再访问原来的服务 C。引入这种降级方案需要集成测试，因为我们在 happy path（译注：所谓 happy path，即测试方法的默认场景，没有异常和错误信息。具体可参见 <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Happy_path">wikipedia</a>）可能不会遇到这种网络模式。</p>
-<h2><span id="状态">状态</span></h2><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204011142.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204011033.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>通过 hystrix 熔断器，我们可以采用降级方案，对上游返回降级后的结果。例如，服务 B 可以访问一个备份服务或 cache，不再访问原来的服务 C。引入这种降级方案需要集成测试，因为我们在 happy path（译注：所谓 happy path，即测试方法的默认场景，没有异常和错误信息。具体可参见 <a class="link" href="https://en.wikipedia.org/wiki/Happy_path"  target="_blank" rel="noopener"
+    >wikipedia</a>）可能不会遇到这种网络模式。</p>
+<h2 id="状态">状态</h2>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204011142.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>熔断器有三个主要的状态：</p>
 <ul>
 <li>Closed：让所有请求都通过的默认状态。在阈值下的请求不管成功还是失败，熔断器的状态都不会改变。可能出现的错误是 <strong>Max Concurrency</strong>（最大并发数）和 <strong>Timeout</strong>（超时）。</li>
 <li>Open：所有的请求都会返回 <strong>Circuit Open</strong> 错误并被标记为失败。这是一种不等待处理结束的 timeout 时间的 fail-fast 机制。</li>
 <li>Half Open：周期性地向下游服务发出请求，检查它是否已恢复。如果下游服务已恢复，熔断器切换到 Closed 状态，否则熔断器保持 Open 状态。</li>
 </ul>
-<h2><span id="熔断器原理">熔断器原理</span></h2><p>控制熔断的设置共有 5 个主要参数。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// CommandConfig is used to tune circuit settings at runtime</span></span><br><span class="line"><span class="keyword">type</span> CommandConfig <span class="keyword">struct</span> &#123;</span><br><span class="line">	Timeout                <span class="type">int</span> <span class="string">`json:&quot;timeout&quot;`</span></span><br><span class="line">	MaxConcurrentRequests  <span class="type">int</span> <span class="string">`json:&quot;max_concurrent_requests&quot;`</span></span><br><span class="line">	RequestVolumeThreshold <span class="type">int</span> <span class="string">`json:&quot;request_volume_threshold&quot;`</span></span><br><span class="line">	SleepWindow            <span class="type">int</span> <span class="string">`json:&quot;sleep_window&quot;`</span></span><br><span class="line">	ErrorPercentThreshold  <span class="type">int</span> <span class="string">`json:&quot;error_percent_threshold&quot;`</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><a target="_blank" rel="noopener" href="https://gist.githubusercontent.com/aladine/18b38b37f838c1938131f67da0648e92/raw/8f97b8ef0b796ea5355b8f895b4009adfe472668/command.go">查看源码</a></p>
-<p>可以通过根据两个服务的 SLA（‎ Service Level Agreement，<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/zh-hans/服务级别协议">服务级别协议</a>）来定出阈值。如果在测试时把依赖的其他服务也涉及到了，这些值会得到很好的调整。</p>
+<h2 id="熔断器原理">熔断器原理</h2>
+<p>控制熔断的设置共有 5 个主要参数。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// CommandConfig is used to tune circuit settings at runtime
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">CommandConfig</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Timeout</span>                <span style="color:#66d9ef">int</span> <span style="color:#e6db74">`json:&#34;timeout&#34;`</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">MaxConcurrentRequests</span>  <span style="color:#66d9ef">int</span> <span style="color:#e6db74">`json:&#34;max_concurrent_requests&#34;`</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">RequestVolumeThreshold</span> <span style="color:#66d9ef">int</span> <span style="color:#e6db74">`json:&#34;request_volume_threshold&#34;`</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">SleepWindow</span>            <span style="color:#66d9ef">int</span> <span style="color:#e6db74">`json:&#34;sleep_window&#34;`</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ErrorPercentThreshold</span>  <span style="color:#66d9ef">int</span> <span style="color:#e6db74">`json:&#34;error_percent_threshold&#34;`</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><a class="link" href="https://gist.githubusercontent.com/aladine/18b38b37f838c1938131f67da0648e92/raw/8f97b8ef0b796ea5355b8f895b4009adfe472668/command.go"  target="_blank" rel="noopener"
+    >查看源码</a></p>
+<p>可以通过根据两个服务的 SLA（‎ Service Level Agreement，<a class="link" href="https://zh.wikipedia.org/zh-hans/%e6%9c%8d%e5%8a%a1%e7%ba%a7%e5%88%ab%e5%8d%8f%e8%ae%ae"  target="_blank" rel="noopener"
+    >服务级别协议</a>）来定出阈值。如果在测试时把依赖的其他服务也涉及到了，这些值会得到很好的调整。</p>
 <p>一个好的熔断器的名字应该能精确指出哪个服务连接出了问题。实际上，请求一个服务时可能会有很多个 API endpoint。每一个 endpoint 都应该有一个对应的熔断器。</p>
-<h2><span id="生产上的熔断器">生产上的熔断器</span></h2><p>熔断器通常被放在聚合点上。尽管熔断器提供了一种 fail-fast 机制，但我们仍然需要确保可选的降级方案可行。如果我们因为假定需要降级方案的场景出现的可能性很小就不去测试它，那（之前的努力）就是白费力气了。即使在最简单的演练中，我们也要确保阈值是有意义的。以我的个人经验，把参数配置在 log 中 print 出来对于 debug 很有帮助。</p>
-<h2><span id="demo">Demo</span></h2><p>这段实例代码用的是 <a target="_blank" rel="noopener" href="http://github.com/afex/hystrix-go/hystrix">hystrix-go</a> 库，hystrix Netflix 库在 Golang 的实现。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;errors&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;log&quot;</span></span><br><span class="line">	<span class="string">&quot;net/http&quot;</span></span><br><span class="line">	<span class="string">&quot;os&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="string">&quot;github.com/afex/hystrix-go/hystrix&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> commandName = <span class="string">&quot;producer_api&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">	hystrix.ConfigureCommand(commandName, hystrix.CommandConfig&#123;</span><br><span class="line">		Timeout:                <span class="number">500</span>,</span><br><span class="line">		MaxConcurrentRequests:  <span class="number">100</span>,</span><br><span class="line">		ErrorPercentThreshold:  <span class="number">50</span>,</span><br><span class="line">		RequestVolumeThreshold: <span class="number">3</span>,</span><br><span class="line">		SleepWindow:            <span class="number">1000</span>,</span><br><span class="line">	&#125;)</span><br><span class="line"></span><br><span class="line">	http.HandleFunc(<span class="string">&quot;/&quot;</span>, logger(handle))</span><br><span class="line">	log.Println(<span class="string">&quot;listening on :8080&quot;</span>)</span><br><span class="line">	http.ListenAndServe(<span class="string">&quot;:8080&quot;</span>, <span class="literal">nil</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">handle</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">	output := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">1</span>)</span><br><span class="line">	errors := hystrix.Go(commandName, <span class="function"><span class="keyword">func</span><span class="params">()</span></span> <span class="type">error</span> &#123;</span><br><span class="line">		<span class="comment">// talk to other services</span></span><br><span class="line">		err := callChargeProducerAPI()</span><br><span class="line">		<span class="comment">// err := callWithRetryV1()</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> err == <span class="literal">nil</span> &#123;</span><br><span class="line">			output &lt;- <span class="literal">true</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;, <span class="literal">nil</span>)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">select</span> &#123;</span><br><span class="line">	<span class="keyword">case</span> out := &lt;-output:</span><br><span class="line">		<span class="comment">// success</span></span><br><span class="line">		log.Printf(<span class="string">&quot;success %v&quot;</span>, out)</span><br><span class="line">	<span class="keyword">case</span> err := &lt;-errors:</span><br><span class="line">		<span class="comment">// failure</span></span><br><span class="line">		log.Printf(<span class="string">&quot;failed %s&quot;</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// logger is Handler wrapper function for logging</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">logger</span><span class="params">(fn http.HandlerFunc)</span></span> http.HandlerFunc &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">		log.Println(r.URL.Path, r.Method)</span><br><span class="line">		fn(w, r)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">callChargeProducerAPI</span><span class="params">()</span></span> <span class="type">error</span> &#123;</span><br><span class="line">	fmt.Println(os.Getenv(<span class="string">&quot;SERVER_ERROR&quot;</span>))</span><br><span class="line">	<span class="keyword">if</span> os.Getenv(<span class="string">&quot;SERVER_ERROR&quot;</span>) == <span class="string">&quot;1&quot;</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> errors.New(<span class="string">&quot;503 error&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>demo 中分别测试了请求调用链 closed 和 open 两种情况：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">/* Experiment 1: success path */</span><br><span class="line">// server</span><br><span class="line">go run main.go</span><br><span class="line"></span><br><span class="line">// client</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> $(<span class="built_in">seq</span> 10); <span class="keyword">do</span> curl -x <span class="string">&#x27;&#x27;</span> localhost:8080 ;<span class="keyword">done</span></span><br><span class="line"></span><br><span class="line">/* Experiment 2: circuit open */</span><br><span class="line">// server</span><br><span class="line">SERVER_ERROR=1 Go run main.go</span><br><span class="line"></span><br><span class="line">// client</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> $(<span class="built_in">seq</span> 10); <span class="keyword">do</span> curl -x <span class="string">&#x27;&#x27;</span> localhost:8080 ;<span class="keyword">done</span></span><br></pre></td></tr></table></figure>
-
-<p><a target="_blank" rel="noopener" href="https://gist.github.com/aladine/48d935c44820508e5bca2f061e3a7c1d/raw/930cdc10c41e8b9b37018f2be36bc421e6df481a/demo.sh">查看源码</a></p>
-<h2><span id="重试问题">重试问题</span></h2><p>在上面的熔断器模式中，如果服务 B 缩容，会发生什么？大量已经从 A 发出的请求会返回 5xx error。可能会触发熔断器切换到 open 的错误报警。因此我们需要重试以防间歇性的 network hiccup 发生。</p>
+<h2 id="生产上的熔断器">生产上的熔断器</h2>
+<p>熔断器通常被放在聚合点上。尽管熔断器提供了一种 fail-fast 机制，但我们仍然需要确保可选的降级方案可行。如果我们因为假定需要降级方案的场景出现的可能性很小就不去测试它，那（之前的努力）就是白费力气了。即使在最简单的演练中，我们也要确保阈值是有意义的。以我的个人经验，把参数配置在 log 中 print 出来对于 debug 很有帮助。</p>
+<h2 id="demo">Demo</h2>
+<p>这段实例代码用的是 <a class="link" href="http://github.com/afex/hystrix-go/hystrix"  target="_blank" rel="noopener"
+    >hystrix-go</a> 库，hystrix Netflix 库在 Golang 的实现。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;errors&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;log&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;net/http&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;os&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/afex/hystrix-go/hystrix&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">commandName</span> = <span style="color:#e6db74">&#34;producer_api&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">hystrix</span>.<span style="color:#a6e22e">ConfigureCommand</span>(<span style="color:#a6e22e">commandName</span>, <span style="color:#a6e22e">hystrix</span>.<span style="color:#a6e22e">CommandConfig</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Timeout</span>:                <span style="color:#ae81ff">500</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">MaxConcurrentRequests</span>:  <span style="color:#ae81ff">100</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">ErrorPercentThreshold</span>:  <span style="color:#ae81ff">50</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">RequestVolumeThreshold</span>: <span style="color:#ae81ff">3</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">SleepWindow</span>:            <span style="color:#ae81ff">1000</span>,
+</span></span><span style="display:flex;"><span>	})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandleFunc</span>(<span style="color:#e6db74">&#34;/&#34;</span>, <span style="color:#a6e22e">logger</span>(<span style="color:#a6e22e">handle</span>))
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;listening on :8080&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ListenAndServe</span>(<span style="color:#e6db74">&#34;:8080&#34;</span>, <span style="color:#66d9ef">nil</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">handle</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">output</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">bool</span>, <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">errors</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">hystrix</span>.<span style="color:#a6e22e">Go</span>(<span style="color:#a6e22e">commandName</span>, <span style="color:#66d9ef">func</span>() <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// talk to other services
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">callChargeProducerAPI</span>()
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// err := callWithRetryV1()
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">output</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}, <span style="color:#66d9ef">nil</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">select</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">out</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">output</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// success
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;success %v&#34;</span>, <span style="color:#a6e22e">out</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">errors</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// failure
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;failed %s&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// logger is Handler wrapper function for logging
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">logger</span>(<span style="color:#a6e22e">fn</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandlerFunc</span>) <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandlerFunc</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">URL</span>.<span style="color:#a6e22e">Path</span>, <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Method</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fn</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">r</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">callChargeProducerAPI</span>() <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Getenv</span>(<span style="color:#e6db74">&#34;SERVER_ERROR&#34;</span>))
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Getenv</span>(<span style="color:#e6db74">&#34;SERVER_ERROR&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;1&#34;</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;503 error&#34;</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>demo 中分别测试了请求调用链 closed 和 open 两种情况：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>/* Experiment 1: success path */
+</span></span><span style="display:flex;"><span>// server
+</span></span><span style="display:flex;"><span>go run main.go
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>// client
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> i in <span style="color:#66d9ef">$(</span>seq 10<span style="color:#66d9ef">)</span>; <span style="color:#66d9ef">do</span> curl -x <span style="color:#e6db74">&#39;&#39;</span> localhost:8080 ;<span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/* Experiment 2: circuit open */
+</span></span><span style="display:flex;"><span>// server
+</span></span><span style="display:flex;"><span>SERVER_ERROR<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> Go run main.go
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>// client
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> i in <span style="color:#66d9ef">$(</span>seq 10<span style="color:#66d9ef">)</span>; <span style="color:#66d9ef">do</span> curl -x <span style="color:#e6db74">&#39;&#39;</span> localhost:8080 ;<span style="color:#66d9ef">done</span>
+</span></span></code></pre></div><p><a class="link" href="https://gist.github.com/aladine/48d935c44820508e5bca2f061e3a7c1d/raw/930cdc10c41e8b9b37018f2be36bc421e6df481a/demo.sh"  target="_blank" rel="noopener"
+    >查看源码</a></p>
+<h2 id="重试问题">重试问题</h2>
+<p>在上面的熔断器模式中，如果服务 B 缩容，会发生什么？大量已经从 A 发出的请求会返回 5xx error。可能会触发熔断器切换到 open 的错误报警。因此我们需要重试以防间歇性的 network hiccup 发生。</p>
 <p>一段简单的重试代码示例：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">callWithRetryV1</span><span class="params">()</span></span> (err <span class="type">error</span>) &#123;</span><br><span class="line">	<span class="keyword">for</span> index := <span class="number">0</span>; index &lt; <span class="number">3</span>; index++ &#123;</span><br><span class="line">		<span class="comment">// call producer API</span></span><br><span class="line">		err := callChargeProducerAPI()</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> err</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// adding backoff</span></span><br><span class="line">	<span class="comment">// adding jitter</span></span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><a target="_blank" rel="noopener" href="https://gist.githubusercontent.com/aladine/6d65d1db78b020ef9866e3a8ad2516aa/raw/a4d3b65cc4ef920cdfc7e898c130b92371007785/retry.go">查看源码</a></p>
-<h2><span id="重试模式">重试模式</span></h2><p>为了实现乐观锁，我们可以为不同的服务配置不同的重试次数。因为立即重试会对下游服务产生爆发性的请求，所以不能用立即重试。加一个 backoff 时间可以缓解下游服务的压力。一些其他的模式会用一个随机的 backoff 时间（或在等待时加 jitter）。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">callWithRetryV1</span>() (<span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">index</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">index</span> &lt; <span style="color:#ae81ff">3</span>; <span style="color:#a6e22e">index</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// call producer API
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">callChargeProducerAPI</span>()
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// adding backoff
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// adding jitter
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><a class="link" href="https://gist.githubusercontent.com/aladine/6d65d1db78b020ef9866e3a8ad2516aa/raw/a4d3b65cc4ef920cdfc7e898c130b92371007785/retry.go"  target="_blank" rel="noopener"
+    >查看源码</a></p>
+<h2 id="重试模式">重试模式</h2>
+<p>为了实现乐观锁，我们可以为不同的服务配置不同的重试次数。因为立即重试会对下游服务产生爆发性的请求，所以不能用立即重试。加一个 backoff 时间可以缓解下游服务的压力。一些其他的模式会用一个随机的 backoff 时间（或在等待时加 jitter）。</p>
 <p>一起来看下列算法：</p>
 <ul>
-<li>Exponential: bash * 2<sup>attemp</sup></li>
-<li>Full Jitter: sleep = rand(0, base * 2<sup>attempt</sup>)</li>
-<li>Equal Jitter: temp = base * 2<sup>attemp</sup>; sleep = temp/2+rand(0, temp/2)</li>
+<li>Exponential: bash * 2<!-- raw HTML omitted -->attemp<!-- raw HTML omitted --></li>
+<li>Full Jitter: sleep = rand(0, base * 2<!-- raw HTML omitted -->attempt<!-- raw HTML omitted -->)</li>
+<li>Equal Jitter: temp = base * 2<!-- raw HTML omitted -->attemp<!-- raw HTML omitted -->; sleep = temp/2+rand(0, temp/2)</li>
 <li>De-corredlated Jitter: sleep = rand(base, sleep*3)</li>
 </ul>
-<p>【译注】关于这几个算法，可以参考<a target="_blank" rel="noopener" href="https://amazonaws-china.com/cn/blogs/architecture/exponential-backoff-and-jitter/">这篇文章</a> 。<strong>Full Jitter</strong>、 <strong>Equal Jitter</strong>、 <strong>De-corredlated</strong> 等都是原作者自己定义的名词。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204111132.png" alt></p>
-<p>客户端的数量与服务端的总负载和处理完成时间是有关联的。为了确定什么样的重试模式最适合你的系统，在客户端数量增加时很有必要运行基准测试。详细的实验过程可以在<a target="_blank" rel="noopener" href="https://amazonaws-china.com/cn/blogs/architecture/exponential-backoff-and-jitter/">这篇文章</a>中看到。我建议的算法是 de-corredlated Jitter 和 full jitter 选择其中一个。</p>
-<h2><span id="两者结合">两者结合</span></h2><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204011245.png" alt="Example configuration of both tools"></p>
+<p>【译注】关于这几个算法，可以参考<a class="link" href="https://amazonaws-china.com/cn/blogs/architecture/exponential-backoff-and-jitter/"  target="_blank" rel="noopener"
+    >这篇文章</a> 。<strong>Full Jitter</strong>、 <strong>Equal Jitter</strong>、 <strong>De-corredlated</strong> 等都是原作者自己定义的名词。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204111132.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>客户端的数量与服务端的总负载和处理完成时间是有关联的。为了确定什么样的重试模式最适合你的系统，在客户端数量增加时很有必要运行基准测试。详细的实验过程可以在<a class="link" href="https://amazonaws-china.com/cn/blogs/architecture/exponential-backoff-and-jitter/"  target="_blank" rel="noopener"
+    >这篇文章</a>中看到。我建议的算法是 de-corredlated Jitter 和 full jitter 选择其中一个。</p>
+<h2 id="两者结合">两者结合</h2>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201204011245.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="Example configuration of both tools"
+	
+	
+></p>
 <p>熔断器被广泛用在无状态线上事务系统中，尤其是在聚合点上。重试应该用于调度作业或不被 timeout 约束的 worker。经过深思熟虑后我们可以同时用熔断器和重试。在大型系统中，service mesh 是一种能更精确地编排不同配置的理想架构。</p>
-<h2><span id="参考文章">参考文章</span></h2><ol>
-<li><a target="_blank" rel="noopener" href="https://github.com/afex/hystrix-go/">https://github.com/afex/hystrix-go/</a></li>
-<li><a target="_blank" rel="noopener" href="https://github.com/eapache/go-resiliency">https://github.com/eapache/go-resiliency</a></li>
-<li><a target="_blank" rel="noopener" href="https://github.com/Netflix/Hystrix/wiki">https://github.com/Netflix/Hystrix/wiki</a></li>
-<li><a target="_blank" rel="noopener" href="https://www.awsarchitectureblog.com/2015/03/backoff.html">https://www.awsarchitectureblog.com/2015/03/backoff.html</a></li>
-<li><a target="_blank" rel="noopener" href="https://dzone.com/articles/go-microservices-part-11-hystrix-and-resilience">https://dzone.com/articles/go-microservices-part-11-hystrix-and-resilience</a></li>
+<h2 id="参考文章">参考文章</h2>
+<ol>
+<li><a class="link" href="https://github.com/afex/hystrix-go/"  target="_blank" rel="noopener"
+    >https://github.com/afex/hystrix-go/</a></li>
+<li><a class="link" href="https://github.com/eapache/go-resiliency"  target="_blank" rel="noopener"
+    >https://github.com/eapache/go-resiliency</a></li>
+<li><a class="link" href="https://github.com/Netflix/Hystrix/wiki"  target="_blank" rel="noopener"
+    >https://github.com/Netflix/Hystrix/wiki</a></li>
+<li><a class="link" href="https://www.awsarchitectureblog.com/2015/03/backoff.html"  target="_blank" rel="noopener"
+    >https://www.awsarchitectureblog.com/2015/03/backoff.html</a></li>
+<li><a class="link" href="https://dzone.com/articles/go-microservices-part-11-hystrix-and-resilience"  target="_blank" rel="noopener"
+    >https://dzone.com/articles/go-microservices-part-11-hystrix-and-resilience</a></li>
 </ol>
 <hr>
-<p>via: <a target="_blank" rel="noopener" href="https://medium.com/@trongdan_tran/circuit-breaker-and-retry-64830e71d0f6">https://medium.com/@trongdan_tran/circuit-breaker-and-retry-64830e71d0f6</a></p>
-<p>作者：<a target="_blank" rel="noopener" href="https://medium.com/@trongdan_tran">Dan Tran</a> 译者：<a target="_blank" rel="noopener" href="https://github.com/lxbwolf">Xiaobin.Liu</a> 校对：<a target="_blank" rel="noopener" href="https://github.com/polaris1119">polaris1119</a></p>
-<p>本文由 <a target="_blank" rel="noopener" href="https://github.com/studygolang/GCTT">GCTT</a> 原创编译，<a target="_blank" rel="noopener" href="https://studygolang.com/articles/25295">Go语言中文网</a> 荣誉推出</p>
+<p>via: <a class="link" href="https://medium.com/@trongdan_tran/circuit-breaker-and-retry-64830e71d0f6"  target="_blank" rel="noopener"
+    >https://medium.com/@trongdan_tran/circuit-breaker-and-retry-64830e71d0f6</a></p>
+<p>作者：<a class="link" href="https://medium.com/@trongdan_tran"  target="_blank" rel="noopener"
+    >Dan Tran</a> 译者：<a class="link" href="https://github.com/lxbwolf"  target="_blank" rel="noopener"
+    >Xiaobin.Liu</a> 校对：<a class="link" href="https://github.com/polaris1119"  target="_blank" rel="noopener"
+    >polaris1119</a></p>
+<p>本文由 <a class="link" href="https://github.com/studygolang/GCTT"  target="_blank" rel="noopener"
+    >GCTT</a> 原创编译，<a class="link" href="https://studygolang.com/articles/25295"  target="_blank" rel="noopener"
+    >Go语言中文网</a> 荣誉推出</p>
 
-      
-    </div>
-    <div class="article-footer">
-      <blockquote class="mt-2x">
-  <ul class="post-copyright list-unstyled">
-    
-    <li class="post-copyright-link hidden-xs">
-      <strong>本文链接：</strong>
-      <a href="https://lxb.wiki/c9399f4/" title="【译】微服务中的熔断器和重试" target="_blank" rel="external">https://lxb.wiki/c9399f4/</a>
-    </li>
-    
-    <li class="post-copyright-license">
-      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
-    </li>
-  </ul>
-</blockquote>
-
-    </div>
-  </article>
-  
-    
-  <section id="comments">
-  	
-      
-        <section id="comments" class="comments">
-          <style>
-            .utterances{max-width: 100%;}
-          </style>
-          <script src="https://utteranc.es/client.js"
-                repo="lxbwolf/lxbwolf.github.io"
-                issue-term="title"
-                theme="github-light"
-                crossorigin="anonymous"
-                async>
-          </script>
-        </section>
-      
-    
-  </section>
+</section>
 
 
-  
-</div>
-
-  <nav class="bar bar-footer clearfix" data-stick-bottom>
-  <div class="bar-inner">
-  
-  <ul class="pager pull-left">
+    <footer class="article-footer">
     
-    <li class="prev">
-      <a href="/b3baee92/" title="[译]Go GC 怎么标记内存"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
-    </li>
-    
-    
-    <li class="next">
-      <a href="/4e717bb5/" title="【译】协程，操作系统线程和 CPU 管理"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
-    </li>
-    
-    
-  </ul>
-  
-  
-  
-  <div class="bar-right">
-    
-    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
-    
-  </div>
-  </div>
-</nav>
-  
-
-
-
-</main>
-
-  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
-	
-	
-    <ul class="social-links">
-    	
-        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+    <section class="article-tags">
         
-        <li><a href="mailto:me@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+            <a href="/tags/go/">go</a>
         
-        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+            <a href="/tags/%E7%BF%BB%E8%AF%91/">翻译</a>
         
-    </ul>
+            <a href="/tags/%E6%9E%B6%E6%9E%84/">架构</a>
+        
+    </section>
 
-    <div class="copyright">
-    	
-        <div class="publishby">
-        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> Xiaobin.Liu </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/4e717bb5/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">【译】协程，操作系统线程和 CPU 管理</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/e2c91def/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">go匿名函数和闭包</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/1d3c1f0e/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Golang的反射</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/4fe063a2/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Golang编译器漏洞和标准库设计失误</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/7db296fb/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">分布式锁高并发优化</h2>
+        </div>
+    </a>
+</article>
+
+            
         </div>
     </div>
+</aside>
 
+     
+    
+        
+    <div class="disqus-container">
+    
+</div>
 
-  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
-  <script>
-    if (window.mermaid) {
-      mermaid.initialize({theme: 'forest'});
+<style>
+    .disqus-container {
+        background-color: var(--card-background);
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--shadow-l1);
+        padding: var(--card-padding);
     }
-  </script>
+</style>
 
+<script>
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (typeof DISQUS == 'object') {
+            DISQUS.reset({
+                reload: true
+            });
+        }
+    })
+</script>
 
+    
 
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2023 Xiaobin&#39;s Blog
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
 </footer>
 
-  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
 <script>
-window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
 </script>
 
-<script src="/js/plugin.min.js"></script>
-
-
-<script src="/js/application.js"></script>
-
-
-    <script>
-(function (window) {
-    var INSIGHT_CONFIG = {
-        TRANSLATION: {
-            POSTS: '文章',
-            PAGES: '页面',
-            CATEGORIES: '分类',
-            TAGS: '标签',
-            UNTITLED: '(未命名)',
-        },
-        ROOT_URL: '/',
-        CONTENT_URL: '/content.json',
-    };
-    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
-})(window);
-</script>
-
-<script src="/js/insight.js"></script>
-
-
-
-
-
-
-   
-
-
-
-
-   
-
-
-
-
-
-    <script defer type="text/javascript">
-(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'G-JZ2PWLT6JY', 'auto');
-ga('send', 'pageview');
-
-</script>
-
-
-    <script defer>
-var _hmt = _hmt || [];
-(function() {
-    var hm = document.createElement("script");
-    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
-    var s = document.getElementsByTagName("script")[0];
-    s.parentNode.insertBefore(hm, s);
-})();
-</script>
-
-
-
-
-</body>
+    </body>
 </html>

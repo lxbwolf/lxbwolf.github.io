@@ -1,424 +1,379 @@
 <!DOCTYPE html>
-<html lang=zh>
-<head>
-  <meta charset="utf-8">
-  
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
-  <meta name="renderer" content="webkit">
-  <meta http-equiv="Cache-Control" content="no-transform" />
-  <meta http-equiv="Cache-Control" content="no-siteapp" />
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="format-detection" content="telephone=no,email=no,adress=no">
-  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
-  <!-- Color theme for statusbar -->
-  <meta name="theme-color" content="#000000" />
-  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
-  <meta http-equiv="window-target" content="_top" />
-  
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='快速了解跳表 跳跃表(简称跳表)由美国计算机科学家William Pugh发明于1989年。他在论文《Skip lists: a probabilistic alternative to balanced trees》中详细介绍'>
+<title>跳表的增删改查</title>
 
-  
-  <title>跳表的增删改查 | Xiaobin&#39;s Blog</title>
-  <meta name="description" content="快速了解跳表 跳表的增删改查 查询操作 删除操作 插入操作   总结    快速了解跳表跳跃表(简称跳表)由美国计算机科学家William Pugh发明于1989年。他在论文《Skip lists: a probabilistic alternative to balanced trees》中详细介绍了跳表的数据结构和插入删除等操作。  ​    跳表(SkipList，全称跳跃表)是用于有">
-<meta property="og:type" content="article">
-<meta property="og:title" content="跳表的增删改查">
-<meta property="og:url" content="https://lxb.wiki/942c23ec/index.html">
-<meta property="og:site_name" content="Xiaobin&#39;s Blog">
-<meta property="og:description" content="快速了解跳表 跳表的增删改查 查询操作 删除操作 插入操作   总结    快速了解跳表跳跃表(简称跳表)由美国计算机科学家William Pugh发明于1989年。他在论文《Skip lists: a probabilistic alternative to balanced trees》中详细介绍了跳表的数据结构和插入删除等操作。  ​    跳表(SkipList，全称跳跃表)是用于有">
-<meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011145.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011307.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011343.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011553.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011642.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011750.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011835.png">
-<meta property="article:published_time" content="2020-12-02T13:06:56.000Z">
-<meta property="article:modified_time" content="2023-02-18T02:34:19.715Z">
-<meta property="article:author" content="Xiaobin.Liu">
-<meta property="article:tag" content="算法">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011145.png">
-  <!-- Canonical links  把后面的 index.html 去掉-->
-  <link rel="canonical" href="https://lxb.wiki/942c23ec/">
-  
-    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Blog" type="application/atom+xml">
-  
-  
-    <link rel="icon" href="/favicon.png" type="image/x-icon">
-  
-  
-<link rel="stylesheet" href="/css/style.css">
+<link rel='canonical' href='http://lxb.wiki/942c23ec/'>
 
-  
-  
-  
-  
+<link rel="stylesheet" href="/scss/style.min.bc5bb6e306c354a2f5d5bfd1e65a5f3996962fb9b4a3546b748aee7daee4f258.css"><meta property='og:title' content='跳表的增删改查'>
+<meta property='og:description' content='快速了解跳表 跳跃表(简称跳表)由美国计算机科学家William Pugh发明于1989年。他在论文《Skip lists: a probabilistic alternative to balanced trees》中详细介绍'>
+<meta property='og:url' content='http://lxb.wiki/942c23ec/'>
+<meta property='og:site_name' content='Xiaobin&#39;s Blog'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='算法' /><meta property='article:published_time' content='2020-12-02T21:06:56&#43;00:00'/><meta property='article:modified_time' content='2020-12-02T21:06:56&#43;00:00'/>
+<meta name="twitter:title" content="跳表的增删改查">
+<meta name="twitter:description" content="快速了解跳表 跳跃表(简称跳表)由美国计算机科学家William Pugh发明于1989年。他在论文《Skip lists: a probabilistic alternative to balanced trees》中详细介绍">
+<link rel="shortcut icon" href="/favicon.png" />
 
-    <!-- google adsense -->
-    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
+<script data-ad-client="ca-pub-5708899526501350" async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-JZ2PWLT6JY');
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
 
-      gtag('config', 'G-JZ2PWLT6JY');
-    </script>
-<meta name="generator" content="Hexo 6.0.0"></head>
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
 
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
 
-<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
-  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-  <div class="slimContent">
-    <div class="navbar-header">
-      
-      
-      <div class="profile-block text-center">
-        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
-          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
-        </a>
-        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin.Liu</h2>
-        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
-        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
-      </div>
-      
-      <div class="search" id="search-form-wrap">
-
-    <form class="search-form sidebar-form">
-        <div class="input-group">
-            <input type="text" class="search-form-input form-control" placeholder="搜索" />
-            <span class="input-group-btn">
-                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
-            </span>
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
+                            height="298" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">Xiaobin&#39;s Blog</a></h1>
+            <h2 class="site-description"></h2>
         </div>
-    </form>
-    <div class="ins-search">
-  <div class="ins-search-mask"></div>
-  <div class="ins-search-container">
-    <div class="ins-input-wrapper">
-      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
-      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
-    </div>
-    <div class="ins-section-wrapper">
-      <div class="ins-section-container"></div>
-    </div>
-  </div>
-</div>
-
-
-</div>
-      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-    </div>
-    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
-      <ul class="nav navbar-nav main-nav menu-highlight">
+    </header><ol class="menu" id="main-menu">
         
         
-        <li class="menu-item menu-item-home">
-          <a href="/.">
-            
-            <i class="icon icon-home-fill"></i>
-            
-            <span class="menu-title">首页</span>
-          </a>
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-archives">
-          <a href="/archives">
-            
-            <i class="icon icon-archives-fill"></i>
-            
-            <span class="menu-title">归档</span>
-          </a>
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                <span>归档</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-categories">
-          <a href="/categories">
-            
-            <i class="icon icon-folder"></i>
-            
-            <span class="menu-title">分类</span>
-          </a>
+        <li >
+            <a href='/categories/' >
+                
+                
+                
+                <span>分类</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-tags">
-          <a href="/tags">
-            
-            <i class="icon icon-tags"></i>
-            
-            <span class="menu-title">标签</span>
-          </a>
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>标签</span>
+            </a>
         </li>
         
         
-        <li class="menu-item menu-item-links">
-          <a href="/links">
-            
-            <i class="icon icon-friendship"></i>
-            
-            <span class="menu-title">友链</span>
-          </a>
+        <li >
+            <a href='/links/' >
+                
+                
+                
+                <span>友链</span>
+            </a>
         </li>
         
-        
-        <li class="menu-item menu-item-about">
-          <a href="/about">
+
+        <div class="menu-bottom-section">
             
-            <i class="icon icon-cup-fill"></i>
             
-            <span class="menu-title">关于</span>
-          </a>
-        </li>
-        
-      </ul>
-      
-	
-    <ul class="social-links">
-    	
-        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
-        
-        <li><a href="mailto:me@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
-        
-        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
-        
-    </ul>
-
-    </nav>
-  </div>
-</header>
-
-  
-    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
-  <div class="slimContent">
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">分类</h3>
-    <div class="widget-body">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">48</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">22</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">28</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">18</span></li></ul>
-    </div>
-  </div>
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
 
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">标签云</h3>
-    <div class="widget-body tagcloud">
-      <a href="/tags/GitHub/" style="font-size: 13.09px;">GitHub</a> <a href="/tags/STL/" style="font-size: 13.45px;">STL</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.27px;">blog</a> <a href="/tags/c/" style="font-size: 13.64px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.09px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.09px;">devops</a> <a href="/tags/docker/" style="font-size: 13px;">docker</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.36px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.18px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.09px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.18px;">hexo</a> <a href="/tags/http/" style="font-size: 13.36px;">http</a> <a href="/tags/joplin/" style="font-size: 13.09px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/mac/" style="font-size: 13.27px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.09px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.18px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.36px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.18px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.18px;">pic</a> <a href="/tags/qt/" style="font-size: 13.36px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/redis/" style="font-size: 13.55px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.91px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.09px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/zk/" style="font-size: 13.09px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.45px;">工具</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.73px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.45px;">树莓派</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.55px;">算法</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.82px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.09px;">邮件</a>
-    </div>
-  </div>
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">归档</h3>
-    <div class="widget-body">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">30</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">32</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
-    </div>
-  </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
 
 
-    
-      
-  <div class="widget">
-    <h3 class="widget-title">最新文章</h3>
-    <div class="widget-body">
-      <ul class="recent-post-list list-unstyled no-thumbnail">
-        
-          <li>
+
+                    <span>暗色模式</span>
+                </li>
             
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Design/">Design</a>
-              </p>
-              <p class="item-title">
-                <a href="/12428ad2/" class="title">【译】构建高效的 DevOps 文化的 6 个技巧</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2023-01-30T13:58:33.000Z" itemprop="datePublished">2023-01-30</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Web/">Web</a>
-              </p>
-              <p class="item-title">
-                <a href="/a258db2c/" class="title">【译】域名末尾带个点</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-11-16T14:20:00.000Z" itemprop="datePublished">2022-11-16</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Tools/">Tools</a>
-              </p>
-              <p class="item-title">
-                <a href="/690c8418/" class="title">【译】10大静态网站生成工具</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-10-02T10:26:55.000Z" itemprop="datePublished">2022-10-02</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Tools/">Tools</a>
-              </p>
-              <p class="item-title">
-                <a href="/62afdbe0/" class="title">mermaid画流程图语法</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-06-20T12:34:38.000Z" itemprop="datePublished">2022-06-20</time>
-              </p>
-            </div>
-          </li>
-          
-          <li>
-            
-            <div class="item-inner">
-              <p class="item-category">
-                <a class="category-link" href="/categories/Linux/">Linux</a>
-              </p>
-              <p class="item-title">
-                <a href="/f54357bf/" class="title">流编辑器sed</a>
-              </p>
-              <p class="item-date">
-                <time datetime="2022-06-10T14:28:34.000Z" itemprop="datePublished">2022-06-10</time>
-              </p>
-            </div>
-          </li>
-          
-      </ul>
-    </div>
-  </div>
-  
-
-    
-  </div>
+        </div>
+    </ol>
 </aside>
 
-  
-  
-<main class="main" role="main">
-  <div class="content">
-  <article id="post-跳表的增删改查" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+<section class="widget archives">
     
-    <div class="article-header">
-      
-        
-  
-    <h1 class="article-title" itemprop="name">
-      跳表的增删改查
-    </h1>
-  
+    <h2 class="widget-title section-title">目录</h2>
 
-      
-      <div class="article-meta">
-        <span class="article-date">
-    <i class="icon icon-calendar-check"></i>
-	<a href="/942c23ec/" class="article-date">
-	  <time datetime="2020-12-02T13:06:56.000Z" itemprop="datePublished">2020-12-02</time>
-	</a>
-</span>
-        
-  <span class="article-category">
-    <i class="icon icon-folder"></i>
-    <a class="article-category-link" href="/categories/Algorithm/">Algorithm</a>
-  </span>
-
-        
-  <span class="article-tag">
-    <i class="icon icon-tags"></i>
-	<a class="article-tag-link-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a>
-  </span>
-
-
-<!--        
- -->
-        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/942c23ec/#comments" class="article-comment-link">评论</a></span> 
-        
-	
-		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 4.8k(字)</span>
-	
-	
-		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 18(分)</span>
-	
-
-      </div>
+    <div class="widget--toc">
+        <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#快速了解跳表">快速了解跳表</a></li>
+        <li><a href="#跳表的增删改查">跳表的增删改查</a></li>
+        <li><a href="#总结">总结</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
     </div>
-    <div class="article-entry marked-body" itemprop="articleBody">
-      
-        <!-- toc -->
+</section>
 
-<ul>
-<li><a href="#快速了解跳表">快速了解跳表</a></li>
-<li><a href="#跳表的增删改查">跳表的增删改查</a><ul>
-<li><a href="#查询操作">查询操作</a></li>
-<li><a href="#删除操作">删除操作</a></li>
-<li><a href="#插入操作">插入操作</a></li>
-</ul>
-</li>
-<li><a href="#总结">总结</a></li>
-</ul>
-<!-- tocstop -->
+            
+        
+    </aside>
 
-<h3><span id="快速了解跳表">快速了解跳表</span></h3><p>跳跃表(简称跳表)由美国计算机科学家<strong><em>William Pugh发明于1989年</em></strong>。他在论文《Skip lists: a probabilistic alternative to balanced trees》中详细介绍了跳表的数据结构和插入删除等操作。</p>
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+        <a href="/categories/Algorithm/" >
+            Algorithm
+        </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/942c23ec/">跳表的增删改查</a>
+        </h2>
+
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+            <time class="article-time--published">Dec 02, 2020</time>
+        </div>
+        
+
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+            <time class="article-time--reading">
+                阅读时长: 13 分钟
+            </time>
+        </div>
+        
+        <small>
+    <section class="article-tags">
+        
+            <a href="/tags/%E7%AE%97%E6%B3%95/">算法</a>
+        
+    </section>
+</small>
+    </footer>
+    
+
+    
+</div>
+</header>
+
+    <section class="article-content">
+    
+    
+    <!-- raw HTML omitted -->
+<h3 id="快速了解跳表">快速了解跳表</h3>
+<p>跳跃表(简称跳表)由美国计算机科学家<em><strong>William Pugh发明于1989年</strong></em>。他在论文《Skip lists: a probabilistic alternative to balanced trees》中详细介绍了跳表的数据结构和插入删除等操作。</p>
 <blockquote>
-<p>​    跳表(SkipList，全称跳跃表)是用于有序元素序列快速搜索查找的一个数据结构，跳表是一个随机化的数据结构，实质就是一种可以进行二分查找的有序链表。跳表在原有的有序链表上面增加了多级索引，通过索引来实现快速查找。跳表不仅能提高搜索性能，同时也可以提高插入和删除操作的性能。它在性能上和红黑树，AVL树不相上下，但是跳表的原理非常简单，实现也比红黑树简单很多。</p>
+<p>​	跳表(SkipList，全称跳跃表)是用于有序元素序列快速搜索查找的一个数据结构，跳表是一个随机化的数据结构，实质就是一种可以进行二分查找的有序链表。跳表在原有的有序链表上面增加了多级索引，通过索引来实现快速查找。跳表不仅能提高搜索性能，同时也可以提高插入和删除操作的性能。它在性能上和红黑树，AVL树不相上下，但是跳表的原理非常简单，实现也比红黑树简单很多。</p>
 </blockquote>
 <p>链表的优势就是更高效的插入、删除。<strong>痛点就是查询很慢很慢</strong>！每次查询都是一种O(n)复杂度的操作</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011145.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011145.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>这是一个带头结点的链表(头结点相当于一个固定的入口，不存储有意义的值)，每次查找都需要一个个枚举，相当的慢，我们能不能稍微优化一下，让它稍微跳一跳呢？答案是可以的，我们知道很多算法和数据结构<strong>以空间换时间</strong>，我们在上面加一层索引，让部分节点在上层能够直接定位到，这样链表的查询时间近乎减少一半</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011307.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011307.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>这样，在查询某个节点的时候，首先会从上一层快速定位节点所在的一个范围，如果找到具体范围向下然后查找代价很小，当然在表的结构设计上会增加一个向下的索引(指针)用来查找确定底层节点。平均查找速度平均为O(n/2)。但是当节点数量很大的时候，它依旧很慢很慢。我们都知道二分查找是每次都能折半的去压缩查找范围，要是有序链表也能这么跳起来那就太完美了。没错<strong>跳表就能让链表拥有近乎的接近二分查找的效率的一种数据结构</strong>，其原理依然是给上面加若干层索引，优化查找速度。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011343.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011343.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>通过上图可以看到，通过这样的一个数据结构对有序链表进行查找都能近乎二分的性能。就是在上面维护那么多层的索引，首先在最高级索引上查找最后一个小于当前查找元素的位置，然后再跳到次高级索引继续查找，直到跳到最底层为止，这时候以及十分接近要查找的元素的位置了(如果查找元素存在的话)。由于根据索引可以一次跳过多个元素，所以跳查找的查找速度也就变快了。</p>
 <p>对于理想的跳表，每向上一层索引节点数量都是下一层的1/2.那么如果n个节点增加的节点数量(1/2+1/4+…)&lt;n。并且层数较低，对查找效果影响不大。但是对于这么一个结构，你可能会疑惑，这样完美的结构真的存在吗？大概率不存在的，因为作为一个链表，少不了增删该查的一些操作。而删除和插入可能会改变整个结构，所以上面的这些都是理想的结构，在插入的时候是否添加上层索引是个概率问题(1/2的概率)，</p>
-<h3><span id="跳表的增删改查">跳表的增删改查</span></h3><p>在实现本跳表的过程为了便于操作，我们将跳表的头结点(head)的key设为int的最小值(一定满足左小右大方便比较)。</p>
+<h3 id="跳表的增删改查">跳表的增删改查</h3>
+<p>在实现本跳表的过程为了便于操作，我们将跳表的头结点(head)的key设为int的最小值(一定满足左小右大方便比较)。</p>
 <p>对于每个节点的设置，设置成SkipNode类，为了防止初学者将next向下还是向右搞混，直接设置right，down两个指针。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">SkipNode</span>&lt;T&gt;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> key;</span><br><span class="line">    T value;</span><br><span class="line">    SkipNode right,down;<span class="comment">//右下个方向的指针</span></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">SkipNode</span> <span class="params">(<span class="type">int</span> key,T value)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.key=key;</span><br><span class="line">        <span class="built_in">this</span>.value=value;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>跳表的结构和初始化也很重要，其主要参数和初始化方法为：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SkipList</span> &lt;T&gt; &#123;</span><br><span class="line">    </span><br><span class="line">    SkipNode headNode;<span class="comment">//头节点，入口</span></span><br><span class="line">    <span class="type">int</span> highLevel;<span class="comment">//当前跳表索引层数</span></span><br><span class="line">    Random random;<span class="comment">// 用于投掷硬币</span></span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> <span class="variable">MAX_LEVEL</span> <span class="operator">=</span> <span class="number">32</span>;<span class="comment">//最大的层</span></span><br><span class="line"></span><br><span class="line">    SkipList()&#123;</span><br><span class="line">        random=<span class="keyword">new</span> <span class="title class_">Random</span>();</span><br><span class="line">        headNode=<span class="keyword">new</span> <span class="title class_">SkipNode</span>(Integer.MIN_VALUE,<span class="literal">null</span>);</span><br><span class="line">        highLevel=<span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//其他方法</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4><span id="查询操作">查询操作</span></h4><p>很多时候链表也可能这样相连仅仅是某个元素或者key作为有序的标准。所以有可能链表内部存在一些value。不过修改和查询其实都是一个操作，找到关键数字(key)。并且查找的流程也很简单，设置一个临时节点team=head。当<strong>team不为null</strong>其流程大致如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">SkipNode</span><span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> key<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    T value<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    SkipNode right<span style="color:#f92672">,</span>down<span style="color:#f92672">;</span><span style="color:#75715e">//右下个方向的指针
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">SkipNode</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> key<span style="color:#f92672">,</span>T value<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">=</span>key<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>value<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>跳表的结构和初始化也很重要，其主要参数和初始化方法为：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">SkipList</span> <span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    SkipNode headNode<span style="color:#f92672">;</span><span style="color:#75715e">//头节点，入口
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">int</span> highLevel<span style="color:#f92672">;</span><span style="color:#75715e">//当前跳表索引层数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    Random random<span style="color:#f92672">;</span><span style="color:#75715e">// 用于投掷硬币
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">int</span> MAX_LEVEL <span style="color:#f92672">=</span> <span style="color:#ae81ff">32</span><span style="color:#f92672">;</span><span style="color:#75715e">//最大的层
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    SkipList<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        random<span style="color:#f92672">=</span><span style="color:#66d9ef">new</span> Random<span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        headNode<span style="color:#f92672">=</span><span style="color:#66d9ef">new</span> SkipNode<span style="color:#f92672">(</span>Integer<span style="color:#f92672">.</span><span style="color:#a6e22e">MIN_VALUE</span><span style="color:#f92672">,</span><span style="color:#66d9ef">null</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        highLevel<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//其他方法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h4 id="查询操作">查询操作</h4>
+<p>很多时候链表也可能这样相连仅仅是某个元素或者key作为有序的标准。所以有可能链表内部存在一些value。不过修改和查询其实都是一个操作，找到关键数字(key)。并且查找的流程也很简单，设置一个临时节点team=head。当<strong>team不为null</strong>其流程大致如下：</p>
 <p>(1) 从team节点出发，<strong>如果当前节点的key与查询的key相等</strong>，那么返回当前节点(如果是修改操作那么一直向下进行修改值即可)。</p>
 <p>(2) 如果key不相等，且<strong>右侧为null</strong>，那么证明只能向下(结果可能出现在下右方向)，此时team=team.down</p>
 <p>(3) 如果key不相等，且右侧不为null，且<strong>右侧节点key小于待查询的key</strong>。那么说明同级还可向右，此时team=team.right</p>
 <p>(4)（否则的情况）如果key不相等，且右侧不为null，且<strong>右侧节点key大于待查询的key</strong> 。那么说明如果有结果的话就在这个索引和下个索引之间，此时team=team.down。</p>
 <p>最终将按照这个步骤返回正确的节点或者null(说明没查到)。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011553.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011553.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>例如上图查询12节点，首先第一步从head出发发现右侧不为空，且7&lt;12,向右；第二步右侧为null向下；第三步节点7的右侧10&lt;12继续向右；第四步10右侧为null向下；第五步右侧12小于等于向右。第六步起始发现相等返回节点结束。</p>
 <p>而这块的代码也非常容易：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> SkipNode <span class="title function_">search</span><span class="params">(<span class="type">int</span> key)</span> &#123;</span><br><span class="line">    SkipNode team=headNode;</span><br><span class="line">    <span class="keyword">while</span> (team!=<span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span>(team.key==key)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">return</span>  team;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span>(team.right==<span class="literal">null</span>)<span class="comment">//右侧没有了，只能下降</span></span><br><span class="line">        &#123;</span><br><span class="line">            team=team.down;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span>(team.right.key&gt;key)<span class="comment">//需要下降去寻找</span></span><br><span class="line">        &#123;</span><br><span class="line">            team=team.down;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="comment">//右侧比较小向右</span></span><br><span class="line">        &#123;</span><br><span class="line">            team=team.right;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-
-
-<h4><span id="删除操作">删除操作</span></h4><p>删除操作比起查询稍微复杂一丢丢，但是比插入简单。删除需要改变链表结构所以需要处理好节点之间的联系。对于删除操作你需要谨记以下几点：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> SkipNode <span style="color:#a6e22e">search</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> key<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    SkipNode team<span style="color:#f92672">=</span>headNode<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>team<span style="color:#f92672">!=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">==</span>key<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span>  team<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">==</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span><span style="color:#75715e">//右侧没有了，只能下降
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">&gt;</span>key<span style="color:#f92672">)</span><span style="color:#75715e">//需要下降去寻找
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span> <span style="color:#75715e">//右侧比较小向右
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h4 id="删除操作">删除操作</h4>
+<p>删除操作比起查询稍微复杂一丢丢，但是比插入简单。删除需要改变链表结构所以需要处理好节点之间的联系。对于删除操作你需要谨记以下几点：</p>
 <p>(1)删除当前节点和这个节点的前后节点都有关系</p>
 <p>(2)删除当前层节点之后，下一层该key的节点也要删除，一直删除到最底层</p>
 <p>根据这两点分析一下：如果找到当前节点了，<strong>它的前面一个节点怎么查找呢</strong>？这个总不能在遍历一遍吧！有的使用四个方向的指针(上下左右)用来找到左侧节点。是可以的，但是这里可以<strong>特殊处理一下</strong> ，不直接判断和操作节点，先找到<strong>待删除节点的左侧节点</strong>。通过这个节点即可完成删除，然后这个节点直接向下去找下一层待删除的左侧节点。设置一个临时节点team=head，<strong>当team不为null</strong>具体循环流程为：</p>
@@ -426,218 +381,555 @@
 <p>(2)如果team右侧不 为null，并且<strong>右侧的key等于待删除的key</strong>，那么先删除节点，再team向下team=team.down为了删除下层节点。</p>
 <p>(3)如果team右侧不 为null，并且<strong>右侧key小于待删除的key</strong>，那么team向右team=team.right。</p>
 <p>(4)如果team右侧不 为null，并且<strong>右侧key大于待删除的key</strong>，那么team向下team=team.down，在下层继续查找删除节点。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011642.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011642.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>例如上图删除10节点，首先team=head从team出发，7&lt;10向右(team=team.right后面省略)；第二步右侧为null只能向下；第三部右侧为10在当前层删除10节点然后向下继续查找下一层10节点；第四步8&lt;10向右；第五步右侧为10删除该节点并且team向下。team为null说明删除完毕退出循环。</p>
 <p>删除操作实现的代码如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">delete</span><span class="params">(<span class="type">int</span> key)</span><span class="comment">//删除不需要考虑层数</span></span><br><span class="line">&#123;</span><br><span class="line">    SkipNode team=headNode;</span><br><span class="line">    <span class="keyword">while</span> (team!=<span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (team.right == <span class="literal">null</span>) &#123;<span class="comment">//右侧没有了，说明这一层找到，没有只能下降</span></span><br><span class="line">            team=team.down;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span>(team.right.key==key)<span class="comment">//找到节点，右侧即为待删除节点</span></span><br><span class="line">        &#123;</span><br><span class="line">            team.right=team.right.right;<span class="comment">//删除右侧节点</span></span><br><span class="line">            team=team.down;<span class="comment">//向下继续查找删除</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span>(team.right.key&gt;key)<span class="comment">//右侧已经不可能了，向下</span></span><br><span class="line">        &#123;</span><br><span class="line">            team=team.down;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123; <span class="comment">//节点还在右侧</span></span><br><span class="line">            team=team.right;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4><span id="插入操作">插入操作</span></h4><p>插入操作在实现起来是最麻烦的，需要的考虑的东西最多。回顾查询，不需要动索引；回顾删除，每层索引如果有删除就是了。但是插入不一样了，<strong>插入需要考虑是否插入索引，插入几层</strong>等问题。由于需要插入删除所以我们肯定无法维护一个完全理想的索引结构，因为它耗费的代价太高。但我们使用<strong>随机化</strong>的方法去判断是否向上层插入索引。即产生一个[0-1]的随机数如果小于0.5就向上插入索引，插入完毕后再次使用随机数判断是否向上插入索引。运气好这个值可能是多层索引，运气不好只插入最底层(这是100%插入的)。但是索引也不能不限制高度，我们一般会设置索引最高值如果大于这个值就不往上继续添加索引了。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">delete</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> key<span style="color:#f92672">)</span><span style="color:#75715e">//删除不需要考虑层数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    SkipNode team<span style="color:#f92672">=</span>headNode<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>team<span style="color:#f92672">!=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span><span style="color:#75715e">//右侧没有了，说明这一层找到，没有只能下降
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">==</span>key<span style="color:#f92672">)</span><span style="color:#75715e">//找到节点，右侧即为待删除节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span><span style="color:#75715e">//删除右侧节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">;</span><span style="color:#75715e">//向下继续查找删除
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">&gt;</span>key<span style="color:#f92672">)</span><span style="color:#75715e">//右侧已经不可能了，向下
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span> <span style="color:#75715e">//节点还在右侧
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h4 id="插入操作">插入操作</h4>
+<p>插入操作在实现起来是最麻烦的，需要的考虑的东西最多。回顾查询，不需要动索引；回顾删除，每层索引如果有删除就是了。但是插入不一样了，<strong>插入需要考虑是否插入索引，插入几层</strong>等问题。由于需要插入删除所以我们肯定无法维护一个完全理想的索引结构，因为它耗费的代价太高。但我们使用<strong>随机化</strong>的方法去判断是否向上层插入索引。即产生一个[0-1]的随机数如果小于0.5就向上插入索引，插入完毕后再次使用随机数判断是否向上插入索引。运气好这个值可能是多层索引，运气不好只插入最底层(这是100%插入的)。但是索引也不能不限制高度，我们一般会设置索引最高值如果大于这个值就不往上继续添加索引了。</p>
 <p>我们一步步剖析该怎么做，其流程为</p>
 <p>(1)首先通过上面查找的方式，找到<strong>待插入的左节点</strong>。插入的话最底层肯定是需要插入的，所以通过链表插入节点(需要考虑是否为末尾节点)</p>
 <p>(2)插入完这一层，需要考虑上一层是否插入，首先判断当前索引层级，如果大于最大值那么就停止(比如已经到最高索引层了)。否则设置一个随机数1/2的概率向上插入一层索引(因为理想状态下的就是每2个向上建一个索引节点)。</p>
 <p>(3)继续(2)的操作，直到概率退出或者索引层数大于最大索引层。</p>
 <p>在<strong>具体向上插入</strong>的时候，实质上还有非常重要的细节需要考虑。首先<strong>如何找到上层的待插入节点</strong> ？</p>
 <p>这个各个实现方法可能不同，如果有左、上指向的指针那么可以向左向上找到上层需要插入的节点，但是如果只有右指向和下指向的我们也可以<strong>巧妙的借助查询过程中记录下降的节点</strong>。因为曾经下降的节点倒序就是需要插入的节点，最底层也不例外(因为没有匹配值会下降为null结束循环)。在这里我使用<strong>栈</strong>这个数据结构进行存储，当然使用List也可以。下图就是给了一个插入示意图。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011750.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011750.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>其次如果该层是目前的<strong>最高层索引</strong>，需要<strong>继续向上建立索引</strong>应该怎么办？</p>
 <p>首先跳表最初肯定是没索引的，然后慢慢添加节点才有一层、二层索引，但是如果这个节点添加的索引突破当前最高层，该怎么办呢？</p>
 <p>这时候<strong>需要注意</strong>了，跳表的head需要改变了，新建一个ListNode节点作为新的head，将它的down指向老head，将这个head节点加入栈中(也就是这个节点作为下次后面要插入的节点)，就比如上面的9节点如果运气够好在往上建立一层节点，会是这样的。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011835.png" alt></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201228011835.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 <p>插入上层的时候注意所有节点要新建(拷贝)，除了right的指向down的指向也不能忘记，down指向上一个节点可以用一个临时节点作为前驱节点。如果层数突破当前最高层，头head节点(入口)需要改变。</p>
 <p>这部分更多的细节在代码中注释解释了，详细代码为：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">add</span><span class="params">(SkipNode node)</span></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> key=node.key;</span><br><span class="line">    SkipNode findNode=search(key);</span><br><span class="line">    <span class="keyword">if</span>(findNode!=<span class="literal">null</span>)<span class="comment">//如果存在这个key的节点</span></span><br><span class="line">    &#123;</span><br><span class="line">        findNode.value=node.value;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    Stack&lt;SkipNode&gt;stack=<span class="keyword">new</span> <span class="title class_">Stack</span>&lt;SkipNode&gt;();<span class="comment">//存储向下的节点，这些节点可能在右侧插入节点</span></span><br><span class="line">    SkipNode team=headNode;<span class="comment">//查找待插入的节点   找到最底层的哪个节点。</span></span><br><span class="line">    <span class="keyword">while</span> (team!=<span class="literal">null</span>) &#123;<span class="comment">//进行查找操作 </span></span><br><span class="line">        <span class="keyword">if</span>(team.right==<span class="literal">null</span>)<span class="comment">//右侧没有了，只能下降</span></span><br><span class="line">        &#123;</span><br><span class="line">            stack.add(team);<span class="comment">//将曾经向下的节点记录一下</span></span><br><span class="line">            team=team.down;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span>(team.right.key&gt;key)<span class="comment">//需要下降去寻找</span></span><br><span class="line">        &#123;</span><br><span class="line">            stack.add(team);<span class="comment">//将曾经向下的节点记录一下</span></span><br><span class="line">            team=team.down;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="comment">//向右</span></span><br><span class="line">        &#123;</span><br><span class="line">            team=team.right;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">int</span> level=<span class="number">1</span>;<span class="comment">//当前层数，从第一层添加(第一层必须添加，先添加再判断)</span></span><br><span class="line">    SkipNode downNode=<span class="literal">null</span>;<span class="comment">//保持前驱节点(即down的指向，初始为null)</span></span><br><span class="line">    <span class="keyword">while</span> (!stack.isEmpty()) &#123;</span><br><span class="line">        <span class="comment">//在该层插入node</span></span><br><span class="line">        team=stack.pop();<span class="comment">//抛出待插入的左侧节点</span></span><br><span class="line">        SkipNode nodeTeam=<span class="keyword">new</span> <span class="title class_">SkipNode</span>(node.key, node.value);<span class="comment">//节点需要重新创建</span></span><br><span class="line">        nodeTeam.down=downNode;<span class="comment">//处理竖方向</span></span><br><span class="line">        downNode=nodeTeam;<span class="comment">//标记新的节点下次使用</span></span><br><span class="line">        <span class="keyword">if</span>(team.right==<span class="literal">null</span>) &#123;<span class="comment">//右侧为null 说明插入在末尾</span></span><br><span class="line">            team.right=nodeTeam;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//水平方向处理</span></span><br><span class="line">        <span class="keyword">else</span> &#123;<span class="comment">//右侧还有节点，插入在两者之间</span></span><br><span class="line">            nodeTeam.right=team.right;</span><br><span class="line">            team.right=nodeTeam;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//考虑是否需要向上</span></span><br><span class="line">        <span class="keyword">if</span>(level&gt;MAX_LEVEL)<span class="comment">//已经到达最高级的节点啦</span></span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="type">double</span> num=random.nextDouble();<span class="comment">//[0-1]随机数</span></span><br><span class="line">        <span class="keyword">if</span>(num&gt;<span class="number">0.5</span>)<span class="comment">//运气不好结束</span></span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        level++;</span><br><span class="line">        <span class="keyword">if</span>(level&gt;highLevel)<span class="comment">//比当前最大高度要高但是依然在允许范围内 需要改变head节点</span></span><br><span class="line">        &#123;</span><br><span class="line">            highLevel=level;</span><br><span class="line">            <span class="comment">//需要创建一个新的节点</span></span><br><span class="line">            SkipNode highHeadNode=<span class="keyword">new</span> <span class="title class_">SkipNode</span>(Integer.MIN_VALUE, <span class="literal">null</span>);</span><br><span class="line">            highHeadNode.down=headNode;</span><br><span class="line">            headNode=highHeadNode;<span class="comment">//改变head</span></span><br><span class="line">            stack.add(headNode);<span class="comment">//下次抛出head</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-<h3><span id="总结">总结</span></h3><p>对于上面，跳表完整分析就结束啦，当然，你可能看到不同品种跳表的实现，还有的用数组方式表示上下层的关系这样也可以，但本文只定义right和down两个方向的链表更纯正化的讲解跳表。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>SkipNode node<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> key<span style="color:#f92672">=</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    SkipNode findNode<span style="color:#f92672">=</span>search<span style="color:#f92672">(</span>key<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>findNode<span style="color:#f92672">!=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span><span style="color:#75715e">//如果存在这个key的节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        findNode<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    Stack<span style="color:#f92672">&lt;</span>SkipNode<span style="color:#f92672">&gt;</span>stack<span style="color:#f92672">=</span><span style="color:#66d9ef">new</span> Stack<span style="color:#f92672">&lt;</span>SkipNode<span style="color:#f92672">&gt;();</span><span style="color:#75715e">//存储向下的节点，这些节点可能在右侧插入节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    SkipNode team<span style="color:#f92672">=</span>headNode<span style="color:#f92672">;</span><span style="color:#75715e">//查找待插入的节点   找到最底层的哪个节点。
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>team<span style="color:#f92672">!=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span><span style="color:#75715e">//进行查找操作 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">==</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span><span style="color:#75715e">//右侧没有了，只能下降
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            stack<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>team<span style="color:#f92672">);</span><span style="color:#75715e">//将曾经向下的节点记录一下
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">&gt;</span>key<span style="color:#f92672">)</span><span style="color:#75715e">//需要下降去寻找
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            stack<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>team<span style="color:#f92672">);</span><span style="color:#75715e">//将曾经向下的节点记录一下
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span> <span style="color:#75715e">//向右
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> level<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span><span style="color:#f92672">;</span><span style="color:#75715e">//当前层数，从第一层添加(第一层必须添加，先添加再判断)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    SkipNode downNode<span style="color:#f92672">=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">;</span><span style="color:#75715e">//保持前驱节点(即down的指向，初始为null)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">while</span> <span style="color:#f92672">(!</span>stack<span style="color:#f92672">.</span><span style="color:#a6e22e">isEmpty</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//在该层插入node
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        team<span style="color:#f92672">=</span>stack<span style="color:#f92672">.</span><span style="color:#a6e22e">pop</span><span style="color:#f92672">();</span><span style="color:#75715e">//抛出待插入的左侧节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        SkipNode nodeTeam<span style="color:#f92672">=</span><span style="color:#66d9ef">new</span> SkipNode<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">,</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">);</span><span style="color:#75715e">//节点需要重新创建
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        nodeTeam<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">=</span>downNode<span style="color:#f92672">;</span><span style="color:#75715e">//处理竖方向
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        downNode<span style="color:#f92672">=</span>nodeTeam<span style="color:#f92672">;</span><span style="color:#75715e">//标记新的节点下次使用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">==</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span><span style="color:#75715e">//右侧为null 说明插入在末尾
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">=</span>nodeTeam<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//水平方向处理
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span><span style="color:#75715e">//右侧还有节点，插入在两者之间
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            nodeTeam<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">=</span>nodeTeam<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//考虑是否需要向上
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>level<span style="color:#f92672">&gt;</span>MAX_LEVEL<span style="color:#f92672">)</span><span style="color:#75715e">//已经到达最高级的节点啦
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">break</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">double</span> num<span style="color:#f92672">=</span>random<span style="color:#f92672">.</span><span style="color:#a6e22e">nextDouble</span><span style="color:#f92672">();</span><span style="color:#75715e">//[0-1]随机数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>num<span style="color:#f92672">&gt;</span><span style="color:#ae81ff">0.5</span><span style="color:#f92672">)</span><span style="color:#75715e">//运气不好结束
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">break</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        level<span style="color:#f92672">++;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>level<span style="color:#f92672">&gt;</span>highLevel<span style="color:#f92672">)</span><span style="color:#75715e">//比当前最大高度要高但是依然在允许范围内 需要改变head节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            highLevel<span style="color:#f92672">=</span>level<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//需要创建一个新的节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            SkipNode highHeadNode<span style="color:#f92672">=</span><span style="color:#66d9ef">new</span> SkipNode<span style="color:#f92672">(</span>Integer<span style="color:#f92672">.</span><span style="color:#a6e22e">MIN_VALUE</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>            highHeadNode<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">=</span>headNode<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            headNode<span style="color:#f92672">=</span>highHeadNode<span style="color:#f92672">;</span><span style="color:#75715e">//改变head
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            stack<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>headNode<span style="color:#f92672">);</span><span style="color:#75715e">//下次抛出head
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h3 id="总结">总结</h3>
+<p>对于上面，跳表完整分析就结束啦，当然，你可能看到不同品种跳表的实现，还有的用数组方式表示上下层的关系这样也可以，但本文只定义right和down两个方向的链表更纯正化的讲解跳表。</p>
 <p>对于跳表以及跳表的同类竞争产品：红黑树，为啥Redis的有序集合(zset) 使用跳表呢？因为跳表除了查找插入维护和红黑树有着差不多的效率，它是个链表，能确定范围区间，而区间问题在树上可能就没那么方便查询啦。而JDK中<strong>跳跃表ConcurrentSkipListSet和ConcurrentSkipListMap。</strong> 有兴趣的也可以查阅一下源码。</p>
 <p>完整代码：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.Random;</span><br><span class="line"><span class="keyword">import</span> java.util.Stack;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SkipNode</span>&lt;T&gt;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> key;</span><br><span class="line">    T value;</span><br><span class="line">    SkipNode right,down;<span class="comment">//左右上下四个方向的指针</span></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">SkipNode</span> <span class="params">(<span class="type">int</span> key,T value)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.key=key;</span><br><span class="line">        <span class="built_in">this</span>.value=value;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SkipList</span> &lt;T&gt; &#123;</span><br><span class="line"></span><br><span class="line">    SkipNode headNode;<span class="comment">//头节点，入口</span></span><br><span class="line">    <span class="type">int</span> highLevel;<span class="comment">//层数</span></span><br><span class="line">    Random random;<span class="comment">// 用于投掷硬币</span></span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> <span class="variable">MAX_LEVEL</span> <span class="operator">=</span> <span class="number">32</span>;<span class="comment">//最大的层</span></span><br><span class="line">    SkipList()&#123;</span><br><span class="line">        random=<span class="keyword">new</span> <span class="title class_">Random</span>();</span><br><span class="line">        headNode=<span class="keyword">new</span> <span class="title class_">SkipNode</span>(Integer.MIN_VALUE,<span class="literal">null</span>);</span><br><span class="line">        highLevel=<span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> SkipNode <span class="title function_">search</span><span class="params">(<span class="type">int</span> key)</span> &#123;</span><br><span class="line">        SkipNode team=headNode;</span><br><span class="line">        <span class="keyword">while</span> (team!=<span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span>(team.key==key)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">return</span>  team;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span>(team.right==<span class="literal">null</span>)<span class="comment">//右侧没有了，只能下降</span></span><br><span class="line">            &#123;</span><br><span class="line">                team=team.down;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span>(team.right.key&gt;key)<span class="comment">//需要下降去寻找</span></span><br><span class="line">            &#123;</span><br><span class="line">                team=team.down;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="comment">//右侧比较小向右</span></span><br><span class="line">            &#123;</span><br><span class="line">                team=team.right;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">delete</span><span class="params">(<span class="type">int</span> key)</span><span class="comment">//删除不需要考虑层数</span></span><br><span class="line">    &#123;</span><br><span class="line">        SkipNode team=headNode;</span><br><span class="line">        <span class="keyword">while</span> (team!=<span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (team.right == <span class="literal">null</span>) &#123;<span class="comment">//右侧没有了，说明这一层找到，没有只能下降</span></span><br><span class="line">                team=team.down;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span>(team.right.key==key)<span class="comment">//找到节点，右侧即为待删除节点</span></span><br><span class="line">            &#123;</span><br><span class="line">                team.right=team.right.right;<span class="comment">//删除右侧节点</span></span><br><span class="line">                team=team.down;<span class="comment">//向下继续查找删除</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span>(team.right.key&gt;key)<span class="comment">//右侧已经不可能了，向下</span></span><br><span class="line">            &#123;</span><br><span class="line">                team=team.down;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> &#123; <span class="comment">//节点还在右侧</span></span><br><span class="line">                team=team.right;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">add</span><span class="params">(SkipNode node)</span></span><br><span class="line">    &#123;</span><br><span class="line">    </span><br><span class="line">        <span class="type">int</span> key=node.key;</span><br><span class="line">        SkipNode findNode=search(key);</span><br><span class="line">        <span class="keyword">if</span>(findNode!=<span class="literal">null</span>)<span class="comment">//如果存在这个key的节点</span></span><br><span class="line">        &#123;</span><br><span class="line">            findNode.value=node.value;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Stack&lt;SkipNode&gt;stack=<span class="keyword">new</span> <span class="title class_">Stack</span>&lt;SkipNode&gt;();<span class="comment">//存储向下的节点，这些节点可能在右侧插入节点</span></span><br><span class="line">        SkipNode team=headNode;<span class="comment">//查找待插入的节点   找到最底层的哪个节点。</span></span><br><span class="line">        <span class="keyword">while</span> (team!=<span class="literal">null</span>) &#123;<span class="comment">//进行查找操作</span></span><br><span class="line">            <span class="keyword">if</span>(team.right==<span class="literal">null</span>)<span class="comment">//右侧没有了，只能下降</span></span><br><span class="line">            &#123;</span><br><span class="line">                stack.add(team);<span class="comment">//将曾经向下的节点记录一下</span></span><br><span class="line">                team=team.down;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span>(team.right.key&gt;key)<span class="comment">//需要下降去寻找</span></span><br><span class="line">            &#123;</span><br><span class="line">                stack.add(team);<span class="comment">//将曾经向下的节点记录一下</span></span><br><span class="line">                team=team.down;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="comment">//向右</span></span><br><span class="line">            &#123;</span><br><span class="line">                team=team.right;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="type">int</span> level=<span class="number">1</span>;<span class="comment">//当前层数，从第一层添加(第一层必须添加，先添加再判断)</span></span><br><span class="line">        SkipNode downNode=<span class="literal">null</span>;<span class="comment">//保持前驱节点(即down的指向，初始为null)</span></span><br><span class="line">        <span class="keyword">while</span> (!stack.isEmpty()) &#123;</span><br><span class="line">            <span class="comment">//在该层插入node</span></span><br><span class="line">            team=stack.pop();<span class="comment">//抛出待插入的左侧节点</span></span><br><span class="line">            SkipNode nodeTeam=<span class="keyword">new</span> <span class="title class_">SkipNode</span>(node.key, node.value);<span class="comment">//节点需要重新创建</span></span><br><span class="line">            nodeTeam.down=downNode;<span class="comment">//处理竖方向</span></span><br><span class="line">            downNode=nodeTeam;<span class="comment">//标记新的节点下次使用</span></span><br><span class="line">            <span class="keyword">if</span>(team.right==<span class="literal">null</span>) &#123;<span class="comment">//右侧为null 说明插入在末尾</span></span><br><span class="line">                team.right=nodeTeam;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">//水平方向处理</span></span><br><span class="line">            <span class="keyword">else</span> &#123;<span class="comment">//右侧还有节点，插入在两者之间</span></span><br><span class="line">                nodeTeam.right=team.right;</span><br><span class="line">                team.right=nodeTeam;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">//考虑是否需要向上</span></span><br><span class="line">            <span class="keyword">if</span>(level&gt;MAX_LEVEL)<span class="comment">//已经到达最高级的节点啦</span></span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="type">double</span> num=random.nextDouble();<span class="comment">//[0-1]随机数</span></span><br><span class="line">            <span class="keyword">if</span>(num&gt;<span class="number">0.5</span>)<span class="comment">//运气不好结束</span></span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            level++;</span><br><span class="line">            <span class="keyword">if</span>(level&gt;highLevel)<span class="comment">//比当前最大高度要高但是依然在允许范围内 需要改变head节点</span></span><br><span class="line">            &#123;</span><br><span class="line">                highLevel=level;</span><br><span class="line">                <span class="comment">//需要创建一个新的节点</span></span><br><span class="line">                SkipNode highHeadNode=<span class="keyword">new</span> <span class="title class_">SkipNode</span>(Integer.MIN_VALUE, <span class="literal">null</span>);</span><br><span class="line">                highHeadNode.down=headNode;</span><br><span class="line">                headNode=highHeadNode;<span class="comment">//改变head</span></span><br><span class="line">                stack.add(headNode);<span class="comment">//下次抛出head</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">printList</span><span class="params">()</span> &#123;</span><br><span class="line">        SkipNode teamNode=headNode;</span><br><span class="line">        <span class="type">int</span> index=<span class="number">1</span>;</span><br><span class="line">        SkipNode last=teamNode;</span><br><span class="line">        <span class="keyword">while</span> (last.down!=<span class="literal">null</span>)&#123;</span><br><span class="line">            last=last.down;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">while</span> (teamNode!=<span class="literal">null</span>) &#123;</span><br><span class="line">            SkipNode enumNode=teamNode.right;</span><br><span class="line">            SkipNode enumLast=last.right;</span><br><span class="line">            System.out.printf(<span class="string">&quot;%-8s&quot;</span>,<span class="string">&quot;head-&gt;&quot;</span>);</span><br><span class="line">            <span class="keyword">while</span> (enumLast!=<span class="literal">null</span>&amp;&amp;enumNode!=<span class="literal">null</span>) &#123;</span><br><span class="line">                <span class="keyword">if</span>(enumLast.key==enumNode.key)</span><br><span class="line">                &#123;</span><br><span class="line">                    System.out.printf(<span class="string">&quot;%-5s&quot;</span>,enumLast.key+<span class="string">&quot;-&gt;&quot;</span>);</span><br><span class="line">                    enumLast=enumLast.right;</span><br><span class="line">                    enumNode=enumNode.right;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span>&#123;</span><br><span class="line">                    enumLast=enumLast.right;</span><br><span class="line">                    System.out.printf(<span class="string">&quot;%-5s&quot;</span>,<span class="string">&quot;&quot;</span>);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line">            teamNode=teamNode.down;</span><br><span class="line">            index++;</span><br><span class="line">            System.out.println();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        SkipList&lt;Integer&gt;list=<span class="keyword">new</span> <span class="title class_">SkipList</span>&lt;Integer&gt;();</span><br><span class="line">        <span class="keyword">for</span>(<span class="type">int</span> i=<span class="number">1</span>;i&lt;<span class="number">20</span>;i++)</span><br><span class="line">        &#123;</span><br><span class="line">            list.add(<span class="keyword">new</span> <span class="title class_">SkipNode</span>(i,<span class="number">666</span>));</span><br><span class="line">        &#125;</span><br><span class="line">        list.printList();</span><br><span class="line">        list.delete(<span class="number">4</span>);</span><br><span class="line">        list.delete(<span class="number">8</span>);</span><br><span class="line">        list.printList();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">import</span> java.util.Random<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> java.util.Stack<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">SkipNode</span><span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> key<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    T value<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    SkipNode right<span style="color:#f92672">,</span>down<span style="color:#f92672">;</span><span style="color:#75715e">//左右上下四个方向的指针
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">SkipNode</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> key<span style="color:#f92672">,</span>T value<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">=</span>key<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>value<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">SkipList</span> <span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    SkipNode headNode<span style="color:#f92672">;</span><span style="color:#75715e">//头节点，入口
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">int</span> highLevel<span style="color:#f92672">;</span><span style="color:#75715e">//层数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    Random random<span style="color:#f92672">;</span><span style="color:#75715e">// 用于投掷硬币
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">int</span> MAX_LEVEL <span style="color:#f92672">=</span> <span style="color:#ae81ff">32</span><span style="color:#f92672">;</span><span style="color:#75715e">//最大的层
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    SkipList<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        random<span style="color:#f92672">=</span><span style="color:#66d9ef">new</span> Random<span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        headNode<span style="color:#f92672">=</span><span style="color:#66d9ef">new</span> SkipNode<span style="color:#f92672">(</span>Integer<span style="color:#f92672">.</span><span style="color:#a6e22e">MIN_VALUE</span><span style="color:#f92672">,</span><span style="color:#66d9ef">null</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        highLevel<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> SkipNode <span style="color:#a6e22e">search</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> key<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        SkipNode team<span style="color:#f92672">=</span>headNode<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>team<span style="color:#f92672">!=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">==</span>key<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span>  team<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">==</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span><span style="color:#75715e">//右侧没有了，只能下降
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">&gt;</span>key<span style="color:#f92672">)</span><span style="color:#75715e">//需要下降去寻找
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">else</span> <span style="color:#75715e">//右侧比较小向右
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">delete</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> key<span style="color:#f92672">)</span><span style="color:#75715e">//删除不需要考虑层数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        SkipNode team<span style="color:#f92672">=</span>headNode<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>team<span style="color:#f92672">!=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span><span style="color:#75715e">//右侧没有了，说明这一层找到，没有只能下降
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">==</span>key<span style="color:#f92672">)</span><span style="color:#75715e">//找到节点，右侧即为待删除节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span><span style="color:#75715e">//删除右侧节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">;</span><span style="color:#75715e">//向下继续查找删除
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">&gt;</span>key<span style="color:#f92672">)</span><span style="color:#75715e">//右侧已经不可能了，向下
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span> <span style="color:#75715e">//节点还在右侧
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>SkipNode node<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">int</span> key<span style="color:#f92672">=</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        SkipNode findNode<span style="color:#f92672">=</span>search<span style="color:#f92672">(</span>key<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>findNode<span style="color:#f92672">!=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span><span style="color:#75715e">//如果存在这个key的节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            findNode<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        Stack<span style="color:#f92672">&lt;</span>SkipNode<span style="color:#f92672">&gt;</span>stack<span style="color:#f92672">=</span><span style="color:#66d9ef">new</span> Stack<span style="color:#f92672">&lt;</span>SkipNode<span style="color:#f92672">&gt;();</span><span style="color:#75715e">//存储向下的节点，这些节点可能在右侧插入节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        SkipNode team<span style="color:#f92672">=</span>headNode<span style="color:#f92672">;</span><span style="color:#75715e">//查找待插入的节点   找到最底层的哪个节点。
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>team<span style="color:#f92672">!=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span><span style="color:#75715e">//进行查找操作
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">==</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span><span style="color:#75715e">//右侧没有了，只能下降
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                stack<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>team<span style="color:#f92672">);</span><span style="color:#75715e">//将曾经向下的节点记录一下
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">&gt;</span>key<span style="color:#f92672">)</span><span style="color:#75715e">//需要下降去寻找
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                stack<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>team<span style="color:#f92672">);</span><span style="color:#75715e">//将曾经向下的节点记录一下
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">else</span> <span style="color:#75715e">//向右
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                team<span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">int</span> level<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span><span style="color:#f92672">;</span><span style="color:#75715e">//当前层数，从第一层添加(第一层必须添加，先添加再判断)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        SkipNode downNode<span style="color:#f92672">=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">;</span><span style="color:#75715e">//保持前驱节点(即down的指向，初始为null)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">while</span> <span style="color:#f92672">(!</span>stack<span style="color:#f92672">.</span><span style="color:#a6e22e">isEmpty</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//在该层插入node
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            team<span style="color:#f92672">=</span>stack<span style="color:#f92672">.</span><span style="color:#a6e22e">pop</span><span style="color:#f92672">();</span><span style="color:#75715e">//抛出待插入的左侧节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            SkipNode nodeTeam<span style="color:#f92672">=</span><span style="color:#66d9ef">new</span> SkipNode<span style="color:#f92672">(</span>node<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">,</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">);</span><span style="color:#75715e">//节点需要重新创建
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            nodeTeam<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">=</span>downNode<span style="color:#f92672">;</span><span style="color:#75715e">//处理竖方向
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            downNode<span style="color:#f92672">=</span>nodeTeam<span style="color:#f92672">;</span><span style="color:#75715e">//标记新的节点下次使用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">==</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span><span style="color:#75715e">//右侧为null 说明插入在末尾
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">=</span>nodeTeam<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//水平方向处理
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span><span style="color:#75715e">//右侧还有节点，插入在两者之间
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                nodeTeam<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">=</span>team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>                team<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">=</span>nodeTeam<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//考虑是否需要向上
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>level<span style="color:#f92672">&gt;</span>MAX_LEVEL<span style="color:#f92672">)</span><span style="color:#75715e">//已经到达最高级的节点啦
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">break</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">double</span> num<span style="color:#f92672">=</span>random<span style="color:#f92672">.</span><span style="color:#a6e22e">nextDouble</span><span style="color:#f92672">();</span><span style="color:#75715e">//[0-1]随机数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>num<span style="color:#f92672">&gt;</span><span style="color:#ae81ff">0.5</span><span style="color:#f92672">)</span><span style="color:#75715e">//运气不好结束
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">break</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            level<span style="color:#f92672">++;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>level<span style="color:#f92672">&gt;</span>highLevel<span style="color:#f92672">)</span><span style="color:#75715e">//比当前最大高度要高但是依然在允许范围内 需要改变head节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                highLevel<span style="color:#f92672">=</span>level<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//需要创建一个新的节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                SkipNode highHeadNode<span style="color:#f92672">=</span><span style="color:#66d9ef">new</span> SkipNode<span style="color:#f92672">(</span>Integer<span style="color:#f92672">.</span><span style="color:#a6e22e">MIN_VALUE</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>                highHeadNode<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">=</span>headNode<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>                headNode<span style="color:#f92672">=</span>highHeadNode<span style="color:#f92672">;</span><span style="color:#75715e">//改变head
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                stack<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>headNode<span style="color:#f92672">);</span><span style="color:#75715e">//下次抛出head
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">printList</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        SkipNode teamNode<span style="color:#f92672">=</span>headNode<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">int</span> index<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        SkipNode last<span style="color:#f92672">=</span>teamNode<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>last<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">!=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">){</span>
+</span></span><span style="display:flex;"><span>            last<span style="color:#f92672">=</span>last<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>teamNode<span style="color:#f92672">!=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            SkipNode enumNode<span style="color:#f92672">=</span>teamNode<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            SkipNode enumLast<span style="color:#f92672">=</span>last<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">printf</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;%-8s&#34;</span><span style="color:#f92672">,</span><span style="color:#e6db74">&#34;head-&gt;&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>enumLast<span style="color:#f92672">!=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">&amp;&amp;</span>enumNode<span style="color:#f92672">!=</span><span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>enumLast<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">==</span>enumNode<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                    System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">printf</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;%-5s&#34;</span><span style="color:#f92672">,</span>enumLast<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">+</span><span style="color:#e6db74">&#34;-&gt;&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>                    enumLast<span style="color:#f92672">=</span>enumLast<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>                    enumNode<span style="color:#f92672">=</span>enumNode<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">else</span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                    enumLast<span style="color:#f92672">=</span>enumLast<span style="color:#f92672">.</span><span style="color:#a6e22e">right</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>                    System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">printf</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;%-5s&#34;</span><span style="color:#f92672">,</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            teamNode<span style="color:#f92672">=</span>teamNode<span style="color:#f92672">.</span><span style="color:#a6e22e">down</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            index<span style="color:#f92672">++;</span>
+</span></span><span style="display:flex;"><span>            System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main</span><span style="color:#f92672">(</span>String<span style="color:#f92672">[]</span> args<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        SkipList<span style="color:#f92672">&lt;</span>Integer<span style="color:#f92672">&gt;</span>list<span style="color:#f92672">=</span><span style="color:#66d9ef">new</span> SkipList<span style="color:#f92672">&lt;</span>Integer<span style="color:#f92672">&gt;();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> i<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span><span style="color:#f92672">;</span>i<span style="color:#f92672">&lt;</span><span style="color:#ae81ff">20</span><span style="color:#f92672">;</span>i<span style="color:#f92672">++)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            list<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> SkipNode<span style="color:#f92672">(</span>i<span style="color:#f92672">,</span><span style="color:#ae81ff">666</span><span style="color:#f92672">));</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        list<span style="color:#f92672">.</span><span style="color:#a6e22e">printList</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        list<span style="color:#f92672">.</span><span style="color:#a6e22e">delete</span><span style="color:#f92672">(</span><span style="color:#ae81ff">4</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        list<span style="color:#f92672">.</span><span style="color:#a6e22e">delete</span><span style="color:#f92672">(</span><span style="color:#ae81ff">8</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        list<span style="color:#f92672">.</span><span style="color:#a6e22e">printList</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div>
+</section>
 
 
-
-
-
-      
-    </div>
-    <div class="article-footer">
-      <blockquote class="mt-2x">
-  <ul class="post-copyright list-unstyled">
+    <footer class="article-footer">
     
-    <li class="post-copyright-link hidden-xs">
-      <strong>本文链接：</strong>
-      <a href="https://lxb.wiki/942c23ec/" title="跳表的增删改查" target="_blank" rel="external">https://lxb.wiki/942c23ec/</a>
-    </li>
-    
-    <li class="post-copyright-license">
-      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN</a> 许可协议。转载请注明出处！
-    </li>
-  </ul>
-</blockquote>
-
-    </div>
-  </article>
-  
-    
-  <section id="comments">
-  	
-      
-        <section id="comments" class="comments">
-          <style>
-            .utterances{max-width: 100%;}
-          </style>
-          <script src="https://utteranc.es/client.js"
-                repo="lxbwolf/lxbwolf.github.io"
-                issue-term="title"
-                theme="github-light"
-                crossorigin="anonymous"
-                async>
-          </script>
-        </section>
-      
-    
-  </section>
-
-
-  
-</div>
-
-  <nav class="bar bar-footer clearfix" data-stick-bottom>
-  <div class="bar-inner">
-  
-  <ul class="pager pull-left">
-    
-    <li class="prev">
-      <a href="/ff3c9770/" title="【译】了解一下 Fossil，一个 Git 的替代品"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
-    </li>
-    
-    
-    <li class="next">
-      <a href="/176a23be/" title="Tmux 使用教程"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
-    </li>
-    
-    
-  </ul>
-  
-  
-  
-  <div class="bar-right">
-    
-    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,qq,qzone"></div>
-    
-  </div>
-  </div>
-</nav>
-  
-
-
-
-</main>
-
-  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
-	
-	
-    <ul class="social-links">
-    	
-        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+    <section class="article-tags">
         
-        <li><a href="mailto:me@liuxb.email" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+            <a href="/tags/%E7%AE%97%E6%B3%95/">算法</a>
         
-        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
-        
-    </ul>
+    </section>
 
-    <div class="copyright">
-    	
-        <div class="publishby">
-        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> Xiaobin.Liu </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/a2b71d73/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">合并区间56</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/fb68a62c/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">环形链表142</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/6a0b412d/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">删除排序数组中的重复项</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/81be14b5/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">跑道问题</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/22f34ac7/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">strict weak ordering</h2>
+        </div>
+    </a>
+</article>
+
+            
         </div>
     </div>
+</aside>
 
+     
+    
+        
+    <div class="disqus-container">
+    
+</div>
 
-  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
-  <script>
-    if (window.mermaid) {
-      mermaid.initialize({theme: 'forest'});
+<style>
+    .disqus-container {
+        background-color: var(--card-background);
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--shadow-l1);
+        padding: var(--card-padding);
     }
-  </script>
+</style>
 
+<script>
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (typeof DISQUS == 'object') {
+            DISQUS.reset({
+                reload: true
+            });
+        }
+    })
+</script>
 
+    
 
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2023 Xiaobin&#39;s Blog
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
 </footer>
 
-  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
 <script>
-window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
 </script>
 
-<script src="/js/plugin.min.js"></script>
-
-
-<script src="/js/application.js"></script>
-
-
-    <script>
-(function (window) {
-    var INSIGHT_CONFIG = {
-        TRANSLATION: {
-            POSTS: '文章',
-            PAGES: '页面',
-            CATEGORIES: '分类',
-            TAGS: '标签',
-            UNTITLED: '(未命名)',
-        },
-        ROOT_URL: '/',
-        CONTENT_URL: '/content.json',
-    };
-    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
-})(window);
-</script>
-
-<script src="/js/insight.js"></script>
-
-
-
-
-
-
-   
-
-
-
-
-   
-
-
-
-
-
-    <script defer type="text/javascript">
-(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'G-JZ2PWLT6JY', 'auto');
-ga('send', 'pageview');
-
-</script>
-
-
-    <script defer>
-var _hmt = _hmt || [];
-(function() {
-    var hm = document.createElement("script");
-    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
-    var s = document.getElementsByTagName("script")[0];
-    s.parentNode.insertBefore(hm, s);
-})();
-</script>
-
-
-
-
-</body>
+    </body>
 </html>

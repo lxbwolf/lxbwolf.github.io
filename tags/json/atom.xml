@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>json on Xiaobin&#39;s Blog</title>
+        <link>http://lxb.wiki/tags/json/</link>
+        <description>Recent content in json on Xiaobin&#39;s Blog</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <lastBuildDate>Wed, 10 May 2017 10:10:27 +0000</lastBuildDate><atom:link href="http://lxb.wiki/tags/json/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <title>Move semantics of RapidJSON</title>
+        <link>http://lxb.wiki/e5a4892c/</link>
+        <pubDate>Wed, 10 May 2017 10:10:27 +0000</pubDate>
+        
+        <guid>http://lxb.wiki/e5a4892c/</guid>
+        <description>&lt;p&gt;RapidJSON 的设计有一个特性, 进行赋值操作时, 不是把源value复制(copy)到目的 value, 而是转移(move)到目的value. 例如&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Value a(123);
+Value b(456);
+b = a; // a becomes a Null value, b becomes number 123.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201207003749.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;这样的设计的目的是 为了提高性能. 对于固定大小的JSON类型(Number, True, False, Null), 复制很简单快捷. 而对于可变大小的类型(String, Array, Object), 复制时会产生大量不容易被察觉的开销. 尤其是当我们需要创建一个临时的值, 把它复制给另一个变量, 然后析构它. 若使用正常的&lt;strong&gt;复制&lt;/strong&gt; 语义:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Document d;
+Value o(kObjectType);
+{
+    Value contacts(kArrayType);
+    // Adding elements to contacts array.
+    // ...
+    o.AddMember(&amp;quot;contacts&amp;quot;, contacts, d.GetAllocator(); // deep clone contacts(may be with lots of allocations)
+    // destruct contact
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201207003815.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;o&lt;/code&gt; 需要分配跟&lt;code&gt;contacts&lt;/code&gt; 大小一样的缓冲区, 做深度复制, 然后析构&lt;code&gt;contacts&lt;/code&gt; . 这样会产生大量不必要的内存分配/释放 和内存复制. 有一些方案可以避免实质的复制这些数据, 如引用计数, 垃圾回收等等. 为了使RapidJSON简单和快速, 我们选择使用转移语义来进行赋值. 这与&lt;code&gt;std::auto_ptr&lt;/code&gt;类似, 都是在赋值时转移拥有权. 转移比复制简捷地多, 它只需 析构原来的值, 把源值&lt;code&gt;memcpy()&lt;/code&gt; 到目的值, 最后再把源值 设为Null类型.&lt;/p&gt;
+&lt;p&gt;使用转移语义, 上面的例子变成:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Document d;
+Value o(kObjectType);
+{
+    Value contacts(kArraryType);
+    // Adding elements to contacts array.
+    o.AddMember(&amp;quot;contacts&amp;quot;, contacts, d.GetAllocator()); // Just memcpy() of contacts itself to the value of new member(16 bytes)
+    // contacts became Null here. Its destructiong is trivial.
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201207003854.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;转移语义和临时值&lt;/strong&gt; 有时, 我们想直接构造一个临时变量传给&amp;quot;转移&amp;quot;函数, 如&lt;code&gt;PushBack()&lt;/code&gt; , &lt;code&gt;AddMember()&lt;/code&gt; . 由于临时对象不能直接转化成正常的值引用, 我们可以调用&lt;code&gt;Move()&lt;/code&gt; 函数&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Value a(kArrayType);
+Document::AllocatorType&amp;amp; allocator = document.GetAllocator();
+// a.PushBack(Value(42), allocator); // Compiling error
+a.PushBack(Value().SetInt(42), allocator); // fluent API
+a.PushBack(Value(42).Move(), allocator); // same as above
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;翻译原文: &lt;a class=&#34;link&#34; href=&#34;http://rapidjson.org/md&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;http://rapidjson.org/md&lt;/a&gt;_doc_tutorial.html#MoveSemantics&lt;/p&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>
