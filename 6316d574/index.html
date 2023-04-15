@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='术语定义 名词 说明 job 任务 payload 在POST请求中提交的数据 {optionalFolderPath} 可选参数：任务所在目录的路径 {job_name} 必须参数：任务名称 在 GET/POST 时需要附加 HTTP 认证才能访问 API 本文使用的'>
+<title>Jenkins的Api</title>
+
+<link rel='canonical' href='https://lxb.wiki/6316d574/'>
+
+<link rel="stylesheet" href="/scss/style.min.bc5bb6e306c354a2f5d5bfd1e65a5f3996962fb9b4a3546b748aee7daee4f258.css"><meta property='og:title' content='Jenkins的Api'>
+<meta property='og:description' content='术语定义 名词 说明 job 任务 payload 在POST请求中提交的数据 {optionalFolderPath} 可选参数：任务所在目录的路径 {job_name} 必须参数：任务名称 在 GET/POST 时需要附加 HTTP 认证才能访问 API 本文使用的'>
+<meta property='og:url' content='https://lxb.wiki/6316d574/'>
+<meta property='og:site_name' content='Xiaobin&#39;s Blog'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='devops' /><meta property='article:published_time' content='2022-07-05T20:56:19&#43;08:00'/><meta property='article:modified_time' content='2022-07-05T20:56:19&#43;08:00'/>
+<meta name="twitter:title" content="Jenkins的Api">
+<meta name="twitter:description" content="术语定义 名词 说明 job 任务 payload 在POST请求中提交的数据 {optionalFolderPath} 可选参数：任务所在目录的路径 {job_name} 必须参数：任务名称 在 GET/POST 时需要附加 HTTP 认证才能访问 API 本文使用的">
+<link rel="shortcut icon" href="/favicon.png" />
+
+<script data-ad-client="ca-pub-5708899526501350" async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-JZ2PWLT6JY');
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
+                            height="298" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">Xiaobin&#39;s Blog</a></h1>
+            <h2 class="site-description"></h2>
+        </div>
+    </header>
+
+
+    <ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/categories/' >
+                
+                
+                
+                <span>分类</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>标签</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/links/' >
+                
+                
+                
+                <span>友链</span>
+            </a>
+        </li>
+        
+
+        <div class="menu-bottom-section"><ol class="social-menu">
+                    
+                        <li>
+                            <a 
+                                href='mailto://me@liuxb.email'
+                                target="_blank"
+                                title="Email"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a 
+                                href='https://github.com/lxbwolf'
+                                target="_blank"
+                                title="GitHub"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
+</svg>
+
+
+
+                                
+                            </a>
+                        </li>
+                    
+                </ol>
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <span>暗色模式</span>
+                </li>
+            
+        </div>
+    </ol>
+</aside>
+
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+<section class="widget archives">
+    
+    <h2 class="widget-title section-title">目录</h2>
+
+    <div class="widget--toc">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#术语定义">术语定义</a></li>
+    <li><a href="#api类型">API类型</a></li>
+    <li><a href="#api汇总">API汇总</a></li>
+    <li><a href="#api详述">API详述</a>
+      <ul>
+        <li><a href="#创建-job">创建 Job</a></li>
+        <li><a href="#更新job">更新Job</a></li>
+        <li><a href="#job-info-获取任务信息">job-info 获取任务信息</a></li>
+        <li><a href="#delete-删除任务">delete 删除任务</a></li>
+        <li><a href="#enable允许任务">enable允许任务</a></li>
+        <li><a href="#disable-禁止任务">disable 禁止任务</a></li>
+        <li><a href="#get-description-获取任务描述">get-description 获取任务描述</a></li>
+        <li><a href="#set-description-设置任务描述">set-description 设置任务描述</a></li>
+        <li><a href="#创建-build">创建 Build</a></li>
+        <li><a href="#根据-queueid-获取-queueitem">根据 QueueId 获取 QueueItem</a></li>
+        <li><a href="#cancel-取消任务队列">cancel 取消任务队列</a></li>
+        <li><a href="#queue-所有任务队列信息">queue 所有任务队列信息</a></li>
+        <li><a href="#获取-build-详情">获取 Build 详情</a></li>
+        <li><a href="#last-build-number-获取上次构建序号">last-build-number 获取上次构建序号</a></li>
+        <li><a href="#last-build-timestamp-获取上次构建时间戳">last-build-timestamp 获取上次构建时间戳</a></li>
+        <li><a href="#progressive-text-获取构建控制台输出">progressive-text 获取构建控制台输出</a></li>
+        <li><a href="#crumbissuer-系统哈希值信息用于防御csrf攻击">CrumbIssuer 系统哈希值信息（用于防御CSRF攻击）</a></li>
+        <li><a href="#statistics-统计信息">Statistics 统计信息</a></li>
+        <li><a href="#system-系统信息">System 系统信息</a></li>
+        <li><a href="#pluginmanager-插件管理插件信息安装插件">PluginManager 插件管理（插件信息、安装插件）</a></li>
+        <li><a href="#installnecessaryplugins-安装插件">installNecessaryPlugins 安装插件</a></li>
+      </ul>
+    </li>
+    <li><a href="#代码示例">代码示例</a>
+      <ul>
+        <li><a href="#配置">配置</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+    </div>
+</section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+        <a href="/categories/Tools/" >
+            Tools
+        </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/6316d574/">Jenkins的Api</a>
+        </h2>
+
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+            <time class="article-time--published">Jul 05, 2022</time>
+        </div>
+        
+
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+            <time class="article-time--reading">
+                阅读时长: 7 分钟
+            </time>
+        </div>
+        
+        <small>
+    <section class="article-tags">
+        
+            <a href="/tags/devops/">devops</a>
+        
+    </section>
+</small>
+    </footer>
+    
+
+    
+</div>
+</header>
+
+    <section class="article-content">
+    
+    
+    <h2 id="术语定义">术语定义</h2>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left"><strong>名词</strong></th>
+<th style="text-align:left"><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">job</td>
+<td style="text-align:left">任务</td>
+</tr>
+<tr>
+<td style="text-align:left">payload</td>
+<td style="text-align:left">在POST请求中提交的数据</td>
+</tr>
+<tr>
+<td style="text-align:left">{optionalFolderPath}</td>
+<td style="text-align:left">可选参数：任务所在目录的路径</td>
+</tr>
+<tr>
+<td style="text-align:left">{job_name}</td>
+<td style="text-align:left">必须参数：任务名称</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>在 GET/POST 时需要附加 HTTP 认证才能访问 API</li>
+<li>本文使用的数据结构可以在 jenkins-rest/domain 中查看详细定义</li>
+</ul>
+<h2 id="api类型">API类型</h2>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left"><strong>API类型</strong></th>
+<th style="text-align:left"><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">JobsAP</td>
+<td style="text-align:left">任务管理（任务信息、创建、修改）</td>
+</tr>
+<tr>
+<td style="text-align:left">OBPluginManagerAPI</td>
+<td style="text-align:left">插件管理（插件信息、安装插件）</td>
+</tr>
+<tr>
+<td style="text-align:left">QueueAPI</td>
+<td style="text-align:left">任务队列相关（队列状态）</td>
+</tr>
+<tr>
+<td style="text-align:left">StatisticsAPI</td>
+<td style="text-align:left">Jenkins统计信息</td>
+</tr>
+<tr>
+<td style="text-align:left">CrumbIssuerAPI</td>
+<td style="text-align:left">系统哈希值信息（用于防御CSRF攻击）</td>
+</tr>
+<tr>
+<td style="text-align:left">SystemAPI</td>
+<td style="text-align:left">Jenkins系统状态（版本、路径）</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="api汇总">API汇总</h2>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>名称</th>
+<th>API</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>创建 Job</td>
+<td><code>POST http://localhost:8080/createItem/api/json</code></td>
+</tr>
+<tr>
+<td>更新 Job</td>
+<td><code>POST http://localhost:8080/job/{job_name}/config.xml/api/json</code></td>
+</tr>
+<tr>
+<td>获取 Job</td>
+<td><code>GET http://localhost:8080/job/{job_name}/api/json</code></td>
+</tr>
+<tr>
+<td>获取 JobXml</td>
+<td><code>GET http://localhost:8080/job/{job_name}/config.xml/api/json</code></td>
+</tr>
+<tr>
+<td>删除 Job</td>
+<td><code>POST http://127.0.0.1:8080/{optionalFolderPath}job/{job_name}/doDelete</code></td>
+</tr>
+<tr>
+<td>enable Job</td>
+<td><code>POST http://127.0.0.1:8080/{optionalFolderPath}job/{job_name}/enable</code></td>
+</tr>
+<tr>
+<td>disable Job</td>
+<td><code>POST http://127.0.0.1:8080/{optionalFolderPath}job/{job_name}/disable</code></td>
+</tr>
+<tr>
+<td>获取任务描述</td>
+<td><code>GET http://127.0.0.1:8080/{optionalFolderPath}job/{job_name}/description</code></td>
+</tr>
+<tr>
+<td>设置任务描述</td>
+<td><code>POST http://127.0.0.1:8080/{optionalFolderPath}job/{job_name}/description</code></td>
+</tr>
+<tr>
+<td>创建 Build</td>
+<td><code>POST http://localhost:8080/job/{job_name}/build/api/json</code></td>
+</tr>
+<tr>
+<td>获取 QueueItem</td>
+<td><code>GET http://localhost:8080/queue/item/17/api/json</code></td>
+</tr>
+<tr>
+<td>取消任务队列</td>
+<td><code>POST http://127.0.0.1:8080/cancelItem?id={id}</code></td>
+</tr>
+<tr>
+<td>所有任务队列信息</td>
+<td><code>GET http://127.0.0.1:8080/queue/api/json</code></td>
+</tr>
+<tr>
+<td>获取 Build信息</td>
+<td><code>GET http://localhost:8080/job/test/6/api/json</code></td>
+</tr>
+<tr>
+<td>获取上次构建序号</td>
+<td><code>GET http://127.0.0.1:8080/{optionalFolderPath}job/{job_name}/lastBuild/buildNumber</code></td>
+</tr>
+<tr>
+<td>获取上次构建时间戳</td>
+<td><code>GET http://127.0.0.1:8080/{optionalFolderPath}job/{job_name}/lastBuild/buildTimestamp</code></td>
+</tr>
+<tr>
+<td>获取TXT日志</td>
+<td><code>GET http://localhost:8080/job/test/{build_number}/logText/progressiveText/api/json</code></td>
+</tr>
+<tr>
+<td>获取 Html 日志</td>
+<td><code>GET http://localhost:8080/job/test/{build_number}/logText/progressiveHtml/api/json</code></td>
+</tr>
+<tr>
+<td>系统哈希值信息</td>
+<td><code>GET http://127.0.0.1:8080/crumbIssuer/api/xml?{key}={value}</code></td>
+</tr>
+<tr>
+<td>load统计信息</td>
+<td><code>GET http://127.0.0.1:8080/overallLoad/api/json</code></td>
+</tr>
+<tr>
+<td>插件管理</td>
+<td><code>GET http://127.0.0.1:8080/pluginManager/api/json</code></td>
+</tr>
+<tr>
+<td>安装插件</td>
+<td><code>POST http://127.0.0.1:8080/pluginManager/installNecessaryPlugins</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="api详述">API详述</h2>
+<h3 id="创建-job">创建 Job</h3>
+<p>jenkins 的配置都是靠 xml 的格式落地的,所以配置其实都是 xml 的形式.</p>
+<pre tabindex="0"><code>POST http://127.0.0.1:8080/createItem
+</code></pre><p><strong>参数</strong></p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">key</th>
+<th style="text-align:left">value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">name 任务名称</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">payload XML配置文件</td>
+<td style="text-align:left"></td>
+</tr>
+</tbody>
+</table></div>
+<p>返回类型：RequestStatus</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">类型</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">value</td>
+<td style="text-align:left">Boolean</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">errors</td>
+<td style="text-align:left">List</td>
+<td style="text-align:left"></td>
+</tr>
+</tbody>
+</table></div>
+<p>如何知道 config.xml应该如何编写呢?</p>
+<ul>
+<li>可以在 jenkins 收工创建一个需要的项目,然后编辑完成后,到 jenkins 工作目录下 找到 jobs/{job_name}/config.xml 用他作为模板来书写你需要的模板.</li>
+<li>通过获取 xml 的 api 来获取</li>
+</ul>
+<p><code>GET http://localhost:8080/job/{job_name}/config.xml/api/json</code></p>
+<p><strong>Java Client</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">createJob</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;auto_test_job&#34;</span><span style="color:#f92672">,</span> replacedText<span style="color:#f92672">,</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>String xml <span style="color:#f92672">=</span> jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">getJobXml</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;auto_test_job&#34;</span><span style="color:#f92672">);</span>
+</span></span></code></pre></div><h3 id="更新job">更新Job</h3>
+<pre tabindex="0"><code>POST http://localhost:8080/job/{job_name}/config.xml/api/json
+</code></pre><p><strong>参数</strong></p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">payload</td>
+<td style="text-align:left">XML配置文件</td>
+</tr>
+</tbody>
+</table></div>
+<p>config.xml的内容传入到 body 中,contentType 设置为<code>text/xml</code></p>
+<p>返回类型：Boolean</p>
+<p><strong>Java Client</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">updateJob</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;auto_test_job&#34;</span><span style="color:#f92672">,</span> replacedText<span style="color:#f92672">,</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">);</span>
+</span></span></code></pre></div><h3 id="job-info-获取任务信息">job-info 获取任务信息</h3>
+<p><code>GET http://127.0.0.1:8080/{optionalFolderPath}job/{job_name}/api/json</code></p>
+<p>返回类型：JobInfo</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">类型</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">description</td>
+<td style="text-align:left">String</td>
+<td style="text-align:left">描述</td>
+</tr>
+<tr>
+<td style="text-align:left">name</td>
+<td style="text-align:left">String</td>
+<td style="text-align:left">项目名称</td>
+</tr>
+<tr>
+<td style="text-align:left">url</td>
+<td style="text-align:left">boolean</td>
+<td style="text-align:left">路径</td>
+</tr>
+<tr>
+<td style="text-align:left">buildable</td>
+<td style="text-align:left">String</td>
+<td style="text-align:left">是否可构建</td>
+</tr>
+<tr>
+<td style="text-align:left">builds</td>
+<td style="text-align:left">List</td>
+<td style="text-align:left">构建记录</td>
+</tr>
+<tr>
+<td style="text-align:left">lastBuild</td>
+<td style="text-align:left">BuildInfo</td>
+<td style="text-align:left">上次构建记录</td>
+</tr>
+<tr>
+<td style="text-align:left">……</td>
+<td style="text-align:left"></td>
+<td style="text-align:left"></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="delete-删除任务">delete 删除任务</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>POST http://127.0.0.1:8080/<span style="color:#f92672">{</span>optionalFolderPath<span style="color:#f92672">}</span>job/<span style="color:#f92672">{</span>project_name<span style="color:#f92672">}</span>/doDelete
+</span></span></code></pre></div><p>返回类型：RequestStatus</p>
+<p><strong>补充：</strong></p>
+<p>也可以使用</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>DELETE https://&lt;Jenkins_url&gt;/job/&lt;job_name&gt;/
+</span></span></code></pre></div><p>注意最后有个 <code>/</code>，不加 <code>/</code> 不能正常删除</p>
+<h3 id="enable允许任务">enable允许任务</h3>
+<pre tabindex="0"><code>POST http://127.0.0.1:8080/{optionalFolderPath}job/{project_name}/enable
+</code></pre><p>返回类型：Boolean</p>
+<h3 id="disable-禁止任务">disable 禁止任务</h3>
+<pre tabindex="0"><code>POST http://127.0.0.1:8080/{optionalFolderPath}job/{project_name}/disable
+</code></pre><p>返回类型：Boolean</p>
+<h3 id="get-description-获取任务描述">get-description 获取任务描述</h3>
+<pre tabindex="0"><code>GET http://127.0.0.1:8080/{optionalFolderPath}job/{project_name}/description
+</code></pre><p>返回类型：String</p>
+<h3 id="set-description-设置任务描述">set-description 设置任务描述</h3>
+<pre tabindex="0"><code>POST http://127.0.0.1:8080/{optionalFolderPath}job/{project_name}/description
+</code></pre><p><strong>参数</strong></p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">key</th>
+<th style="text-align:left">value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">description</td>
+<td style="text-align:left">描述</td>
+</tr>
+</tbody>
+</table></div>
+<p>返回类型：Boolean</p>
+<h3 id="创建-build">创建 Build</h3>
+<pre tabindex="0"><code>POST http://127.0.0.1:8080/{optionalFolderPath}job/{job_name}/build
+POST http://localhost:8080/job/{job_name}/build/api/json
+</code></pre><p>返回类型： IntegerResponse</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">类型</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">value</td>
+<td style="text-align:left">Integer</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">errors</td>
+<td style="text-align:left">List</td>
+<td style="text-align:left"></td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="build-with-params-使用参数创建任务">build-with-params 使用参数创建任务</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>POST http://127.0.0.1:8080/<span style="color:#f92672">{</span>optionalFolderPath<span style="color:#f92672">}</span>job/<span style="color:#f92672">{</span>job_name<span style="color:#f92672">}</span>/buildWithParameters
+</span></span></code></pre></div><p><strong>参数</strong></p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">key</th>
+<th style="text-align:left">value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">payload</td>
+<td style="text-align:left">Map&lt;String, List&gt; properties</td>
+</tr>
+</tbody>
+</table></div>
+<p>返回类型： IntegerResponse</p>
+<p>新的构建请求提交到服务器成功后返回一个类似于队列ID的东西,因为是异步构建,那么要获取构建的状态,就需要,用这个队列 id去进一步的获取. 例如:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ curl -v  -XPOST http://localhost:8080/job/test/build/api/json
+</span></span><span style="display:flex;"><span>*   Trying ::1...
+</span></span><span style="display:flex;"><span>* TCP_NODELAY set
+</span></span><span style="display:flex;"><span>* Connected to localhost <span style="color:#f92672">(</span>::1<span style="color:#f92672">)</span> port <span style="color:#ae81ff">8080</span> <span style="color:#f92672">(</span><span style="color:#75715e">#0)</span>
+</span></span><span style="display:flex;"><span>&gt; POST /job/test/build/api/json HTTP/1.1
+</span></span><span style="display:flex;"><span>&gt; Host: localhost:8080
+</span></span><span style="display:flex;"><span>&gt; User-Agent: curl/7.54.0
+</span></span><span style="display:flex;"><span>&gt; Accept: */*
+</span></span><span style="display:flex;"><span>&gt;
+</span></span><span style="display:flex;"><span>&lt; HTTP/1.1 <span style="color:#ae81ff">201</span> Created
+</span></span><span style="display:flex;"><span>&lt; Date: Sat, <span style="color:#ae81ff">05</span> Jan <span style="color:#ae81ff">2019</span> 08:33:45 GMT
+</span></span><span style="display:flex;"><span>&lt; X-Content-Type-Options: nosniff
+</span></span><span style="display:flex;"><span>&lt; Location: http://localhost:8080/queue/item/17/
+</span></span><span style="display:flex;"><span>&lt; Content-Length: <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>&lt; Server: Jetty<span style="color:#f92672">(</span>9.4.z-SNAPSHOT<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>&lt;
+</span></span><span style="display:flex;"><span>* Connection <span style="color:#75715e">#0 to host localhost left intact</span>
+</span></span></code></pre></div><p>上面的<code>Location: http://localhost:8080/queue/item/17/</code>就是返回的队列信息,下面的 queueItem 获取就是依赖这个.</p>
+<h3 id="根据-queueid-获取-queueitem">根据 QueueId 获取 QueueItem</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>GET http://localhost:8080/queue/item/17/api/json 
+</span></span></code></pre></div><p><strong>参数</strong></p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">{queueId}</td>
+<td style="text-align:left">任务队列ID</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>返回类型</strong>：QueueItem</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ curl  http://localhost:8080/queue/item/17/api/json<span style="color:#ae81ff">\?</span>pretty<span style="color:#ae81ff">\=</span>true
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;_class&#34;</span> : <span style="color:#e6db74">&#34;hudson.model.Queue</span>$LeftItem<span style="color:#e6db74">&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;actions&#34;</span> : <span style="color:#f92672">[</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#34;_class&#34;</span> : <span style="color:#e6db74">&#34;hudson.model.CauseAction&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#34;causes&#34;</span> : <span style="color:#f92672">[</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#e6db74">&#34;_class&#34;</span> : <span style="color:#e6db74">&#34;hudson.model.Cause</span>$UserIdCause<span style="color:#e6db74">&#34;</span>,
+</span></span><span style="display:flex;"><span>          <span style="color:#e6db74">&#34;shortDescription&#34;</span> : <span style="color:#e6db74">&#34;由用户 anonymous 启动&#34;</span>,
+</span></span><span style="display:flex;"><span>          <span style="color:#e6db74">&#34;userId&#34;</span> : null,
+</span></span><span style="display:flex;"><span>          <span style="color:#e6db74">&#34;userName&#34;</span> : <span style="color:#e6db74">&#34;anonymous&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">]</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;blocked&#34;</span> : false,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;buildable&#34;</span> : false,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;id&#34;</span> : 17,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;inQueueSince&#34;</span> : 1546677225670,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;params&#34;</span> : <span style="color:#e6db74">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;stuck&#34;</span> : false,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;task&#34;</span> : <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;_class&#34;</span> : <span style="color:#e6db74">&#34;hudson.maven.MavenModuleSet&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;name&#34;</span> : <span style="color:#e6db74">&#34;test&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;url&#34;</span> : <span style="color:#e6db74">&#34;http://localhost:8080/job/test/&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;color&#34;</span> : <span style="color:#e6db74">&#34;blue&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">}</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;url&#34;</span> : <span style="color:#e6db74">&#34;queue/item/17/&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;why&#34;</span> : null,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;cancelled&#34;</span> : false,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;executable&#34;</span> : <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;_class&#34;</span> : <span style="color:#e6db74">&#34;hudson.maven.MavenModuleSetBuild&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;number&#34;</span> : 6,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;url&#34;</span> : <span style="color:#e6db74">&#34;http://localhost:8080/job/test/6/&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h3 id="cancel-取消任务队列">cancel 取消任务队列</h3>
+<pre tabindex="0"><code>POST http://127.0.0.1:8080/cancelItem?id={id}
+</code></pre><p><strong>参数</strong></p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">{id}</td>
+<td style="text-align:left">任务队列ID</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>返回类型</strong>：RequestStatus</p>
+<h3 id="queue-所有任务队列信息">queue 所有任务队列信息</h3>
+<pre tabindex="0"><code>GET http://127.0.0.1:8080/queue/api/json
+</code></pre><p><strong>返回类型</strong>：List</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">类型</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">blocked</td>
+<td style="text-align:left">Boolean</td>
+<td style="text-align:left">是否阻塞</td>
+</tr>
+<tr>
+<td style="text-align:left">buildable</td>
+<td style="text-align:left">Boolean</td>
+<td style="text-align:left">是否可构建</td>
+</tr>
+<tr>
+<td style="text-align:left">id</td>
+<td style="text-align:left">Integer</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">inQueueSince</td>
+<td style="text-align:left">Long</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">params</td>
+<td style="text-align:left">Map&lt;String, String&gt;</td>
+<td style="text-align:left">任务参数</td>
+</tr>
+<tr>
+<td style="text-align:left">task</td>
+<td style="text-align:left">Task</td>
+<td style="text-align:left">Task中包含任务名称和URL</td>
+</tr>
+<tr>
+<td style="text-align:left">……</td>
+<td style="text-align:left"></td>
+<td style="text-align:left"></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="获取-build-详情">获取 Build 详情</h3>
+<pre tabindex="0"><code>GET http://127.0.0.1:8080/{optionalFolderPath}job/{job_name}/{number}/api/json
+</code></pre><p><strong>返回类型</strong>：BuildInfo</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">类型</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">artifacts</td>
+<td style="text-align:left">List</td>
+<td style="text-align:left">artifacts</td>
+</tr>
+<tr>
+<td style="text-align:left">actions</td>
+<td style="text-align:left">Lis</td>
+<td style="text-align:left">actions</td>
+</tr>
+<tr>
+<td style="text-align:left">building</td>
+<td style="text-align:left">boolean 路径</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">description</td>
+<td style="text-align:left">String</td>
+<td style="text-align:left">描述</td>
+</tr>
+<tr>
+<td style="text-align:left">……</td>
+<td style="text-align:left"></td>
+<td style="text-align:left"></td>
+</tr>
+</tbody>
+</table></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl http://localhost:8080/job/test/6/api/json<span style="color:#ae81ff">\?</span>pretty<span style="color:#ae81ff">\=</span>true
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  ...
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;building&#34;</span> : false,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;description&#34;</span> : null,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;displayName&#34;</span> : <span style="color:#e6db74">&#34;#6&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;duration&#34;</span> : 13631,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;estimatedDuration&#34;</span> : 17999,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;executor&#34;</span> : null,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;fullDisplayName&#34;</span> : <span style="color:#e6db74">&#34;test #6&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;id&#34;</span> : <span style="color:#e6db74">&#34;6&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;keepLog&#34;</span> : false,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;number&#34;</span> : 6,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;queueId&#34;</span> : 17,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;result&#34;</span> : <span style="color:#e6db74">&#34;SUCCESS&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;timestamp&#34;</span> : 1546677234794,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;url&#34;</span> : <span style="color:#e6db74">&#34;http://localhost:8080/job/test/6/&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;builtOn&#34;</span> : <span style="color:#e6db74">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span> ...
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>从返回结果可以看到 是否还在 build:<code>&quot;building&quot; : false</code>,如果 build 结束状态就在:<code>&quot;result&quot; : &quot;SUCCESS&quot;</code></p>
+<h4 id="获取上次build详情">获取上次Build详情</h4>
+<pre tabindex="0"><code>curl http://172.12.12.234:8080/job/pytest_7.0/lastBuild/api/xml --user jenkins:1
+</code></pre><h3 id="last-build-number-获取上次构建序号">last-build-number 获取上次构建序号</h3>
+<pre tabindex="0"><code>GET http://127.0.0.1:8080/{optionalFolderPath}job/{job_name}/lastBuild/buildNumber
+</code></pre><p><strong>返回类型</strong>：Integer</p>
+<h3 id="last-build-timestamp-获取上次构建时间戳">last-build-timestamp 获取上次构建时间戳</h3>
+<pre tabindex="0"><code>GET http://127.0.0.1:8080/{optionalFolderPath}job/{job_name}/lastBuild/buildTimestamp
+</code></pre><p><strong>返回类型</strong>：String</p>
+<h3 id="progressive-text-获取构建控制台输出">progressive-text 获取构建控制台输出</h3>
+<p>获取上次构建的日志</p>
+<pre tabindex="0"><code>GET http://127.0.0.1:8080/{optionalFolderPath}job/{job_name}/lastBuild/logText/progressiveText
+</code></pre><p><strong>返回类型</strong>：ProgressiveText</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">类型</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">text</td>
+<td style="text-align:left">String</td>
+<td style="text-align:left">控制台输出</td>
+</tr>
+<tr>
+<td style="text-align:left">size</td>
+<td style="text-align:left">Integer</td>
+<td style="text-align:left">字数</td>
+</tr>
+<tr>
+<td style="text-align:left">hasMoreData</td>
+<td style="text-align:left">Boolean</td>
+<td style="text-align:left">是否有更多数据</td>
+</tr>
+</tbody>
+</table></div>
+<p>获取某次构建的日志</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>// text
+</span></span><span style="display:flex;"><span>GET http://localhost:8080/job/test/<span style="color:#f92672">{</span>build_number<span style="color:#f92672">}</span>/logText/progressiveText/api/json
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>// html
+</span></span><span style="display:flex;"><span>GET http://localhost:8080/job/test/<span style="color:#f92672">{</span>build_number<span style="color:#f92672">}</span>/logText/progressiveHtml/api/json
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>JobWithDetails job <span style="color:#f92672">=</span> jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">getJob</span><span style="color:#f92672">(</span>jenkinsJob<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span> QueueReference reference <span style="color:#f92672">=</span> job<span style="color:#f92672">.</span><span style="color:#a6e22e">build</span><span style="color:#f92672">(</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>QueueItem queueItem <span style="color:#f92672">=</span> jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">getQueueItem</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> QueueReference<span style="color:#f92672">(</span>queuePart<span style="color:#f92672">));</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>Build build <span style="color:#f92672">=</span> jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">getBuild</span><span style="color:#f92672">(</span>queueItem<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>BuildWithDetails details <span style="color:#f92672">=</span> build<span style="color:#f92672">.</span><span style="color:#a6e22e">details</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>BuildResult result <span style="color:#f92672">=</span> details<span style="color:#f92672">.</span><span style="color:#a6e22e">getResult</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>String logs <span style="color:#f92672">=</span>  details<span style="color:#f92672">.</span><span style="color:#a6e22e">getConsoleOutputText</span><span style="color:#f92672">();</span>
+</span></span></code></pre></div><h3 id="crumbissuer-系统哈希值信息用于防御csrf攻击">CrumbIssuer 系统哈希值信息（用于防御CSRF攻击）</h3>
+<ul>
+<li>CrumbIssuerApi</li>
+<li>path: /crumbIssuer/api/xml</li>
+</ul>
+<h4 id="crumb">crumb</h4>
+<pre tabindex="0"><code>GET http://127.0.0.1:8080/crumbIssuer/api/xml?{key}={value}
+</code></pre><p><strong>参数</strong></p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">key</th>
+<th style="text-align:left">value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">xpath</td>
+<td style="text-align:left">concat(//crumbRequestField,”:”,//crumb)</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>返回类型</strong>：Crumb</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">value</td>
+<td style="text-align:left">String</td>
+</tr>
+<tr>
+<td style="text-align:left">errors</td>
+<td style="text-align:left">List</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="statistics-统计信息">Statistics 统计信息</h3>
+<ul>
+<li>StatisticsApi</li>
+<li>path: /</li>
+</ul>
+<h4 id="overall-load">overall-load</h4>
+<pre tabindex="0"><code>GET http://127.0.0.1:8080/overallLoad/api/json
+</code></pre><p><strong>返回类型</strong>：OverallLoad</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">类型</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">availableExecutors</td>
+<td style="text-align:left">Map&lt;String, String&gt;</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">busyExecutors</td>
+<td style="text-align:left">Map&lt;String, String&gt;</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">connectingExecutors</td>
+<td style="text-align:left">Map&lt;String, String&gt;</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">definedExecutors</td>
+<td style="text-align:left">Map&lt;String, String&gt;</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">idleExecutors</td>
+<td style="text-align:left">Map&lt;String, String&gt;</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">onlineExecutors</td>
+<td style="text-align:left">Map&lt;String, String&gt;</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">queueLength</td>
+<td style="text-align:left">Map&lt;String, String&gt;</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">totalExecutors</td>
+<td style="text-align:left">Map&lt;String, String&gt;</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">totalQueueLength</td>
+<td style="text-align:left">Map&lt;String, String&gt;</td>
+<td style="text-align:left"></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="system-系统信息">System 系统信息</h3>
+<ul>
+<li>path: /</li>
+</ul>
+<p><strong>返回类型</strong>：SystemInfo</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">类型</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">hudsonVersion</td>
+<td style="text-align:left">String</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">jenkinsVersion</td>
+<td style="text-align:left">String</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">jenkinsSession</td>
+<td style="text-align:left">String</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">instanceIdentity</td>
+<td style="text-align:left">String</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">sshEndpoint</td>
+<td style="text-align:left">String</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">server</td>
+<td style="text-align:left">String</td>
+<td style="text-align:left"></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="pluginmanager-插件管理插件信息安装插件">PluginManager 插件管理（插件信息、安装插件）</h3>
+<ul>
+<li>PluginManagerApi</li>
+<li>path: /pluginManager</li>
+</ul>
+<h4 id="plugins-插件列表">plugins 插件列表</h4>
+<pre tabindex="0"><code>GET http://127.0.0.1:8080/pluginManager/api/json
+</code></pre><p><strong>返回类型</strong>：List</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">类型</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">active</td>
+<td style="text-align:left">Boolean</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">backupVersion String</td>
+<td style="text-align:left"></td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">bundled</td>
+<td style="text-align:left">Boolean</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">deleted</td>
+<td style="text-align:left">Boolean</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">downgradable</td>
+<td style="text-align:left">Boolean</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">enabled</td>
+<td style="text-align:left">Boolean</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">longName</td>
+<td style="text-align:left">String</td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left">……</td>
+<td style="text-align:left"></td>
+<td style="text-align:left"></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="installnecessaryplugins-安装插件">installNecessaryPlugins 安装插件</h3>
+<pre tabindex="0"><code>POST http://127.0.0.1:8080/pluginManager/installNecessaryPlugins
+</code></pre><p><strong>参数</strong></p>
+<pre tabindex="0"><code>payload: &lt;jenkins&gt;&lt;install plugin=&#34;{pluginID}&#34;/&gt;&lt;/jenkins&gt;
+</code></pre><div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">字段</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">{pluginID}</td>
+<td style="text-align:left">要安装的插件ID</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>返回类型</strong>：RequestStatus</p>
+<h2 id="代码示例">代码示例</h2>
+<h3 id="配置">配置</h3>
+<p>导入依赖</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#75715e">&lt;!--jenkins-java-client--&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;dependency&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;groupId&gt;</span>com.offbytwo.jenkins<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;artifactId&gt;</span>jenkins-client<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;version&gt;</span>0.3.8<span style="color:#f92672">&lt;/version&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>创建连接配置，配置对应的信息</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">import</span> com.offbytwo.jenkins.JenkinsServer<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> com.offbytwo.jenkins.client.JenkinsHttpClient<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> java.net.URI<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> java.net.URISyntaxException<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">JenkinsConnect</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">JenkinsConnect</span><span style="color:#f92672">(){}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 连接 Jenkins 需要设置的信息
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">final</span> String JENKINS_URL <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;http://jenkins:8080/&#34;</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">final</span> String JENKINS_USERNAME <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;jenkins&#34;</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">final</span> String JENKINS_PASSWORD <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;jenkins&#34;</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * Http 客户端工具
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 如果有些 API 该Jar工具包未提供，可以用此Http客户端操作远程接口，执行命令
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * @return
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> JenkinsHttpClient <span style="color:#a6e22e">getClient</span><span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        JenkinsHttpClient jenkinsHttpClient <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            jenkinsHttpClient <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> JenkinsHttpClient<span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> URI<span style="color:#f92672">(</span>JENKINS_URL<span style="color:#f92672">),</span> JENKINS_USERNAME<span style="color:#f92672">,</span> JENKINS_PASSWORD<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>URISyntaxException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            e<span style="color:#f92672">.</span><span style="color:#a6e22e">printStackTrace</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> jenkinsHttpClient<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 连接 Jenkins
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> JenkinsServer <span style="color:#a6e22e">connection</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        JenkinsServer jenkinsServer <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            jenkinsServer <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> JenkinsServer<span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> URI<span style="color:#f92672">(</span>JENKINS_URL<span style="color:#f92672">),</span> JENKINS_USERNAME<span style="color:#f92672">,</span> JENKINS_PASSWORD<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>URISyntaxException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            e<span style="color:#f92672">.</span><span style="color:#a6e22e">printStackTrace</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> jenkinsServer<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>JENKINS_URL是Jenkins的反向代理地址， <code>Configure System -&gt; Jenkins location url</code>， 一般和Jenkins首页访问地址一致</p>
+<p>JENKINS_USERNAME Jenkins登录账号</p>
+<p>JENKINS_PASSWORD Jenkins账号密码</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202304151033105.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<h4 id="使用示例">使用示例</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">import</span> com.offbytwo.jenkins.JenkinsServer<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> com.offbytwo.jenkins.client.JenkinsHttpClient<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> com.offbytwo.jenkins.model.Build<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> com.offbytwo.jenkins.model.Job<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> com.offbytwo.jenkins.model.JobWithDetails<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> com.offbytwo.jenkins.model.MavenJobWithDetails<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> java.io.IOException<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> java.util.HashMap<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> java.util.Map<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">JobApi</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Jenkins 对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> JenkinsServer jenkinsServer<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// http 客户端对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> JenkinsHttpClient jenkinsHttpClient<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 构造方法中调用连接 Jenkins 方法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    JobApi<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 连接 Jenkins
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        jenkinsServer <span style="color:#f92672">=</span> JenkinsConnect<span style="color:#f92672">.</span><span style="color:#a6e22e">connection</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 设置客户端连接 Jenkins
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        jenkinsHttpClient <span style="color:#f92672">=</span> JenkinsConnect<span style="color:#f92672">.</span><span style="color:#a6e22e">getClient</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 创建 Job
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">ceateJob</span><span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">/**创建一个流水线任务，且设置一个简单的脚本**/</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 创建 Pipeline 脚本
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            String script <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;node(){ \n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;echo &#39;hello world!&#39; \n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;}&#34;</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// xml配置文件，且将脚本加入到配置中
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            String xml <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&lt;flow-definition plugin=\&#34;workflow-job@2.32\&#34;&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;description&gt;测试项目&lt;/description&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;definition class=\&#34;org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition\&#34; plugin=\&#34;workflow-cps@2.66\&#34;&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;script&gt;&#34;</span> <span style="color:#f92672">+</span> script <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;&lt;/script&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;sandbox&gt;true&lt;/sandbox&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;/definition&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;/flow-definition&gt;&#34;</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 创建 Job
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">createJob</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;test-job&#34;</span><span style="color:#f92672">,</span>xml<span style="color:#f92672">,</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>IOException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            e<span style="color:#f92672">.</span><span style="color:#a6e22e">printStackTrace</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 更新 Job
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 更改之前创建的无参数Job，更改其为参数Job
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">updateJob</span><span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * 更改一个流水线任务，让一个无参数的任务变成带参数任务
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             */</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 创建 Pipeline 脚本，用一个key变量
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            String script <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;node(){ \n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;echo \&#34;${key}\&#34; \n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;}&#34;</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// xml配置文件，且将脚本加入到配置中
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            String xml <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&lt;flow-definition plugin=\&#34;workflow-job@2.32\&#34;&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;actions/&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;description&gt;测试项目&lt;/description&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;keepDependencies&gt;false&lt;/keepDependencies&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;properties&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;hudson.model.ParametersDefinitionProperty&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;parameterDefinitions&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;hudson.model.StringParameterDefinition&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;name&gt;key&lt;/name&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;description&gt;用于测试的字符变量&lt;/description&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;defaultValue&gt;hello&lt;/defaultValue&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;trim&gt;false&lt;/trim&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;/hudson.model.StringParameterDefinition&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;/parameterDefinitions&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;/hudson.model.ParametersDefinitionProperty&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;/properties&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;definition class=\&#34;org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition\&#34; plugin=\&#34;workflow-cps@2.66\&#34;&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;script&gt;&#34;</span> <span style="color:#f92672">+</span> script <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;&lt;/script&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;sandbox&gt;true&lt;/sandbox&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;/definition&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;disabled&gt;false&lt;/disabled&gt;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;&lt;/flow-definition&gt;&#34;</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 创建 Job
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">updateJob</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;test-job&#34;</span><span style="color:#f92672">,</span>xml<span style="color:#f92672">,</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>IOException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            e<span style="color:#f92672">.</span><span style="color:#a6e22e">printStackTrace</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 获取 Job 基本信息
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">getJob</span><span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 获取 Job 信息
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            JobWithDetails job <span style="color:#f92672">=</span> jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">getJob</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;das-app-android-pkg&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 获取 Job 名称
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>job<span style="color:#f92672">.</span><span style="color:#a6e22e">getName</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 获取 Job URL
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>job<span style="color:#f92672">.</span><span style="color:#a6e22e">getUrl</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 获取 Job 下一个 build 编号
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>job<span style="color:#f92672">.</span><span style="color:#a6e22e">getNextBuildNumber</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 获取 Job 显示的名称
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>job<span style="color:#f92672">.</span><span style="color:#a6e22e">getDisplayName</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 输出 Job 描述信息
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>job<span style="color:#f92672">.</span><span style="color:#a6e22e">getDescription</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 获取 Job 下游任务列表
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>job<span style="color:#f92672">.</span><span style="color:#a6e22e">getDownstreamProjects</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 获取 Job 上游任务列表
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>job<span style="color:#f92672">.</span><span style="color:#a6e22e">getUpstreamProjects</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>IOException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            e<span style="color:#f92672">.</span><span style="color:#a6e22e">printStackTrace</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 获取 Maven Job 信息
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">getMavenJob</span><span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 获取 Job 信息
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            MavenJobWithDetails job <span style="color:#f92672">=</span> jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">getMavenJob</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;test-job&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>IOException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            e<span style="color:#f92672">.</span><span style="color:#a6e22e">printStackTrace</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 获取 Job 列表
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">getJobList</span><span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 获取 Job 列表
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            Map<span style="color:#f92672">&lt;</span>String<span style="color:#f92672">,</span> Job<span style="color:#f92672">&gt;</span> jobs <span style="color:#f92672">=</span> jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">getJobs</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>Job job<span style="color:#f92672">:</span>jobs<span style="color:#f92672">.</span><span style="color:#a6e22e">values</span><span style="color:#f92672">()){</span>
+</span></span><span style="display:flex;"><span>                System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>job<span style="color:#f92672">.</span><span style="color:#a6e22e">getName</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>IOException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            e<span style="color:#f92672">.</span><span style="color:#a6e22e">printStackTrace</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 获取 View 名称获取 Job 列表
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">getJobListByView</span><span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 获取 Job 列表
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            Map<span style="color:#f92672">&lt;</span>String<span style="color:#f92672">,</span>Job<span style="color:#f92672">&gt;</span> jobs <span style="color:#f92672">=</span> jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">getJobs</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;all&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>Job job<span style="color:#f92672">:</span>jobs<span style="color:#f92672">.</span><span style="color:#a6e22e">values</span><span style="color:#f92672">()){</span>
+</span></span><span style="display:flex;"><span>                System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>job<span style="color:#f92672">.</span><span style="color:#a6e22e">getName</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>IOException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            e<span style="color:#f92672">.</span><span style="color:#a6e22e">printStackTrace</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 查看 Job XML 信息
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">getJobConfig</span><span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            String xml <span style="color:#f92672">=</span> jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">getJobXml</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;test-job&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>            System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>xml<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>IOException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            e<span style="color:#f92672">.</span><span style="color:#a6e22e">printStackTrace</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 执行无参数 Job build
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">buildJob</span><span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">getJob</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;test-job&#34;</span><span style="color:#f92672">).</span><span style="color:#a6e22e">build</span><span style="color:#f92672">(</span><span style="color:#66d9ef">true</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>IOException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            e<span style="color:#f92672">.</span><span style="color:#a6e22e">printStackTrace</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 执行带参数 Job build
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">buildParamJob</span><span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * 例如，现有一个job，拥有一个字符参数&#34;key&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * 现在对这个值进行设置，然后执行一个输出这个值的脚本
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             */</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 设置参数值
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            Map<span style="color:#f92672">&lt;</span>String<span style="color:#f92672">,</span>String<span style="color:#f92672">&gt;</span> param <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> HashMap<span style="color:#f92672">&lt;&gt;();</span>
+</span></span><span style="display:flex;"><span>            param<span style="color:#f92672">.</span><span style="color:#a6e22e">put</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;way&#34;</span><span style="color:#f92672">,</span><span style="color:#e6db74">&#34;gm-R-b&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 执行 build 任务
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">getJob</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;das-app-android-pkg&#34;</span><span style="color:#f92672">).</span><span style="color:#a6e22e">build</span><span style="color:#f92672">(</span>param<span style="color:#f92672">,</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>IOException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            e<span style="color:#f92672">.</span><span style="color:#a6e22e">printStackTrace</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 停止最后构建的 Job Build
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">stopLastJobBuild</span><span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 获取最后的 build 信息
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            Build build <span style="color:#f92672">=</span> jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">getJob</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;test-job&#34;</span><span style="color:#f92672">).</span><span style="color:#a6e22e">getLastBuild</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 停止最后的 build
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            build<span style="color:#f92672">.</span><span style="color:#a6e22e">Stop</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>IOException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            e<span style="color:#f92672">.</span><span style="color:#a6e22e">printStackTrace</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 删除 Job
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">deleteJob</span><span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">deleteJob</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;test-job&#34;</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>IOException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            e<span style="color:#f92672">.</span><span style="color:#a6e22e">printStackTrace</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 禁用 Job
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">disableJob</span><span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">disableJob</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;test-job&#34;</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>IOException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            e<span style="color:#f92672">.</span><span style="color:#a6e22e">printStackTrace</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 启用 Job
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">enableJob</span><span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            jenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">enableJob</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;test-job&#34;</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>IOException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            e<span style="color:#f92672">.</span><span style="color:#a6e22e">printStackTrace</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main</span><span style="color:#f92672">(</span>String<span style="color:#f92672">[]</span> args<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        JobApi jobApi <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> JobApi<span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//        jobApi.getJob();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        jobApi.getJobList();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        jobApi<span style="color:#f92672">.</span><span style="color:#a6e22e">buildParamJob</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//        // 创建 Job
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        jobApi.ceateJob();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        // 构建无参数的 Job
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        jobApi.buildJob();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        // 构建带参数的 Job
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        jobApi.buildParamJob();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        // 停止最后构建的 Job Build
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        jobApi.stopLastJobBuild();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        // 更新 Job
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        jobApi.updateJob();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        // 获取 Job 信息
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        jobApi.getJob();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        // 获取 Maven 项目 Job
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        jobApi.getMavenJob();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        // 获取 Job 配置xml
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        jobApi.getJobConfig();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#75715e">// 获取全部 Job 列表
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        jobApi.getJobList();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#75715e">// 根据 view 名称获取 Job 列表
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        jobApi.getJobListByView();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        // 禁用 Job
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        jobApi.disableJob();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        // 启用 Job
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        jobApi.enableJob();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        // 删除 Job
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//        jobApi.deleteJob();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div>
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/f5fbcabb/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">【译】解决 CI/CD 中的仓库阻抗失配</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    <script src="https://utteranc.es/client.js" 
+        repo="lxbwolf/lxbwolf.github.io"
+        issue-term="pathname"
+        
+        crossorigin="anonymous"
+        async
+        >
+</script>
+
+<style>
+    .utterances {
+        max-width: unset;
+    }
+</style>
+
+<script>
+    let utterancesLoaded = false;
+
+    function setUtterancesTheme(theme) {
+        let utterances = document.querySelector('.utterances iframe');
+        if (utterances) {
+            utterances.contentWindow.postMessage(
+                {
+                    type: 'set-theme',
+                    theme: `github-${theme}`
+                },
+                'https://utteranc.es'
+            );
+        }
+    }
+
+    addEventListener('message', event => {
+        if (event.origin !== 'https://utteranc.es') return;
+
+        
+        utterancesLoaded = true;
+        setUtterancesTheme(document.documentElement.dataset.scheme)
+    });
+
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (!utterancesLoaded) return;
+        setUtterancesTheme(e.detail)
+    })
+</script>
+
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2023 Xiaobin&#39;s Blog
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>
