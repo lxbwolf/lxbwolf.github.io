@@ -1,0 +1,1974 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>DB on Xiaobin&#39;s Blog</title>
+        <link>https://lxb.wiki/categories/DB/</link>
+        <description>Recent content in DB on Xiaobin&#39;s Blog</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <lastBuildDate>Fri, 01 Apr 2022 21:42:21 +0000</lastBuildDate><atom:link href="https://lxb.wiki/categories/DB/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <title>【转】Redis 分布式锁使用不当事故记录</title>
+        <link>https://lxb.wiki/f17b426c/</link>
+        <pubDate>Fri, 01 Apr 2022 21:42:21 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/f17b426c/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;p&gt;某电商项目中，抢购订单采用的是分布式锁来解决的。某次茅台抢购活动，库存共 100 瓶，分布式锁设计不当，最终超卖。&lt;/p&gt;
+&lt;h2 id=&#34;事故现场&#34;&gt;事故现场&lt;/h2&gt;
+&lt;p&gt;核心代码&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; SeckillActivityRequestVO &lt;span style=&#34;color:#a6e22e&#34;&gt;seckillHandle&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;SeckillActivityRequestVO request&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;SeckillActivityRequestVO response&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    String key &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;key:&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; request&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;getSeckillId&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        Boolean lockFlag &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; redisTemplate&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;opsForValue&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;().&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;setIfAbsent&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;key&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;val&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; TimeUnit&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;SECONDS&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;lockFlag&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// HTTP请求用户服务进行用户相关的校验
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 用户活动校验
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 库存校验
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;            Object stock &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; redisTemplate&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;opsForHash&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;().&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;get&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;key&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;:info&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;stock&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;assert&lt;/span&gt; stock &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;Integer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;parseInt&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;stock&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;toString&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;())&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#75715e&#34;&gt;// 业务异常
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                redisTemplate&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;opsForHash&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;().&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;increment&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;key&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;:info&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;stock&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#75715e&#34;&gt;// 生成订单
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;                &lt;span style=&#34;color:#75715e&#34;&gt;// 发布订单创建成功事件
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;                &lt;span style=&#34;color:#75715e&#34;&gt;// 构建响应VO
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;finally&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 释放锁
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        stringRedisTemplate&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;delete&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;key&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 构建响应VO
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; response&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;以上代码，通过分布式锁过期时间有效期 10s 来保障业务逻辑有足够的执行时间；采用 try-finally 语句块保证锁一定会及时释放。&lt;/p&gt;
+&lt;h2 id=&#34;事故原因&#34;&gt;事故原因&lt;/h2&gt;
+&lt;p&gt;飞天茅台抢购活动吸引了大量新用户下载注册我们的 APP，其中，不乏很多羊毛党，采用专业的手段来注册新用户来薅羊毛和刷单。正因如此，让用户服务一直处于较高的运行负载中。&lt;/p&gt;
+&lt;p&gt;抢购活动开始的一瞬间，大量的用户校验请求打到了用户服务。&lt;/p&gt;
+&lt;p&gt;导致用户服务网关出现了短暂的响应延迟，有些请求的响应时长超过了 10s，但由于 HTTP 请求的响应超时我们设置的是 30s。&lt;/p&gt;
+&lt;p&gt;这就导致接口一直阻塞在用户校验那里，10s 后，分布式锁已经失效了，此时有新的请求进来是可以拿到锁的，也就是说锁被覆盖了。&lt;/p&gt;
+&lt;p&gt;这些阻塞的接口执行完之后，又会执行释放锁的逻辑，这就把其他线程的锁释放了，导致新的请求也可以竞争到锁~这真是一个极其恶劣的循环。&lt;/p&gt;
+&lt;p&gt;这个时候只能依赖库存校验，但是偏偏库存校验不是非原子性的，采用的是 get and compare 的方式，超卖的悲剧就这样发生了~~~&lt;/p&gt;
+&lt;h2 id=&#34;事故分析&#34;&gt;事故分析&lt;/h2&gt;
+&lt;p&gt;仔细分析下来，可以发现，这个抢购接口在高并发场景下，是有严重的安全隐患的，主要集中在三个地方：&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;①没有其他系统风险容错处理&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;由于用户服务吃紧，网关响应延迟，但没有任何应对方式，这是超卖的导火索。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;②看似安全的分布式锁其实一点都不安全&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;虽然采用了 set key value [EX seconds] [PX milliseconds] [NX|XX]的方式，但是如果线程 A 执行的时间较长没有来得及释放，锁就过期了，此时线程 B 是可以获取到锁的。&lt;/p&gt;
+&lt;p&gt;当线程 A 执行完成之后，释放锁，实际上就把线程 B 的锁释放掉了。这个时候，线程 C 又是可以获取到锁的，而此时如果线程 B 执行完释放锁实际上就是释放的线程 C 设置的锁。这是超卖的直接原因。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;③非原子性的库存校验&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;非原子性的库存校验导致在并发场景下，库存校验的结果不准确。这是超卖的根本原因。&lt;/p&gt;
+&lt;p&gt;通过以上分析，问题的根本原因在于库存校验严重依赖了分布式锁。因为在分布式锁正常 set、del 的情况下，库存校验是没有问题的。&lt;/p&gt;
+&lt;p&gt;但是，当分布式锁不安全可靠的时候，库存校验就没有用了。&lt;/p&gt;
+&lt;h2 id=&#34;解决方案&#34;&gt;解决方案&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;实现相对安全的分布式锁&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;相对安全的定义：set、del 是一一映射的，不会出现把其他现成的锁 del 的情况。&lt;/p&gt;
+&lt;p&gt;从实际情况的角度来看，即使能做到 set、del一一映射，也无法保障业务的绝对安全。&lt;/p&gt;
+&lt;p&gt;因为锁的过期时间始终是有界的，除非不设置过期时间或者把过期时间设置的很长，但这样做也会带来其他问题。故没有意义。&lt;/p&gt;
+&lt;p&gt;要想实现相对安全的分布式锁，必须依赖 key 的 value 值。在释放锁的时候，通过 value 值的唯一性来保证不会勿删。&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;我们基于 LUA 脚本实现原子性的 get and compare&lt;/em&gt;，如下：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-lua&#34; data-lang=&#34;lua&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;public void safedUnLock(String key, String val) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    String luaScript &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;local in = ARGV[1] local curr=redis.call(&amp;#39;get&amp;#39;, KEYS[1]) if in==curr then redis.call(&amp;#39;del&amp;#39;, KEYS[1]) end return &amp;#39;OK&amp;#39;&amp;#34;&amp;#34;;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    RedisScript&amp;lt;String&amp;gt; redisScript = RedisScript.of(luaScript);
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    redisTemplate.execute(redisScript, Collections.singletonList(key), Collections.singleton(val));
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;我们通过 LUA 脚本来实现安全地解锁。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;实现安全的库存校验&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;如果我们对于并发有比较深入的了解的话，会发现想 get and compare/ read and save 等操作，都是非原子性的。如果要实现原子性，我们也可以借助 LUA 脚本来实现。&lt;/p&gt;
+&lt;p&gt;在公众号互联网架构师回复“2T”，获取惊喜礼包。&lt;/p&gt;
+&lt;p&gt;但就我们这个例子中，由于抢购活动一单只能下 1 瓶，因此可以不用基于 LUA 脚本实现而是基于 Redis 本身的原子性。&lt;/p&gt;
+&lt;p&gt;原因在于：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// redis会返回操作之后的结果，这个过程是原子性的
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;Long currStock &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; redisTemplate&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;opsForHash&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;().&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;increment&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;key&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;stock&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;发现没有，代码中的库存校验完全是“画蛇添足”。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;改进之后的代码&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;经过以上的分析之后，我们决定新建一个 DistributedLocker 类专门用于处理分布式锁：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; SeckillActivityRequestVO &lt;span style=&#34;color:#a6e22e&#34;&gt;seckillHandle&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;SeckillActivityRequestVO request&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;SeckillActivityRequestVO response&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    String key &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;key:&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; request&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;getSeckillId&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    String val &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; UUID&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;randomUUID&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;().&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;toString&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        Boolean lockFlag &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; distributedLocker&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;lock&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;key&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; val&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; TimeUnit&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;SECONDS&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(!&lt;/span&gt;lockFlag&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 业务异常
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 用户活动校验
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 库存校验，基于redis本身的原子性来保证
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        Long currStock &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; stringRedisTemplate&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;opsForHash&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;().&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;increment&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;key &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;:info&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;stock&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;currStock &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;// 说明库存已经扣减完了。
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 业务异常。
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;            log&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;[抢购下单] 无库存&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 生成订单
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 发布订单创建成功事件
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 构建响应
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;finally&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        distributedLocker&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;safedUnLock&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;key&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; val&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 构建响应
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; response&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;深度思考&#34;&gt;深度思考&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;①分布式锁有必要么&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;改进之后，其实可以发现，我们借助于 Redis 本身的原子性扣减库存，也是可以保证不会超卖的。&lt;/p&gt;
+&lt;p&gt;对的。但是如果没有这一层锁的话，那么所有请求进来都会走一遍业务逻辑，由于依赖了其他系统，此时就会造成对其他系统的压力增大。&lt;/p&gt;
+&lt;p&gt;这会增加的性能损耗和服务不稳定性，得不偿失。基于分布式锁可以在一定程度上拦截一些流量。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;②分布式锁的选型&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;有人提出用 RedLock 来实现分布式锁。RedLock 的可靠性更高，但其代价是牺牲一定的性能。&lt;/p&gt;
+&lt;p&gt;在本场景，这点可靠性的提升远不如性能的提升带来的性价比高。如果对于可靠性极高要求的场景，则可以采用 RedLock 来实现。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;③再次思考分布式锁有必要么&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;由于 Bug 需要紧急修复上线，因此我们将其优化并在测试环境进行了压测之后，就立马热部署上线了。&lt;/p&gt;
+&lt;p&gt;实际证明，这个优化是成功的，性能方面略微提升了一些，并在分布式锁失效的情况下，没有出现超卖的情况。&lt;/p&gt;
+&lt;p&gt;然而，还有没有优化空间呢？有的！由于服务是集群部署，我们可以将库存均摊到集群中的每个服务器上，通过广播通知到集群的各个服务器。&lt;/p&gt;
+&lt;p&gt;网关层基于用户 ID 做 hash 算法来决定请求到哪一台服务器。这样就可以基于应用缓存来实现库存的扣减和判断。&lt;/p&gt;
+&lt;p&gt;性能又进一步提升了：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 通过消息提前初始化好，借助ConcurrentHashMap实现高效线程安全
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; ConcurrentHashMap&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Long&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; Boolean&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; SECKILL_FLAG_MAP &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; ConcurrentHashMap&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 通过消息提前设置好。由于AtomicInteger本身具备原子性，因此这里可以直接使用HashMap
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; Map&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Long&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; AtomicInteger&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; SECKILL_STOCK_MAP &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; HashMap&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; SeckillActivityRequestVO &lt;span style=&#34;color:#a6e22e&#34;&gt;seckillHandle&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;SeckillActivityRequestVO request&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;SeckillActivityRequestVO response&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Long seckillId &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; request&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;getSeckillId&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(!&lt;/span&gt;SECKILL_FLAG_MAP&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;get&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;requestseckillId&lt;span style=&#34;color:#f92672&#34;&gt;))&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 业务异常
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;// 用户活动校验
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;// 库存校验
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;SECKILL_STOCK_MAP&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;get&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;seckillId&lt;span style=&#34;color:#f92672&#34;&gt;).&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;decrementAndGet&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;()&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        SECKILL_FLAG_MAP&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;put&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;seckillId&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 业务异常
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 生成订单
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 发布订单创建成功事件
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 构建响应
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; response&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;通过以上的改造，我们就完全不需要依赖 Redis 了。性能和安全性两方面都能进一步得到提升！&lt;/p&gt;
+&lt;p&gt;当然，此方案没有考虑到机器的动态扩容、缩容等复杂场景，如果还要考虑这些话，则不如直接考虑分布式锁的解决方案。&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Redis的底层数据结构 </title>
+        <link>https://lxb.wiki/abddb7fd/</link>
+        <pubDate>Tue, 02 Nov 2021 21:21:18 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/abddb7fd/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;h3 id=&#34;1演示数据类型的实现&#34;&gt;1、演示数据类型的实现&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;OBJECT ENCODING    key&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;该命令是用来显示五大数据类型的底层数据结构。&lt;/p&gt;
+&lt;p&gt;比如对于 string 数据类型：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312142322.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;可以看到实现string数据类型的数据结构有 embstr 以及 int。&lt;/p&gt;
+&lt;p&gt;再比如 list 数据类型：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312142349.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;2简单动态字符串&#34;&gt;2、简单动态字符串&lt;/h3&gt;
+&lt;p&gt;Redis 是用 C 语言写的，但是对于Redis的字符串，却不是 C 语言中的字符串（即以空字符’\0’结尾的字符数组），它是自己构建了一种名为 简单动态字符串（simple dynamic string,SDS）的抽象类型，并将 SDS 作为 Redis的默认字符串表示。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;SDS 定义：&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; sdshdr{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//记录buf数组中已使用字节的数量
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//等于 SDS 保存字符串的长度
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; len;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//记录 buf 数组中未使用字节的数量
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; free;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//字节数组，用于保存字符串
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; buf[];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;用SDS保存字符串 “Redis”具体图示如下：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312142538.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;我们看上面对于 SDS 数据类型的定义：&lt;/p&gt;
+&lt;p&gt;　　1、len 保存了SDS保存字符串的长度&lt;/p&gt;
+&lt;p&gt;　　2、buf[] 数组用来保存字符串的每个元素&lt;/p&gt;
+&lt;p&gt;　　3、free j记录了 buf 数组中未使用的字节数量&lt;/p&gt;
+&lt;p&gt;　　上面的定义相对于 C 语言对于字符串的定义，多出了 len 属性以及 free 属性。为什么不使用C语言字符串实现，而是使用 SDS呢？这样实现有什么好处？&lt;/p&gt;
+&lt;p&gt;　　&lt;strong&gt;①、常数复杂度获取字符串长度&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;　　由于 len 属性的存在，我们获取 SDS 字符串的长度只需要读取 len 属性，时间复杂度为 O(1)。而对于 C 语言，获取字符串的长度通常是经过遍历计数来实现的，时间复杂度为 O(n)。通过 strlen key 命令可以获取 key 的字符串长度。&lt;/p&gt;
+&lt;p&gt;　　&lt;strong&gt;②、杜绝缓冲区溢出&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;　　我们知道在 C 语言中使用 strcat 函数来进行两个字符串的拼接，一旦没有分配足够长度的内存空间，就会造成缓冲区溢出。而对于 SDS 数据类型，在进行字符修改的时候，会首先根据记录的 len 属性检查内存空间是否满足需求，如果不满足，会进行相应的空间扩展，然后在进行修改操作，所以不会出现缓冲区溢出。&lt;/p&gt;
+&lt;p&gt;　　&lt;strong&gt;③、减少修改字符串的内存重新分配次数&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;　　C语言由于不记录字符串的长度，所以如果要修改字符串，必须要重新分配内存（先释放再申请），因为如果没有重新分配，字符串长度增大时会造成内存缓冲区溢出，字符串长度减小时会造成内存泄露。&lt;/p&gt;
+&lt;p&gt;　　而对于SDS，由于len属性和free属性的存在，对于修改字符串SDS实现了空间预分配和惰性空间释放两种策略：&lt;/p&gt;
+&lt;p&gt;　　1、空间预分配：对字符串进行空间扩展的时候，扩展的内存比实际需要的多，这样可以减少连续执行字符串增长操作所需的内存重分配次数。&lt;/p&gt;
+&lt;p&gt;　　2、惰性空间释放：对字符串进行缩短操作时，程序不立即使用内存重新分配来回收缩短后多余的字节，而是使用 free 属性将这些字节的数量记录下来，等待后续使用。（当然SDS也提供了相应的API，当我们有需要时，也可以手动释放这些未使用的空间。）&lt;/p&gt;
+&lt;p&gt;　　&lt;strong&gt;④、二进制安全&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;　　因为C字符串以空字符作为字符串结束的标识，而对于一些二进制文件（如图片等），内容可能包括空字符串，因此C字符串无法正确存取；而所有 SDS 的API 都是以处理二进制的方式来处理 buf 里面的元素，并且 SDS 不是以空字符串来判断是否结束，而是以 len 属性表示的长度来判断字符串是否结束。&lt;/p&gt;
+&lt;p&gt;　　&lt;strong&gt;⑤、兼容部分 C 字符串函数&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;　　虽然 SDS 是二进制安全的，但是一样遵从每个字符串都是以空字符串结尾的惯例，这样可以重用 C 语言库&amp;lt;string.h&amp;gt; 中的一部分函数。&lt;/p&gt;
+&lt;p&gt;　　&lt;strong&gt;⑥、总结&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312142712.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;一般来说，SDS 除了保存数据库中的字符串值以外，SDS 还可以作为缓冲区（buffer）：包括 AOF 模块中的AOF缓冲区以及客户端状态中的输入缓冲区。后面在介绍Redis的持久化时会进行介绍。&lt;/p&gt;
+&lt;h3 id=&#34;3链表&#34;&gt;3、链表&lt;/h3&gt;
+&lt;p&gt;链表是一种常用的数据结构，C 语言内部是没有内置这种数据结构的实现，所以Redis自己构建了链表的实现。&lt;/p&gt;
+&lt;p&gt;　　链表定义：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;typedef&lt;/span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; listNode{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;       &lt;span style=&#34;color:#75715e&#34;&gt;//前置节点
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;       &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; listNode &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;prev;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;       &lt;span style=&#34;color:#75715e&#34;&gt;//后置节点
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;       &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; listNode &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;next;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;       &lt;span style=&#34;color:#75715e&#34;&gt;//节点的值
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;       &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;value;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}listNode
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;通过多个 listNode 结构就可以组成链表，这是一个双向链表，Redis还提供了操作链表的数据结构：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;typedef&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; list{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//表头节点
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     listNode &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;head;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//表尾节点
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     listNode &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;tail;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//链表所包含的节点数量
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;long&lt;/span&gt; len;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//节点值复制函数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;free) (&lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;ptr);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//节点值释放函数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;free) (&lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;ptr);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//节点值对比函数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;match) (&lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;ptr,&lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;key);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}list;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312143157.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;Redis链表特性：&lt;/p&gt;
+&lt;p&gt;　　①、双端：链表具有前置节点和后置节点的引用，获取这两个节点时间复杂度都为O(1)。&lt;/p&gt;
+&lt;p&gt;　　②、无环：表头节点的 prev 指针和表尾节点的 next 指针都指向 NULL,对链表的访问都是以 NULL 结束。　　&lt;/p&gt;
+&lt;p&gt;　　③、带链表长度计数器：通过 len 属性获取链表长度的时间复杂度为 O(1)。&lt;/p&gt;
+&lt;p&gt;　　④、多态：链表节点使用 void* 指针来保存节点值，可以保存各种不同类型的值。&lt;/p&gt;
+&lt;h3 id=&#34;4字典&#34;&gt;4、字典&lt;/h3&gt;
+&lt;p&gt;字典又称为符号表或者关联数组、或映射（map），是一种用于保存键值对的抽象数据结构。字典中的每一个键 key 都是唯一的，通过 key 可以对值来进行查找或修改。C 语言中没有内置这种数据结构的实现，所以字典依然是 Redis自己构建的。&lt;/p&gt;
+&lt;p&gt;　　Redis 的字典使用哈希表作为底层实现&lt;/p&gt;
+&lt;p&gt;　　哈希表结构定义：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;typedef&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; dictht{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//哈希表数组
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     dictEntry &lt;span style=&#34;color:#f92672&#34;&gt;**&lt;/span&gt;table;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//哈希表大小
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;long&lt;/span&gt; size;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//哈希表大小掩码，用于计算索引值
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//总是等于 size-1
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;long&lt;/span&gt; sizemask;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//该哈希表已有节点的数量
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;long&lt;/span&gt; used;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}dictht
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;哈希表是由数组 table 组成，table 中每个元素都是指向 dict.h/dictEntry 结构，dictEntry 结构定义如下：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;typedef&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; dictEntry{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//键
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;key;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//值
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;union&lt;/span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;val;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          uint64_tu64;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          int64_ts64;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     }v;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//指向下一个哈希表节点，形成链表
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; dictEntry &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;next;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}dictEntry
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;key 用来保存键，val 属性用来保存值，值可以是一个指针，也可以是uint64_t整数，也可以是int64_t整数。&lt;/p&gt;
+&lt;p&gt;　　注意这里还有一个指向下一个哈希表节点的指针，我们知道哈希表最大的问题是存在哈希冲突，如何解决哈希冲突，有开放地址法和链地址法。这里采用的便是链地址法，通过next这个指针可以将多个哈希值相同的键值对连接在一起，用来解决&lt;strong&gt;哈希冲突&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312143330.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;**①、哈希算法：**Redis计算哈希值和索引值方法如下：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#1、使用字典设置的哈希函数，计算键 key 的哈希值
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;hash &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dict&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;type&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;hashFunction&lt;/span&gt;(key);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#2、使用哈希表的sizemask属性和第一步得到的哈希值，计算索引值
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;index &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; hash &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; dict&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;ht[x].sizemask;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;**②、解决哈希冲突：**这个问题上面我们介绍了，方法是链地址法。通过字典里面的 *next 指针指向下一个具有相同索引值的哈希表节点。&lt;/p&gt;
+&lt;p&gt;　　**③、扩容和收缩：**当哈希表保存的键值对太多或者太少时，就要通过 rerehash(重新散列）来对哈希表进行相应的扩展或者收缩。具体步骤：&lt;/p&gt;
+&lt;p&gt;　　　　　　1、如果执行扩展操作，会基于原哈希表创建一个大小等于 ht[0].used*2n 的哈希表（也就是每次扩展都是根据原哈希表已使用的空间扩大一倍创建另一个哈希表）。相反如果执行的是收缩操作，每次收缩是根据已使用空间缩小一倍创建一个新的哈希表。&lt;/p&gt;
+&lt;p&gt;　　　　　　2、重新利用上面的哈希算法，计算索引值，然后将键值对放到新的哈希表位置上。&lt;/p&gt;
+&lt;p&gt;　　　　　　3、所有键值对都迁徙完毕后，释放原哈希表的内存空间。&lt;/p&gt;
+&lt;p&gt;　　&lt;strong&gt;④、触发扩容的条件：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;　　　　　　1、服务器目前没有执行 BGSAVE 命令或者 BGREWRITEAOF 命令，并且负载因子大于等于1。&lt;/p&gt;
+&lt;p&gt;　　　　　　2、服务器目前正在执行 BGSAVE 命令或者 BGREWRITEAOF 命令，并且负载因子大于等于5。&lt;/p&gt;
+&lt;p&gt;　　　　ps：负载因子 = 哈希表已保存节点数量 / 哈希表大小。&lt;/p&gt;
+&lt;p&gt;　　&lt;strong&gt;⑤、渐近式 rehash&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;　　　　什么叫渐进式 rehash？也就是说扩容和收缩操作不是一次性、集中式完成的，而是分多次、渐进式完成的。如果保存在Redis中的键值对只有几个几十个，那么 rehash 操作可以瞬间完成，但是如果键值对有几百万，几千万甚至几亿，那么要一次性的进行 rehash，势必会造成Redis一段时间内不能进行别的操作。所以Redis采用渐进式 rehash,这样在进行渐进式rehash期间，字典的删除查找更新等操作可能会在两个哈希表上进行，第一个哈希表没有找到，就会去第二个哈希表上进行查找。但是进行 增加操作，一定是在新的哈希表上进行的。&lt;/p&gt;
+&lt;h3 id=&#34;5跳跃表&#34;&gt;5、跳跃表&lt;/h3&gt;
+&lt;p&gt;跳跃表（skiplist）是一种有序数据结构，它通过在每个节点中维持多个指向其它节点的指针，从而达到快速访问节点的目的。具有如下性质：&lt;/p&gt;
+&lt;p&gt;　　1、由很多层结构组成；&lt;/p&gt;
+&lt;p&gt;　　2、每一层都是一个有序的链表，排列顺序为由高层到底层，都至少包含两个链表节点，分别是前面的head节点和后面的nil节点；&lt;/p&gt;
+&lt;p&gt;　　3、最底层的链表包含了所有的元素；&lt;/p&gt;
+&lt;p&gt;　　4、如果一个元素出现在某一层的链表中，那么在该层之下的链表也全都会出现（上一层的元素是当前层的元素的子集）；&lt;/p&gt;
+&lt;p&gt;　　5、链表中的每个节点都包含两个指针，一个指向同一层的下一个链表节点，另一个指向下一层的同一个链表节点；&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312143603.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;Redis中跳跃表节点定义如下：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;typedef&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; zskiplistNode {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//层
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; zskiplistLevel{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;           &lt;span style=&#34;color:#75715e&#34;&gt;//前进指针
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;           &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; zskiplistNode &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;forward;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;           &lt;span style=&#34;color:#75715e&#34;&gt;//跨度
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;           &lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; span;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     }level[];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//后退指针
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; zskiplistNode &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;backward;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//分值
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;double&lt;/span&gt; score;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//成员对象
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     robj &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;obj;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;} zskiplistNode
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;多个跳跃表节点构成一个跳跃表：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;typedef&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; zskiplist{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//表头节点和表尾节点
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     structz skiplistNode &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;header, &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;tail;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//表中节点的数量
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;long&lt;/span&gt; length;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//表中层数最大的节点的层数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; level;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}zskiplist;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312143819.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;①、搜索：从最高层的链表节点开始，如果比当前节点要大和比当前层的下一个节点要小，那么则往下找，也就是和当前层的下一层的节点的下一个节点进行比较，以此类推，一直找到最底层的最后一个节点，如果找到则返回，反之则返回空。&lt;/p&gt;
+&lt;p&gt;　　②、插入：首先确定插入的层数，有一种方法是假设抛一枚硬币，如果是正面就累加，直到遇见反面为止，最后记录正面的次数作为插入的层数。当确定插入的层数k后，则需要将新元素插入到从底层到k层。&lt;/p&gt;
+&lt;p&gt;　　③、删除：在各个层中找到包含指定值的节点，然后将节点从链表中删除即可，如果删除以后只剩下头尾两个节点，则删除这一层。&lt;/p&gt;
+&lt;h3 id=&#34;6整数集合&#34;&gt;6、整数集合&lt;/h3&gt;
+&lt;p&gt;整数集合（intset）是Redis用于保存整数值的集合抽象数据类型，它可以保存类型为int16_t、int32_t 或者int64_t 的整数值，并且保证集合中不会出现重复元素。&lt;/p&gt;
+&lt;p&gt;　　定义如下：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;typedef&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; intset{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//编码方式
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;uint32_t&lt;/span&gt; encoding;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//集合包含的元素数量
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;uint32_t&lt;/span&gt; length;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;//保存元素的数组
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;     &lt;span style=&#34;color:#66d9ef&#34;&gt;int8_t&lt;/span&gt; contents[];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}intset;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;整数集合的每个元素都是 contents 数组的一个数据项，它们按照从小到大的顺序排列，并且不包含任何重复项。&lt;/p&gt;
+&lt;p&gt;　　length 属性记录了 contents 数组的大小。&lt;/p&gt;
+&lt;p&gt;　　需要注意的是虽然 contents 数组声明为 int8_t 类型，但是实际上contents 数组并不保存任何 int8_t 类型的值，其真正类型有 encoding 来决定。&lt;/p&gt;
+&lt;p&gt;　　&lt;strong&gt;①、升级&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;　　当我们新增的元素类型比原集合元素类型的长度要大时，需要对整数集合进行升级，才能将新元素放入整数集合中。具体步骤：&lt;/p&gt;
+&lt;p&gt;　　1、根据新元素类型，扩展整数集合底层数组的大小，并为新元素分配空间。&lt;/p&gt;
+&lt;p&gt;　　2、将底层数组现有的所有元素都转成与新元素相同类型的元素，并将转换后的元素放到正确的位置，放置过程中，维持整个元素顺序都是有序的。&lt;/p&gt;
+&lt;p&gt;　　3、将新元素添加到整数集合中（保证有序）。&lt;/p&gt;
+&lt;p&gt;　　升级能极大地节省内存。&lt;/p&gt;
+&lt;p&gt;　　&lt;strong&gt;②、降级&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;　　整数集合不支持降级操作，一旦对数组进行了升级，编码就会一直保持升级后的状态。&lt;/p&gt;
+&lt;h3 id=&#34;7压缩列表&#34;&gt;7、压缩列表&lt;/h3&gt;
+&lt;p&gt;压缩列表（ziplist）是Redis为了节省内存而开发的，是由一系列特殊编码的连续内存块组成的顺序型数据结构，一个压缩列表可以包含任意多个节点（entry），每个节点可以保存一个字节数组或者一个整数值。&lt;/p&gt;
+&lt;p&gt;　　&lt;strong&gt;压缩列表的原理：压缩列表并不是对数据利用某种算法进行压缩，而是将数据按照一定规则编码在一块连续的内存区域，目的是节省内存。&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312144033.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;　压缩列表的每个节点构成如下：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220312144116.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;①、previous_entry_ength：记录压缩列表前一个字节的长度。previous_entry_ength的长度可能是1个字节或者是5个字节，如果上一个节点的长度小于254，则该节点只需要一个字节就可以表示前一个节点的长度了，如果前一个节点的长度大于等于254，则previous length的第一个字节为254，后面用四个字节表示当前节点前一个节点的长度。利用此原理即当前节点位置减去上一个节点的长度即得到上一个节点的起始位置，压缩列表可以从尾部向头部遍历。这么做很有效地减少了内存的浪费。&lt;/p&gt;
+&lt;p&gt;②、encoding：节点的encoding保存的是节点的content的内容类型以及长度，encoding类型一共有两种，一种字节数组一种是整数，encoding区域长度为1字节、2字节或者5字节长。&lt;/p&gt;
+&lt;p&gt;③、content：content区域用于保存节点的内容，节点内容类型和长度由encoding决定。&lt;/p&gt;
+&lt;h3 id=&#34;8总结&#34;&gt;8、总结&lt;/h3&gt;
+&lt;p&gt;​		大多数情况下，Redis使用简单字符串SDS作为字符串的表示，相对于C语言字符串，SDS具有常数复杂度获取字符串长度，杜绝了缓存区的溢出，减少了修改字符串长度时所需的内存重分配次数，以及二进制安全能存储各种类型的文件，并且还兼容部分C函数。&lt;/p&gt;
+&lt;p&gt;　　通过为链表设置不同类型的特定函数，Redis链表可以保存各种不同类型的值，除了用作列表键，还在发布与订阅、慢查询、监视器等方面发挥作用（后面会介绍）。&lt;/p&gt;
+&lt;p&gt;　　Redis的字典底层使用哈希表实现，每个字典通常有两个哈希表，一个平时使用，另一个用于rehash时使用，使用链地址法解决哈希冲突。&lt;/p&gt;
+&lt;p&gt;　　跳跃表通常是有序集合的底层实现之一，表中的节点按照分值大小进行排序。&lt;/p&gt;
+&lt;p&gt;　　整数集合是集合键的底层实现之一，底层由数组构成，升级特性能尽可能的节省内存。&lt;/p&gt;
+&lt;p&gt;　　压缩列表是Redis为节省内存而开发的顺序型数据结构，通常作为列表键和哈希键的底层实现之一。&lt;/p&gt;
+&lt;h3 id=&#34;参考资料&#34;&gt;参考资料&lt;/h3&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://www.cnblogs.com/ysocean/p/9080940.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Redis详解（三）&amp;mdash;&amp;mdash; redis的六大数据类型详细用法 - YSOcean - 博客园 (cnblogs.com)&lt;/a&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>MySQL的四种事务隔离级别</title>
+        <link>https://lxb.wiki/689978a2/</link>
+        <pubDate>Mon, 02 Aug 2021 23:20:12 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/689978a2/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;h1 id=&#34;一事务的基本要素acid&#34;&gt;一、事务的基本要素（ACID）&lt;/h1&gt;
+&lt;p&gt;　　1、原子性（Atomicity）：事务开始后所有操作，要么全部做完，要么全部不做，不可能停滞在中间环节。事务执行过程中出错，会回滚到事务开始前的状态，所有的操作就像没有发生一样。也就是说事务是一个不可分割的整体，就像化学中学过的原子，是物质构成的基本单位。&lt;/p&gt;
+&lt;p&gt;　　 2、一致性（Consistency）：事务开始前和结束后，数据库的完整性约束没有被破坏 。比如A向B转账，不可能A扣了钱，B却没收到。&lt;/p&gt;
+&lt;p&gt;　　 3、隔离性（Isolation）：同一时间，只允许一个事务请求同一数据，不同的事务之间彼此没有任何干扰。比如A正在从一张银行卡中取钱，在A取钱的过程结束前，B不能向这张卡转账。&lt;/p&gt;
+&lt;p&gt;　　 4、持久性（Durability）：事务完成后，事务对数据库的所有更新将被保存到数据库，不能回滚。&lt;/p&gt;
+&lt;h1 id=&#34;二事务的并发问题&#34;&gt;二、事务的并发问题&lt;/h1&gt;
+&lt;p&gt;　　1、脏读：事务A读取了事务B更新的数据，然后B回滚操作，那么A读取到的数据是脏数据&lt;/p&gt;
+&lt;p&gt;　　2、不可重复读：事务 A 多次读取同一数据，事务 B 在事务A多次读取的过程中，对数据作了更新并提交，导致事务A多次读取同一数据时，结果 不一致。&lt;/p&gt;
+&lt;p&gt;　　3、幻读：系统管理员A将数据库中所有学生的成绩从具体分数改为ABCDE等级，但是系统管理员B就在这个时候插入了一条具体分数的记录，当系统管理员A改结束后发现还有一条记录没有改过来，就好像发生了幻觉一样，这就叫幻读。&lt;/p&gt;
+&lt;p&gt;　　小结：不可重复读的和幻读很容易混淆，不可重复读侧重于修改，幻读侧重于新增或删除。解决不可重复读的问题只需锁住满足条件的行，解决幻读需要锁表&lt;/p&gt;
+&lt;h1 id=&#34;三mysql事务隔离级别&#34;&gt;三、MySQL事务隔离级别&lt;/h1&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;事务隔离级别&lt;/th&gt;
+&lt;th&gt;脏读&lt;/th&gt;
+&lt;th&gt;不可重复读&lt;/th&gt;
+&lt;th&gt;幻读&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;读未提交（read-uncommitted）&lt;/td&gt;
+&lt;td&gt;是&lt;/td&gt;
+&lt;td&gt;是&lt;/td&gt;
+&lt;td&gt;是&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;不可重复读（read-committed）&lt;/td&gt;
+&lt;td&gt;否&lt;/td&gt;
+&lt;td&gt;是&lt;/td&gt;
+&lt;td&gt;是&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;可重复读（repeatable-read）&lt;/td&gt;
+&lt;td&gt;否&lt;/td&gt;
+&lt;td&gt;否&lt;/td&gt;
+&lt;td&gt;是&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;串行化（serializable）&lt;/td&gt;
+&lt;td&gt;否&lt;/td&gt;
+&lt;td&gt;否&lt;/td&gt;
+&lt;td&gt;否&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;mysql默认的事务隔离级别为repeatable-read&lt;/p&gt;
+&lt;h1 id=&#34;四用例子说明各个隔离级别的情况&#34;&gt;四、用例子说明各个隔离级别的情况&lt;/h1&gt;
+&lt;h2 id=&#34;1读未提交&#34;&gt;1、读未提交：&lt;/h2&gt;
+&lt;p&gt;　　　　（1）打开一个客户端A，并设置当前事务模式为read uncommitted（未提交读），查询表account的初始值：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226132329.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;（2）在客户端A的事务提交之前，打开另一个客户端B，更新表account：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226132440.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;（3）这时，虽然客户端B的事务还没提交，但是客户端A就可以查询到B已经更新的数据：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226132511.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;（4）一旦客户端B的事务因为某种原因回滚，所有的操作都将会被撤销，那客户端A查询到的数据其实就是脏数据：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226132642.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;（5）在客户端A执行更新语句update account set balance = balance - 50 where id =1，lilei的balance没有变成350，居然是400，是不是很奇怪，数据不一致啊，如果你这么想就太天真 了，在应用程序中，我们会用400-50=350，并不知道其他会话回滚了，要想解决这个问题可以采用读已提交的隔离级别&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226132722.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2读已提交&#34;&gt;2、读已提交&lt;/h2&gt;
+&lt;p&gt;（1）打开一个客户端A，并设置当前事务模式为read committed（读已提交），查询表account的所有记录：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226132916.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;（2）在客户端A的事务提交之前，打开另一个客户端B，更新表account：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226133127.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;（3）这时，客户端B的事务还没提交，客户端A不能查询到B已经更新的数据，解决了脏读问题：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226133227.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;（4）客户端B的事务提交&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226133253.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;（5）客户端A执行与上一步相同的查询，结果 与上一步不一致，即产生了不可重复读的问题&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226133509.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3可重复读&#34;&gt;3、可重复读&lt;/h2&gt;
+&lt;p&gt;（1）打开一个客户端A，并设置当前事务模式为repeatable read，查询表account的所有记录&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226133541.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;（2）在客户端A的事务提交之前，打开另一个客户端B，更新表account并提交&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226133617.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;（3）在客户端A查询表account的所有记录，与步骤（1）查询结果一致，没有出现不可重复读的问题&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226133720.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;（4）在客户端A，接着执行update balance = balance - 50 where id = 1，balance没有变成400-50=350，lilei的balance值用的是步骤（2）中的350来算的，所以是300，数据的一致性倒是没有被破坏。可重复读的隔离级别下使用了MVCC机制，select操作不会更新版本号，是快照读（历史版本）；insert、update和delete会更新版本号，是当前读（当前版本）。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226133747.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;（5）重新打开客户端B，插入一条新数据后提交&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226133806.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;!-- raw HTML omitted --&gt;（6）在客户端A查询表account的所有记录，没有 查出 新增数据，所以没有出现幻读&lt;!-- raw HTML omitted --&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226133936.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;4串行化&#34;&gt;4.串行化&lt;/h2&gt;
+&lt;p&gt;（1）打开一个客户端A，并设置当前事务模式为serializable，查询表account的初始值：&lt;/p&gt;
+&lt;p&gt;（2）打开一个客户端B，并设置当前事务模式为serializable，插入一条记录报错，表被锁了插入失败，mysql中事务隔离级别为serializable时会锁表，因此不会出现幻读的情况，这种隔离级别并发性极低，开发中很少会用到。&lt;/p&gt;
+&lt;p&gt;　　&lt;strong&gt;补充：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;　　1、事务隔离级别为读提交时，写数据只会锁住相应的行&lt;/p&gt;
+&lt;p&gt;　　2、事务隔离级别为可重复读时，如果检索条件有索引（包括主键索引）的时候，默认加锁方式是next-key 锁；如果****检索条件****没有索引，更新数据时会锁住整张表。一个间隙被事务加了锁，其他事务是不能在这个间隙插入记录的，这样可以防止幻读。&lt;/p&gt;
+&lt;p&gt;　　3、事务隔离级别为串行化时，读写数据都会锁住整张表&lt;/p&gt;
+&lt;p&gt;　　4、隔离级别越高，越能保证数据的完整性和一致性，但是对并发性能的影响也越大。&lt;/p&gt;
+&lt;p&gt;　　5、MYSQL MVCC实现机制参考链接：https://blog.csdn.net/whoamiyang/article/details/51901888&lt;/p&gt;
+&lt;p&gt;　　 6、关于next-key 锁可以参考链接：https://blog.csdn.net/bigtree_3721/article/details/73731377&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;后注：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;关于 &lt;a class=&#34;link&#34; href=&#34;#%e5%be%85%e9%aa%8c%e8%af%81&#34; &gt;四、3、可重复的的第(6)步&lt;/a&gt;， 待验证&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>B树和B&#43;树</title>
+        <link>https://lxb.wiki/17ced2c4/</link>
+        <pubDate>Sun, 11 Jul 2021 21:07:59 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/17ced2c4/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;&lt;strong&gt;一 B树&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;**1.B树的定义：**B树（B-tree）是一种树状数据结构，它能够存储数据、对其进行排序并允许以O(log n)的时间复杂度运行进行查找、顺序读取、插入和删除的数据结构。B树，概括来说是一个节点可以拥有多于2个子节点的二叉查找树。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;2.B树的特征：&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;根节点至少有两个子节点&lt;/li&gt;
+&lt;li&gt;每个中间节点都包含k-1个元素和k个孩子，其中 m/2 ≤ k ≤ m （m为树的阶）&lt;/li&gt;
+&lt;li&gt;每个叶子节点都包含k-1个元素，其中 m/2 ≤ k ≤ m （m为树的阶）&lt;/li&gt;
+&lt;li&gt;每个节点中的元素从小到大排列，节点当中k-1个元素正好是k个孩子包含的元素的值域划分（一个结点有k个孩子时，必有k-1个元素才能将子树中所有元素划分为k个子集）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;3.B树的操作&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;**3.1 B树的查找：**如下图，查询元素8&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210837.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;第一次磁盘IO：把15所在节点读到内存中，然后与8做比较，小于15，找到下一个节点（5和9对应的节点）&lt;/p&gt;
+&lt;p&gt;第二次磁盘IO：把5和9所在的节点读到内存中，然后与8做比较，5&amp;lt;8&amp;lt;9，找到下一个节点（6和8对应的节点）&lt;/p&gt;
+&lt;p&gt;第三次磁盘IO：把6和8所在节点读到内存中，然后与8做比较，找到了元素8&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;3.1 B树的插入：&lt;/strong&gt; 将元素7插入下图中的B树&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212211015.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;步骤一：自顶向下查找元素7应该在的位置，即在6和8之间&lt;/p&gt;
+&lt;p&gt;步骤二：三阶B树中的节点最多有两个元素，把6 7 8里面的中间元素上移（中间元素上移是插入操作的关键）&lt;/p&gt;
+&lt;p&gt;步骤三：上移之后，上一层节点元素也超载了，5 7 9中间元素上移，现在根节点变为了 7 15&lt;/p&gt;
+&lt;p&gt;步骤四：要对B树进行调整，使其满足B树的特性，最终如下图：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212211040.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;二 B+树&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;B+树是B树的一种变形体，它与B树的差异在于：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;有K个子节点的节点必然有K个关键码&lt;/li&gt;
+&lt;li&gt;非叶节点仅具有索引作用，元素信息均存放在叶节点中&lt;/li&gt;
+&lt;li&gt;树的所有叶节点构成一个有序链表，可以按照关键码排序的次序遍历全部记录&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;B+树的优势：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;由于B+树在内部节点上不包含数据信息，因此在内存页中能够存放更多的key。 数据存放的更加紧密，具有更好的空间局部性。因此访问叶子节点上关联的数据也具有更好的缓存命中率。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;B+树的叶子节点都是相连的，因此对整棵树的遍历只需要一次线性遍历叶子节点即可。而且由于数据顺序排列并且相连，所以便于区间查找和搜索。而B树则需要进行每一层的递归遍历。相邻的元素可能在内存中不相邻，所以缓存命中性没有B+树好。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212211103.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;总结：我们知道二叉查找树的时间复杂度是Ｏ(logN)，效率已经足够高。为什么出现B树和B+树呢？当大量数据存储在磁盘上，进行查询操作时，需要先将数据加载到内存中（磁盘IO操作），而数据并不能一次性全部加载到内存中，只能逐一加载每个磁盘页（对应树的一个节点），并且磁盘IO操作很慢，平衡二叉树由于树深度过大而造成磁盘IO读写过于频繁，进而导致效率低下。为了减少磁盘IO的次数，就需要降低树的深度，那么就引出了B树和B+树：每个节点存储多个元素，采用多叉树结构。这样就提高了效率，比如数据库索引，就是存储在磁盘上，采用的就是B+树的数据结构。&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Redis-Sorted-Set底层数据结构</title>
+        <link>https://lxb.wiki/f1113725/</link>
+        <pubDate>Tue, 22 Jun 2021 22:56:12 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/f1113725/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;h1 id=&#34;sortedset底层存储结构&#34;&gt;Sortedset底层存储结构&lt;/h1&gt;
+&lt;p&gt;sortedset同时会由两种数据结构支持,ziplist和skiplist.&lt;/p&gt;
+&lt;p&gt;只有同时满足如下条件是,使用的是ziplist,其他时候则是使用skiplist&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;有序集合保存的元素数量小于128个&lt;/li&gt;
+&lt;li&gt;有序集合保存的所有元素的长度小于64字节&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;当ziplist作为存储结构时候,每个集合元素使用两个紧挨在一起的压缩列表结点来保存,第一个节点保存元素的成员,第二个元素保存元素的分值.&lt;/p&gt;
+&lt;p&gt;当使用skiplist作为存储结构时,使用skiplist按序保存元素分值,使用dict来保存元素和分值的对应关系&lt;/p&gt;
+&lt;h2 id=&#34;1-跳跃表&#34;&gt;1 跳跃表&lt;/h2&gt;
+&lt;p&gt;跳跃表（skiplist）是一种有序数据结构，它通过在每个节点中维持多个指向其他节点的指针，从而达到快速访问节点的目的。跳跃表支持平均O（logN）、最坏O（N）复杂度的节点查找，还可以通过顺序性操作来批量处理节点。&lt;/p&gt;
+&lt;p&gt;在大部分情况下，跳跃表的效率可以和平衡树相媲美，并且因为跳跃表的实现比平衡树要来得更为简单。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Redis使用跳跃表作为有序集合键的底层实现之一，如果一个有序集合包含的元素数量比较多，又或者有序集合中元素的成员（member）是比较长的字符串时，Redis就会使用跳跃表来作为有序集合键的底层实现。&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Redis只在两个地方用到了跳跃表，一个是实现有序集合键，另一个是在集群节点中用作内部数据结构，除此之外，跳跃表在Redis里面没有其他用途。&lt;/p&gt;
+&lt;p&gt;Redis的配置文件中关于有序集合底层实现的两个配置。
+1）zset-max-ziplist-entries 128:zset采用压缩列表时，元素个数最大值。默认值为128。
+2）zset-max-ziplist-value 64:zset采用压缩列表时，每个元素的字符串长度最大值。默认值为64。
+zset插入第一个元素时，会判断下面两种条件：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;zset-max-ziplist-entries的值是否等于0；&lt;/li&gt;
+&lt;li&gt;zset-max-ziplist-value小于要插入元素的字符串长度。满足任一条件Redis就会采用跳跃表作为底层实现，否则采用压缩列表作为底层实现方式。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;一般情况下，不会将zset-max-ziplist-entries配置成0，元素的字符串长度也不会太长，所以在创建有序集合时，默认使用压缩列表的底层实现。zset新插入元素时，会判断以下两种条件：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;zset中元素个数大于zset_max_ziplist_entries；&lt;/li&gt;
+&lt;li&gt;插入元素的字符串长度大于zset_max_ziplist_value。当满足任一条件时，Redis便会将zset的底层实现由压缩列表转为跳跃表。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;zset在转为跳跃表之后，即使元素被逐渐删除，也不会重新转为压缩列表。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-跳跃表的结构&#34;&gt;2 跳跃表的结构&lt;/h2&gt;
+&lt;p&gt;其c语言代码如下：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;typedef&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; zskiplistNode {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;//成员对象
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    robj &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;obj;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;double&lt;/span&gt; score;&lt;span style=&#34;color:#75715e&#34;&gt;//分值
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; zskiplistNode &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;backward;&lt;span style=&#34;color:#75715e&#34;&gt;//回退指针
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;//层
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; zskiplistLevel {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    	&lt;span style=&#34;color:#75715e&#34;&gt;//前进指针
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; zskiplistNode &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;forward;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;//跨度
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; span;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } level[];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;} zskiplistNode;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;1）obj：用于存储字符串类型的数据。
+2）score：用于存储排序的分值。
+3）backward：后退指针，只能指向当前节点最底层的前一个节点，头节点和第一个节点——backward指向NULL，从后向前遍历跳跃表时使用。
+4）level：为柔性数组。每个节点的数组长度不一样，在生成跳跃表节点时，随机生成一个1～64的值，值越大出现的概率越低。
+level数组的每项包含以下两个元素。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;forward：指向本层下一个节点，尾节点的forward指向NULL。&lt;/li&gt;
+&lt;li&gt;span:forward指向的节点与本节点之间的元素个数。span值越大，跳过的节点个数越多。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;除了跳跃表节点外，还需要一个跳跃表结构来管理节点，Redis使用zskiplist结构体，定义如下：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;typedef&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; zskiplist {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; zskiplistNode &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;header, &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;tail;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;long&lt;/span&gt; length;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; level;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;} zskiplist;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;1）header：指向跳跃表头节点。头节点是跳跃表的一个特殊节点，它的level数组元素个数为64。头节点在有序集合中不存储任何member和score值，ele值为NULL, score值为0；也不计入跳跃表的总长度。头节点在初始化时，64个元素的forward都指向NULL, span值都为0。
+2）tail：指向跳跃表尾节点。
+3）length：跳跃表长度，表示除头节点之外的节点总数。
+4）level：跳跃表的高度。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210023.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;查找从最高层开始，如果本层的next节点大于要查找的值或next节点为NULL，则从本节点开始，降低一层继续向后查找，依次类推，如果找到则返回节点；否则返回NULL。采用该原理查找节点，在节点数量比较多时，可以跳过一些节点，查询效率大大提升，这就是跳跃表的基本思想。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;1）跳跃表由很多层构成。
+2）跳跃表有一个头（header）节点，头节点中有一个64层的结构，每层的结构包含指向本层的下个节点的指针，指向本层下个节点中间所跨越的节点个数为本层的跨度（span）。
+3）除头节点外，层数最多的节点的层高为跳跃表的高度（level）
+4）每层都是一个有序链表，数据递增。
+5）除header节点外，一个元素在上层有序链表中出现，则它一定会在下层有序链表中出现。
+6）跳跃表每层最后一个节点指向NULL，表示本层有序链表的结束。
+7）跳跃表拥有一个tail指针，指向跳跃表最后一个节点。
+8）最底层的有序链表包含所有节点，最底层的节点个数为跳跃表的长度（length）（不包括头节点）。
+9）每个节点包含一个后退指针，头节点和第一个节点指向NULL；其他节点指向最底层的前一个节点。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Redis通过zslRandomLevel函数随机生成一个1～64的值作为新建节点的高度&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;3-压缩列表&#34;&gt;3 压缩列表&lt;/h2&gt;
+&lt;p&gt;压缩列表ziplist本质上就是一个字节数组，是Redis为了节约内存而设计的一种线性数据结构，可以包含多个元素，每个元素可以是一个字节数组或一个整数。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Redis的有序集合、散列和列表都直接或者间接使用了压缩列表。当有序集合或散列表的元素个数比较少，且元素都是短字符串时，Redis便使用压缩列表作为其底层数据存储结构。列表使用快速链表（quicklist）数据结构存储，而快速链表就是双向链表与压缩列表的组合。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;一个压缩列表可以包含任意多个节点（entry），&lt;strong&gt;每个节点可以保存一个字节数组或者一个整数值。&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210219.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;1）zlbytes：压缩列表的字节长度，占4个字节，因此压缩列表最多有232-1个字节。
+2）zltail：压缩列表尾元素相对于压缩列表起始地址的偏移量，占4个字节。3）zllen：压缩列表的元素个数，占2个字节。zllen无法存储元素个数超过65535（216-1）的压缩列表，必须遍历整个压缩列表才能获取到元素个数。4）entryX：压缩列表存储的元素，可以是字节数组或者整数，长度不限。entry的编码结构将在后面详细介绍。
+5）zlend：压缩列表的结尾，占1个字节，恒为0xFF。&lt;/p&gt;
+&lt;p&gt;而压缩列表元素(entry)的编码结构：
+&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210255.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;previous_entry_length字段表示前一个元素的字节长度
+占1个或者5个字节，当前一个元素的长度小于254字节时，用1个字节表示；当前一个元素的长度大于或等于254字节时，用5个字节来表示。&lt;/li&gt;
+&lt;li&gt;encoding字段表示当前元素的编码&lt;/li&gt;
+&lt;li&gt;数据内容存储在content字段&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;其中包含了很多复杂的解码运算，想详细了解的可以找对应的书来看。&lt;/p&gt;
+&lt;h3 id=&#34;连锁更新&#34;&gt;连锁更新&lt;/h3&gt;
+&lt;p&gt;每个节点的previous_entry_length属性都记录了前一个节点的长度，添加新节点可能会引发连锁更新之外，删除节点也可能会引发连锁更新。
+因为某个可能的结点previous_entry_length属性仅长1字节，它没办法保存新节点new的长度，所以程序将对压缩列表执行空间重分配操作，并将则个节点的previous_entry_length属性从原来的1字节长扩展为5字节长。进而引发后面的连锁更新。
+其最坏复杂度是O（N 2）。&lt;/p&gt;
+&lt;p&gt;尽管连锁更新的复杂度较高，但它真正造成性能问题的几率是很低的：&lt;/p&gt;
+&lt;p&gt;压缩列表里要恰好有多个连续的、长度介于250字节至253字节之间的节点，连锁更新才有可能被引发，在实际中，这种情况并不多见；
+即使出现连锁更新，但只要被更新的节点数量不多，就不会对性能造成任何影响：比如说，对三五个节点进行连锁更新是绝对不会影响性能的；&lt;/p&gt;
+&lt;h2 id=&#34;4-quicklist&#34;&gt;4 quicklist&lt;/h2&gt;
+&lt;p&gt;quicklist是Redis底层最重要的数据结构之一，它是Redis对外提供的6种基本数据结构中List的底层实现，在Redis 3.2版本中引入。&lt;/p&gt;
+&lt;p&gt;在引入quicklist之前，Redis采用压缩链表（ziplist）以及双向链表（adlist）作为List的底层实现。当元素个数比较少并且元素长度比较小时，Redis采用ziplist作为其底层存储；当任意一个条件不满足时，Redis采用adlist作为底层存储结构。&lt;/p&gt;
+&lt;p&gt;这么做的主要原因是，当元素长度较小时，采用ziplist可以有效节省存储空间，但ziplist的存储空间是连续的，当元素个数比较多时，修改元素时，必须重新分配存储空间，这无疑会影响Redis的执行效率，故而采用一般的双向链表。&lt;/p&gt;
+&lt;p&gt;结构如下：
+&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212210432.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;代码如下&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;typedef&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; quicklist{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	quicklistNode &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;head;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	quicklistNode &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;tail;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;long&lt;/span&gt; count;&lt;span style=&#34;color:#75715e&#34;&gt;//quicklist中元素总数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;long&lt;/span&gt; len;&lt;span style=&#34;color:#75715e&#34;&gt;//quicklist Node（节点）个数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; fill : &lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;;&lt;span style=&#34;color:#75715e&#34;&gt;//每个quicklistNode中ziplist长度
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}quicklist;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;typedef&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; quicklistNode{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; quicklistNode &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;prev;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; quicklistNode &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;next;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;zl;&lt;span style=&#34;color:#75715e&#34;&gt;//zl指向该节点对应的ziplist结构；
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; sz;&lt;span style=&#34;color:#75715e&#34;&gt;//整个ziplist结构的大小
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; count:&lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;;&lt;span style=&#34;color:#75715e&#34;&gt;//ziplist的个数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; coding&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;：&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;;&lt;span style=&#34;color:#75715e&#34;&gt;//1代表是原生的，2代表使用LZF进行压缩；
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; containnr&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;：&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;;&lt;span style=&#34;color:#75715e&#34;&gt;//container为quicklistNode节点zl指向的容器类型：1代表none,2代表使用ziplist存储数据；
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; recompress:&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;span style=&#34;color:#75715e&#34;&gt;//recompress代表这个节点之前是否是压缩节点
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; extra:&lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;;&lt;span style=&#34;color:#75715e&#34;&gt;//extra为预留
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}quicklistNode;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;数据压缩&#34;&gt;数据压缩&lt;/h3&gt;
+&lt;p&gt;quicklist每个节点的实际数据存储结构为ziplist，这种结构的主要优势在于节省存储空间。为了进一步降低ziplist所占用的空间，Redis允许对ziplist进一步压缩，Redis采用的压缩算法是LZF，压缩过后的数据可以分成多个片段，每个片段有2部分：一部分是解释字段，另一部分是存放具体的数据字段。
+解释字段可以占用1～3个字节，数据字段可能不存在。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;typedef&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; quicklistLZF{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;unsigned&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; sz;&lt;span style=&#34;color:#75715e&#34;&gt;//sz表示compressed所占字节大小
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; compress[];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}quicklistLZF;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;解释字段有3种:
+1）字面型，解释字段占用1个字节，数据字段长度由解释字段后5位决定。
+2）简短重复型，解释字段占用2个字节，没有数据字段，数据内容与前面数据内容重复，重复长度小于8。
+3）批量重复型，解释字段占3个字节，没有数据字段，数据内容与前面内容重复。&lt;/p&gt;
+&lt;p&gt;压缩：
+数据与前面重复的，记录重复位置以及重复长度，否则直接记录原始数据内容。压缩算法的流程如下：遍历输入字符串，对当前字符及其后面2个字符进行散列运算，如果在Hash表中找到曾经出现的记录，则计算重复字节的长度以及位置，反之直接输出数据。
+解压：
+可能存在重复数据与当前位置重叠的情况，例如在当前位置前的15个字节处，重复了20个字节，此时需要按位逐个复制。&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Redis的线程模型</title>
+        <link>https://lxb.wiki/9106c914/</link>
+        <pubDate>Fri, 11 Jun 2021 22:33:18 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/9106c914/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;h2 id=&#34;文件事件处理器&#34;&gt;文件事件处理器&lt;/h2&gt;
+&lt;p&gt;Redis基于Reactor模式开发了网络事件处理器，这个处理器被称为文件事件处理器。它的组成结构为4部分：多个&lt;a class=&#34;link&#34; href=&#34;https://so.csdn.net/so/search?q=%e5%a5%97%e6%8e%a5%e5%ad%97&amp;amp;spm=1001.2101.3001.7020&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;套接字&lt;/a&gt;、IO多路复用程序、文件事件分派器、事件处理器。因为文件事件分派器队列的消费是单线程的，所以Redis才叫单线程模型。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212203719.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;消息处理流程&#34;&gt;消息处理流程&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;文件事件处理器使用I/O多路复用(multiplexing)程序来同时监听多个套接字，并根据套接字目前执行的任务来为套接字关联不同的事件处理器。&lt;/li&gt;
+&lt;li&gt;当被监听的套接字准备好执行连接应答(accept)、读取(read)、写入(write)、关闭(close)等操作时，与操作相对应的文件事件就会产生，这时文件事件处理器就会调用套接字之前关联好的事件处理器来处理这些事件。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;尽管多个文件事件可能会并发地出现，但I/O多路复用程序总是会将所有产生事件的套接字都推到一个队列里面，然后通过这个队列，以有序（sequentially）、同步（synchronously）、每次一个套接字的方式向文件事件分派器传送套接字：当上一个套接字产生的事件被处理完毕之后（该套接字为事件所关联的事件处理器执行完毕）， I/O多路复用程序才会继续向文件事件分派器传送下一个套接字。&lt;/p&gt;
+&lt;h2 id=&#34;io-多路复用程序的实现&#34;&gt;I/O 多路复用程序的实现&lt;/h2&gt;
+&lt;p&gt;Redis的I/O多路复用程序的所有功能是通过包装select、epoll、evport和kqueue这些I/O多路复用函数库来实现的，每个I/O多路复用函数库在Redis源码中都对应一个单独的文件，比如ae_select.c、ae_epoll.c、ae_kqueue.c等。&lt;/p&gt;
+&lt;p&gt;因为Redis为每个I/O多路复用函数库都实现了相同的API，所以I/O多路复用程序的底层实现是可以互换的，如下图所示
+&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212203919.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;Redis在I/O多路复用程序的实现源码中用#include宏定义了相应的规则，程序会在编译时自动选择系统中性能最好的I/O多路复用函数库来作为Redis的I/O多路复用程序的底层实现：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/* Include the best multiplexing layer supported by this system.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt; * The following should be ordered by performances, descending. */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#ifdef HAVE_EVPORT
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;#34;ae_evport.c&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#else
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;#ifdef HAVE_EPOLL
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;#34;ae_epoll.c&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;#else
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;#ifdef HAVE_KQUEUE
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;#34;ae_kqueue.c&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;#else
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;#34;ae_select.c&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;#endif
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;#endif
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#endif
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;文件事件的类型&#34;&gt;文件事件的类型&lt;/h2&gt;
+&lt;p&gt;I/O 多路复用程序可以监听多个套接字的ae.h/AE_READABLE事件和ae.h/AE_WRITABLE事件，这两类事件和套接字操作之间的对应关系如下：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;当套接字变得可读时（客户端对套接字执行write操作，或者执行close操作），或者有新的可应答（acceptable）套接字出现时（客户端对服务器的监听套接字执行connect操作），套接字产生AE_READABLE 事件&lt;/li&gt;
+&lt;li&gt;当套接字变得可写时（客户端对套接字执行read操作），套接字产生AE_WRITABLE事件。I/O多路复用程序允许服务器同时监听套接字的AE_READABLE事件和AE_WRITABLE事件，如果一个套接字同时产生了这两种事件，那么文件事件分派器会优先处理AE_READABLE事件，等到AE_READABLE事件处理完之后，才处理AE_WRITABLE 事件。这也就是说，如果一个套接字又可读又可写的话，那么服务器将先读套接字，后写套接字。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;文件事件的处理器&#34;&gt;文件事件的处理器&lt;/h2&gt;
+&lt;p&gt;Redis为文件事件编写了多个处理器，这些事件处理器分别用于实现不同的网络通讯需求，常用的处理器如下：&lt;/p&gt;
+&lt;p&gt;为了对连接服务器的各个客户端进行应答， 服务器要为监听套接字关联连接应答处理器。
+为了接收客户端传来的命令请求， 服务器要为客户端套接字关联命令请求处理器。
+为了向客户端返回命令的执行结果， 服务器要为客户端套接字关联命令回复处理器。&lt;/p&gt;
+&lt;h3 id=&#34;连接应答处理器&#34;&gt;连接应答处理器&lt;/h3&gt;
+&lt;p&gt;networking.c中acceptTcpHandler函数是Redis的连接应答处理器，这个处理器用于对连接服务器监听套接字的客户端进行应答，具体实现为sys/socket.h/accept函数的包装。&lt;/p&gt;
+&lt;p&gt;当Redis服务器进行初始化的时候，程序会将这个连接应答处理器和服务器监听套接字的AE_READABLE事件关联起来，当有客户端用sys/socket.h/connect函数连接服务器监听套接字的时候， 套接字就会产生AE_READABLE 事件， 引发连接应答处理器执行， 并执行相应的套接字应答操作，如图所示。
+&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212204113.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;命令请求处理器&#34;&gt;命令请求处理器&lt;/h3&gt;
+&lt;p&gt;networking.c中readQueryFromClient函数是Redis的命令请求处理器，这个处理器负责从套接字中读入客户端发送的命令请求内容， 具体实现为unistd.h/read函数的包装。&lt;/p&gt;
+&lt;p&gt;当一个客户端通过连接应答处理器成功连接到服务器之后， 服务器会将客户端套接字的AE_READABLE事件和命令请求处理器关联起来，当客户端向服务器发送命令请求的时候，套接字就会产生 AE_READABLE事件，引发命令请求处理器执行，并执行相应的套接字读入操作，如图所示。
+&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212204151.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;在客户端连接服务器的整个过程中，服务器都会一直为客户端套接字的AE_READABLE事件关联命令请求处理器。&lt;/p&gt;
+&lt;h3 id=&#34;命令回复处理器&#34;&gt;命令回复处理器&lt;/h3&gt;
+&lt;p&gt;networking.c中sendReplyToClient函数是Redis的命令回复处理器，这个处理器负责将服务器执行命令后得到的命令回复通过套接字返回给客户端，具体实现为unistd.h/write函数的包装。&lt;/p&gt;
+&lt;p&gt;当服务器有命令回复需要传送给客户端的时候，服务器会将客户端套接字的AE_WRITABLE事件和命令回复处理器关联起来，当客户端准备好接收服务器传回的命令回复时，就会产生AE_WRITABLE事件，引发命令回复处理器执行，并执行相应的套接字写入操作， 如图所示。
+&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212204231.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;当命令回复发送完毕之后， 服务器就会解除命令回复处理器与客户端套接字的 AE_WRITABLE 事件之间的关联&lt;/p&gt;
+&lt;h2 id=&#34;一次完整的客户端与服务器连接事件示例&#34;&gt;一次完整的客户端与服务器连接事件示例&lt;/h2&gt;
+&lt;p&gt;假设Redis服务器正在运作，那么这个服务器的监听套接字的AE_READABLE事件应该正处于监听状态之下，而该事件所对应的处理器为连接应答处理器。&lt;/p&gt;
+&lt;p&gt;如果这时有一个Redis客户端向Redis服务器发起连接，那么监听套接字将产生AE_READABLE事件， 触发连接应答处理器执行：处理器会对客户端的连接请求进行应答， 然后创建客户端套接字，以及客户端状态，并将客户端套接字的 AE_READABLE 事件与命令请求处理器进行关联，使得客户端可以向主服务器发送命令请求。&lt;/p&gt;
+&lt;p&gt;之后，客户端向Redis服务器发送一个命令请求，那么客户端套接字将产生 AE_READABLE事件，引发命令请求处理器执行，处理器读取客户端的命令内容， 然后传给相关程序去执行。&lt;/p&gt;
+&lt;p&gt;执行命令将产生相应的命令回复，为了将这些命令回复传送回客户端，服务器会将客户端套接字的AE_WRITABLE事件与命令回复处理器进行关联：当客户端尝试读取命令回复的时候，客户端套接字将产生AE_WRITABLE事件， 触发命令回复处理器执行， 当命令回复处理器将命令回复全部写入到套接字之后， 服务器就会解除客户端套接字的AE_WRITABLE事件与命令回复处理器之间的关联。
+&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212204316.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;思考问题&#34;&gt;思考问题&lt;/h2&gt;
+&lt;p&gt;Q：
+Redis是单线程模型为什么效率还这么高？
+A：&lt;/p&gt;
+&lt;p&gt;纯内存访问：数据存放在内存中，内存的响应时间大约是100纳秒，这是Redis每秒万亿级别访问的重要基础。
+非阻塞I/O：Redis采用epoll做为I/O多路复用技术的实现，再加上Redis自身的事件处理模型将epoll中的连接，读写，关闭都转换为了时间，不在I/O上浪费过多的时间。
+单线程避免了线程切换和竞态产生的消耗。
+Redis采用单线程模型，每条命令执行如果占用大量时间，会造成其他线程阻塞，对于Redis这种高性能服务是致命的，所以Redis是面向高速执行的数据库&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Redis持久化机制</title>
+        <link>https://lxb.wiki/f885fe0f/</link>
+        <pubDate>Tue, 01 Jun 2021 21:18:51 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/f885fe0f/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;redis是一个内存数据库，数据保存在内存中，但是我们都知道内存的数据变化是很快的，也容易发生丢失。幸好Redis还为我们提供了持久化的机制，分别是RDB(Redis DataBase)和AOF(Append Only File)。&lt;/p&gt;
+&lt;h3 id=&#34;一持久化流程&#34;&gt;一、持久化流程&lt;/h3&gt;
+&lt;p&gt;既然redis的数据可以保存在磁盘上，那么这个流程是什么样的呢？&lt;/p&gt;
+&lt;p&gt;要有下面五个过程：&lt;/p&gt;
+&lt;p&gt;（1）客户端向服务端发送写操作(数据在客户端的内存中)。&lt;/p&gt;
+&lt;p&gt;（2）数据库服务端接收到写请求的数据(数据在服务端的内存中)。&lt;/p&gt;
+&lt;p&gt;（3）服务端调用write这个系统调用，将数据往磁盘上写(数据在系统内存的缓冲区中)。&lt;/p&gt;
+&lt;p&gt;（4）操作系统将缓冲区中的数据转移到磁盘控制器上(数据在磁盘缓存中)。&lt;/p&gt;
+&lt;p&gt;（5）磁盘控制器将数据写到磁盘的物理介质中(数据真正落到磁盘上)。&lt;/p&gt;
+&lt;p&gt;这5个过程是在理想条件下一个正常的保存流程，但是在大多数情况下，我们的机器等等都会有各种各样的故障，这里划分了两种情况：&lt;/p&gt;
+&lt;p&gt;（1）Redis数据库发生故障，只要在上面的第三步执行完毕，那么就可以持久化保存，剩下的两步由操作系统替我们完成。&lt;/p&gt;
+&lt;p&gt;（2）操作系统发生故障，必须上面5步都完成才可以。&lt;/p&gt;
+&lt;p&gt;在这里只考虑了保存的过程可能发生的故障，其实保存的数据也有可能发生损坏，需要一定的恢复机制，不过在这里就不再延伸了。现在主要考虑的是redis如何来实现上面5个保存磁盘的步骤。它提供了两种策略机制，也就是RDB和AOF。&lt;/p&gt;
+&lt;h3 id=&#34;二rdb机制&#34;&gt;二、RDB机制&lt;/h3&gt;
+&lt;p&gt;RDB其实就是把数据以快照的形式保存在磁盘上。什么是快照呢，你可以理解成把当前时刻的数据拍成一张照片保存下来。&lt;/p&gt;
+&lt;p&gt;RDB持久化是指在指定的时间间隔内将内存中的数据集快照写入磁盘。也是默认的持久化方式，这种方式是就是将内存中数据以快照的方式写入到二进制文件中,默认的文件名为dump.rdb。&lt;/p&gt;
+&lt;p&gt;在我们安装了redis之后，所有的配置都是在redis.conf文件中，里面保存了RDB和AOF两种持久化机制的各种配置。&lt;/p&gt;
+&lt;p&gt;既然RDB机制是通过把某个时刻的所有数据生成一个快照来保存，那么就应该有一种触发机制，是实现这个过程。对于RDB来说，提供了三种机制：save、bgsave、自动化。我们分别来看一下&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;1、save触发方式&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;该命令会阻塞当前Redis服务器，执行save命令期间，Redis不能处理其他命令，直到RDB过程完成为止。具体流程如下：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212202507.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;执行完成时候如果存在老的RDB文件，就把新的替代掉旧的。我们的客户端可能都是几万或者是几十万，这种方式显然不可取。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;2、bgsave触发方式&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;执行该命令时，Redis会在后台异步进行快照操作，快照同时还可以响应客户端请求。具体流程如下：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212202435.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;具体操作是Redis进程执行fork操作创建子进程，RDB持久化过程由子进程负责，完成后自动结束。阻塞只发生在fork阶段，一般时间很短。基本上 Redis 内部所有的RDB操作都是采用 bgsave 命令。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;3、自动触发&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;自动触发是由我们的配置文件来完成的。在redis.conf配置文件中，里面有如下配置，我们可以去设置：&lt;/p&gt;
+&lt;p&gt;**①save：**这里是用来配置触发 Redis的 RDB 持久化条件，也就是什么时候将内存中的数据保存到硬盘。比如“save m n”。表示m秒内数据集存在n次修改时，自动触发bgsave。&lt;/p&gt;
+&lt;p&gt;默认如下配置：&lt;/p&gt;
+&lt;p&gt;#表示900 秒内如果至少有 1 个 key 的值变化，则保存save 900 1#表示300 秒内如果至少有 10 个 key 的值变化，则保存save 300 10#表示60 秒内如果至少有 10000 个 key 的值变化，则保存save 60 10000&lt;/p&gt;
+&lt;p&gt;不需要持久化，那么你可以注释掉所有的 save 行来停用保存功能。&lt;/p&gt;
+&lt;p&gt;**②stop-writes-on-bgsave-error ：**默认值为yes。当启用了RDB且最后一次后台保存数据失败，Redis是否停止接收数据。这会让用户意识到数据没有正确持久化到磁盘上，否则没有人会注意到灾难（disaster）发生了。如果Redis重启了，那么又可以重新开始接收数据了&lt;/p&gt;
+&lt;p&gt;**③rdbcompression ；**默认值是yes。对于存储到磁盘中的快照，可以设置是否进行压缩存储。&lt;/p&gt;
+&lt;p&gt;**④rdbchecksum ：**默认值是yes。在存储快照后，我们还可以让redis使用CRC64算法来进行数据校验，但是这样做会增加大约10%的性能消耗，如果希望获取到最大的性能提升，可以关闭此功能。&lt;/p&gt;
+&lt;p&gt;**⑤dbfilename ：**设置快照的文件名，默认是 dump.rdb&lt;/p&gt;
+&lt;p&gt;**⑥dir：**设置快照文件的存放路径，这个配置项一定是个目录，而不能是文件名。&lt;/p&gt;
+&lt;p&gt;我们可以修改这些配置来实现我们想要的效果。因为第三种方式是配置的，所以我们对前两种进行一个对比：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212202559.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;4、RDB 的优势和劣势&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;①、优势&lt;/p&gt;
+&lt;p&gt;（1）RDB文件紧凑，全量备份，非常适合用于进行备份和灾难恢复。&lt;/p&gt;
+&lt;p&gt;（2）生成RDB文件的时候，redis主进程会fork()一个子进程来处理所有保存工作，主进程不需要进行任何磁盘IO操作。&lt;/p&gt;
+&lt;p&gt;（3）RDB 在恢复大数据集时的速度比 AOF 的恢复速度要快。&lt;/p&gt;
+&lt;p&gt;②、劣势&lt;/p&gt;
+&lt;p&gt;RDB快照是一次全量备份，存储的是内存数据的二进制序列化形式，存储上非常紧凑。当进行快照持久化时，会开启一个子进程专门负责快照持久化，子进程会拥有父进程的内存数据，父进程修改内存子进程不会反应出来，所以在快照持久化期间修改的数据不会被保存，可能丢失数据。&lt;/p&gt;
+&lt;h3 id=&#34;三aof机制&#34;&gt;三、AOF机制&lt;/h3&gt;
+&lt;p&gt;全量备份总是耗时的，有时候我们提供一种更加高效的方式AOF，工作机制很简单，redis会将每一个收到的写命令都通过write函数追加到文件中。通俗的理解就是日志记录。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;1、持久化原理&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;他的原理看下面这张图：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212202651.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;每当有一个写命令过来时，就直接保存在我们的AOF文件中。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;2、文件重写原理&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;AOF的方式也同时带来了另一个问题。持久化文件会变的越来越大。为了压缩aof的持久化文件。redis提供了bgrewriteaof命令。将内存中的数据以命令的方式保存到临时文件中，同时会fork出一条新进程来将文件重写。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212202823.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;重写aof文件的操作，并没有读取旧的aof文件，而是将整个内存中的数据库内容用命令的方式重写了一个新的aof文件，这点和快照有点类似。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;3、AOF也有三种触发机制&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;（1）每修改同步always：同步持久化 每次发生数据变更会被立即记录到磁盘 性能较差但数据完整性比较好&lt;/p&gt;
+&lt;p&gt;（2）每秒同步everysec：异步操作，每秒记录 如果一秒内宕机，有数据丢失&lt;/p&gt;
+&lt;p&gt;（3）不同no：从不同步&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212202930.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;4、优点&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;（1）AOF可以更好的保护数据不丢失，一般AOF会每隔1秒，通过一个后台线程执行一次fsync操作，最多丢失1秒钟的数据。（2）AOF日志文件没有任何磁盘寻址的开销，写入性能非常高，文件不容易破损。&lt;/p&gt;
+&lt;p&gt;（3）AOF日志文件即使过大的时候，出现后台重写操作，也不会影响客户端的读写。&lt;/p&gt;
+&lt;p&gt;（4）AOF日志文件的命令通过非常可读的方式进行记录，这个特性非常适合做灾难性的误删除的紧急恢复。比如某人不小心用flushall命令清空了所有数据，只要这个时候后台rewrite还没有发生，那么就可以立即拷贝AOF文件，将最后一条flushall命令给删了，然后再将该AOF文件放回去，就可以通过恢复机制，自动恢复所有数据&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;5、缺点&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;（1）对于同一份数据来说，AOF日志文件通常比RDB数据快照文件更大&lt;/p&gt;
+&lt;p&gt;（2）AOF开启后，支持的写QPS会比RDB支持的写QPS低，因为AOF一般会配置成每秒fsync一次日志文件，当然，每秒一次fsync，性能也还是很高的&lt;/p&gt;
+&lt;p&gt;（3）以前AOF发生过bug，就是通过AOF记录的日志，进行数据恢复的时候，没有恢复一模一样的数据出来。&lt;/p&gt;
+&lt;h3 id=&#34;四rdb和aof到底该如何选择&#34;&gt;四、RDB和AOF到底该如何选择&lt;/h3&gt;
+&lt;p&gt;选择的话，两者加一起才更好。因为两个持久化机制你明白了，剩下的就是看自己的需求了，需求不同选择的也不一定，但是通常都是结合使用。有一张图可供总结：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220212203019.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;其他资料&#34;&gt;其他资料&lt;/h3&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;[Redis%e6%8c%81%e4%b9%85%e5%8c%96%e5%8e%9f%e7%90%86%28RDB%29_%e5%b0%8f%e9%ba%a6%e5%a4%a7%e5%a4%a7%e5%8d%9a%e5%ae%a2-CSDN%e5%8d%9a%e5%ae%a2_rdb%e6%8c%81%e4%b9%85%e5%8c%96]%28https://blog.csdn.net/qq_35433716/article/details/82191511%29&#34; &gt;Redis持久化原理(RDB)&lt;/a&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>redis 跳表分析并用 Go 实现</title>
+        <link>https://lxb.wiki/e98e0a2b/</link>
+        <pubDate>Wed, 03 Mar 2021 23:09:59 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/e98e0a2b/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;redis的zset和set都使用跳表实现。跳表简单地说，就是在链表上构造多级索引，以加速查找，是用空间换时间。它比红黑树实现更简单，不需要耗费大量的精力维护树的平衡。跳表的各个节点是有顺序的，可以进行范围查询。&lt;/p&gt;
+&lt;p&gt;本文将分析跳表的构成、插入、删除等操作，并使用go实现。&lt;/p&gt;
+&lt;h2 id=&#34;1--跳表结构&#34;&gt;1.  跳表结构&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210503231105.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;上图就是一个包含5个节点的跳表结构。跳表的结构包含一个又一个的节点，和header节点。header节点是查询的起始点。跳表定义如下，包含头结点、尾节点、长度以及跳表的索引层数。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;
+// skiplist 持有一个跳表的完整数据
+type skiplist struct {
+  // header和tail表示跳表的头结点和尾节点
+  header, tail *skiplistNode
+  // length 表示跳表的长度
+  length int
+  // level 表示该跳表索引的层数
+  level int
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;从上面跳表的定义看不出什么，跳表每个节点的定义就有很多东西了。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;
+// skiplistLevel 表示skiplist每一节点在每一层持有的数据结构
+type skiplistLevel struct {
+  // 该层节点的下一个节点，redis使用forward
+  next *skiplistNode
+  // 该层节点到下一节点中间间隔的跳数
+  span int
+}
+// skiplistNode 表示skiplist的每一个节点
+type skiplistNode struct {
+  // robj 代表该节点的数据
+  robj interface{}
+  // score 表示该节点的分数，以便排序
+  score float64
+  // prev 表示该节点的上一节点，redis 中使用backward
+  prev *skiplistNode
+  // levels 表示该节点在每一层索引中到下一节点的信息
+  levels []skiplistLevel
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;每一个节点中持有数据robj、该数据的分数score用来排序、上一节点的指针prev以便于反向遍历、各层索引信息levels。每一层的索引信息skiplistlevel包括该层索引中该节点指向的下一个节点的指针next、该节点到下一节点的间隔span。例如上图中，节点s2在第三层索引的下一节点是s4，而在第二层索引的下一节点是s3，而且间隔span分别是2和1。&lt;/p&gt;
+&lt;p&gt;每个节点的索引层数通过随机数生成，redis设计的思路：使用第n级索引是使用第n-1级索引概率的1/4，最多使用32级索引，如果真用到了32级索引，这个跳表所持有的数据也是巨大的，因此不用担心索引不够用。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;
+func randomLevel() int {
+ var level = 1
+   // SKIPLIST_P = 0.25
+ for rand.Float64() &amp;lt; SKIPLIST_P {
+   level ++
+ }
+ if level &amp;lt; SKIPLIST_MAXLEVEL {
+   return level
+ }
+ return SKIPLIST_MAXLEVEL
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;跳表按照score和robj从小到大进行排序，因此它的各个节点是有序的，可以进行范围查找。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;// compareObj 如果obj1&amp;gt;obj2，返回true
+func compareObj(obj1, obj2 interface{}) bool {
+  var t1, t2 reflect.Type
+  t1 = reflect.TypeOf(obj1)
+  t2 = reflect.TypeOf(obj2)
+  if t1.Kind() != t2.Kind() {
+    compareObj(fmt.Sprint(obj1), fmt.Sprint(obj2))
+  }
+  var v1, v2 reflect.Value
+  v1 = reflect.ValueOf(obj1)
+  v2 = reflect.ValueOf(obj2)
+  switch t1.Kind() {
+  case reflect.Int:
+    return v1.Int() &amp;gt; v2.Int()
+  case reflect.Float64, reflect.Float32:
+    return v1.Float() &amp;gt; v2.Float()
+  case reflect.String:
+    return v1.String() &amp;gt; v2.String()
+  }
+  return compareObj(fmt.Sprint(obj1), fmt.Sprint(obj2))
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;2--节点的插入&#34;&gt;2.  节点的插入&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210503231517.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;在链表中如果要插入一个节点S，需要找到在链表中比S小的最大节点F，把S挂在F节点后面。那么在跳表中也是这样的套路，只不过更复杂一些。下面分几步将上图中s2.5节点挂在s2后面，已知s2.5的score或者obj比s2的score或obj要大，但是小于s3。&lt;/p&gt;
+&lt;h3 id=&#34;21--查找比s25小的最大节点&#34;&gt;2.1.  查找比s2.5小的最大节点&lt;/h3&gt;
+&lt;p&gt;在插入新节点之前，需要找到新节点可以插入的位置，就需要找出每一层索引中新节点的前一节点，这里就是比s2.5小的最大节点。跳表有五层索引，表示为0-4。跳表的起点是header，因此查找节点时需要从header的level 4开始进行，表示为header.levels[4]。代码中使用update[i]表示第i层索引中比s2.5小的最大节点指针。注意下面的代码还有一个rank数组，rank[i]就表示第i层索引中，update[i]节点到header的span，下面注意它是怎么增加的。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;从header.levels[4]开始向右遍历，此时rank[4]=0；header.levels[4]下一节点是s4比s2.5大，因此该层索引中s2.5的上一节点就是header，即update[4]=header，接下来向下进入第3层索引，即header.levels[3]&lt;/li&gt;
+&lt;li&gt;第3层索引中，初始rank[3] =rank[4]=0，向右遍历搜索到header的下一节点s2。s2就是这一层s2.5需要插入的位置的前一节点，因此update[3]=s2，rank[3]=rank[3]+header.levels[3].span=2，然后向下进入s2.levels[2]&lt;/li&gt;
+&lt;li&gt;依次遍历第2、1、0层索引，路径为s2.levels[2]-&amp;gt;s2.levels[1]-&amp;gt;s2.levels[0]，求得update[2]=update[1]=update[0]=s2，rank[2]=rank[1]=rank[0]=rank[3]=2。到这里，通过走楼梯的方式将s2.5需要插入的位置全找出来了&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt; x = sl.header
+  for i := sl.level-1; i &amp;gt;= 0; i -- {
+    if i == sl.level-1 {
+      rank[i] = 0
+    } else {
+      rank[i] = rank[i+1]
+    }
+    // 寻找比score和robj小的最近节点
+    for x.levels[i].next != nil &amp;amp;&amp;amp; (x.levels[i].next.score &amp;lt; score ||
+          (x.levels[i].next.score == score &amp;amp;&amp;amp; compareObj(robj, x.levels[i].next.robj))) {
+      rank[i] += x.levels[i].span
+      x = x.levels[i].next
+    }
+    update[i] = x
+  }
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;22--插入节点s25&#34;&gt;2.2.  插入节点s2.5&lt;/h3&gt;
+&lt;p&gt;现在有了update数组表示各层索引中s2.5的上一节点位置，以及rank数组表示update各节点到header的距离，就可以进行s2.5的插入了。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;var level = randomLevel()
+  // 代码1
+  if level &amp;gt; sl.level {
+    for i := sl.level; i &amp;lt; level; i ++ {
+      rank[i] = 0
+      update[i] = sl.header
+      update[i].levels[i].span = sl.length
+    }
+    sl.level = level
+  }
+  //-----
+  x = createSkiplistNode(level, score, robj)
+  // 代码2
+  for i := 0; i &amp;lt; level; i ++ {
+    x.levels[i].next = update[i].levels[i].next
+    update[i].levels[i].next = x
+
+    x.levels[i].span = update[i].levels[i].span - (rank[0]-rank[i])
+    update[i].levels[i].span = rank[0] - rank[1] + 1
+  }
+  // -----
+  // 代码3
+  for i := level-1; i &amp;lt; sl.level; i ++ {
+    update[i].levels[i].span ++
+  }
+  //-----
+  // 如果当前节点是插入的第一个节点，它的prev是nil
+  if update[0] == sl.header {
+    x.prev = nil
+  } else {
+    x.prev = update[0]
+  }
+  if x.levels[0].next != nil {
+    x.levels[0].next.prev = x
+  } else {
+    sl.tail = x
+  }
+  sl.length ++
+&lt;/code&gt;&lt;/pre&gt;&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;首先通过随机算法randomLevel()获取该节点的索引层数&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;现在有两种情况：level比跳表原来的层数sl.level要大或者level小于等于sl.level&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;ul&gt;
+&lt;li&gt;首先处理level&amp;gt;sl.level的情况（代码1）。高于sl.level小于level的索引i中，s2.5的前一节点就直接是header，因此设置update[i]=header，同时rank[i]=0。header.levels[i].span设置为跳表的长度。设置sl.level=level。&lt;/li&gt;
+&lt;li&gt;现在只有level&amp;lt;=sl.level的情况了（代码2）。当索引i&amp;lt;level时，直接将s2.5挂在update[i].levels[i]的后面，并更新update[i].levels[i]和s2.5.levels[i]的span&lt;/li&gt;
+&lt;li&gt;而在level&amp;lt;=sl.level的情况（代码3），当level&amp;lt;=索引i&amp;lt;sl.level时，直接把update节点的span加一。因为此时新节点的索引层数level比跳表的层数少，那么新节点的插入对于比level高的索引节点来说就是将其与后面节点的距离增加了一个单位。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;处理s2.5的prev指针，由上面的图也可以知道prev指针和第0层的索引是反向的，但是并不会指向header。这里我认为是为了方便反向遍历，如果s1.prev指向header，在反向遍历时需要加一层header的判断。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;处理跳表的tail指针，如果插入的节点在最后，则重新设置tail&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;更新跳表长度&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;3--删除节点&#34;&gt;3.  删除节点&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210503231624.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;上图中，如果想删除s3节点，需要两步：找到s3节点在各层索引处的上一节点；删除s3节点。&lt;/p&gt;
+&lt;h3 id=&#34;32--查找比s3小的最大节点&#34;&gt;3.2.  查找比s3小的最大节点&lt;/h3&gt;
+&lt;p&gt;查找的算法依旧是从header的最高层索引开始下楼梯，并使用update数组保存每一层索引中s3的前一个节点。&lt;/p&gt;
+&lt;p&gt;在上图中：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;从header.levels[4]开始向右遍历，找不到其他的节点小于s3，因此向下遍历header.levels[3]，第4层的最大节点是header，即update[4]=header&lt;/li&gt;
+&lt;li&gt;依次类推，update[3]=s2，update[2]=s2，update[1]=update[0]=s2，遍历路径见图中的蓝色箭头。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;
+// 查找最近节点
+  x = sl.header
+  for i := sl.level-1; i &amp;gt;= 0; i -- {
+    for x.levels[i].next != nil &amp;amp;&amp;amp; (x.levels[i].next.score &amp;lt; score || 
+      (x.levels[i].next.score == score &amp;amp;&amp;amp; compareObj(robj, x.levels[i].next.robj))) {
+      x = x.levels[i].next
+    }
+    update[i] = x
+  }
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;23--删除节点&#34;&gt;2.3.  删除节点&lt;/h3&gt;
+&lt;p&gt;删除节点就比较简单了，但是在这之前需要验证一下x指向的下一节点是不是需要删除的数据：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;
+  // x之后的节点可能是需要删除的节点，也可能不是
+  x = x.levels[0].next
+  if x != nil &amp;amp;&amp;amp; x.score == score &amp;amp;&amp;amp; equalObj(x.robj, robj) {
+    sl.deleteNode(update, x)
+    return true
+  }
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;在deleteNode中，进行如下删除步骤：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;对每一层的update[i]进行：&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;ul&gt;
+&lt;li&gt;如果update[i].levels[i]的下一节点是x，则进行x的删除，包括节点指针和span的改变&lt;/li&gt;
+&lt;li&gt;如果update[i].levels[i]的下一节点不是x，例如：删除s3节点，它的update[4].levels[4]下一节点是s4，此时直接将update[4].levels[4]的span减一&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;将x的next节点（如果有的话）挂在x的prev节点后面&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;更新跳表的level值。以删除s4节点为例，删除完该节点之后跳表实际层数应该调整为3。从第4层开始向下遍历，如果header.levels[i].next是nil，说明该层索引已经没必要存在了，就将跳表的level减一&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;别忘了把跳表的length减一&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
+&lt;p&gt;跳表听起来挺难，如果仔细研究它的代码的话还是挺简单的。跳表主要难的地方就在于节点的插入和删除，只要理解了跳表的多级索引是怎么使用的，其他的操作：范围查询、查询排名等都比较简单了。这块的代码可以看redis的源码，在它的t_zset.c和redis.h中有zsl开头的代码就是跳表相关内容。不过我觉得更难的是写文档，写文档的时候需要阅读完代码之后理清思路，这块我发现通过画图还是可以加深理解的。&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>【译】备忘单：提升你的 MariaDB 和 MySQL 数据库技能</title>
+        <link>https://lxb.wiki/3641869e/</link>
+        <pubDate>Sun, 13 Dec 2020 22:07:00 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/3641869e/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;blockquote&gt;
+&lt;p&gt;阅读本文并下载我们的免费备忘单，去使用开源的数据库吧。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210103221458.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;当你写一个程序或配置一个服务时，你最终都要持久化存储信息。有时候，你只需要一个 INI 或者 &lt;a class=&#34;link&#34; href=&#34;https://www.redhat.com/sysadmin/yaml-tips&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;YAML&lt;/a&gt; 配置文件就够了。而有时候，一个自定义格式的 XML 或者 JSON 或其他类似的文件会更好。&lt;/p&gt;
+&lt;p&gt;但也有时候你需要校验输入、快速查询信息、关联数据、通常还要熟练地处理你的用户的请求。这就是设计数据库的目的，而 &lt;a class=&#34;link&#34; href=&#34;https://mariadb.org/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;MariaDB&lt;/a&gt;（由 &lt;a class=&#34;link&#34; href=&#34;https://www.mysql.com/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;MySQL&lt;/a&gt; 的原始开发人员开发的一个分支） 是一个极佳的选项。在本文中我使用的是 MariaDB，但这些信息同样适用于 MySQL。&lt;/p&gt;
+&lt;p&gt;通过编程语言与数据库进行交互是很普遍的。正因如此，出现了大量 Java、Python、Lua、PHP、Ruby、C++ 和其他语言的 &lt;a class=&#34;link&#34; href=&#34;https://en.wikipedia.org/wiki/SQL&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;SQL&lt;/a&gt; 库。然而，在使用这些库之前，理解数据库引擎做了什么以及为什么选择数据库是重要的对我们会很有帮助。本文介绍 MariaDB 和 &lt;code&gt;mysql&lt;/code&gt; 命令来帮助你熟悉数据库处理数据的基本原理。&lt;/p&gt;
+&lt;p&gt;如果你还没有安装 MariaDB，请查阅我的文章 &lt;a class=&#34;link&#34; href=&#34;https://opensource.com/article/20/10/install-mariadb-and-mysql-linux&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;在 Linux 上安装 MariaDB&lt;/a&gt;。如果你没有使用 Linux，请参照 MariaDB &lt;a class=&#34;link&#34; href=&#34;https://mariadb.org/download&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;下载页面&lt;/a&gt;提供的指导方法。&lt;/p&gt;
+&lt;h3 id=&#34;与-mariadb-交互&#34;&gt;与 MariaDB 交互&lt;/h3&gt;
+&lt;p&gt;你可以使用 &lt;code&gt;mysql&lt;/code&gt; 命令与 MariaDB 进行交互。首先使用子命令 &lt;code&gt;ping&lt;/code&gt; 确认你的服务是运行着的，在提示后输入密码：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;$ mysqladmin -u root -p ping
+Enter password:
+mysqld is alive
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;为了易于读者理解，打开一个交互式的 MariaDB 会话：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;$ mysql -u root -p
+Enter password:
+Welcome to the MariaDB monitor.
+Commands end with ; or \g.
+[...]
+Type &amp;#39;help;&amp;#39; or &amp;#39;\h&amp;#39; for help.
+Type &amp;#39;\c&amp;#39; to clear the current input statement.
+
+MariaDB [(none)]&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;你现在是在一个 MariaDB 子 shell 中，提示符是 MariaDB 提示符。普通的 Bash 命令在这里不能使用，只能用 MariaDB 命令。输入 &lt;code&gt;help&lt;/code&gt; （或 &lt;code&gt;?&lt;/code&gt;）查看命令列表。这些是你的 MariaDB shell 的管理命令，使用它们可以定制你的 shell，但它们不属于 SQL 语言。&lt;/p&gt;
+&lt;h3 id=&#34;学习-sql-基本知识&#34;&gt;学习 SQL 基本知识&lt;/h3&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://publications.opengroup.org/c449&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;结构化查询语言&lt;/a&gt;是基于它们的能力定义的：一种通过有规则且一致的语法来查询数据库中的内容以得到有用的结果的方法。SQL 看起来像是普通的英文语句，有一点点生硬。例如，如果你登入数据库服务器，想查看有哪些库，输入 &lt;code&gt;SHOW DATABASES;&lt;/code&gt; 并回车就能看到结果。&lt;/p&gt;
+&lt;p&gt;SQL 命令以分号作为结尾。如果你忘记输入分号，MariaDB 会认为你是想在下一行继续输入你的查询命令，在下一行你可以继续输入命令也可以输入分号结束命令。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;MariaDB [(NONE)]&amp;gt; SHOW DATABASES;
++--------------------+
+| DATABASE           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| test               |
++--------------------+
+4 ROWS IN SET (0.000 sec)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;上面的例子显示当前有四个数据库：&lt;code&gt;information_schema&lt;/code&gt;、&lt;code&gt;mysql&lt;/code&gt;、&lt;code&gt;performance_schema&lt;/code&gt; 和 &lt;code&gt;test&lt;/code&gt;。你必须指定 MariaDB 使用哪个库，才能对该库使用查询语句。指定数据库的命令是 &lt;code&gt;use&lt;/code&gt;。当你选择了一个库后，MariaDB 提示框会切换为选择的库。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;MariaDB [(NONE)]&amp;gt; USE test;
+MariaDB [(test)]&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;显示数据库的表&#34;&gt;显示数据库的表&lt;/h4&gt;
+&lt;p&gt;数据库里有&lt;em&gt;表&lt;/em&gt;，与电子表格类似：有一系列的行（在数据库中称为&lt;em&gt;记录&lt;/em&gt;）和列。一个行和一个列唯一确定一个&lt;em&gt;字段&lt;/em&gt;。&lt;/p&gt;
+&lt;p&gt;查看一个数据库中可用的表（可以理解为多表单电子表格中的一页），使用 SQL 关键字 &lt;code&gt;SHOW&lt;/code&gt;：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;MariaDB [(test)]&amp;gt; SHOW TABLES;
+empty SET
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;test&lt;/code&gt; 数据库是空的，所以使用 &lt;code&gt;use&lt;/code&gt; 命令切换到 &lt;code&gt;mysql&lt;/code&gt; 数据库：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;MariaDB [(test)]&amp;gt; USE mysql;
+MariaDB [(mysql)]&amp;gt; SHOW TABLES;
+
++---------------------------+
+| Tables_in_mysql           |
++---------------------------+
+| column_stats              |
+| columns_priv              |
+| db                        |
+[...]
+| time_zone_transition_type |
+| transaction_registry      |
+| USER                      |
++---------------------------+
+31 ROWS IN SET (0.000 sec)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这个数据库中有很多表！&lt;code&gt;mysql&lt;/code&gt; 数据库是这个 MariaDB 实例的系统管理数据库。它里面包含重要数据，比如用来管理数据库权限的用户结构。这个数据库很重要，你不需要经常直接与它交互，但是使用 SQL 脚本来操作它却很常见。当你学习 MariaDB 时理解 &lt;code&gt;mysql&lt;/code&gt; 数据库很有用，因为它有助于说明一些基本的 SQL 命令。&lt;/p&gt;
+&lt;h4 id=&#34;检查一个表&#34;&gt;检查一个表&lt;/h4&gt;
+&lt;p&gt;这个实例的 &lt;code&gt;mysql&lt;/code&gt; 数据库的最后一个表名为 &lt;code&gt;USER&lt;/code&gt;。这个表包含了可以访问这个数据库的用户。当前里面只有一个 root 用户，但是你可以添加不同权限的用户，赋予它们查看、更新或创建数据的权限。你可以查看一个表的列首来了解一个  MariaDB 用户的所有属性：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;gt; SHOW COLUMNS IN USER;
+MariaDB [mysql]&amp;gt; SHOW COLUMNS IN USER;
++-------------+---------------+------+-----+----------+
+| FIELD       | TYPE          | NULL | KEY | DEFAULT  |
++-------------+---------------+------+-----+----------+
+| Host        | CHAR(60)      | NO   | PRI |          |
+| USER        | CHAR(80)      | NO   | PRI |          |
+| Password    | CHAR(41)      | NO   |     |          |
+| Select_priv | enum(&amp;#39;N&amp;#39;,&amp;#39;Y&amp;#39;) | NO   |     | N        |
+| Insert_priv | enum(&amp;#39;N&amp;#39;,&amp;#39;Y&amp;#39;) | NO   |     | N        |
+| Update_priv | enum(&amp;#39;N&amp;#39;,&amp;#39;Y&amp;#39;) | NO   |     | N        |
+| Delete_priv | enum(&amp;#39;N&amp;#39;,&amp;#39;Y&amp;#39;) | NO   |     | N        |
+| Create_priv | enum(&amp;#39;N&amp;#39;,&amp;#39;Y&amp;#39;) | NO   |     | N        |
+| Drop_priv   | enum(&amp;#39;N&amp;#39;,&amp;#39;Y&amp;#39;) | NO   |     | N        |
+[...]
+47 ROWS IN SET (0.001 sec)
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;创建一个新的用户&#34;&gt;创建一个新的用户&lt;/h4&gt;
+&lt;p&gt;不论你是否需要一个普通的账号来管理数据库或者为计算机配置数据库（例如安装 WordPress、Drupal 或 Joomla时），在 MariaDB 中多建一个用户账号是很普遍的。你可以通过向 &lt;code&gt;mysql&lt;/code&gt; 数据库的 &lt;code&gt;USER&lt;/code&gt; 表中添加一个用户或使用 SQL 关键字 &lt;code&gt;CREATE&lt;/code&gt; 来提示 MariaDB 创建一个 MariaDB 用户。使用 &lt;code&gt;CREATE&lt;/code&gt; 来创建新用户会默认执行一些有用的方法，因此你不需要手动生成所有的信息：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;gt; CREATE USER &amp;#39;tux&amp;#39;@&amp;#39;localhost&amp;#39; IDENTIFIED BY &amp;#39;really_secure_password&amp;#39;;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;查看表的字段&#34;&gt;查看表的字段&lt;/h4&gt;
+&lt;p&gt;你可以使用 &lt;code&gt;SELECT&lt;/code&gt; 关键字来查看数据库表的字段和值。这本例中，你创建了一个名为 &lt;code&gt;tux&lt;/code&gt; 的用户，因此查询 &lt;code&gt;USER&lt;/code&gt; 表中的列：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;gt; SELECT USER,host FROM USER;
++------+------------+
+| USER | host       |
++------+------------+
+| root | localhost  |
+[...]
+| tux  | localhost  |
++------+------------+
+7 ROWS IN SET (0.000 sec)
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;为一个用户赋予权限&#34;&gt;为一个用户赋予权限&lt;/h4&gt;
+&lt;p&gt;通过查看 &lt;code&gt;USER&lt;/code&gt; 表列出的信息，你可以看到用户的状态。例如，新用户 &lt;code&gt;tux&lt;/code&gt; 对这个数据库没有任何权限。使用 &lt;code&gt;WHERE&lt;/code&gt; 语句你可以只查 &lt;code&gt;tux&lt;/code&gt; 那一条记录。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;gt; SELECT USER,select_priv,insert_priv,update_priv FROM USER WHERE USER=&amp;#39;tux&amp;#39;;
++------+-------------+-------------+-------------+
+| USER | select_priv | insert_priv | update_priv |
++------+-------------+-------------+-------------+
+| tux  | N           | N           | N           |
++------+-------------+-------------+-------------+
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;使用 &lt;code&gt;GRANT&lt;/code&gt; 命令修改用户的权限：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;gt; GRANT SELECT ON *.* TO &amp;#39;tux&amp;#39;@&amp;#39;localhost&amp;#39;;
+&amp;gt; FLUSH PRIVILEGES;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;验证你的修改：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;gt; SELECT USER,select_priv,insert_priv,update_priv FROM USER WHERE USER=&amp;#39;tux&amp;#39;;
++------+-------------+-------------+-------------+
+| USER | select_priv | insert_priv | update_priv |
++------+-------------+-------------+-------------+
+| tux  | Y           | N           | N           |
++------+-------------+-------------+-------------+
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;tux&lt;/code&gt; 用户现在有了从所有表中查询记录的权限。&lt;/p&gt;
+&lt;h3 id=&#34;创建自定义的数据库&#34;&gt;创建自定义的数据库&lt;/h3&gt;
+&lt;p&gt;到目前为止，你一直在与默认的数据库进行交互。除了用户管理，大部分人很少会与默认的数据库进行交互。通常，你会用自定义的数据来填充创建的数据库。&lt;/p&gt;
+&lt;h4 id=&#34;创建一个-mariadb-数据库&#34;&gt;创建一个 MariaDB 数据库&lt;/h4&gt;
+&lt;p&gt;你可能已经可以自己在 MariaDB 中创建新数据库了。创建数据库跟新建用户差不多。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;gt; CREATE DATABASE example;
+Query OK, 1 ROW affected (0.000 sec)
+&amp;gt; SHOW DATABASES;
++--------------------+
+| DATABASE           |
++--------------------+
+| example            |
+[...]
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;使用 &lt;code&gt;use&lt;/code&gt; 命令来把这个新建的数据库作为当前使用的库：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;gt; USE example;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;创建一个表&#34;&gt;创建一个表&lt;/h4&gt;
+&lt;p&gt;创建表比创建数据库要复杂，因为你必须定义列首。MariaDB 提供了很多方便的函数，可以用于创建列，引入数据类型定义，自增选项，对空值的约束，自动时间戳等等。&lt;/p&gt;
+&lt;p&gt;下面是用来描述一系列用户的一个简单的表：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;gt; CREATE TABLE IF NOT EXISTS member (
+    -&amp;gt; id INT AUTO_INCREMENT PRIMARY KEY,
+    -&amp;gt; name VARCHAR(128) NOT NULL,
+    -&amp;gt; startdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+Query OK, 0 ROWS affected (0.030 sec)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这个表通过使用一个自动递增的方法来唯一标识每一行。表示用户名字的字段不能为空（或 &lt;code&gt;null&lt;/code&gt;），每一行被创建时会自动生成时间戳。&lt;/p&gt;
+&lt;p&gt;使用 SQL 关键字 &lt;code&gt;INSERT&lt;/code&gt; 向这个表填充一些示例数据：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;gt; INSERT INTO member (name) VALUES (&amp;#39;Alice&amp;#39;);
+Query OK, 1 ROW affected (0.011 sec)
+&amp;gt; INSERT INTO member (name) VALUES (&amp;#39;Bob&amp;#39;);
+Query OK, 1 ROW affected (0.011 sec)
+&amp;gt; INSERT INTO member (name) VALUES (&amp;#39;Carol&amp;#39;);
+Query OK, 1 ROW affected (0.011 sec)
+&amp;gt; INSERT INTO member (name) VALUES (&amp;#39;David&amp;#39;);
+Query OK, 1 ROW affected (0.011 sec)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;验证一下表里的数据：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;gt; SELECT * FROM member;
++----+-------+---------------------+
+| id | name  | startdate           |
++----+-------+---------------------+
+|  1 | Alice | 2020-10-03 15:25:06 |
+|  2 | Bob   | 2020-10-03 15:26:43 |
+|  3 | Carol | 2020-10-03 15:26:46 |
+|  4 | David | 2020-10-03 15:26:51 |
++----+-------+---------------------+
+4 ROWS IN SET (0.000 sec)
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;同时增加多行数据&#34;&gt;同时增加多行数据&lt;/h4&gt;
+&lt;p&gt;再创建一个表：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;gt; CREATE TABLE IF NOT EXISTS linux (
+    -&amp;gt; id INT AUTO_INCREMENT PRIMARY KEY,
+    -&amp;gt; distro VARCHAR(128) NOT NULL);
+Query OK, 0 ROWS affected (0.030 sec)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;填充一些示例数据，这次使用 &lt;code&gt;VALUES&lt;/code&gt; 快捷方式，这样你可以一次添加多行数据。&lt;code&gt;VALUES&lt;/code&gt; 关键字需要一个用括号包围的列表作为参数，也可以用逗号分隔的多个列表作为参数。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;gt; INSERT INTO linux (distro)
+ -&amp;gt; VALUES (&amp;#39;Slackware&amp;#39;), (&amp;#39;RHEL&amp;#39;),(&amp;#39;Fedora&amp;#39;),(&amp;#39;Debian&amp;#39;);
+Query OK, 4 ROWS affected (0.011 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+&amp;gt; SELECT * FROM linux;
++----+-----------+
+| id | distro    |
++----+-----------+
+|  1 | Slackware |
+|  2 | RHEL      |
+|  3 | Fedora    |
+|  4 | Debian    |
++----+-----------+
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;关联多个表&#34;&gt;关联多个表&lt;/h3&gt;
+&lt;p&gt;现在你有两个表，之间没有关联。两个表的数据是独立的，但是你可能需要表一中的一个值来识别表二的记录。&lt;/p&gt;
+&lt;p&gt;你可以在表一中新增一列对应表二中的值。因为两个表都有唯一的标识符（自动递增的 &lt;code&gt;id&lt;/code&gt; 字段），关联的它们的最简单的方式是，使用表一中的 &lt;code&gt;id&lt;/code&gt; 字段作为表二的查询条件。&lt;/p&gt;
+&lt;p&gt;在表一中创建一列用来表示表二中的一个值：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;gt; ALTER TABLE member ADD COLUMN (os INT);
+Query OK, 0 ROWS affected (0.012 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+&amp;gt; DESCRIBE member;
+DESCRIBE member;
++-----------+--------------+------+-----+---------+------+
+| FIELD     | TYPE         | NULL | KEY | DEFAULT | Extra|
++-----------+--------------+------+-----+---------+------+
+| id        | INT(11)      | NO   | PRI | NULL    | auto_|
+| name      | VARCHAR(128) | NO   |     | NULL    |      |
+| startdate | TIMESTAMP    | NO   |     | cur[...]|      |
+| os        | INT(11)      | YES  |     | NULL    |      |
++-----------+--------------+------+-----+---------+------+
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;把 &lt;code&gt;linux&lt;/code&gt; 表中的唯一 ID 分配给每个成员。因为记录已经存在，使用 &lt;code&gt;UPDATE&lt;/code&gt; 关键字而不是 &lt;code&gt;INSERT&lt;/code&gt;。尤其是当你想查询某行然后再更新某列值时。语法上，表达方式有点倒装，先更新后查询：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;gt; UPDATE member SET os=1 WHERE name=&amp;#39;Alice&amp;#39;;
+Query OK, 1 ROW affected (0.007 sec)
+ROWS matched: 1  Changed: 1  Warnings: 0
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;要填充数据，请对其他名字重复执行这个过程。为了数据的多样性，在四行记录中分配三个不同的值。&lt;/p&gt;
+&lt;h4 id=&#34;连接表&#34;&gt;连接表&lt;/h4&gt;
+&lt;p&gt;现在这两个表彼此有了关联，你可以使用 SQL 来展示关联的数据。数据库中有很多种连接方式，你可以尽请尝试。下面的例子是关联 &lt;code&gt;member&lt;/code&gt; 表中 &lt;code&gt;os&lt;/code&gt; 字段和 &lt;code&gt;linux&lt;/code&gt; 表中 &lt;code&gt;id&lt;/code&gt; 字段：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;SELECT * FROM member JOIN linux ON member.os=linux.id;
++----+-------+---------------------+------+----+-----------+
+| id | name  | startdate           | os   | id | distro    |
++----+-------+---------------------+------+----+-----------+
+|  1 | Alice | 2020-10-03 15:25:06 |    1 |  1 | Slackware |
+|  2 | Bob   | 2020-10-03 15:26:43 |    3 |  3 | Fedora    |
+|  4 | David | 2020-10-03 15:26:51 |    3 |  3 | Fedora    |
+|  3 | Carol | 2020-10-03 15:26:46 |    4 |  4 | Debian    |
++----+-------+---------------------+------+----+-----------+
+4 ROWS IN SET (0.000 sec)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;连接 &lt;code&gt;os&lt;/code&gt; 和 &lt;code&gt;id&lt;/code&gt; 字段。&lt;/p&gt;
+&lt;p&gt;在图形化的应用中，你可以想象 &lt;code&gt;os&lt;/code&gt; 字段可以在下拉菜单中设置，值的来源是 &lt;code&gt;linux&lt;/code&gt; 表中的 &lt;code&gt;distro&lt;/code&gt; 字段。通过使用多个表中独立却有关联的数据，你可以保证数据的一致性和有效性，使用 SQL 你可以动态地关联它们。&lt;/p&gt;
+&lt;h3 id=&#34;下载-mariadb-和-mysql-备忘单&#34;&gt;下载 MariaDB 和 MySQL 备忘单&lt;/h3&gt;
+&lt;p&gt;MariaDB 是企业级的数据库。它是健壮、强大、高效的数据库引擎。学习它是你向管理 web 应用和编写语言库迈出的伟大的一步。你可以&lt;a class=&#34;link&#34; href=&#34;https://opensource.com/downloads/mariadb-mysql-cheat-sheet&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;下载 MariaDB 和 MySQL 备忘单&lt;/a&gt;，在你使用 MariaDB 时可以快速参考。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;via: &lt;a class=&#34;link&#34; href=&#34;https://opensource.com/article/20/10/mariadb-mysql-cheat-sheet&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://opensource.com/article/20/10/mariadb-mysql-cheat-sheet&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;作者：&lt;a class=&#34;link&#34; href=&#34;https://opensource.com/users/seth&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Seth Kenlon&lt;/a&gt;
+选题：&lt;a class=&#34;link&#34; href=&#34;https://github.com/lujun9972&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;lujun9972&lt;/a&gt;
+译者：&lt;a class=&#34;link&#34; href=&#34;https://github.com/lxbwolf&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;lxbwolf&lt;/a&gt;
+校对：&lt;a class=&#34;link&#34; href=&#34;https://github.com/wxy&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;wxy&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;本文由 &lt;a class=&#34;link&#34; href=&#34;https://github.com/LCTT/TranslateProject&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;LCTT&lt;/a&gt; 原创编译，&lt;a class=&#34;link&#34; href=&#34;https://linux.cn/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Linux中国&lt;/a&gt; 荣誉推出&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>分布式发号器架构设计</title>
+        <link>https://lxb.wiki/3d5a1f1d/</link>
+        <pubDate>Fri, 10 May 2019 14:04:04 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/3d5a1f1d/</guid>
+        <description>&lt;h3 id=&#34;一-需求设计&#34;&gt;一 需求设计&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;分布式环境下，保证每个序列号（sequence）是全系统唯一的；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;序列号可排序，满足单调递增的规律；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;特定场景下，能生成无规则（或者看不出规则）的序列号；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;生成的序列号尽量短；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;序列号可进行二次混淆，提供可扩展的interface，业务方自定义实现。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;二-方案设计&#34;&gt;二 方案设计&lt;/h3&gt;
+&lt;p&gt;为了满足上述需求，发号器必须能够支持不同的生成策略，最好是还能支持自定义的生成策略，这就对系统本身的可扩展性提出了要求。 目前，发号器设计了两种比较通用的基础策略，各有优缺点，但结合起来，能达到优势互补的目的。&lt;/p&gt;
+&lt;h4 id=&#34;1-segment&#34;&gt;1. segment&lt;/h4&gt;
+&lt;p&gt;第一种策略称之为『分段』（segment），下文将对其进行详细阐述： 整个segment发号器有两个重要的角色：Redis和MongoDB，理论上MongoDB是可以被MySQL或其他DB产品所替代的。 segment发号器所产生的号码满足单调递增的规律，短时间内产生的号码不会有过长的问题（可根据实际需要，设置初始值，比如 100）。&lt;/p&gt;
+&lt;h5 id=&#34;redis数据结构hash类型&#34;&gt;Redis数据结构（Hash类型）&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt;key: &amp;lt;string&amp;gt;，表示业务主键/名称
+value: {
+  cur: &amp;lt;long&amp;gt;，表示当前序列号
+  max: &amp;lt;long&amp;gt;，表示这个号段最大的可用序列号
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;取号的大部分操作都集中在Redis，为了保证序列号递增的原子性，取号的功能可以用Lua脚本实现。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;--[[
+  由于RedisTemplate设置的HashValueSerializer是GenericToStringSerializer，故此处的HASH结构中的
+  VALUE都是string类型，需要使用tonumber函数转换成数字类型。
+]]
+local max = redis.pcall(&amp;quot;HGET&amp;quot;, KEYS[1], &amp;quot;max&amp;quot;)  --获取一段序列号的max
+local cur = redis.pcall(&amp;quot;HGET&amp;quot;, KEYS[1], &amp;quot;cur&amp;quot;)  --获取当前发号位置
+if tonumber(cur) &amp;gt;= tonumber(max) then  --没有超过这段序列号的上限
+    local step = ARGV[1]
+    if (step == nil) then  --没有传入step参数
+        step = redis.pcall(&amp;quot;HGET&amp;quot;, KEYS[1], &amp;quot;step&amp;quot;)  --获取这段序列号的step配置参数值
+    end
+    redis.pcall(&amp;quot;HSET&amp;quot;, KEYS[1], &amp;quot;max&amp;quot;, tonumber(max) + tonumber(step))  --调整max参数值，扩展上限
+end
+return redis.pcall(&amp;quot;HINCRBY&amp;quot;, KEYS[1], &amp;quot;cur&amp;quot;, 1)  --触发HINCRBY操作，对cur自增，并返回自增后的值
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;​&lt;/p&gt;
+&lt;p&gt;注意：在redis执行lua script期间，redis处于BUSY状态，这个时候对redis的任何形式的访问都会抛出JedisBusyException异常，所以lua script中的处理逻辑不得太复杂。&lt;/p&gt;
+&lt;p&gt;值得一提的是，即使切换到一个新的database，或者开启新线程执行lua script，都将会遇到同样的问题，毕竟redis是单进程单线程的。&lt;/p&gt;
+&lt;p&gt;如果不幸遇到上述问题，需要使用redis-cli客户端连上redis-server，向其发送SCRIPT KILL命令，即可终止脚本执行。&lt;/p&gt;
+&lt;p&gt;如果想避免上述问题，也可以直接使用Springboot提供的RedisTemplate，能支持绝大部分redis command。&lt;/p&gt;
+&lt;h5 id=&#34;mongodb-数据结构&#34;&gt;MongoDB 数据结构&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt;{
+ bizTag: &amp;lt;string&amp;gt;,  表示业务主键/名称
+ max: &amp;lt;long&amp;gt;,  表示这个号段最大的可用序列号
+ step: &amp;lt;int&amp;gt;, 每次分段的步长
+ timestamp: &amp;lt;long&amp;gt;,  更新数据的时间戳（毫秒）
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;MongoDB部分主要是对号段的分配进行管理，一个号段不能多发，也可以根据发号情况，适当放缩号段步长（step）。&lt;/p&gt;
+&lt;p&gt;到此为止，segment发号器的雏形已经形成了。 一个比较突出的问题是在两个号段衔接的时间点，当一个segment派发完了后，会对MongoDB和Redis中的数据中的max扩容，I/O消耗比正常发号要稍多，会遇到“尖刺”&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210219.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;为了消除“尖刺”，可以使用双Buffer模型&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210239.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;这个模型的核心思想就是“&lt;strong&gt;预分配&lt;/strong&gt;”。可以设置一个阈值（threshold），比如20%，当Buffer-1里面的号段已经消耗了20%，那么立刻根据Buffer-1的max和step，开辟Buffer-2。 当Buffer-1完全消耗了，可以无缝衔接Buffer-2,。&lt;/p&gt;
+&lt;p&gt;如果Buffer-2的消耗也达到阈值了，又可以开辟Buffer-1，如此往复。&lt;/p&gt;
+&lt;p&gt;接下来，我们来讨论一下&lt;strong&gt;异常/故障&lt;/strong&gt;情况。&lt;/p&gt;
+&lt;p&gt;① Redis宕机。因为大部分发号工作都是依靠Redis完成的，所以发生了这种情况是非常糟糕的。如果想有效降低此风险，最行之有效的办法是对Redis进行集群化，通常是1主2从，这样可以挺住非常高的QPS了。 当然也有退而求其次的办法，就是利用上述提到的双Buffer模型。不依赖Redis取号，直接通过程序控制，利用机器内存。所以当需要重启发号服务之前，要确保依赖的组件是运行良好的，不然号段就丢失了。&lt;/p&gt;
+&lt;p&gt;② 要不要持久化的问题。这个问题主要是针对Redis，如果没有记录下当前的取号进度，那么随着Redis的宕机，取号现场就变得难以恢复了；如果每次都记录取号进度，那么这种I/O高密度型的作业会对服务性能 造成一定影响，并且随着取号的时间延长，恢复取号现场就变得越来越慢了，甚至到最后是无法忍受的。除了对Redis做高可用之外，引入MongoDB也是出于对Redis持久化功能辅助的考虑。 个人建议：如果Redis已经集群化了，而且还开启了双Buffer的策略，以及MongoDB的加持，可以不用再开启Redis的持久化了。 如果考虑到极端情况下，Redis还是宕机了，我们可以使用MongoDB里面存下来的max，就max+1赋值给cur（避免上个号段取完，正好宕机了）。&lt;/p&gt;
+&lt;p&gt;③ MongoDB宕机。这个问题不是很严重，只要将step适当拉长一些（至少取号能支撑20分钟），利用Redis还在正常取号的时间来抢救MongoDB。不过，考虑到实际可能没这么快恢复mongo服务，可以在程序中采取 一些容错措施，比如号段用完了，mongo服务无法到达，直接关闭取号通道，直到MongoDB能正常使用；或者程序给一个默认的step，让MongoDB中的max延长到max+step*n（可能取了N个号段MongoDB才恢复过来）， 这样取号服务也可以继续。依靠程序本身继续服务，那么需要有相关的log，这样才有利于恢复MongoDB中的数据。&lt;/p&gt;
+&lt;p&gt;④ 取号服务宕机。这个没什么好说的，只能尽快恢复服务运行了。&lt;/p&gt;
+&lt;p&gt;⑤ Redis，MongoDB都宕机了。这种情况已经很极端了，只能利用双Buffer策略，以及程序默认的设置进行工作了，同样要有相关的log，以便恢复Redis和MongoDB。&lt;/p&gt;
+&lt;p&gt;⑥ 都宕机了。我有一句mmp不知当讲不当讲……&lt;/p&gt;
+&lt;h4 id=&#34;2snowflake&#34;&gt;2、snowflake&lt;/h4&gt;
+&lt;p&gt;第二种策略是Twitter出品，算法思想比较巧妙，实现的难度也不大。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210341.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;以上示意图描述了一个序列号的二进制组成结构。 第一位不用，恒为0，即表示正整数； 接下来的41位表示时间戳，精确到毫秒。为了节约空间，可以将此时间戳定义为距离某个时间点所经历的毫秒数（Java默认是1970-01-01 00:00:00）； 再后来的10位用来标识工作机器，如果出现了跨IDC的情况，可以将这10位一分为二，一部分用于标识IDC，一部分用于标识服务器； 最后12位是序列号，自增长。&lt;/p&gt;
+&lt;p&gt;snowflake的核心思想是64bit的合理分配，但不必要严格按照上图所示的分法。 如果在机器较少的情况下，可以适当缩短机器id的长度，留出来给序列号。&lt;/p&gt;
+&lt;p&gt;当然，snowflake的算法将会面临两个挑战：&lt;/p&gt;
+&lt;p&gt;① 机器id的指定。这个问题在分布式的环境下会比较突出，通常的解决方案是利用Redis或者Zookeeper进行机器注册，确保注册上去的机器id是唯一的。为了解决 强依赖Redis或者Zookeeper的问题，可以将机器id写入本地文件系统。&lt;/p&gt;
+&lt;p&gt;② 机器id的生成规则。这个问题会有一些纠结，因为机器id的生成大致要满足三个条件：a. int类型(10bit)纯数字，b. 相对稳定，c. 与其他机器要有所区别。至于优雅美观，都是其次了。对于机器id的存储，可以使用HASH结构，KEY的规则是“application-name.port.ip”，其中ip是通过算法转换成了一段长整型的纯数字，VALUE则是机器id， 服务id，机房id，其中，可以通过服务id和机房id反推出机器id。&lt;/p&gt;
+&lt;p&gt;假设服务id(workerId)占8bit，机房id(rackId)占2bit，从1开始，workerId=00000001，rackId=01，machineId=00000000101 如果用Redis存储，其表现形式如下：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210414.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;如果存储在文件中（建议properties文件），则文件名是sequence-client:8112:3232235742.properties，文件内容如下：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210429.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;如果发号服务上线，直接按照“application-name.port.ip”的规则取其内容。&lt;/p&gt;
+&lt;p&gt;③ 时钟回拨。因为snowflake对系统时间是很依赖的，所以对于时钟的波动是很敏感的，尤其是时钟回拨，很有可能就会出现重复发号的情况。时钟回拨问题解决策略通常是直接拒绝发号，直到时钟正常，必要时进行告警。&lt;/p&gt;
+&lt;h3 id=&#34;三-程序设计&#34;&gt;三 程序设计&lt;/h3&gt;
+&lt;p&gt;整个发号过程可以分成三个层次：&lt;/p&gt;
+&lt;p&gt;1、策略层(strategy layer)：这个层面决定的是发号方法/算法，涵盖了上述所讲的segment和snowflake两种方式，当然，用户也可以自己扩展实现其他发号策略。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210445.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;最顶上定义Sequence实际上就是发号的结果。bizType是对发号业务场景的定义，比如订单号，用户ID，邀请好友的分享码。 发号策略的init接口是发号前的初始化工作，而generate接口就是调用发号器的主入口了。 当然，考虑到各种异常情况，加入了拒绝发号的处理器（SequenceRejectedHandler），默认实现只是记录日志，用户可根据需求去实现该处理器，然后用set方法设置发号策略的拒绝处理器。&lt;/p&gt;
+&lt;p&gt;2、插件层(plugin layer)：此处的插件可以理解是一种拦截器，贯穿SequenceStrategy的发号全周期。引入插件后，无疑是丰富了整个发号的操作过程，用户可以从中干预到发号的整个流程，以便达到其他的目的，比如：记录发号历史，统计发号速率，发号二次混淆等。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210511.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;可以看出，插件被设计成『注册式』的，发号策略只有注册了相关插件之后，插件才能生效， 当然，一个插件能被多个发号策略所注册，一个发号策略也能同时注册多个插件，所以两者是多对多的关系，PluginManager的出现就是解决插件的注册管理问题。 从SequencePlugin的定义中可以发现，插件是有优先级（Order）的，通过getOrder()可以获得，在这套发号系统里，Order值越小，表示该插件越优先执行。此外，插件有三个重要的操作： before，表示发号之前的处理。若返回了false，那么该插件后面的操作都失效了，否则继续执行发号流程。 after，表示发号之后的处理。 doException，表示插件发生异常的处理方法。&lt;/p&gt;
+&lt;p&gt;3、持久层(persistence layer)：这个层面指代的是上述所提的MongoDB部分，如果不需要持久化的支持，可以不实现此接口，那么整个发号器就变成纯内存管理的了。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206210529.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;PersistRepository定义了基本的CRUD方法，其中persistId可以理解成上述提到的BizType。 一切的持久化对象都是从PersistModel开始的，上图中的Segment、PersistDocument都是为了实现分段发号器而定义的。&lt;/p&gt;
+&lt;h3 id=&#34;四-总结&#34;&gt;四 总结&lt;/h3&gt;
+&lt;p&gt;这篇文章详细阐述了分布式发号器系统的设计，旨在能做出一个可扩展，易维护的发号系统。业界比较知名的发号算法似乎也不多，整个发号系统不一定就按照笔者所做的设计，还是要立足于具体的业务需求。&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>mysqldump: Got error: 1044: Access denied for user</title>
+        <link>https://lxb.wiki/a333bc04/</link>
+        <pubDate>Sat, 27 Apr 2019 11:24:27 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/a333bc04/</guid>
+        <description>&lt;p&gt;&lt;code&gt;mysqldump -u username -p dbname &amp;gt; dbname.sql&lt;/code&gt; mysqldump: Got error: 1044: Access denied for user XXX to database XXX when using LOCK TABLES 解决方法: &lt;code&gt;mysqldump -u dbuser -ppass db --skip-lock-tables &amp;gt; db.sql&lt;/code&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>分布式数据库系统(DDBS)</title>
+        <link>https://lxb.wiki/728c18a3/</link>
+        <pubDate>Wed, 10 Apr 2019 14:00:41 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/728c18a3/</guid>
+        <description>&lt;p&gt;业务规模较小时，使用单机mysql作存储。但伴随业务发展，存储容量和并发能力会有瓶颈。&lt;/p&gt;
+&lt;p&gt;首先，假设单机的硬盘为1.8T，也可以挂更大容量硬盘，但仍有限。&lt;/p&gt;
+&lt;p&gt;其次，单机的读写并发能力有限，假设峰值写入qps1000，峰值读取qps3000，网卡对读取时流量也有要求，单次访问的读取量不应过大。&lt;/p&gt;
+&lt;p&gt;单机的链接数也有限。&lt;/p&gt;
+&lt;p&gt;那么，当使用单机mysql的业务发展，受到以上瓶颈时，一般的思路会是什么呢？一台机器不行，用两台呢，再不行，扩展更多台。&lt;/p&gt;
+&lt;p&gt;一台扩展为两台，磁盘容量扩大了，通过分表，将表打散在不同机器上，共同承担写入任务，并发也提高了，感觉这个思路是对的。&lt;/p&gt;
+&lt;p&gt;那么在这个过程中，我们需要做什么？&lt;/p&gt;
+&lt;p&gt;业务发展到单机无法承受，即使在单机上，很多表应该也做过分表了。一般会根据业务选择分表键。单个表的大小mysql也有一定要求，一般存储量不大于1G，单条记录小一些，一般不超过1k，条数一般不超过1000万条，最多不超过5000万条，否则表的使用和维护效率都很低。假设业务已经做了足够多的分表，满足三年的数据增长需要，第一年过后，每个分表的条数达到200万条，整机存储容量使用了一半，此时我们想拆分为两台机器。&lt;/p&gt;
+&lt;p&gt;此时我们可以将原机器上部分表数据同步到新机器上，并在model层抽象一个路由层，将对数据库的操作发到不同的机器上，上层业务仍可以认为在使用单机。此时可以将原机器上不归属自己管理范围的表删除，腾出空间。&lt;/p&gt;
+&lt;p&gt;一台变成了两台，向分布式走了一步。此时存储容量和并发都提高了，由路由层管理两台机器。如果两台或今后的多台机器，并发数高于路由层处理能力怎么办？那还要把路由层机器也扩一下，把路由规则都写进去，大家按一个格则办事。&lt;/p&gt;
+&lt;p&gt;经过上面的一番折腾，数据库机器水平扩展，解决了单机存在的一些问题。在这个扩展的过程中，是否会对业务产生中断影响呢？&lt;/p&gt;
+&lt;p&gt;会有一点影响。至少在路由层改路由表时，会中断数据库的写入，读取此时可以不中断。&lt;/p&gt;
+&lt;p&gt;ddbs中，使用到的多台机器，都叫做分片。分片提高了系统存储容量和并发能力，引入分片，也是系统的复杂度提高了，需要引入路由层机器，路由机器也可能需要扩展，复杂操作，还需要添加更多逻辑功能。但至少可以可业务逻辑区分开，业务可以把ddbs当做单机在使用。&lt;/p&gt;
+&lt;p&gt;那么ddbs有哪些不足呢？&lt;/p&gt;
+&lt;p&gt;ddbs还是要基于分表、分片实现的。那么对数据库的任何操作，首要条件是需要指明操作的分表键。没有这个维度的准确值，就不能对数据库操作，当然除非是备用库，那你随便扫表，因为备用库可以转为冗余安全，不走线上流量，可以做统计任务。&lt;/p&gt;
+&lt;p&gt;单指明分表键还不行，还要注意操作的数据可能会分布在不同分表、不同分片中，这样的操作会引发ddbs产生大量并发操作，业务的一个请求就会占用多个机器多个链接，使ddbs得并发能力大打折扣。比如 ‘where 分表键 in （）’操作，这种操作要慎重，in中个数不可太多。&lt;/p&gt;
+&lt;p&gt;分表键最好选用整形，字符串型，可能hash后分配不均，表大小不均衡。&lt;/p&gt;
+&lt;p&gt;事物操作在ddbs中的实现，非常耗费系统性能。事务类操作需要路由控制层控制整个操作过程，期中可能涉及多个分片，多个不同的表的操作，对系统整体可用性要求高&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>mysql启动时 &amp;quot;No space left on device&amp;quot;</title>
+        <link>https://lxb.wiki/77f38978/</link>
+        <pubDate>Tue, 28 Aug 2018 19:04:37 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/77f38978/</guid>
+        <description>&lt;p&gt;先用&lt;code&gt;free&lt;/code&gt; 命令查看剩余空间&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;[root@tokyo mysqld]# free
+              total        used        free      shared  buff/cache   available
+Mem:        1016108      632132      205776       66344      178200      180496
+Swap:             0           0           0
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;发现swap 为零了&lt;/p&gt;
+&lt;p&gt;执行&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;dd if=/dev/zero of=/swapfile bs=1M count=1024
+mkswap /swapfile
+wapon /swapfile
+swapon /swapfile
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;再用&lt;code&gt;free&lt;/code&gt;查看&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;[root@tokyo ~]# free
+              total        used        free      shared  buff/cache   available
+Mem:        1016108      732148       63984       51400      219976       71132
+Swap:       1048572      209240      839332
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;启动mysql, 解决&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Redis 笔记</title>
+        <link>https://lxb.wiki/9f188831/</link>
+        <pubDate>Thu, 19 Jul 2018 18:51:37 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/9f188831/</guid>
+        <description>&lt;h4 id=&#34;数据类型&#34;&gt;数据类型&lt;/h4&gt;
+&lt;p&gt;Redis 支持5中数据类型&lt;/p&gt;
+&lt;h5 id=&#34;字符串string&#34;&gt;字符串(string)&lt;/h5&gt;
+&lt;p&gt;Redis 中字符串是一个字节序列. Redis 中的字符串是二进制安全的, 这意味着它们的长度不由任何特殊的终止字符决定。因此，可以在一个字符串中存储高达512兆字节的任何内容 &lt;strong&gt;例&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;redis 127.0.0.1:6379&amp;gt; SET name &amp;quot;value&amp;quot;
+OK
+redis 127.0.0.1:6379&amp;gt; GET name
+&amp;quot;value&amp;quot;
+
+
+Redis命令不区分大小写.字符串的最大长度为512M
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h5 id=&#34;散列哈希hash&#34;&gt;散列/哈希(Hash)&lt;/h5&gt;
+&lt;p&gt;Redis散列/哈希(Hashes)是键值对的集合。Redis散列/哈希是字符串字段和字符串值之间的映射。因此，它们用于表示对象。 &lt;strong&gt;例&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;redis 127.0.0.1:6379&amp;gt; HMSET ukey username &amp;quot;yiibai&amp;quot; password &amp;quot;passswd123&amp;quot; points 200
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;散列/哈希数据类型用于存储包含用户的基本信息的用户对象。这里HMSET，HGETALL是Redis的命令，而ukey是键的名称。&lt;/p&gt;
+&lt;p&gt;每个散列/哈希可以存储多达2^32 - 1个健-值对(超过40亿个)。&lt;/p&gt;
+&lt;h5 id=&#34;列表list&#34;&gt;列表(List)&lt;/h5&gt;
+&lt;p&gt;Redis列表只是字符串列表，按插入顺序排序。可以向Redis列表的头部或尾部添加元素。 &lt;strong&gt;例&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;redis 127.0.0.1:6379&amp;gt; lpush alist redis 
+(integer) 1 
+redis 127.0.0.1:6379&amp;gt; lpush alist mongodb 
+(integer) 2 
+redis 127.0.0.1:6379&amp;gt; lpush alist sqlite 
+(integer) 3 
+redis 127.0.0.1:6379&amp;gt; lrange alist 0 10  
+
+1) &amp;quot;sqlite&amp;quot; 
+2) &amp;quot;mongodb&amp;quot; 
+3) &amp;quot;redis&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h5 id=&#34;集合set&#34;&gt;集合(Set)&lt;/h5&gt;
+&lt;p&gt;Redis集合是字符串的无序集合。在Redis中，可以添加，删除和测试成员存在的时间O(1)复杂性 &lt;strong&gt;例&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;redis 127.0.0.1:6379&amp;gt; sadd yiibailist redis 
+(integer) 1 
+redis 127.0.0.1:6379&amp;gt; sadd yiibailist mongodb 
+(integer) 1 
+redis 127.0.0.1:6379&amp;gt; sadd yiibailist sqlite 
+(integer) 1 
+redis 127.0.0.1:6379&amp;gt; sadd yiibailist sqlite 
+(integer) 0 
+redis 127.0.0.1:6379&amp;gt; smembers yiibailist  
+
+1) &amp;quot;sqlite&amp;quot; 
+2) &amp;quot;mongodb&amp;quot; 
+3) &amp;quot;redis&amp;quot;
+
+
+注意 - 在上面的示例中，sqlite被添加了两次，但是由于集合的唯一属性，所以它只算添加一次
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h5 id=&#34;可排序集合zset&#34;&gt;可排序集合(ZSET)&lt;/h5&gt;
+&lt;p&gt;Redis可排序集合类似于Redis集合，是不重复的字符集合。 不同之处在于，排序集合的每个成员都与分数相关联，这个分数用于按最小分数到最大分数来排序的排序集合。虽然成员是唯一的，但分数值可以重复 &lt;strong&gt;例&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;redis 127.0.0.1:6379&amp;gt; zadd yiibaiset 0 redis
+(integer) 1 
+redis 127.0.0.1:6379&amp;gt; zadd yiibaiset 0 mongodb
+(integer) 1 
+redis 127.0.0.1:6379&amp;gt; zadd yiibaiset 1 sqlite
+(integer) 1 
+redis 127.0.0.1:6379&amp;gt; zadd yiibaiset 1 sqlite
+(integer) 0 
+redis 127.0.0.1:6379&amp;gt; ZRANGEBYSCORE yiibaiset 0 1000  
+
+1) &amp;quot;mongodb&amp;quot; 
+2) &amp;quot;redis&amp;quot; 
+3) &amp;quot;sqlite&amp;quot;
+
+
+因为 ‘sqlite‘ 的排序值是 1 ，其它两个元素的排序值是 0 ，所以 ‘sqlite‘ 排在最后一个位置上
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>

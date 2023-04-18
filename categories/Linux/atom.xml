@@ -1,0 +1,1573 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Linux on Xiaobin&#39;s Blog</title>
+        <link>https://lxb.wiki/categories/Linux/</link>
+        <description>Recent content in Linux on Xiaobin&#39;s Blog</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <lastBuildDate>Fri, 10 Jun 2022 22:28:34 +0000</lastBuildDate><atom:link href="https://lxb.wiki/categories/Linux/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <title>流编辑器sed</title>
+        <link>https://lxb.wiki/f54357bf/</link>
+        <pubDate>Fri, 10 Jun 2022 22:28:34 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/f54357bf/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;p&gt;sed 是一种流编辑器， 一次处理一行文件并把输出送往屏幕。处理时，把当前处理的行存储在临时缓冲区中，称为“模式空间”（pattern space），接着用sed命令处理缓冲区中的内容，处理完成后，把缓冲区的内容送往屏幕。接着处理下一行，这样不断重复，直到文件末尾。文件内容并没有 改变，除非你使用重定向存储输出。Sed主要用来自动编辑一个或多个文件；简化对文件的反复操作；编写转换程序等。&lt;/p&gt;
+&lt;h2 id=&#34;命令选项参数&#34;&gt;命令、选项参数&lt;/h2&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;strong&gt;命令&lt;/strong&gt;&lt;/th&gt;
+&lt;th&gt;&lt;strong&gt;功能描述&lt;/strong&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;a\&lt;/td&gt;
+&lt;td&gt;在当前行的后面加入一行或者文本。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;c\&lt;/td&gt;
+&lt;td&gt;用新的文本改变或者替代本行的文本。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;d&lt;/td&gt;
+&lt;td&gt;从pattern space位置删除行。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;i\&lt;/td&gt;
+&lt;td&gt;在当前行的上面插入文本。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;h&lt;/td&gt;
+&lt;td&gt;拷贝pattern space的内容到holding buffer(特殊缓冲区)。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;H&lt;/td&gt;
+&lt;td&gt;追加pattern space的内容到holding buffer。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;g&lt;/td&gt;
+&lt;td&gt;获得holding buffer中的内容，并替代当前pattern space中的文本。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;G&lt;/td&gt;
+&lt;td&gt;获得holding buffer中的内容，并追加到当前pattern space的后面。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;n&lt;/td&gt;
+&lt;td&gt;读取下一个输入行，用下一个命令处理新的行而不是用第一个命令。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;p&lt;/td&gt;
+&lt;td&gt;打印pattern space中的行。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;P&lt;/td&gt;
+&lt;td&gt;打印pattern space中的第一行。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;q&lt;/td&gt;
+&lt;td&gt;退出sed。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;w file&lt;/td&gt;
+&lt;td&gt;写并追加pattern space到file的末尾。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;!&lt;/td&gt;
+&lt;td&gt;表示后面的命令对所有没有被选定的行发生作用。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;s/re/string&lt;/td&gt;
+&lt;td&gt;用string替换正则表达式re。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;=&lt;/td&gt;
+&lt;td&gt;打印当前行号码。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;替换标记&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;g&lt;/td&gt;
+&lt;td&gt;行内全面替换，如果没有g，只替换第一个匹配。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;p&lt;/td&gt;
+&lt;td&gt;打印行。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;x&lt;/td&gt;
+&lt;td&gt;互换pattern space和holding buffer中的文本。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;y&lt;/td&gt;
+&lt;td&gt;把一个字符翻译为另一个字符(但是不能用于正则表达式)。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@www ~&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# sed [-nefr] [动作]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;选项与参数：
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-n ：取消默认输出。使用安静&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;silent&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;模式。在一般 sed 的用法中，所有来自 STDIN 的数据一般都会被列出到终端上。但如果加上 -n 参数后，则只有经过sed 特殊处理的那一行&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;或者动作&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;才会被列出来。
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-e ：直接在命令列模式上进行 sed 的动作编辑；允许多点编辑。
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-f ：直接将 sed 的动作写在一个文件内， -f filename 则可以运行 filename 内的 sed 动作；
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-r ：sed 的动作支持的是延伸型正规表示法的语法。&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;默认是基础正规表示法语法&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-i ：直接修改读取的文件内容，而不是输出到终端。
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;动作说明： &lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;n1&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;,n2&lt;span style=&#34;color:#f92672&#34;&gt;]]&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;n1, n2 ：不见得会存在，一般代表『选择进行动作的行数』，举例来说，如果我的动作是需要在 &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; 到 &lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt; 行之间进行的，则『 10,20&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;动作行为&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; 』
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt;：
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;a ：新增， a 的后面可以接字串，而这些字串会在新的一行出现&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;目前的下一行&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;～
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;c ：取代， c 的后面可以接字串，这些字串可以取代 n1,n2 之间的行！
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;d ：删除，因为是删除啊，所以 d 后面通常不接任何咚咚；
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;i ：插入， i 的后面可以接字串，而这些字串会在新的一行出现&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;目前的上一行&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;；
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;p ：列印，亦即将某个选择的数据印出。通常 p 会与参数 sed -n 一起运行～
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;s ：取代，可以直接进行取代的工作哩！通常这个 s 的动作可以搭配正规表示法！例如 1,20s/old/new/g 就是啦！
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;以行为单位的新增删除&#34;&gt;以行为单位的新增/删除&lt;/h3&gt;
+&lt;p&gt;将 &lt;code&gt;/etc/passwd&lt;/code&gt; 的内容列出并且列印行号，同时，将第 2~5 行删除！&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@www ~&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# nl /etc/passwd | sed &amp;#39;2,5d&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; root:x:0:0:root:/root:/bin/bash
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt; sync:x:5:0:sync:/sbin:/bin/sync
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt; shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;.....&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;后面省略&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.....
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;sed 的动作为 &lt;code&gt;&#39;2,5d&#39;&lt;/code&gt; ，那个 d 就是删除！因为 2-5 行给他删除了，所以显示的数据就没有 2-5 行罗～ 另外，注意一下，原本应该是要下达 sed -e 才对，没有 -e 也行啦！同时也要注意的是， sed 后面接的动作，请务必以 &amp;rsquo;&amp;rsquo; 两个单引号括住喔！&lt;/p&gt;
+&lt;p&gt;只要删除第 2 行&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;nl /etc/passwd | sed &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;2d&amp;#39;&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;要删除第 3 到最后一行&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; nl /etc/passwd | sed &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;3,$d&amp;#39;&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;在第二行后(亦即是加在第三行)加上『drink tea』字样！&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@www ~&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# nl /etc/passwd | sed &amp;#39;2a drink tea&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; root:x:0:0:root:/root:/bin/bash
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; bin:x:1:1:bin:/bin:/sbin/nologin
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;drink tea
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; daemon:x:2:2:daemon:/sbin:/sbin/nologin
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;.....&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;后面省略&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.....
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;那如果是要在第二行前&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;nl /etc/passwd | sed &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;2i drink tea&amp;#39;&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果是要增加两行以上，在第二行后面加入两行字，例如『Drink tea or &amp;hellip;..』与『drink beer』
+&lt;strong&gt;这里是 &lt;code&gt;\&lt;/code&gt; 还是 &lt;code&gt;\&amp;gt;&lt;/code&gt; ?&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@www ~&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# nl /etc/passwd | sed &amp;#39;2a Drink tea or ......\&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;gt; drink beer ?&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; root:x:0:0:root:/root:/bin/bash
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; bin:x:1:1:bin:/bin:/sbin/nologin
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Drink tea or ......
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;drink beer ?
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; daemon:x:2:2:daemon:/sbin:/sbin/nologin
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;.....&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;后面省略&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.....
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;每一行之间都必须要以反斜杠『 \ 』来进行新行的添加喔！所以，上面的例子中，我们可以发现在第一行的最后面就有 \ 存在。&lt;/p&gt;
+&lt;h3 id=&#34;以行为单位的替换与显示&#34;&gt;以行为单位的替换与显示&lt;/h3&gt;
+&lt;p&gt;将第2-5行的内容取代成为『No 2-5 number』&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@www ~&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# nl /etc/passwd | sed &amp;#39;2,5c No 2-5 number&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; root:x:0:0:root:/root:/bin/bash
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;No 2-5 number
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt; sync:x:5:0:sync:/sbin:/bin/sync
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;.....&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;后面省略&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.....
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;仅列出 /etc/passwd 文件内的第 5-7 行&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@www ~&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# nl /etc/passwd | sed -n &amp;#39;5,7p&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt; lp:x:4:7:lp:/var/spool/lpd:/sbin/nologin
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt; sync:x:5:0:sync:/sbin:/bin/sync
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt; shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;数据的搜寻并显示&#34;&gt;数据的搜寻并显示&lt;/h3&gt;
+&lt;p&gt;搜索 /etc/passwd有root关键字的行&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;nl /etc/passwd | sed &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/root/p&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;  root:x:0:0:root:/root:/bin/bash
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;  root:x:0:0:root:/root:/bin/bash
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;  daemon:x:1:1:daemon:/usr/sbin:/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;  bin:x:2:2:bin:/bin:/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;  sys:x:3:3:sys:/dev:/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;  sync:x:4:65534:sync:/bin:/bin/sync
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;....下面忽略
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果root找到，除了输出所有行，还会输出匹配行。&lt;/p&gt;
+&lt;p&gt;使用-n的时候将只打印包含模板的行。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;nl /etc/passwd | sed -n &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/root/p&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;  root:x:0:0:root:/root:/bin/bash
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;数据的搜寻并删除&#34;&gt;数据的搜寻并删除&lt;/h3&gt;
+&lt;p&gt;删除/etc/passwd所有包含root的行，其他行输出&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;nl /etc/passwd | sed  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/root/d&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;  daemon:x:1:1:daemon:/usr/sbin:/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;  bin:x:2:2:bin:/bin:/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;....下面忽略
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#第一行的匹配root已经删除了&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;数据的搜寻并执行命令&#34;&gt;数据的搜寻并执行命令&lt;/h3&gt;
+&lt;p&gt;找到匹配模式eastern的行后，
+搜索/etc/passwd,找到root对应的行，执行后面花括号中的一组命令，每个命令之间用分号分隔，这里把bash替换为blueshell，再输出这行：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; nl /etc/passwd | sed -n &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/root/{s/bash/blueshell/;p}&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;  root:x:0:0:root:/root:/bin/blueshell
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果只替换/etc/passwd的第一个bash关键字为blueshell，就退出&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;nl /etc/passwd | sed -n &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/bash/{s/bash/blueshell/;p;q}&amp;#39;&lt;/span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;  root:x:0:0:root:/root:/bin/blueshell
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;最后的q是退出。&lt;/p&gt;
+&lt;h3 id=&#34;数据的搜寻并替换&#34;&gt;数据的搜寻并替换&lt;/h3&gt;
+&lt;p&gt;除了整行的处理模式之外， sed 还可以用行为单位进行部分数据的搜寻并取代。基本上 sed 的搜寻与替代的与 vi 相当的类似！他有点像这样：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sed &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;s/要被取代的字串/新的字串/g&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;先观察原始信息，利用 /sbin/ifconfig 查询 IP&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@www ~&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# /sbin/ifconfig eth0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;eth0 Link encap:Ethernet HWaddr 00:90:CC:A6:34:84
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;inet addr:192.168.1.100 Bcast:192.168.1.255 Mask:255.255.255.0
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;inet6 addr: fe80::290:ccff:fea6:3484/64 Scope:Link
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;UP BROADCAST RUNNING MULTICAST MTU:1500 Metric:1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;.....&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;以下省略&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.....
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;本机的ip是192.168.1.100。&lt;/p&gt;
+&lt;p&gt;将 IP 前面的部分予以删除&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@www ~&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# /sbin/ifconfig eth0 | grep &amp;#39;inet addr&amp;#39; | sed &amp;#39;s/^.*addr://g&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;192.168.1.100 Bcast:192.168.1.255 Mask:255.255.255.0
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;接下来则是删除后续的部分，亦即： 192.168.1.100 Bcast:192.168.1.255 Mask:255.255.255.0
+将 IP 后面的部分予以删除&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@www ~&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# /sbin/ifconfig eth0 | grep &amp;#39;inet addr&amp;#39; | sed &amp;#39;s/^.*addr://g&amp;#39; | sed &amp;#39;s/Bcast.*$//g&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;192.168.1.100
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;多点编辑&#34;&gt;多点编辑&lt;/h3&gt;
+&lt;p&gt;一条sed命令，删除/etc/passwd第三行到末尾的数据，并把bash替换为blueshell&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;nl /etc/passwd | sed -e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;3,$d&amp;#39;&lt;/span&gt; -e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;s/bash/blueshell/&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;  root:x:0:0:root:/root:/bin/blueshell
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;  daemon:x:1:1:daemon:/usr/sbin:/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;-e&lt;/code&gt;表示多点编辑，第一个编辑命令删除/etc/passwd第三行到末尾的数据，第二条命令搜索bash替换为blueshell。&lt;/p&gt;
+&lt;h3 id=&#34;直接修改文件内容危险动作&#34;&gt;直接修改文件内容(危险动作)&lt;/h3&gt;
+&lt;p&gt;sed 可以直接修改文件的内容，不必使用管道命令或数据流重导向！ 不过，由於这个动作会直接修改到原始的文件，所以请你千万不要随便拿系统配置来测试！ 我们还是使用下载的 regular_express.txt 文件来测试看看吧！&lt;/p&gt;
+&lt;p&gt;利用 sed 将 regular_express.txt 内每一行结尾若为 . 则换成 !&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@www ~&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# sed -i &amp;#39;s/\.$/\!/g&amp;#39; regular_express.txt&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;利用 sed 直接在 regular_express.txt 最后一行加入『# This is a test』&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@www ~&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# sed -i &amp;#39;$a # This is a test&amp;#39; regular_express.txt&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;由於 $ 代表的是最后一行，而 a 的动作是新增，因此该文件最后新增『# This is a test』！&lt;/p&gt;
+&lt;p&gt;sed 的『 -i 』选项可以直接修改文件内容，这功能非常有帮助！举例来说，如果你有一个 100 万行的文件，你要在第 100 行加某些文字，此时使用 vim 可能会疯掉！因为文件太大了！那怎办？就利用 sed 啊！透过 sed 直接修改/取代的功能，你甚至不需要使用 vim 去修订！&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Linux 下 su 和 su - 的区别</title>
+        <link>https://lxb.wiki/686a477f/</link>
+        <pubDate>Sat, 13 Feb 2021 21:24:47 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/686a477f/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;大部分Linux发行版的默认账户是普通用户，而更改系统文件或者执行某些命令，需要root身份才能进行，这就需要从当前用户切换到root用户。Linux中切换用户的命令是su或su -。前天我在使用useradd这个命令时，才体会到这两者的本质区别。如图：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210503112328.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;我首先是用su命令切换到root身份的，但是运行useradd时，出现错误：bash: useradd: command not found。google了一下，原因是在这个用su命令切换过来的root用户上。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;su命令和su -命令最大的本质区别就是：前者只是切换了root身份，但Shell环境仍然是普通用户的Shell；而后者连用户和Shell环境一起切换成root身份了。只有切换了Shell环境才不会出现PATH环境变量错误。su切换成root用户以后，pwd一下，发现工作目录仍然是普通用户的工作目录；而用su -命令切换以后，工作目录变成root的工作目录了。用echo $PATH命令看一下su和su -以后的环境变量有何不同。以此类推，要从当前用户切换到其它用户也一样，应该使用su -命令。&lt;/strong&gt; 如图：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210503112427.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Linux 守护进程的启动方法</title>
+        <link>https://lxb.wiki/2e3ff18f/</link>
+        <pubDate>Tue, 03 Nov 2020 20:49:04 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/2e3ff18f/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;http://baike.baidu.com/view/53123.htm&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&amp;ldquo;守护进程&amp;rdquo;&lt;/a&gt;（daemon）就是一直在后台运行的进程（daemon）。&lt;/p&gt;
+&lt;p&gt;如何将一个 Web 应用，启动为守护进程。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/201130/00.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;1-问题的由来&#34;&gt;1 问题的由来&lt;/h2&gt;
+&lt;p&gt;Web应用写好后，下一件事就是启动，让它一直在后台运行。&lt;/p&gt;
+&lt;p&gt;这并不容易。举例来说，下面是一个最简单的Node应用&lt;code&gt;server.js&lt;/code&gt;，只有6行。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;require&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;http&amp;#39;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;createServer&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;req&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;res&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;res&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;writeHead&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;200&lt;/span&gt;, {&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Content-Type&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;text/plain&amp;#39;&lt;/span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;res&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;end&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Hello World&amp;#39;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}).&lt;span style=&#34;color:#a6e22e&#34;&gt;listen&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;5000&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;你在命令行下启动它。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ node server.js
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;看上去一切正常，所有人都能快乐地访问 5000 端口了。但是，一旦你退出命令行窗口，这个应用就一起退出了，无法访问了。&lt;/p&gt;
+&lt;p&gt;怎么才能让它变成系统的守护进程（daemon），成为一种服务（service），一直在那里运行呢？&lt;/p&gt;
+&lt;h2 id=&#34;2-前台任务与后台任务&#34;&gt;2 前台任务与后台任务&lt;/h2&gt;
+&lt;p&gt;上面这样启动的脚本，称为&amp;quot;前台任务&amp;quot;（foreground job）。它会独占命令行窗口，只有运行完了或者手动中止，才能执行其他命令。&lt;/p&gt;
+&lt;p&gt;变成守护进程的第一步，就是把它改成&amp;quot;后台任务&amp;quot;（background job）。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ node server.js &amp;amp;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;只要在命令的尾部加上符号&lt;code&gt;&amp;amp;&lt;/code&gt;，启动的进程就会成为&amp;quot;后台任务&amp;quot;。如果要让正在运行的&amp;quot;前台任务&amp;quot;变为&amp;quot;后台任务&amp;quot;，可以先按&lt;code&gt;ctrl + z&lt;/code&gt;，然后执行&lt;code&gt;bg&lt;/code&gt;命令（让最近一个暂停的&amp;quot;后台任务&amp;quot;继续执行）。&lt;/p&gt;
+&lt;p&gt;&amp;ldquo;后台任务&amp;quot;有两个特点。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;继承当前 session （对话）的标准输出（stdout）和标准错误（stderr）。因此，后台任务的所有输出依然会同步地在命令行下显示。&lt;/li&gt;
+&lt;li&gt;不再继承当前 session 的标准输入（stdin）。你无法向这个任务输入指令了。如果它试图读取标准输入，就会暂停执行（halt）。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;可以看到，&amp;ldquo;后台任务&amp;quot;与&amp;quot;前台任务&amp;quot;的本质区别只有一个：是否继承标准输入。所以，执行后台任务的同时，用户还可以输入其他命令。&lt;/p&gt;
+&lt;h2 id=&#34;3-sighup信号&#34;&gt;3 SIGHUP信号&lt;/h2&gt;
+&lt;p&gt;变为&amp;quot;后台任务&amp;quot;后，一个进程是否就成为了守护进程呢？或者说，用户退出 session 以后，&amp;ldquo;后台任务&amp;quot;是否还会继续执行？&lt;/p&gt;
+&lt;p&gt;Linux系统是这样设计的。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;用户准备退出 session&lt;/li&gt;
+&lt;li&gt;系统向该 session 发出&lt;code&gt;SIGHUP&lt;/code&gt;信号&lt;/li&gt;
+&lt;li&gt;session 将&lt;code&gt;SIGHUP&lt;/code&gt;信号发给所有子进程&lt;/li&gt;
+&lt;li&gt;子进程收到&lt;code&gt;SIGHUP&lt;/code&gt;信号后，自动退出&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;上面的流程解释了，为什么&amp;quot;前台任务&amp;quot;会随着 session 的退出而退出：因为它收到了&lt;code&gt;SIGHUP&lt;/code&gt;信号。&lt;/p&gt;
+&lt;p&gt;那么，&amp;ldquo;后台任务&amp;quot;是否也会收到&lt;code&gt;SIGHUP&lt;/code&gt;信号？&lt;/p&gt;
+&lt;p&gt;这由 Shell 的&lt;code&gt;huponexit&lt;/code&gt;参数决定的。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ shopt | grep huponexit
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;执行上面的命令，就会看到&lt;code&gt;huponexit&lt;/code&gt;参数的值。&lt;/p&gt;
+&lt;p&gt;大多数Linux系统，这个参数默认关闭（&lt;code&gt;off&lt;/code&gt;）。因此，session 退出的时候，不会把&lt;code&gt;SIGHUP&lt;/code&gt;信号发给&amp;quot;后台任务&amp;rdquo;。所以，一般来说，&amp;ldquo;后台任务&amp;quot;不会随着 session 一起退出。&lt;/p&gt;
+&lt;h2 id=&#34;4-disown-命令&#34;&gt;4 disown 命令&lt;/h2&gt;
+&lt;p&gt;通过&amp;quot;后台任务&amp;quot;启动&amp;quot;守护进程&amp;quot;并不保险，因为有的系统的&lt;code&gt;huponexit&lt;/code&gt;参数可能是打开的（&lt;code&gt;on&lt;/code&gt;）。&lt;/p&gt;
+&lt;p&gt;更保险的方法是使用&lt;code&gt;disown&lt;/code&gt;命令。它可以将指定任务从&amp;quot;后台任务&amp;quot;列表（&lt;code&gt;jobs&lt;/code&gt;命令的返回结果）之中移除。一个&amp;quot;后台任务&amp;quot;只要不在这个列表之中，session 就肯定不会向它发出&lt;code&gt;SIGHUP&lt;/code&gt;信号。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ node server.js &amp;amp;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ disown
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;执行上面的命令以后，&lt;code&gt;server.js&lt;/code&gt;进程就被移出了&amp;quot;后台任务&amp;quot;列表。你可以执行&lt;code&gt;jobs&lt;/code&gt;命令验证，输出结果里面，不会有这个进程。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;disown&lt;/code&gt;的用法如下。&lt;/p&gt;
+&lt;p&gt;​&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 移出最近一个正在执行的后台任务&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ disown
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 移出所有正在执行的后台任务&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ disown -r
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 移出所有后台任务&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ disown -a
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 不移出后台任务，但是让它们不会收到SIGHUP信号&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ disown -h
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 根据jobId，移出指定的后台任务&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ disown %2
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ disown -h %2
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;5-标准-io&#34;&gt;5 标准 I/O&lt;/h2&gt;
+&lt;p&gt;使用&lt;code&gt;disown&lt;/code&gt;命令之后，还有一个问题。那就是，退出 session 以后，如果后台进程与标准I/O有交互，它还是会挂掉。&lt;/p&gt;
+&lt;p&gt;还是以上面的脚本为例，现在加入一行。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;require&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;http&amp;#39;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;createServer&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;req&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;res&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;server starts...&amp;#39;&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;// 加入此行
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;res&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;writeHead&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;200&lt;/span&gt;, {&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Content-Type&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;text/plain&amp;#39;&lt;/span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;res&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;end&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Hello World&amp;#39;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}).&lt;span style=&#34;color:#a6e22e&#34;&gt;listen&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;5000&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;启动上面的脚本，然后再执行&lt;code&gt;disown&lt;/code&gt;命令。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ node server.js &amp;amp;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ disown
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;接着，你退出 session，访问5000端口，就会发现连不上。&lt;/p&gt;
+&lt;p&gt;这是因为&amp;quot;后台任务&amp;quot;的标准 I/O 继承自当前 session，&lt;code&gt;disown&lt;/code&gt;命令并没有改变这一点。一旦&amp;quot;后台任务&amp;quot;读写标准 I/O，就会发现它已经不存在了，所以就报错终止执行。&lt;/p&gt;
+&lt;p&gt;为了解决这个问题，需要对&amp;quot;后台任务&amp;quot;的标准 I/O 进行重定向。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ node server.js &amp;gt; stdout.txt 2&amp;gt; stderr.txt &amp;lt; /dev/null &amp;amp;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ disown
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;p&gt;上面这样执行，基本上就没有问题了。&lt;/p&gt;
+&lt;h2 id=&#34;6-nohup-命令&#34;&gt;6 nohup 命令&lt;/h2&gt;
+&lt;p&gt;还有比&lt;code&gt;disown&lt;/code&gt;更方便的命令，就是&lt;code&gt;nohup&lt;/code&gt;。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ nohup node server.js &amp;amp;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;p&gt;&lt;code&gt;nohup&lt;/code&gt;命令对&lt;code&gt;server.js&lt;/code&gt;进程做了三件事。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;阻止&lt;code&gt;SIGHUP&lt;/code&gt;信号发到这个进程。&lt;/li&gt;
+&lt;li&gt;关闭标准输入。该进程不再能够接收任何输入，即使运行在前台。&lt;/li&gt;
+&lt;li&gt;重定向标准输出和标准错误到文件&lt;code&gt;nohup.out&lt;/code&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;也就是说，&lt;code&gt;nohup&lt;/code&gt;命令实际上将子进程与它所在的 session 分离了。&lt;/p&gt;
+&lt;p&gt;注意，&lt;code&gt;nohup&lt;/code&gt;命令不会自动把进程变为&amp;quot;后台任务&amp;rdquo;，所以必须加上&lt;code&gt;&amp;amp;&lt;/code&gt;符号。&lt;/p&gt;
+&lt;h2 id=&#34;7-screen-命令与-tmux-命令&#34;&gt;7 Screen 命令与 Tmux 命令&lt;/h2&gt;
+&lt;p&gt;另一种思路是使用 terminal multiplexer （终端复用器：在同一个终端里面，管理多个session），典型的就是 &lt;a class=&#34;link&#34; href=&#34;https://www.gnu.org/software/screen/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Screen&lt;/a&gt; 命令和 &lt;a class=&#34;link&#34; href=&#34;https://tmux.github.io/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Tmux&lt;/a&gt; 命令。&lt;/p&gt;
+&lt;p&gt;它们可以在当前 session 里面，新建另一个 session。这样的话，当前 session 一旦结束，不影响其他 session。而且，以后重新登录，还可以再连上早先新建的 session。&lt;/p&gt;
+&lt;p&gt;Screen 的用法如下。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 新建一个 session&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ screen
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ node server.js
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;p&gt;然后，按下&lt;code&gt;ctrl + A&lt;/code&gt;和&lt;code&gt;ctrl + D&lt;/code&gt;，回到原来的 session，从那里退出登录。下次登录时，再切回去。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ screen -r
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;p&gt;如果新建多个后台 session，就需要为它们指定名字。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ screen -S name
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 切回指定 session&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ screen -r name
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ screen -r pid_number
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 列出所有 session&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ screen -ls
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;p&gt;如果要停掉某个 session，可以先切回它，然后按下&lt;code&gt;ctrl + c&lt;/code&gt;和&lt;code&gt;ctrl + d&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;Tmux 比 Screen 功能更多、更强大，它的基本用法如下。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ tmux
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ node server.js
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 返回原来的session&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ tmux detach
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;p&gt;除了&lt;code&gt;tmux detach&lt;/code&gt;，另一种方法是按下&lt;code&gt;Ctrl + B&lt;/code&gt;和&lt;code&gt;d&lt;/code&gt; ，也可以回到原来的 session。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 下次登录时，返回后台正在运行服务session&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ tmux attach
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;p&gt;如果新建多个 session，就需要为每个 session 指定名字。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 新建 session&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ tmux new -s session_name
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 切换到指定 session&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ tmux attach -t session_name
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 列出所有 session&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ tmux list-sessions
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 退出当前 session，返回前一个 session &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ tmux detach
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 杀死指定 session&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ tmux kill-session -t session-name
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;h2 id=&#34;8-node-工具&#34;&gt;8 Node 工具&lt;/h2&gt;
+&lt;p&gt;对于 Node 应用来说，可以不用上面的方法，有一些专门用来启动的工具：&lt;a class=&#34;link&#34; href=&#34;https://github.com/foreverjs/forever&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;forever&lt;/a&gt;，&lt;a class=&#34;link&#34; href=&#34;http://nodemon.io/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;nodemon&lt;/a&gt; 和 &lt;a class=&#34;link&#34; href=&#34;http://pm2.keymetrics.io/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;pm2&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;forever 的功能很简单，就是保证进程退出时，应用会自动重启。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 作为前台任务启动&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ forever server.js
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 作为服务进程启动 &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ forever start app.js
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 停止服务进程&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ forever stop Id
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 重启服务进程&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ forever restart Id
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 监视当前目录的文件变动，一有变动就重启&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ forever -w server.js
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# -m 参数指定最多重启次数&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ forever -m &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt; server.js 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 列出所有进程&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ forever list
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;p&gt;&lt;code&gt;nodemon&lt;/code&gt;一般只在开发时使用，它最大的长处在于 watch 功能，一旦文件发生变化，就自动重启进程。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 默认监视当前目录的文件变化&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ nodemon server.js
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;＃ 监视指定文件的变化   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ nodemon --watch app --watch libs server.js  
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;p&gt;pm2 的功能最强大，除了重启进程以外，还能实时收集日志和监控。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 启动应用&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ pm2 start app.js
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 指定同时起多少个进程（由CPU核心数决定），组成一个集群&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ pm2 start app.js -i max
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 列出所有任务&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ pm2 list
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 停止指定任务&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ pm2 stop &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;＃ 重启指定任务
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ pm2 restart &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 删除指定任务&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ pm2 delete &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 保存当前的所有任务，以后可以恢复&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ pm2 save
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 列出每个进程的统计数据&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ pm2 monit
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 查看所有日志&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ pm2 logs
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 导出数据&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ pm2 dump
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 重启所有进程&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ pm2 kill
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ pm2 resurect
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 启动web界面 http://localhost:9615&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ pm2 web
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;h2 id=&#34;9-systemd&#34;&gt;9 Systemd&lt;/h2&gt;
+&lt;p&gt;除了专用工具以外，Linux系统有自己的守护进程管理工具 Systemd 。它是操作系统的一部分，直接与内核交互，性能出色，功能极其强大。我们完全可以将程序交给 Systemd ，让系统统一管理，成为真正意义上的系统服务。&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>目录切换：dirs、pushd、popd命令</title>
+        <link>https://lxb.wiki/1ca354f7/</link>
+        <pubDate>Sun, 01 Nov 2020 21:05:57 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/1ca354f7/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;h2 id=&#34;目录栈指令&#34;&gt;目录栈指令&lt;/h2&gt;
+&lt;p&gt;目录栈是用户最近访问过的系统目录列表，并以堆栈的形式管理。栈中的内容与Shell环境变量 &lt;code&gt;DIRSTACK&lt;/code&gt; 的值对应&lt;/p&gt;
+&lt;h3 id=&#34;1-dirs&#34;&gt;1 dirs&lt;/h3&gt;
+&lt;h4 id=&#34;11-功能&#34;&gt;1.1 功能&lt;/h4&gt;
+&lt;p&gt;显示当前目录栈中的所有记录（不带参数的dirs命令显示当前目录栈中的记录）&lt;/p&gt;
+&lt;h4 id=&#34;12-语法&#34;&gt;1.2 语法&lt;/h4&gt;
+&lt;p&gt;&lt;strong&gt;格式：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;dirs [-clpv] [+n] [-n]&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;选项&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;-c  删除目录栈中的所有记录&lt;/li&gt;
+&lt;li&gt;-l   以完整格式显示(绝对路径)&lt;/li&gt;
+&lt;li&gt;-p  一个目录一行的方式显示&lt;/li&gt;
+&lt;li&gt;-v  每行一个目录来显示目录栈的内容，每个目录前加上的编号&lt;/li&gt;
+&lt;li&gt;+N 显示从左到右的第n个目录，数字从0开始&lt;/li&gt;
+&lt;li&gt;-N  显示从右到左的第n个日录，数字从0开始&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;注意：dirs始终显示当人们目录, 再是堆栈中的内容；即使目录堆栈为空, dirs命令仍然只显示当前目录&lt;/p&gt;
+&lt;h3 id=&#34;2-pushd&#34;&gt;2 pushd&lt;/h3&gt;
+&lt;h4 id=&#34;21-功能&#34;&gt;2.1 功能&lt;/h4&gt;
+&lt;p&gt;将目录加入到栈顶部，并切换到该目录；若 &lt;code&gt;pushd&lt;/code&gt; 命令不加任何参数，则会将位于记录栈最上面的2个目录对换位置&lt;/p&gt;
+&lt;h4 id=&#34;22-语法&#34;&gt;2.2 语法&lt;/h4&gt;
+&lt;p&gt;&lt;strong&gt;格式：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;pushd [目录 | -N | +N]  [-n]&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;选项&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;目录  将该目录加入到栈顶，并执行&amp;quot;cd 目录&amp;quot;，切换到该目录&lt;/li&gt;
+&lt;li&gt;+N  将第N个目录移至栈顶（从左边数起，数字从0开始）&lt;/li&gt;
+&lt;li&gt;-N  将第N个目录移至栈顶（从右边数起，数字从0开始）&lt;/li&gt;
+&lt;li&gt;-n  将目录入栈时，不切换目录&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;3-popd&#34;&gt;3 popd&lt;/h3&gt;
+&lt;h4 id=&#34;31-功能&#34;&gt;3.1 功能&lt;/h4&gt;
+&lt;p&gt;删除目录栈中的记录；如果popd命令不加任何参数，则会先删除目录栈最上面的记录，然后切换到删除过后的目录栈中的最上面的目录&lt;/p&gt;
+&lt;h4 id=&#34;32-语法&#34;&gt;3.2 语法&lt;/h4&gt;
+&lt;p&gt;&lt;strong&gt;格式：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;pushd [-N | +N]  [-n]&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;选项&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;+N  将第N个目录删除（从左边数起，数字从0开始）&lt;/li&gt;
+&lt;li&gt;-N  将第N个目录删除（从右边数起，数字从0开始）&lt;/li&gt;
+&lt;li&gt;-n  将目录出栈时，不切换目录&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;4-示例&#34;&gt;4 示例&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;入栈与出栈&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@root&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;:~# mkdir /root/dir&lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;1,2,3,4&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@root&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;:~# &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;((&lt;/span&gt;i&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;1;i&amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;4;i++&lt;span style=&#34;color:#f92672&#34;&gt;))&lt;/span&gt;; &lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt; pushd /root/dir&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;i&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;; &lt;span style=&#34;color:#66d9ef&#34;&gt;done&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/root/dir1 ~
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/root/dir2 /root/dir1 ~
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/root/dir3 /root/dir2 /root/dir1 ~
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/root/dir4 /root/dir3 /root/dir2 /root/dir1 ~
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@root:/root/dir4&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# dirs &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/root/dir4 /root/dir3 /root/dir2 /root/dir1 ~
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;dirs显出了栈中的所有目录
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@root:/root/dir4&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# popd（相当于popd +0）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/root/dir3 /root/dir2 /root/dir1 ~
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@root:/root/dir3&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# dirs&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/root/dir3 /root/dir2 /root/dir1 ~
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;可以看出/root/dir4目录已被清除，此时栈里已经没有了dir4目录，切当前目录切换为dir3
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@root:/root/dir3&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# pushd /root/dir4 &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/root/dir4 /root/dir3 /root/dir2 /root/dir1 ~
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@root:/root/dir4&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;不推荐以上面的方法进行切换，因为这种方式和cd没有区别。
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@root:/root/dir4&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# popd +1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/root/dir4 /root/dir2 /root/dir1 ~
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;推荐以这种方式进行切换，尤其是目录层次比较多时
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@root:/root/dir4&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# popd -2&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/root/dir4 /root/dir1 ~
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@root:/root/dir2&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# pushd -1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/root/dir1 ~ /root/dir2 /root/dir3 /root/dir4
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@root:/root/dir3&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;注意：最左边表示栈顶，最右边表示栈底
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;清空栈&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@root&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;:~# dirs
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;~ /root/dir2 /root/dir3 /root/dir4 /root/dir1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@root&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;:~# dirs -c
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@root&lt;span style=&#34;color:#f92672&#34;&gt;](&lt;/span&gt;mailto:root@root&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;:~# dirs
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;~
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;列表形式显示的栈的内容&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@root:/root/dir4&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# dirs -l -v&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; /root/dir4
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; /root/dir3
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; /root/dir2
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; /root/dir1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt; /root
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;注：如果只是两个目录之间的切换 &lt;code&gt;cd -&lt;/code&gt;足矣，而且方便。&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>sed替换含有路径的字符串</title>
+        <link>https://lxb.wiki/e4c7cf89/</link>
+        <pubDate>Sun, 13 Sep 2020 21:16:00 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/e4c7cf89/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;h3 id=&#34;问题描述&#34;&gt;问题描述&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;sed -i &amp;quot;s/old/new/g&amp;quot; file.txt&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;如果 &lt;code&gt;new&lt;/code&gt; 是个路径，即字符串中含有&lt;code&gt;/&lt;/code&gt;，这么执行会报错&lt;/p&gt;
+&lt;h3 id=&#34;初级思路&#34;&gt;初级思路&lt;/h3&gt;
+&lt;p&gt;把 &lt;code&gt;new&lt;/code&gt; 中的 &lt;code&gt;/&lt;/code&gt; 进行转义&lt;/p&gt;
+&lt;p&gt;比如 &lt;code&gt;new&lt;/code&gt; 为 &lt;code&gt;/home/users/config.yaml&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;替换时&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sed -i &amp;quot;s/old/\/home\/users\/config.yaml/g&amp;quot; file.txt&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;如果 &lt;code&gt;new&lt;/code&gt; 是变量，&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;new&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/home/users/config.yaml&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;new_sed&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;$(&lt;/span&gt;echo $new | sed -e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;s/\//\\\//g&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sed -i &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;s/old/&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;new_sed&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/g&amp;#34;&lt;/span&gt; file.txt
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;更好的解决方案&#34;&gt;更好的解决方案&lt;/h3&gt;
+&lt;p&gt;转义会降低可读性，只需用其他特殊字符作为&lt;code&gt;sed&lt;/code&gt;表达式的“分隔符”（取代默认的&lt;code&gt;/&lt;/code&gt;）即可。
+例如：&lt;code&gt;sed &#39;s#\$CONFIG#/home/users/config.yaml#g&#39;&lt;/code&gt;，使用&lt;code&gt;#&lt;/code&gt;代替&lt;code&gt;/&lt;/code&gt;从而避免大量转义。&lt;/p&gt;
+&lt;p&gt;你可以尝试一下 &lt;code&gt;echo aabbccdd | sed &#39;s#aa#bb#g&#39; | sed &#39;s?bb?cc?g&#39; | sed &#39;s@cc@dd@g&#39; | sed &#39;s%dd%ee%g&#39;&lt;/code&gt;  用任意字符作间隔&lt;/p&gt;
+&lt;p&gt;这是 &lt;code&gt;sed &lt;/code&gt; 命令方便用户的一个特性，&lt;code&gt;vim&lt;/code&gt; 中的 &lt;code&gt;:s&lt;/code&gt; 也同样支持&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>非实时信号表</title>
+        <link>https://lxb.wiki/c77ce28f/</link>
+        <pubDate>Sat, 15 Feb 2020 19:19:45 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/c77ce28f/</guid>
+        <description>&lt;h1 id=&#34;信号类型&#34;&gt;信号类型&lt;/h1&gt;
+&lt;p&gt;Linux系统共定义了64种信号，分为两大类：可靠信号与不可靠信号，前32种信号为不可靠信号，后32种为可靠信号。&lt;/p&gt;
+&lt;h3 id=&#34;概念&#34;&gt;概念&lt;/h3&gt;
+&lt;p&gt;不可靠信号： 也称为非实时信号，不支持排队，信号可能会丢失, 比如发送多次相同的信号, 进程只能收到一次. 信号值取值区间为&lt;code&gt;1~31&lt;/code&gt;；
+可靠信号： 也称为实时信号，支持排队, 信号不会丢失, 发多少次, 就可以收到多少次. 信号值取值区间为&lt;code&gt;32~64&lt;/code&gt;&lt;/p&gt;
+&lt;h3 id=&#34;信号表&#34;&gt;信号表&lt;/h3&gt;
+&lt;p&gt;在终端，可通过kill -l查看所有的signal信号&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:left&#34;&gt;取值&lt;/th&gt;
+&lt;th style=&#34;text-align:left&#34;&gt;名称&lt;/th&gt;
+&lt;th style=&#34;text-align:left&#34;&gt;解释&lt;/th&gt;
+&lt;th style=&#34;text-align:left&#34;&gt;默认动作&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;1&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGHUP&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;挂起&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;2&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGINT&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;中断&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;3&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGQUIT&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;退出&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;4&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGILL&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;非法指令&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;5&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGTRAP&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;断点或陷阱指令&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;6&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGABRT&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;abort发出的信号&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;7&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGBUS&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;非法内存访问&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;8&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGFPE&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;浮点异常&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;9&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGKILL&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;kill信号&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;不能被忽略、处理和阻塞&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;10&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGUSR1&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;用户信号1&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;11&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGSEGV&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;无效内存访问&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;12&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGUSR2&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;用户信号2&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;13&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGPIPE&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;管道破损，没有读端的管道写数据&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;14&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGALRM&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;alarm发出的信号&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;15&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGTERM&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;终止信号&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;16&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGSTKFLT&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;栈溢出&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;17&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGCHLD&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;子进程退出&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;默认忽略&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;18&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGCONT&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;进程继续&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;19&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGSTOP&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;进程停止&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;不能被忽略、处理和阻塞&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;20&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGTSTP&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;进程停止&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;21&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGTTIN&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;进程停止，后台进程从终端读数据时&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;22&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGTTOU&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;进程停止，后台进程想终端写数据时&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;23&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGURG&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;I/O有紧急数据到达当前进程&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;默认忽略&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;24&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGXCPU&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;进程的CPU时间片到期&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;25&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGXFSZ&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;文件大小的超出上限&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;26&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGVTALRM&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;虚拟时钟超时&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;27&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGPROF&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;profile时钟超时&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;28&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGWINCH&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;窗口大小改变&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;默认忽略&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;29&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGIO&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;I/O相关&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;30&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGPWR&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;关机&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;默认忽略&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;31&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;SIGSYS&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;系统调用异常&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+</description>
+        </item>
+        <item>
+        <title>CentOS释放被占用端口</title>
+        <link>https://lxb.wiki/2d1cc7f9/</link>
+        <pubDate>Thu, 10 Oct 2019 00:36:59 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/2d1cc7f9/</guid>
+        <description>&lt;p&gt;&lt;strong&gt;场景:&lt;/strong&gt;
+在前面的某些操作中, 启动某进程时, 监听8080 和 443 端口, 后进程关闭, 这两个端口却一直处于占用状态, 导致后面再起进程想监听这两个端口时, 启动报错&lt;/p&gt;
+&lt;p&gt;1.输入netstat -tln,查看系统当前所有被占用端口,主要是为了查看你的端口是否真正的被占用着,搭建可以看到我的9001,和9002端口都已经被占用了,所以我需要释放这两个端口&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201003213.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;listen-port&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;2.根据端口查询进程,输入lsof -i :9001,切记不要忘了添加冒号,如下图,就可以看到当前被占用的端口的进程
+的进程编号&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201201003347.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;ol start=&#34;3&#34;&gt;
+&lt;li&gt;kill 掉PID&lt;/li&gt;
+&lt;li&gt;再&lt;code&gt;netstat -tln&lt;/code&gt; 确认下, 然后就可以起进程了&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+        </item>
+        <item>
+        <title>xargs</title>
+        <link>https://lxb.wiki/38dfadad/</link>
+        <pubDate>Tue, 20 Aug 2019 01:14:58 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/38dfadad/</guid>
+        <description>&lt;p&gt;xargs 是给命令传递参数的一个过滤器，也是组合多个命令的一个工具。&lt;/p&gt;
+&lt;p&gt;xargs 可以将管道或标准输入（stdin）数据转换成命令行参数，也能够从文件的输出中读取数据。&lt;/p&gt;
+&lt;p&gt;xargs 也可以将单行或多行文本输入转换为其他格式，例如多行变单行，单行变多行。&lt;/p&gt;
+&lt;p&gt;xargs 默认的命令是 echo，这意味着通过管道传递给 xargs 的输入将会包含换行和空白，不过通过 xargs 的处理，换行和空白将被空格取代。&lt;/p&gt;
+&lt;p&gt;xargs 是一个强有力的命令，它能够捕获一个命令的输出，然后传递给另外一个命令。&lt;/p&gt;
+&lt;p&gt;之所以能用到这个命令，关键是由于很多命令不支持|管道来传递参数，而日常工作中有有这个必要，所以就有了 xargs 命令&lt;/p&gt;
+&lt;p&gt;例如:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;find /sbin -perm 700 |ls -l       #这个命令是错误的
+find /sbin -perm 700 |xargs ls -l   #这样才是正确的
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;命令格式&lt;/strong&gt;
+&lt;code&gt;somecommand |xargs -item command&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;重要参数:&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;-i 或者是-I，这得看linux支持了，将xargs的每项名称，一般是一行一行赋值给 {}，可以用 {} 代替。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;其他参数:&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;-a file 从文件中读入作为sdtin&lt;/li&gt;
+&lt;li&gt;-e flag ，注意有的时候可能会是-E，flag必须是一个以空格分隔的标志，当xargs分析到含有flag这个标志的时候就停止。&lt;/li&gt;
+&lt;li&gt;-p 当每次执行一个argument的时候询问一次用户。&lt;/li&gt;
+&lt;li&gt;-n num 后面加次数，表示命令在执行的时候一次用的argument的个数，默认是用所有的。&lt;/li&gt;
+&lt;li&gt;-t 表示先打印命令，然后再执行。&lt;/li&gt;
+&lt;li&gt;-r no-run-if-empty 当xargs的输入为空的时候则停止xargs，不用再去执行了。&lt;/li&gt;
+&lt;li&gt;-s num 命令行的最大字符数，指的是 xargs 后面那个命令的最大命令行字符数。&lt;/li&gt;
+&lt;li&gt;-L num 从标准输入一次读取 num 行送给 command 命令。&lt;/li&gt;
+&lt;li&gt;-l 同 -L。&lt;/li&gt;
+&lt;li&gt;-d delim 分隔符，默认的xargs分隔符是回车，argument的分隔符是空格，这里修改的是xargs的分隔符。&lt;/li&gt;
+&lt;li&gt;-x exit的意思，主要是配合-s使用。。&lt;/li&gt;
+&lt;li&gt;-P 修改最大的进程数，默认是1，为0时候为as many as it can ，这个例子我没有想到，应该平时都用不到的吧。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;实例&#34;&gt;实例:&lt;/h4&gt;
+&lt;h5 id=&#34;1-多行变成单行&#34;&gt;1. 多行变成单行&lt;/h5&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# cat test.txt
+
+a b c d e f g
+h i j k l m n
+o p q
+r s t
+u v w x y z
+&lt;/code&gt;&lt;/pre&gt;&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# cat test.txt | xargs
+a b c d e f g h i j k l m n o p q r s t u v w x y z
+&lt;/code&gt;&lt;/pre&gt;&lt;h5 id=&#34;2-一次使用n个参数&#34;&gt;2. 一次使用n个参数&lt;/h5&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# cat test.txt | xargs -n3
+
+a b c
+d e f
+g h i
+j k l
+m n o
+p q r
+s t u
+v w x
+y z
+&lt;/code&gt;&lt;/pre&gt;&lt;h5 id=&#34;3-d选项指定分隔符&#34;&gt;3. d选项指定分隔符&lt;/h5&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# echo &amp;#34;nameXnameXnameXname&amp;#34; | xargs -dX
+
+name name name name
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;结合&lt;code&gt;-n&lt;/code&gt; 选项使用&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# echo &amp;#34;nameXnameXnameXname&amp;#34; | xargs -dX -n2
+
+name name
+name name
+&lt;/code&gt;&lt;/pre&gt;&lt;h5 id=&#34;4-i选项的使用&#34;&gt;4. I选项的使用&lt;/h5&gt;
+&lt;h6 id=&#34;41-获取参数并替换&#34;&gt;4.1 获取参数并替换&lt;code&gt;{}&lt;/code&gt;&lt;/h6&gt;
+&lt;p&gt;假设一个命令为 &lt;a class=&#34;link&#34; href=&#34;http://sk.sh/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;sk.sh&lt;/a&gt; 和一个保存参数的文件 arg.txt：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;#!/bin/bash
+#sk.sh命令内容，打印出所有参数。
+
+echo $*
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;arg.txt.文件内容&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# cat arg.txt
+
+aaa
+bbb
+ccc
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;xargs&lt;/code&gt; 的一个选项 &lt;code&gt;-I&lt;/code&gt;，使用 &lt;code&gt;-I&lt;/code&gt; 指定一个替换字符串 &lt;code&gt;{}&lt;/code&gt;，这个字符串在 &lt;code&gt;xargs&lt;/code&gt; 扩展时会被替换掉，当 &lt;code&gt;-I&lt;/code&gt; 与 &lt;code&gt;xargs&lt;/code&gt; 结合使用，每一个参数命令都会被执行一次：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# cat arg.txt | xargs -I {} ./sk.sh sombefore {} someafter
+
+sombefore aaa someafter
+sombefore bbb someafter
+sombefore ccc someafter
+&lt;/code&gt;&lt;/pre&gt;&lt;h6 id=&#34;42-复制文件实例&#34;&gt;4.2 复制文件实例&lt;/h6&gt;
+&lt;p&gt;复制所有图片文件到 /data/images 目录下：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;ls *.jpg | xargs -n1 -I {} cp {} /data/images/
+&lt;/code&gt;&lt;/pre&gt;&lt;h6 id=&#34;43-xargs-结合find-使用&#34;&gt;4.3 xargs 结合find 使用&lt;/h6&gt;
+&lt;p&gt;用 rm 删除太多的文件时候，可能得到一个错误信息：&lt;code&gt;/bin/rm Argument list too long.&lt;/code&gt; 用 xargs 去避免这个问题：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;find . -type f -name &amp;quot;*.log&amp;quot; -print0 | xargs -0 rm -f&lt;/code&gt; xargs -0 将 \0 作为定界符。&lt;/p&gt;
+&lt;p&gt;统计一个源代码目录中所有 php 文件的行数： &lt;code&gt;find . -type f -name &amp;quot;*.php&amp;quot; -print0 | xargs -0 wc -l&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;查找所有的 jpg 文件，并且压缩它们： &lt;code&gt;find . -type f -name &amp;quot;*.jpg&amp;quot; -print | xargs tar -czvf images.tar.gz&lt;/code&gt;&lt;/p&gt;
+&lt;h6 id=&#34;44-下载多个文件&#34;&gt;4.4 下载多个文件&lt;/h6&gt;
+&lt;p&gt;假如你有一个文件包含了很多你希望下载的 URL，你能够使用 xargs下载所有链接： &lt;code&gt;# cat url-list.txt | xargs wget -c&lt;/code&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>date 命令转换时间戳</title>
+        <link>https://lxb.wiki/7b4019ad/</link>
+        <pubDate>Mon, 10 Jun 2019 16:59:14 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/7b4019ad/</guid>
+        <description>&lt;p&gt;给定时间戳, 转换成日期
+网上所有的命令都是
+&lt;code&gt;date -d @$stamp &amp;quot;+%Y-%m-%d&amp;quot;&lt;/code&gt;
+但是一直提示
+&lt;code&gt;date: invalid date&lt;/code&gt;@stamp&amp;rsquo;&lt;code&gt; 带上&amp;quot;@&amp;quot; 符号, 就参数错误 正确使用方法:&lt;/code&gt;date -d &amp;ldquo;1970-01-01 UTC 1287331200 seconds&amp;rdquo; +%F&lt;code&gt; 或者使用awk&lt;/code&gt;awk &amp;lsquo;{print strftime(&amp;quot;%Y%m&amp;quot;, 1287331200)}&amp;rsquo;&lt;code&gt; 调用外部命令耗时比较长, 更高效的方法:&lt;/code&gt;printf &amp;ldquo;%(%Y%m)T\n&amp;rdquo; &amp;ldquo;$str&amp;rdquo; &amp;raquo; file&lt;code&gt; 如果bash 版本低于4, printf 不支持打印日期格式, 因此使用 下面这个bash&lt;/code&gt;/opt/compiler/gcc-4.8.2/bin/bash`&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Shell数组笔记</title>
+        <link>https://lxb.wiki/21c4d609/</link>
+        <pubDate>Thu, 30 Aug 2018 22:33:15 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/21c4d609/</guid>
+        <description>&lt;p&gt;Bash shell 只支持一维数组. 初始化时不需要定义数组大小(与 PHP 类似). 数组元素的下标由0开始&lt;/p&gt;
+&lt;p&gt;shell 数组用括号来表示, 元素用&amp;quot;空格&amp;quot;符号分隔开, 语法: &lt;code&gt;array_name=(value1 value2 ...valuen)&lt;/code&gt;&lt;/p&gt;
+&lt;h3 id=&#34;实例&#34;&gt;实例&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;#!/bin/bash
+my_array=(A B &amp;quot;C&amp;quot; D)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;也可以用下标来定义数组&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;array_name[0]=value0
+array_name[1]=value1
+array_name[2]=value2
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;读取数组&#34;&gt;读取数组&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;${array_name[index]}&lt;/code&gt;&lt;/p&gt;
+&lt;h3 id=&#34;实例-1&#34;&gt;实例&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;#!/bin/bash
+
+my_array=(A B &amp;quot;C&amp;quot; D)
+
+echo &amp;quot;第一个元素为: ${my_array[0]}&amp;quot;
+echo &amp;quot;第二个元素为: ${my_array[1]}&amp;quot;
+echo &amp;quot;第三个元素为: ${my_array[2]}&amp;quot;
+echo &amp;quot;第四个元素为: ${my_array[3]}&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;获取数组中的所有元素&#34;&gt;获取数组中的所有元素&lt;/h3&gt;
+&lt;p&gt;使用&lt;code&gt;@&lt;/code&gt; 或 &lt;code&gt;*&lt;/code&gt; 可以后去数组中的所有元素&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;#!/bin/bash
+
+my_array[0]=A
+my_array[1]=B
+my_array[2]=C
+my_array[3]=D
+
+echo &amp;quot;数组的元素为: ${my_array[*]}&amp;quot;
+echo &amp;quot;数组的元素为: ${my_array[@]}&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;获取数组的长度&#34;&gt;获取数组的长度&lt;/h3&gt;
+&lt;p&gt;获取数组长度的方法与获取字符串长度的方法相同&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;#!/bin/bash
+
+my_array[0]=A
+my_array[1]=B
+my_array[2]=C
+my_array[3]=D
+
+echo &amp;quot;数组元素个数为: ${#my_array[*]}&amp;quot;
+echo &amp;quot;数组元素个数为: ${#my_array[@]}&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+        </item>
+        <item>
+        <title>split命令</title>
+        <link>https://lxb.wiki/aa4c47b6/</link>
+        <pubDate>Thu, 30 Aug 2018 22:23:34 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/aa4c47b6/</guid>
+        <description>&lt;h3 id=&#34;选项&#34;&gt;选项&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;-b 值为每一个输出档案的大小, 单位为byte
+-C 每一个输出档中, 单行的最大byte 数
+-d 使用数字作为后缀
+-l 值为每一个输出档的行数大小
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;实例&#34;&gt;实例&lt;/h3&gt;
+&lt;p&gt;生成一个大小为100KB 的测试文件&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;dd if=/dev/zero bs=100k count=1 of=date.file
+1+0 records in
+1+0 records out
+102400 bytes (102 kB) copied, 0.00043 seconds, 238 MB/s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;使用split 命令将上面创建的date.file文件分割成大小为10KB 的小文件&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ split -b 10k date.file
+$ ls
+date.file  xaa  xab  xac  xad  xae  xaf  xag  xah  xai  xaj
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;文件被分割成带有字母的后缀文件, 如果想用数字后缀可使用&lt;code&gt;-d&lt;/code&gt;参数, 同时可以使用&lt;code&gt;-a length&lt;/code&gt;指定后缀的长度&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;[root@localhost split]# split -b 10k date.file -d -a 3
+[root@localhost split]# ls
+date.file  x000  x001  x002  x003  x004  x005  x006  x007  x008  x009
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;为分割后的文件指定文件名的前缀&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;[root@localhost split]# split -b 10k date.file -d -a 3 split_file
+[root@localhost split]# ls
+date.file  split_file000  split_file001  split_file002  split_file003  split_file004  split_file005  split_file006  split_file007  split_file008  split_file009
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;使用&lt;code&gt;-l&lt;/code&gt;选项根据文件的行数来分割文件,如把文件分割成每个包含10行的小文件&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;split -l 10 date.file
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+        </item>
+        <item>
+        <title>Linux 后台执行命令</title>
+        <link>https://lxb.wiki/be78f922/</link>
+        <pubDate>Tue, 28 Aug 2018 01:01:30 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/be78f922/</guid>
+        <description>&lt;p&gt;当我们在终端或控制台工作时，可能不希望由于运行一个作业而占住了屏幕，因为可能还有更重要的事情要做，比如阅读电子邮件。对于密集访问磁盘的进程，我们更希望它能够在每天的非负荷高峰时间段运行(例如凌晨)。为了使这些进程能够在后台运行，也就是说不在终端屏幕上运行，有几种选择方法可供使用&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&amp;amp;&lt;/li&gt;
+&lt;li&gt;nohup&lt;/li&gt;
+&lt;li&gt;ctrl + z&lt;/li&gt;
+&lt;li&gt;ctrl + c&lt;/li&gt;
+&lt;li&gt;jobs&lt;/li&gt;
+&lt;li&gt;bg&lt;/li&gt;
+&lt;li&gt;fg&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;heading&#34;&gt;&amp;amp;&lt;/h4&gt;
+&lt;p&gt;当在前台运行某个作业时，终端被该作业占据；可以在命令后面加上&amp;amp; 实现后台运行。例如：sh test.sh &amp;amp; 适合在后台运行的命令有f i n d、费时的排序及一些s h e l l脚本。在后台运行作业时要当心：需要用户交互的命令不要放在后台执行，因为这样你的机器就会在那里傻等。不过，作业在后台运行一样会将结果输出到屏幕上，干扰你的工作。如果放在后台运行的作业会产生大量的输出，最好使用下面的方法把它的输出重定向到某个文件中：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;command  &amp;gt;  out.file  2&amp;gt;&amp;amp;1  &amp;amp; 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;当你成功地提交进程以后，就会显示出一个进程号，可以用它来监控该进程，或杀死它。(&lt;code&gt;ps -ef | grep 进程号&lt;/code&gt; 或者 &lt;code&gt;kill -9 进程号&lt;/code&gt;）&lt;/p&gt;
+&lt;h4 id=&#34;nohup&#34;&gt;nohup&lt;/h4&gt;
+&lt;p&gt;使用&lt;code&gt;&amp;amp;&lt;/code&gt;命令后，作业被提交到后台运行，当前控制台没有被占用，但是一但把当前控制台关掉(退出帐户时)，作业就会停止运行。nohup命令可以在你退出帐户之后继续运行相应的进程。nohup就是不挂起的意思( no hang up)。该命令的一般形式为：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;nohup command &amp;amp;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;如果使用nohup命令提交作业，那么在缺省情况下该作业的所有输出都被重定向到一个名为nohup.out的文件中，除非另外指定了输出文件：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;nohup command &amp;gt; myout.file 2&amp;gt;&amp;amp;1 &amp;amp;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;使用了nohup之后，很多人就这样不管了，其实这样有可能在当前账户非正常退出或者结束的时候，命令还是自己结束了。所以在使用nohup命令后台运行命令之后，&lt;strong&gt;需要使用exit正常退出当前账户&lt;/strong&gt;，这样才能保证命令一直在后台运行&lt;/p&gt;
+&lt;h4 id=&#34;ctrl--z&#34;&gt;ctrl + z&lt;/h4&gt;
+&lt;p&gt;可以将一个正在前台执行的命令放到后台，并且处于暂停状态&lt;/p&gt;
+&lt;h4 id=&#34;ctrl--c&#34;&gt;ctrl + c&lt;/h4&gt;
+&lt;p&gt;终止前台命令&lt;/p&gt;
+&lt;h4 id=&#34;jobs&#34;&gt;jobs&lt;/h4&gt;
+&lt;p&gt;查看当前有多少在后台运行的命令。 &lt;code&gt;jobs -l&lt;/code&gt;选项可显示所有任务的PID，jobs的状态可以是running, stopped, Terminated。但是如果任务被终止了（kill），shell 从当前的shell环境已知的列表中删除任务的进程标识&lt;/p&gt;
+&lt;h4 id=&#34;bg&#34;&gt;bg&lt;/h4&gt;
+&lt;p&gt;将一个在后台暂停的命令，变成继续执行 （在后台执行） 如果后台中有多个命令，可以用bg %jobnumber将选中的命令调出，%jobnumber是通过jobs命令查到的后台正在执行的命令的序号(不是pid) 将任务转移到后台运行： 先ctrl + z；再bg，这样进程就被移到后台运行，终端还能继续接受命令。&lt;/p&gt;
+&lt;h4 id=&#34;fg&#34;&gt;fg&lt;/h4&gt;
+&lt;p&gt;将后台中的命令调至前台继续运行 如果后台中有多个命令，可以用 fg %jobnumber将选中的命令调出，%jobnumber是通过jobs命令查到的后台正在执行的命令的序号(不是pid)&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Linux 安装bashmarks</title>
+        <link>https://lxb.wiki/472d58f/</link>
+        <pubDate>Fri, 13 Jul 2018 00:34:43 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/472d58f/</guid>
+        <description>&lt;h6 id=&#34;下载源码&#34;&gt;下载源码&lt;/h6&gt;
+&lt;p&gt;&lt;code&gt;git clone https://github.com/lxbwolf/bashmarks.git&lt;/code&gt; 把&lt;code&gt;bashmarks.sh&lt;/code&gt;复制到&lt;code&gt;~/bin/&lt;/code&gt;&lt;/p&gt;
+&lt;h6 id=&#34;添加环境变量&#34;&gt;添加环境变量&lt;/h6&gt;
+&lt;p&gt;在环境变量文件里, 添加 &lt;code&gt;. ~/bin/bashmarks.sh&lt;/code&gt;&lt;/p&gt;
+&lt;h6 id=&#34;相关命令&#34;&gt;相关命令&lt;/h6&gt;
+&lt;pre&gt;&lt;code&gt;s &amp;lt;bookmark_name&amp;gt; - Saves the current directory as &amp;quot;bookmark_name&amp;quot;
+g &amp;lt;bookmark_name&amp;gt; - Goes (cd) to the directory associated with &amp;quot;bookmark_name&amp;quot;
+p &amp;lt;bookmark_name&amp;gt; - Prints the directory associated with &amp;quot;bookmark_name&amp;quot;
+d &amp;lt;bookmark_name&amp;gt; - Deletes the bookmark
+l                 - Lists all available bookmarks
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+        </item>
+        <item>
+        <title>Linux 安装thefuck</title>
+        <link>https://lxb.wiki/42c1114f/</link>
+        <pubDate>Fri, 13 Jul 2018 00:30:33 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/42c1114f/</guid>
+        <description>&lt;h6 id=&#34;下载源码&#34;&gt;下载源码&lt;/h6&gt;
+&lt;p&gt;&lt;code&gt;git clone https://github.com/lxbwolf/thefuck.git&lt;/code&gt;&lt;/p&gt;
+&lt;h6 id=&#34;配置环境变量&#34;&gt;配置环境变量&lt;/h6&gt;
+&lt;ol&gt;
+&lt;li&gt;把&lt;code&gt;thefuck/**/libexec/bin&lt;/code&gt; 添加进环境变量&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;eval $(thefuck --alias fuck)&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+        </item>
+        <item>
+        <title>Linux 安装thefuck</title>
+        <link>https://lxb.wiki/42c1114f/</link>
+        <pubDate>Fri, 13 Jul 2018 00:30:33 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/42c1114f/</guid>
+        <description>&lt;h6 id=&#34;下载源码&#34;&gt;下载源码&lt;/h6&gt;
+&lt;p&gt;&lt;code&gt;git clone https://github.com/lxbwolf/thefuck.git&lt;/code&gt;&lt;/p&gt;
+&lt;h6 id=&#34;配置环境变量&#34;&gt;配置环境变量&lt;/h6&gt;
+&lt;ol&gt;
+&lt;li&gt;把&lt;code&gt;thefuck/**/libexec/bin&lt;/code&gt; 添加进环境变量&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;eval $(thefuck --alias fuck)&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+        </item>
+        <item>
+        <title>Linux 安装samba</title>
+        <link>https://lxb.wiki/8f5b70d0/</link>
+        <pubDate>Fri, 13 Jul 2018 00:22:04 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/8f5b70d0/</guid>
+        <description>&lt;h5 id=&#34;开发机安装-samba&#34;&gt;开发机安装 samba&lt;/h5&gt;
+&lt;p&gt;&lt;code&gt;yum install samba samba-client samba-swat&lt;/code&gt;&lt;/p&gt;
+&lt;h5 id=&#34;添加账号&#34;&gt;添加账号&lt;/h5&gt;
+&lt;p&gt;&lt;code&gt;sampasswd -a 用户名&lt;/code&gt; 用户名只能为已经存在的账号&lt;/p&gt;
+&lt;h5 id=&#34;配置共享文件夹&#34;&gt;配置共享文件夹&lt;/h5&gt;
+&lt;p&gt;编辑&lt;code&gt;etc/samba/smb.conf&lt;/code&gt;, 追加内容:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;[samba_share_dir]
+
+comment = samba_share
+path = /home/lxb/samba_share
+create mask = 0664
+directory mask = 0775
+writable = yes
+valid users = lxb
+browseable = yes
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h5 id=&#34;配置环境变量&#34;&gt;配置环境变量&lt;/h5&gt;
+&lt;p&gt;环境变量文件添加:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;export LD_LIBRARY_PATH=/usr/local/samba/lib:$LD_LIBRARY_PATH&lt;/code&gt;&lt;/p&gt;
+&lt;h5 id=&#34;samba-重启&#34;&gt;samba 重启&lt;/h5&gt;
+&lt;p&gt;&lt;code&gt;sudo /etc/init.d/smb restart&lt;/code&gt;&lt;/p&gt;
+&lt;h5 id=&#34;mac客户端连接&#34;&gt;MAC客户端连接&lt;/h5&gt;
+&lt;p&gt;Finder -&amp;gt; 前往 -&amp;gt; 连接服务器 -&amp;gt; 输入smb地址&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;smb://user_name@IP/samba_share_dir&lt;/code&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>CentOS7升级gcc 和gdb</title>
+        <link>https://lxb.wiki/ec9feff6/</link>
+        <pubDate>Wed, 28 Mar 2018 11:37:20 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/ec9feff6/</guid>
+        <description>&lt;p&gt;升级后版本: gcc-5.4.0 gdb-7.11.1&lt;/p&gt;
+&lt;h4 id=&#34;安装开发必备环境&#34;&gt;安装开发必备环境&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;yum groupinstall &amp;quot;Development Tools&amp;quot;
+yum install glibc-static libstdc++-static
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;编译安装gcc-540&#34;&gt;编译安装gcc-5.4.0&lt;/h4&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;http://ftp.tsukuba.wide.ad.jp/software/gcc/releases/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;gcc下载地址&lt;/a&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;tar -xvf gcc-5.4.0.tar.bz2
+cd gcc-5.4.0
+./contrib/download_prerequisits
+mkdir build
+cd build
+../configure --enable-checking=release --enable-languages=c,c++ --disable-multilib
+make（建议不要使用make -j来编译，虽然可以缩短编译时间，但极大可能会编译失败）
+make install
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;其中执行&lt;code&gt;./contrib/download_prerequisits&lt;/code&gt;将自动下载以下几个文件，这个几个文件在gcc编译时需要： - mpfr-2.4.2.tar.bz2 - gmp-4.3.2.tar.bz2 - mpc-0.8.1.tar.gz - isl-0.15.tar.bz2&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;make install&lt;/code&gt; 时, 自动安装到&lt;code&gt;/usr/local/gcc-5.40&lt;/code&gt;&lt;/p&gt;
+&lt;h4 id=&#34;解决运行程序时-gcc-报错glibcxx_3421-not-found&#34;&gt;解决运行程序时, gcc 报错&amp;rsquo;GLIBCXX_3.4.21&amp;rsquo; not found&lt;/h4&gt;
+&lt;p&gt;这是因为升级gcc时，生成的动态库没有替换老版本gcc的动态库导致的，将gcc最新版本的动态库替换系统中老版本的动态库即可解决，运行以下命令检查动态库： &lt;code&gt;strings /lib64/libstdc++.so.6 | grep GLIBC&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;以下是输出结果：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;GLIBCXX_3.4
+GLIBCXX_3.4.1
+GLIBCXX_3.4.2
+GLIBCXX_3.4.3
+GLIBCXX_3.4.4
+GLIBCXX_3.4.5
+GLIBCXX_3.4.6
+GLIBCXX_3.4.7
+GLIBCXX_3.4.8
+GLIBCXX_3.4.9
+GLIBCXX_3.4.10
+GLIBCXX_3.4.11
+GLIBCXX_3.4.12
+GLIBCXX_3.4.13
+GLIBCXX_3.4.14
+GLIBCXX_3.4.15
+GLIBCXX_3.4.16
+GLIBCXX_3.4.17
+GLIBCXX_3.4.18
+GLIBCXX_3.4.19
+GLIBC_2.3
+GLIBC_2.2.5
+GLIBC_2.14
+GLIBC_2.4
+GLIBC_2.3.2
+GLIBCXX_DEBUG_MESSAGE_LENGTH
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;从输出结果可以看到并没有“GLIBCXX_3.4.21“,所以可以断定我们的程序运行时动态加载的是老的动态库，解决这个问题需要将当前链接文件的链接指向改成最新的动态库地址：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;cp /usr/local/lib64/libstdc++.so.6.0.21 /lib64
+cd /lib64
+rm -rf libstdc++.so.6
+ln -s libstdc++.so.6.0.21 libstdc++.so.6
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;然后你可以执行以下命令来查看&amp;rsquo;GLIBCXX_3.4.21&amp;rsquo;已经可以找到了: &lt;code&gt;strings /lib64/libstdc++.so.6 | grep GLIBC&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;解决了这个问题终于可以执行程序了，然后又测试了-g选项来编译程序，编译好程序调试程序时并不能够设置断点以及print变量的值，gdb调试中出现：Missing separate debuginfos, use: debuginfo-install glibc-2.17-106.e17_2.6.x86_4 libgcc-4.8.5-4.e17.x86_64的问题，通过上网查阅资料，是因为gcc版本和gdb版本并不匹配，或者说gdb版本过低&lt;/p&gt;
+&lt;h4 id=&#34;编译安装gdb-7111&#34;&gt;编译安装gdb-7.11.1&lt;/h4&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;http://ftp.gnu.org/gnu/gdb/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;gdb下载地址&lt;/a&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;tar -xvf gdb-7.11.1.tar.gz
+cd gdb-7.11.1
+./configure
+make
+make install
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;当执行make install时gdb安装出现了错误：&lt;code&gt;WARNING: &#39;makeinfo&#39; is missing on your sysem&lt;/code&gt;，则需安装相关依赖程序: &lt;code&gt;yum install texinfo libncurses5-dev&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;如果调试程序时出现下面信息时：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;warning: File &amp;quot;/usr/local/lib64/libstdc++.so.6.0.21-gdb.py&amp;quot; auto-loading has been declined by your `auto-load safe-path&#39; set to &amp;quot;$debugdir:$datadir/auto-load&amp;quot;.
+To enable execution of this file add
+    add-auto-load-safe-path /usr/local/lib64/libstdc++.so.6.0.21-gdb.py
+line to your configuration file &amp;quot;/root/.gdbinit&amp;quot;.
+To completely disable this security protection add
+    set auto-load safe-path /
+line to your configuration file &amp;quot;/root/.gdbinit&amp;quot;.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;解决方法: 将以下信息放入&lt;code&gt;~/.gdbinit&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;add-auto-load-safe-path /usr/local/lib64/libstdc++.so.6.0.21-gdb.py
+set auto-load safe-path /
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;若想通过gdb来调试STL容器，则还需要做一些配置，可以通过&lt;code&gt;GDB Python pretty printers&lt;/code&gt;来解决这个问题：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;svn checkout svn://gcc.gnu.org/svn/gcc/trunk/libstdc++-v3/python stlPrettyPrinter
+mv stlPrettyPrinter /usr/local
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;然后将下面的配置信息放入&lt;code&gt;~/.gdbinit&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;python
+import sys
+sys.path.insert(0, &#39;/usr/local/stlPrettyPrinter&#39;)
+from libstdcxx.v6.printers import register_libstdcxx_printers
+register_libstdcxx_printers (None)
+end
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+        </item>
+        <item>
+        <title>命令组和代码块</title>
+        <link>https://lxb.wiki/8cb7d3c0/</link>
+        <pubDate>Mon, 02 Oct 2017 11:54:01 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/8cb7d3c0/</guid>
+        <description>&lt;h1 id=&#34;命令组-和-代码块&#34;&gt;命令组 和 代码块&lt;/h1&gt;
+&lt;p&gt;() 命令组. 如 &lt;code&gt;(a=hello,echo $a)&lt;/code&gt; 在()中的命令列表, 将作为一个子Shell来运行 在()中的变量, 由于是在子Shell总运行的, 因此对脚本剩下的部分是不可见的&lt;/p&gt;
+&lt;p&gt;如&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;a=123
+(a=321;)
+echo &amp;quot;a=$a&amp;quot; # a=123
+# 在()中的a变量, 更像是一个局部变量
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;{} 代码块, 又称内部组. 这个结构创建了一个匿名的函数, 与函数不同的是, 在{}中声明的变量, 对于脚本剩余的代码是可见的, 如&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;{
+    local a;
+    a=123;
+}
+# bash中的local申请的变量只能用在函数中
+
+
+a=123;
+{a=321;}
+echo &amp;quot;a=$a&amp;quot; # a=321
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;()也可用作初始化数组 array=(element1,element2,element3)&lt;/p&gt;
+&lt;p&gt;{xxx,yyy,zzz} 大括号扩展, 例&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;cat {file1,file2,file3} &amp;gt; combined_file
+# 把file1 file2 file3连接在一起, 重定向到combined_file
+
+
+cp file1.{txt,bak}
+# 把file1.txt 复制到file1.bak
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;一个命令会对大括号中以逗号分隔的文件列表起作用, file globbing会对大括号中的文件名作扩展&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;# 大括号中不允许有空白, 除非这个空白是有意义的
+echo {file1,file2}\ :{\ A,&amp;quot; B&amp;quot;,&#39; C&#39;}
+# file1 : A file1 : B file1 : C file2 : A file2 : B file2 : C
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+        </item>
+        <item>
+        <title>Shell 中的冒号</title>
+        <link>https://lxb.wiki/9aa135a6/</link>
+        <pubDate>Thu, 07 Sep 2017 17:55:50 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/9aa135a6/</guid>
+        <description>&lt;p&gt;冒号(:) 是一个空命令. 作用与true相同. &amp;ldquo;:&amp;ldquo;是一个bash内建命令, 返回值为0, 即与true相同. 例:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;:
+echo $?  # 0
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;死循环&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;while :
+do
+    list_1
+    list_2
+done
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;if/then 中的占位符&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;if list
+then : # 什么都不做, 引出分支
+else
+    take-some-action
+fi
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;在一个2元命令中, 提供一个占位符, 表明后面的表达式, 不是一个命令, 如&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;:$((n=$n+1)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;如果没有:, bash会尝试把&amp;rdquo;$((n=$n+1))&amp;rdquo; 解释成一个命令&lt;/p&gt;
+&lt;p&gt;使用&amp;quot;参数替换&amp;quot; 来评估字符串变量&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;:${HOSTNAME?}${USER?}${MAIL?}
+# 如果一个或多个环境变量没有设置, 则打印错误信息
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;在和&amp;gt;(重定向符号)结合使用时, 把一个文件截断到0长度, 不修改它的权限. 如果文件不存在, 则创建它&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;: &amp;gt; data.xxx # 文件&amp;quot;data.xxx&amp;quot; 被清空
+# 与 cat /dev/null &amp;gt; data.xxx 作用相同, 但是不会产生一个新的进程, 因为:是一个内建命令.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;只适用于普通文件, 不适用于管道, 符号链接, 和其他特殊文件.&lt;/p&gt;
+&lt;p&gt;也可以用作注释, :与#不同的是, :不会关闭剩余行的错误检查.&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Shell编程中select用法</title>
+        <link>https://lxb.wiki/53b3b0c1/</link>
+        <pubDate>Tue, 05 Sep 2017 16:02:11 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/53b3b0c1/</guid>
+        <description>&lt;p&gt;select提供了一个构建交互式菜单程序的方式, 语法结构: &lt;code&gt;select name [ in word ] ; do list ; done&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;例:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;#!/bin/bash
+select i in a b c d
+do
+    echo $i
+done
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;执行结果&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ ./select.sh 
+1) a
+2) b
+3) c
+4) d
+#? 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;选择索引&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ ./select.sh 
+1) a
+2) b
+3) c
+4) d
+#? 1
+a
+#? 2
+b
+#? 3
+c
+#? 4
+d
+#? 6
+
+#? 
+1) a
+2) b
+3) c
+4) d
+#? 
+1) a
+2) b
+3) c
+4) d
+#? 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;如果输入的不是菜单描述的范围就会echo一个空行，如果直接输入回车，就会再显示一遍菜单本身。当然我们会发现这样一个菜单程序似乎没有什么意义，实际程序中，select大多数情况是跟case配合使用的。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;#!/bin/bash
+select i in a b c d
+do
+    case $i in 
+        a)
+            echo &amp;quot;Your choice is a&amp;quot;
+        ;;
+        b)
+            echo &amp;quot;Your choice is b&amp;quot;
+        ;;
+        c)
+            echo &amp;quot;Your choice is c&amp;quot;
+        ;;
+        d)
+            echo &amp;quot;Your choice is d&amp;quot;
+        ;;
+        *)
+            echo &amp;quot;Wrong choice! exit!&amp;quot;
+        ;;
+    esac
+done
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;执行结果&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ ./select.sh 
+1) a
+2) b
+3) c
+4) d
+#? 1
+Your choice is a
+#? 2
+Your choice is b
+#? 3
+Your choice is c
+#? 4
+Your choice is d
+#? 5
+Wrong choice! exit!
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+        </item>
+        <item>
+        <title>在shell脚本中使用ls命令的注意事项</title>
+        <link>https://lxb.wiki/12994d1/</link>
+        <pubDate>Tue, 05 Sep 2017 15:03:02 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/12994d1/</guid>
+        <description>&lt;p&gt;请对比如下两个测试：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ for i in `ls /etc`;do echo $i;done
+adjtime
+adobe
+appstream.conf
+arch-release
+asound.conf
+avahi
+bash.bash_logout
+bash.bashrc
+bind.keys
+binfmt.d
+......
+
+
+$ for i in /etc/*;do echo $i;done
+/etc/adjtime
+/etc/adobe
+/etc/appstream.conf
+/etc/arch-release
+/etc/asound.conf
+/etc/avahi
+/etc/bash.bash_logout
+/etc/bash.bashrc
+/etc/bind.keys
+/etc/binfmt.d
+......
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;像ls这样的命令很多时候是设计给人用的，它的很多显示是有特殊设定的，可能并不是纯文本。 比如可能包含一些格式化字符，也可能包含可以让终端显示出颜色的标记字符等等。 当我们在程序里面使用类似这样的命令的时候要格外小心，说不定什么时候在什么不同环境配置的系统上， 你的程序就会有意想不到的异常出现，到时候排查起来非常麻烦。 所以这里我们应该尽量避免使用ls这样的命令来做类似的行为，用通配符可能更好。&lt;/p&gt;
+&lt;p&gt;当然，如果你要操作的是多层目录文件的话，那么ls就更不能帮你的忙了，它遇到目录之后显示成这样：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ ls /etc/*
+/etc/adobe:
+mms.cfg
+
+/etc/avahi:
+avahi-autoipd.action  avahi-daemon.conf  avahi-dnsconfd.action  hosts  services
+
+/etc/binfmt.d:
+
+/etc/bluetooth:
+main.conf
+
+/etc/ca-certificates:
+extracted  trust-source
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;所以遍历一个目录还是要用两个连续的&lt;code&gt;**&lt;/code&gt;，如果不是bash 4.0之后的版本的话，可以使用find。 我推荐用find，因为它更通用。 有时候你会发现，使用find之后，绝大多数原来需要写脚本解决的问题可能都用不着了，一个find命令解决很多问题&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Linux 禁止普通用户su切换root</title>
+        <link>https://lxb.wiki/e5131675/</link>
+        <pubDate>Tue, 23 May 2017 09:26:31 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/e5131675/</guid>
+        <description>&lt;p&gt;一般情况下, 普通用户执行&amp;quot;su -&amp;ldquo;命令, 可以登录为root. 为了加强系统的安全性, 有必要建立一个管理员的组, 只允许这个组的用户执行&amp;quot;su -&amp;rdquo; 命令登录为root, 而让其他组的用户即使执行&amp;quot;su -&amp;quot; 输入了正确的密码, 也无法登录为root用户. 在Unix 和Linux 下, 这个组的名称通常为&amp;quot;wheel&amp;quot;.&lt;/p&gt;
+&lt;p&gt;1 添加一个用户, 把这个用户加入wheel组 2 修改/etc/pam.d/su &lt;code&gt;#auth required pam_wheel.so use_uid&lt;/code&gt; 这行注释打开 3 修改/etc/login.defs 在文件末添加一行 &lt;code&gt;SU_WHEEL_ONLY yes&lt;/code&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>禁止root用户ssh登录机器</title>
+        <link>https://lxb.wiki/d29ba5b9/</link>
+        <pubDate>Tue, 23 May 2017 09:07:42 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/d29ba5b9/</guid>
+        <description>&lt;p&gt;1 修改 /etc/ssh/sshd_config &lt;code&gt;#PermitRootLogin yes&lt;/code&gt; 取消注释并改为 &lt;code&gt;PermitRootLogin no&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;2 重启ssh &lt;code&gt;/etc/init.d/sshd restart&lt;/code&gt;&lt;/p&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>

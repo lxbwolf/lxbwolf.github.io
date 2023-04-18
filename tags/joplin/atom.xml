@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>joplin on Xiaobin&#39;s Blog</title>
+        <link>https://lxb.wiki/tags/joplin/</link>
+        <description>Recent content in joplin on Xiaobin&#39;s Blog</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <lastBuildDate>Sat, 15 Jan 2022 20:01:15 +0000</lastBuildDate><atom:link href="https://lxb.wiki/tags/joplin/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <title>Joplin配置TeraCloud的WebDav进行同步</title>
+        <link>https://lxb.wiki/f3376d3f/</link>
+        <pubDate>Sat, 15 Jan 2022 20:01:15 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/f3376d3f/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;h3 id=&#34;为什么不再使用坚果云&#34;&gt;为什么不再使用坚果云&lt;/h3&gt;
+&lt;p&gt;使用坚果云同步笔记，出现了无法解决的灾难性问题&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;第三方应用访问的限制
+文件上传大小限制： 当前 WebDAV 客户端和网页端上传大小的限制是一致的，默认为 500M（私有云可以通过相关设置调整）。&lt;/p&gt;
+&lt;p&gt;访问频率限制： 由于WebDAV协议比较占用系统资源，免费版用户限制访问频率为每30分钟不超过600次请求。付费用户限制访问频率为每30分钟不超过1500次请求。&lt;/p&gt;
+&lt;p&gt;同步目录数限制： 目前坚果云的WebDAV协议单次请求文件数（包含文件和文件夹）为750个，支持分多页多次加载。如果您使用WebDAV的三方工具未实现按分页多次加载，可能会出现文件同步不完整的情况，建议您使用坚果云客户端进行直接同步。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;用坚果云同步joplin是个糟糕的选择，目前有两个问题：
+一个是短时间大量同步文件，会触发坚果云的限制，导致同步失败，当触发该限制后，我们能做的只有耐心等待6个小时，该限制与免费版/专业版没有关系。
+另一个才是灾难，坚果云对同一文件夹内的文件采取分页传输的机制，导致Joplin一次不能获取全部文件列表，导致Joplin认为有些文件在服务器端不存在，即认为该文件要被删除，Joplin就会删除本地对应的内容，直接的表现就是当笔记达到一定数量后用坚果云同步就会出现频繁的丢笔记现象。&lt;/p&gt;
+&lt;p&gt;目前Joplin官方也不建议使用坚果云。&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://joplinapp.org/faq/#the-following-webdav-hosts-are-not-supported&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;FAQ | Joplin (joplinapp.org)&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;在 2021 年 1 月已经有用户提过 issue&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://github.com/laurent22/joplin/issues/4294&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Data lost when using the webdav to sync data · Issue #4294 · laurent22/joplin (github.com)&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;joplin-配置teracloud-的webdav&#34;&gt;Joplin 配置teracloud 的WebDav&lt;/h3&gt;
+&lt;h4 id=&#34;teracloud注册&#34;&gt;TeraCLOUD注册&lt;/h4&gt;
+&lt;p&gt;官网地址：https://teracloud.jp/en/。&lt;/p&gt;
+&lt;p&gt;进入上述官网地址之后，点击 &lt;code&gt;Create Account&lt;/code&gt;&lt;/p&gt;
+&lt;h4 id=&#34;登录填写推荐码&#34;&gt;登录&amp;amp;填写推荐码&lt;/h4&gt;
+&lt;p&gt;注册账号之后，在官网地址点击 &lt;code&gt;Login&lt;/code&gt; 登录。
+登录之后，点击 &lt;code&gt;My Page&lt;/code&gt; ，进入我的页面。&lt;/p&gt;
+&lt;p&gt;免费用户默认只给10G空间，如果使用推荐码，可以再增加5G空间。&lt;/p&gt;
+&lt;p&gt;在 &lt;code&gt;My Page&lt;/code&gt; 页面，&lt;code&gt;Referral Bonus-&amp;gt;Enter Friends Referral Code&lt;/code&gt;，填写推荐码即可，如下所示。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20220710182918.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;我的推荐码：BQMZ7。&lt;/p&gt;
+&lt;h4 id=&#34;设置teracloud&#34;&gt;设置TeraCLOUD&lt;/h4&gt;
+&lt;p&gt;&lt;strong&gt;开启WebDAV&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;进入 &lt;a class=&#34;link&#34; href=&#34;https://teracloud.jp/en/modules/mypage/usage/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;My Page&lt;/a&gt; 页面，找到&lt;code&gt;Apps Connection&lt;/code&gt;，勾选&lt;code&gt;Turn on Apps Connection&lt;/code&gt;，如下图所示：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20220710183145.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;创建Joplin同步文件夹&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;从首页进入 &lt;a class=&#34;link&#34; href=&#34;https://aki.teracloud.jp/browser/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;File Browser&lt;/a&gt; 页面，创建用于Joplin同步的文件夹，如创建一个名为 &lt;code&gt;terajoplin&lt;/code&gt; 的文件件&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20220710183450.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20220710183642.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;配置Joplin&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;打开 Joplin 客户端的 &lt;code&gt;同步&lt;/code&gt; 选项&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20220710184839.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;同步目标选 &lt;code&gt;Nextcloud&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;Nextcloud WebDAV URL&lt;/code&gt; 为 &lt;a class=&#34;link&#34; href=&#34;https://teracloud.jp/en/modules/mypage/usage/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;My Page|TeraCLOUD&lt;/a&gt; 中 &lt;code&gt;Apps Connection&lt;/code&gt; 里的 &lt;code&gt;WebDAV Connection URL&lt;/code&gt;后加刚刚在 &lt;code&gt;File Browser&lt;/code&gt; 创建的目录名&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;Nextcloud username&lt;/code&gt; 为 &lt;a class=&#34;link&#34; href=&#34;https://teracloud.jp/en/modules/mypage/usage/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;My Page|TeraCLOUD&lt;/a&gt; 中 &lt;code&gt;Apps Connection&lt;/code&gt; 里的 &lt;code&gt;Connection ID&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;Nextcloud password&lt;/code&gt; 为 &lt;a class=&#34;link&#34; href=&#34;https://teracloud.jp/en/modules/mypage/usage/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;My Page|TeraCLOUD&lt;/a&gt; 中 &lt;code&gt;Apps Connection&lt;/code&gt; 里的 &lt;code&gt;Apps Password&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        </item>
+        <item>
+        <title>Joplin&#43;坚果云作为主力笔记工具</title>
+        <link>https://lxb.wiki/f5496f4b/</link>
+        <pubDate>Tue, 09 Mar 2021 21:07:57 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/f5496f4b/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;h1 id=&#34;前言&#34;&gt;前言&lt;/h1&gt;
+&lt;p&gt;之前的云笔记工具一直是有道云，免费版本已经足够使用了。&lt;/p&gt;
+&lt;p&gt;让我下定决心放弃有道云的导火索是，突然有一天，我发现 MAC 和 Android 端都无法登录了。微博、知乎随便一搜“有道云不能登录”，发现这个问题从 2016 年就有很多用户遇到过（是很多用户，我遇到的问题并不是偶发），一直到 2021 年还没有解决（后来还发现，有道云把微博和知乎有关“有道云不能登录”的用户发帖全删了）。有道云连最基本的可用性和可靠性都无法保证，遂决定弃用有道云，转战其他工具平台。&lt;/p&gt;
+&lt;p&gt;尝试过的笔记工具：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;印象笔记&lt;/li&gt;
+&lt;li&gt;OneNote&lt;/li&gt;
+&lt;li&gt;Notion&lt;/li&gt;
+&lt;li&gt;语雀&lt;/li&gt;
+&lt;li&gt;为知笔记&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;其他笔记都无法完全匹配我的使用习惯。最后决定，使用开源的 joplin。&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://joplinapp.org/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;joplin 官网&lt;/a&gt;&lt;/p&gt;
+&lt;h1 id=&#34;joplin-介绍&#34;&gt;Joplin 介绍&lt;/h1&gt;
+&lt;p&gt;Joplin 旨在取代印象笔记，成为全平台的免费开源笔记，其笔记的的书写格式是 markdown，界面支持中文。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;优点：&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;开源&lt;/li&gt;
+&lt;li&gt;多种同步方式可选择: WebDav、OneDrive、DroupOut、Nextcloud
+&lt;ul&gt;
+&lt;li&gt;支持 WebDav 的网盘：
+&lt;ul&gt;
+&lt;li&gt;国外网盘：Box、Dropbox、&lt;strong&gt;TeraCLOUD&lt;/strong&gt;、yandex、TransIP&lt;/li&gt;
+&lt;li&gt;国内网盘：坚果云、城通网盘&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;支持笔记加密，防止数据存储平台偷看笔记内容&lt;/li&gt;
+&lt;li&gt;全平台支持。我使用的平台有 MacOS、Android、Linux&lt;/li&gt;
+&lt;li&gt;支持从印象笔记和 markdown 文件导入&lt;/li&gt;
+&lt;li&gt;有浏览器剪藏插件&lt;/li&gt;
+&lt;li&gt;笔记格式为 markdown&lt;/li&gt;
+&lt;li&gt;支持各种插件&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;joplin-安装&#34;&gt;Joplin 安装&lt;/h1&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://joplinapp.org/#installation&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Joplin 官网&lt;/a&gt; 下载 + 安装&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210509103914.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h1 id=&#34;界面说明&#34;&gt;界面说明&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210509103956.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h1 id=&#34;配置坚果云同步&#34;&gt;配置坚果云同步&lt;/h1&gt;
+&lt;p&gt;&lt;strong&gt;我的同步服务器已从坚果云迁移到 TeraCLOUD&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://lxb.wiki/f3376d3f/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Joplin配置TeraCloud的WebDav进行同步&lt;/a&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;注册&lt;a class=&#34;link&#34; href=&#34;https://www.jianguoyun.com/#/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;坚果云&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;创建文件夹，起名为 joplin&lt;/li&gt;
+&lt;li&gt;点击右上角 &lt;strong&gt;账户信息 -&amp;gt; 安全选项 -&amp;gt; 添加应用&lt;/strong&gt;；应用名称为 joplin&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210509104440.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;ol start=&#34;4&#34;&gt;
+&lt;li&gt;打开 Joplin，点击菜单&lt;strong&gt;首选项-&amp;gt;同步&lt;/strong&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;同步目标&lt;/strong&gt; WebDAV&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;工具-&amp;gt;选项-&amp;gt;同步&lt;/strong&gt; &lt;a class=&#34;link&#34; href=&#34;https://dav.jianguoyun.com/dav/joplin&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://dav.jianguoyun.com/dav/joplin&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;WebDAV 用户名&lt;/strong&gt; 注册坚果云的用户名&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;WebDAV 密码&lt;/strong&gt; 坚果云新添加的 joplin 的应用密码（不是坚果云登录密码）&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210509104829.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;ol start=&#34;5&#34;&gt;
+&lt;li&gt;
+&lt;p&gt;点击&lt;strong&gt;检查同步配置&lt;/strong&gt;，显示成功即可点击应用开始同步&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;配置外部编辑器（可选）。&lt;strong&gt;首选项 -&amp;gt; 通用选项 -&amp;gt; Path&lt;/strong&gt;，在应用程序中选择 Typora&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210509105652.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>

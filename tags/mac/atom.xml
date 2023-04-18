@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>mac on Xiaobin&#39;s Blog</title>
+        <link>https://lxb.wiki/tags/mac/</link>
+        <description>Recent content in mac on Xiaobin&#39;s Blog</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <lastBuildDate>Sun, 01 May 2022 20:04:28 +0000</lastBuildDate><atom:link href="https://lxb.wiki/tags/mac/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <title>Mac上移除EasyConnect常驻后台进程</title>
+        <link>https://lxb.wiki/446d3604/</link>
+        <pubDate>Sun, 01 May 2022 20:04:28 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/446d3604/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;EasyConnect 会在后台强行添加名为 EasyMonitor 的开机自启守护进程，执行以下命令关闭&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo launchctl unload /Library/LaunchDaemons/com.sangfor.EasyMonitor.plist
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可实际上 EasyConnect 还启动了另一个“杀不掉”的后台进程 ECAgent，活动频率很低，似乎不会造成内存泄漏，略显不起眼。但这无法作为它肆意常驻的理由。&lt;/p&gt;
+&lt;h4 id=&#34;禁用&#34;&gt;禁用&lt;/h4&gt;
+&lt;p&gt;首先找到 plist 文件，在 &lt;code&gt;/Library/LaunchAgents/com.sangfor.ECAgentProxy.plist&lt;/code&gt;。它无法被 launchctl unload，不过没关系，你可以直接把它挪走或删除，并且今后都不再需要它。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;sudo mv /Library/LaunchAgents/com.sangfor.ECAgentProxy.plist ~
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当然这时候它还是不能被 kill 掉，要想从 launchctl 中删除而不重启电脑，可以采用 launchctl remove。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;launchctl remove com.sangfor.ECAgentProxy
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;启用&#34;&gt;启用&lt;/h4&gt;
+&lt;p&gt;关闭后台进程之后，启动 EasyConnect 会弹出警告：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Alert
+
+Initialization failed. Please try reinstalling!
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;所以 需要使用时，必须重新加载 EasyMonitor。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# EasyConnect v7.6.7 开始 EasyMonitor 必须在 root 权限下运行，此前版本可以不加 sudo
+sudo launchctl load /Library/LaunchDaemons/com.sangfor.EasyMonitor.plist
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;而 ECAgent 就没这么麻烦了，它根本不必后台常驻 —— EasyConnect 启动时会自己创建一个，并且会随着 EasyConnect 进程一起退出。最终我删掉了 &lt;code&gt;com.sangfor.ECAgentProxy.plist&lt;/code&gt; 文件的备份。&lt;/p&gt;
+&lt;h4 id=&#34;mac-下禁用开机自启软件&#34;&gt;Mac 下禁用开机自启软件&lt;/h4&gt;
+&lt;p&gt;有部分软件的开机启动项放在 &lt;code&gt;/Library/LaunchDaemons&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;使用 &lt;code&gt;sudo launchctl unload xxx.plist&lt;/code&gt; 可以去掉某个软件的开机自启&lt;/p&gt;
+&lt;p&gt;深信服的 EasyConnect 有一个进程叫做 EasyMonitor 可以说是非常流氓了，开机自启 + 常驻内存 + 内存泄露，时间长了以后会占用 1g 以上的内存。
+它的 plist 位于 &lt;code&gt;/Library/LaunchDaemons/com.sangfor.EasyMonitor.plist&lt;/code&gt; 使用上述命令可以干掉它。&lt;/p&gt;
+&lt;p&gt;干掉他这个进程非常开心，但是会遇到一个问题，再次启动 EasyConnect 的时候，它不乐意了，会提示初始化失败，请重新安装，这时候就得重新 load 这个 plist 了，执行 &lt;code&gt;sudo launchctl load /Library/LaunchDaemons/com.sangfor.EasyMonitor.plist&lt;/code&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Mac iTerm2，使用rz和sz无效，解决方式</title>
+        <link>https://lxb.wiki/32451f0a/</link>
+        <pubDate>Thu, 13 May 2021 23:25:13 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/32451f0a/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;h1 id=&#34;1安装lrzsz要先安装brew&#34;&gt;1.安装lrzsz（要先安装brew）&lt;/h1&gt;
+&lt;p&gt;&lt;code&gt;brew install lrzsz&lt;/code&gt;&lt;/p&gt;
+&lt;h1 id=&#34;2配置&#34;&gt;2.配置&lt;/h1&gt;
+&lt;p&gt;&lt;code&gt;cd /usr/local/bin&lt;/code&gt;
+在/usr/loal/bin 目录下创建两个文件&lt;/p&gt;
+&lt;p&gt;命令：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;vi iterm2-recv-zmodem.sh
+vi iterm2-send-zmodem.sh
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;创建好两个文件后分别添加内容：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;iterm2-recv-zmodem.sh&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;#!/bin/bash
+# Author: Matt Mastracci (matthew@mastracci.com)
+# AppleScript from http://stackoverflow.com/questions/4309087/cancel-button-on-osascript-in-a-bash-script
+# licensed under cc-wiki with attribution required 
+# Remainder of script public domain
+ 
+osascript -e &amp;#39;tell application &amp;#34;iTerm2&amp;#34; to version&amp;#39; &amp;gt; /dev/null 2&amp;gt;&amp;amp;1 &amp;amp;&amp;amp; NAME=iTerm2 || NAME=iTerm
+if [[ $NAME = &amp;#34;iTerm&amp;#34; ]]; then
+    FILE=`osascript -e &amp;#39;tell application &amp;#34;iTerm&amp;#34; to activate&amp;#39; -e &amp;#39;tell application &amp;#34;iTerm&amp;#34; to set thefile to choose folder with prompt &amp;#34;Choose a folder to place received files in&amp;#34;&amp;#39; -e &amp;#34;do shell script (\&amp;#34;echo \&amp;#34;&amp;amp;(quoted form of POSIX path of thefile as Unicode text)&amp;amp;\&amp;#34;\&amp;#34;)&amp;#34;`
+else
+    FILE=`osascript -e &amp;#39;tell application &amp;#34;iTerm2&amp;#34; to activate&amp;#39; -e &amp;#39;tell application &amp;#34;iTerm2&amp;#34; to set thefile to choose folder with prompt &amp;#34;Choose a folder to place received files in&amp;#34;&amp;#39; -e &amp;#34;do shell script (\&amp;#34;echo \&amp;#34;&amp;amp;(quoted form of POSIX path of thefile as Unicode text)&amp;amp;\&amp;#34;\&amp;#34;)&amp;#34;`
+fi
+ 
+if [[ $FILE = &amp;#34;&amp;#34; ]]; then
+    echo Cancelled.
+    # Send ZModem cancel
+    echo -e \\x18\\x18\\x18\\x18\\x18
+    sleep 1
+    echo
+    echo \# Cancelled transfer
+else
+    cd &amp;#34;$FILE&amp;#34;
+    /usr/local/bin/rz -E -e -b
+    sleep 1
+    echo
+    echo
+    echo \# Sent \-\&amp;gt; $FILE
+fi
+&lt;/code&gt;&lt;/pre&gt;&lt;ol start=&#34;2&#34;&gt;
+&lt;li&gt;&lt;strong&gt;iterm2-send-zmodem.sh&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;#!/bin/bash
+# Author: Matt Mastracci (matthew@mastracci.com)
+# AppleScript from http://stackoverflow.com/questions/4309087/cancel-button-on-osascript-in-a-bash-script
+# licensed under cc-wiki with attribution required 
+# Remainder of script public domain
+ 
+osascript -e &amp;#39;tell application &amp;#34;iTerm2&amp;#34; to version&amp;#39; &amp;gt; /dev/null 2&amp;gt;&amp;amp;1 &amp;amp;&amp;amp; NAME=iTerm2 || NAME=iTerm
+if [[ $NAME = &amp;#34;iTerm&amp;#34; ]]; then
+    FILE=`osascript -e &amp;#39;tell application &amp;#34;iTerm&amp;#34; to activate&amp;#39; -e &amp;#39;tell application &amp;#34;iTerm&amp;#34; to set thefile to choose file with prompt &amp;#34;Choose a file to send&amp;#34;&amp;#39; -e &amp;#34;do shell script (\&amp;#34;echo \&amp;#34;&amp;amp;(quoted form of POSIX path of thefile as Unicode text)&amp;amp;\&amp;#34;\&amp;#34;)&amp;#34;`
+else
+    FILE=`osascript -e &amp;#39;tell application &amp;#34;iTerm2&amp;#34; to activate&amp;#39; -e &amp;#39;tell application &amp;#34;iTerm2&amp;#34; to set thefile to choose file with prompt &amp;#34;Choose a file to send&amp;#34;&amp;#39; -e &amp;#34;do shell script (\&amp;#34;echo \&amp;#34;&amp;amp;(quoted form of POSIX path of thefile as Unicode text)&amp;amp;\&amp;#34;\&amp;#34;)&amp;#34;`
+fi
+if [[ $FILE = &amp;#34;&amp;#34; ]]; then
+    echo Cancelled.
+    # Send ZModem cancel
+    echo -e \\x18\\x18\\x18\\x18\\x18
+    sleep 1
+    echo
+    echo \# Cancelled transfer
+else
+    /usr/local/bin/sz &amp;#34;$FILE&amp;#34; -e -b
+    sleep 1
+    echo
+    echo \# Received $FILE
+fi 
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;将文件写好后保存好，使用如下命令添加权限&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;chmod 777 iterm2-*
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;配置好配置文件之后，开始对iTerm2进行配置&lt;/p&gt;
+&lt;p&gt;点击 iTerm2 的设置界面 Perference-&amp;gt; Profiles -&amp;gt; Default -&amp;gt; Advanced -&amp;gt; Triggers 的 Edit 按钮，加入以下配置&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210513232741.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;
+Regular expression: rz waiting to receive.\*\*B0100
+Action: Run Silent Coprocess
+Parameters: /usr/local/bin/iterm2-send-zmodem.sh
+ 
+Regular expression: \*\*B00000000000000
+Action: Run Silent Coprocess
+Parameters: /usr/local/bin/iterm2-recv-zmodem.sh
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;em&gt;&lt;strong&gt;*备注：*&lt;/strong&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;rz 上传功能  ：在bash中，也就是iTerm2终端输入rz 就会弹出文件选择框，选择文件 choose 就开始上传，会上传到当前目录
+sz 下载功能 ：sz fileName(你要下载的文件的名字) 回车，会弹出窗体 我们选择要保存的地方即可。&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>误删了Mac中Chrome书签后如何恢复</title>
+        <link>https://lxb.wiki/ef3fb32/</link>
+        <pubDate>Sat, 01 May 2021 18:44:48 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/ef3fb32/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;书签误删该如何恢复&lt;/p&gt;
+&lt;p&gt;1 打开访达，在菜单栏上点击【前往】—【前往文件夹】，或者使用快捷键【Command+Shift+G】即可打开【前往文件夹】&lt;/p&gt;
+&lt;p&gt;输入以下路径【/Users/用户名/Library/Application Support/Google/Chrome】（注：路径中的用户名就是你电脑用户名称），如下图所示：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210503113055.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;2 在chrome文件目录下找到 【Default】文件夹，将里面的 【Bookmarks.bak】 的文件复制到桌面，将.bak名的后缀去掉，如下图所示：&lt;/p&gt;
+&lt;p&gt;注：如果你有多个用户的话，则需要找到对应的用户，一般在文件名为“Profile1、2、3”底下。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210501185251.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;3 在同样的文件夹底下，将修改好的 Bookmarks 复制进 去替换，重启chrome即可。&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Mac iTerm2登陆CentOS提示warning: setlocale: LC_CTYPE: cannot change locale (UTF-8): No such file or directory</title>
+        <link>https://lxb.wiki/784beb8f/</link>
+        <pubDate>Tue, 02 Jul 2019 11:48:53 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/784beb8f/</guid>
+        <description>&lt;p&gt;【报错原因】：没有utf-8这个语系（没添加语言_国名前缀），LC_ALL又没设定值。 &lt;strong&gt;服务端解决方法：&lt;/strong&gt; 在远程系统上， &lt;code&gt;/etc/environment&lt;/code&gt;加入以下两行，重新登陆即可。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;LANG=en_US.utf-8
+LC_ALL=en_US.utf-8
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;Mac终端解决方法：&lt;/strong&gt; 编辑&lt;code&gt;~/.bashrc&lt;/code&gt;或者&lt;code&gt;~/.zshrc&lt;/code&gt;文件，添加&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;export LC_ALL=en_US.UTF-8  
+export LANG=en_US.UTF-8
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>

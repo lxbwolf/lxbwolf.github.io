@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>gdb on Xiaobin&#39;s Blog</title>
+        <link>https://lxb.wiki/tags/gdb/</link>
+        <description>Recent content in gdb on Xiaobin&#39;s Blog</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <lastBuildDate>Wed, 28 Mar 2018 11:37:20 +0000</lastBuildDate><atom:link href="https://lxb.wiki/tags/gdb/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <title>CentOS7升级gcc 和gdb</title>
+        <link>https://lxb.wiki/ec9feff6/</link>
+        <pubDate>Wed, 28 Mar 2018 11:37:20 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/ec9feff6/</guid>
+        <description>&lt;p&gt;升级后版本: gcc-5.4.0 gdb-7.11.1&lt;/p&gt;
+&lt;h4 id=&#34;安装开发必备环境&#34;&gt;安装开发必备环境&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;yum groupinstall &amp;quot;Development Tools&amp;quot;
+yum install glibc-static libstdc++-static
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;编译安装gcc-540&#34;&gt;编译安装gcc-5.4.0&lt;/h4&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;http://ftp.tsukuba.wide.ad.jp/software/gcc/releases/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;gcc下载地址&lt;/a&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;tar -xvf gcc-5.4.0.tar.bz2
+cd gcc-5.4.0
+./contrib/download_prerequisits
+mkdir build
+cd build
+../configure --enable-checking=release --enable-languages=c,c++ --disable-multilib
+make（建议不要使用make -j来编译，虽然可以缩短编译时间，但极大可能会编译失败）
+make install
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;其中执行&lt;code&gt;./contrib/download_prerequisits&lt;/code&gt;将自动下载以下几个文件，这个几个文件在gcc编译时需要： - mpfr-2.4.2.tar.bz2 - gmp-4.3.2.tar.bz2 - mpc-0.8.1.tar.gz - isl-0.15.tar.bz2&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;make install&lt;/code&gt; 时, 自动安装到&lt;code&gt;/usr/local/gcc-5.40&lt;/code&gt;&lt;/p&gt;
+&lt;h4 id=&#34;解决运行程序时-gcc-报错glibcxx_3421-not-found&#34;&gt;解决运行程序时, gcc 报错&amp;rsquo;GLIBCXX_3.4.21&amp;rsquo; not found&lt;/h4&gt;
+&lt;p&gt;这是因为升级gcc时，生成的动态库没有替换老版本gcc的动态库导致的，将gcc最新版本的动态库替换系统中老版本的动态库即可解决，运行以下命令检查动态库： &lt;code&gt;strings /lib64/libstdc++.so.6 | grep GLIBC&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;以下是输出结果：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;GLIBCXX_3.4
+GLIBCXX_3.4.1
+GLIBCXX_3.4.2
+GLIBCXX_3.4.3
+GLIBCXX_3.4.4
+GLIBCXX_3.4.5
+GLIBCXX_3.4.6
+GLIBCXX_3.4.7
+GLIBCXX_3.4.8
+GLIBCXX_3.4.9
+GLIBCXX_3.4.10
+GLIBCXX_3.4.11
+GLIBCXX_3.4.12
+GLIBCXX_3.4.13
+GLIBCXX_3.4.14
+GLIBCXX_3.4.15
+GLIBCXX_3.4.16
+GLIBCXX_3.4.17
+GLIBCXX_3.4.18
+GLIBCXX_3.4.19
+GLIBC_2.3
+GLIBC_2.2.5
+GLIBC_2.14
+GLIBC_2.4
+GLIBC_2.3.2
+GLIBCXX_DEBUG_MESSAGE_LENGTH
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;从输出结果可以看到并没有“GLIBCXX_3.4.21“,所以可以断定我们的程序运行时动态加载的是老的动态库，解决这个问题需要将当前链接文件的链接指向改成最新的动态库地址：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;cp /usr/local/lib64/libstdc++.so.6.0.21 /lib64
+cd /lib64
+rm -rf libstdc++.so.6
+ln -s libstdc++.so.6.0.21 libstdc++.so.6
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;然后你可以执行以下命令来查看&amp;rsquo;GLIBCXX_3.4.21&amp;rsquo;已经可以找到了: &lt;code&gt;strings /lib64/libstdc++.so.6 | grep GLIBC&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;解决了这个问题终于可以执行程序了，然后又测试了-g选项来编译程序，编译好程序调试程序时并不能够设置断点以及print变量的值，gdb调试中出现：Missing separate debuginfos, use: debuginfo-install glibc-2.17-106.e17_2.6.x86_4 libgcc-4.8.5-4.e17.x86_64的问题，通过上网查阅资料，是因为gcc版本和gdb版本并不匹配，或者说gdb版本过低&lt;/p&gt;
+&lt;h4 id=&#34;编译安装gdb-7111&#34;&gt;编译安装gdb-7.11.1&lt;/h4&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;http://ftp.gnu.org/gnu/gdb/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;gdb下载地址&lt;/a&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;tar -xvf gdb-7.11.1.tar.gz
+cd gdb-7.11.1
+./configure
+make
+make install
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;当执行make install时gdb安装出现了错误：&lt;code&gt;WARNING: &#39;makeinfo&#39; is missing on your sysem&lt;/code&gt;，则需安装相关依赖程序: &lt;code&gt;yum install texinfo libncurses5-dev&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;如果调试程序时出现下面信息时：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;warning: File &amp;quot;/usr/local/lib64/libstdc++.so.6.0.21-gdb.py&amp;quot; auto-loading has been declined by your `auto-load safe-path&#39; set to &amp;quot;$debugdir:$datadir/auto-load&amp;quot;.
+To enable execution of this file add
+    add-auto-load-safe-path /usr/local/lib64/libstdc++.so.6.0.21-gdb.py
+line to your configuration file &amp;quot;/root/.gdbinit&amp;quot;.
+To completely disable this security protection add
+    set auto-load safe-path /
+line to your configuration file &amp;quot;/root/.gdbinit&amp;quot;.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;解决方法: 将以下信息放入&lt;code&gt;~/.gdbinit&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;add-auto-load-safe-path /usr/local/lib64/libstdc++.so.6.0.21-gdb.py
+set auto-load safe-path /
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;若想通过gdb来调试STL容器，则还需要做一些配置，可以通过&lt;code&gt;GDB Python pretty printers&lt;/code&gt;来解决这个问题：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;svn checkout svn://gcc.gnu.org/svn/gcc/trunk/libstdc++-v3/python stlPrettyPrinter
+mv stlPrettyPrinter /usr/local
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;然后将下面的配置信息放入&lt;code&gt;~/.gdbinit&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;python
+import sys
+sys.path.insert(0, &#39;/usr/local/stlPrettyPrinter&#39;)
+from libstdcxx.v6.printers import register_libstdcxx_printers
+register_libstdcxx_printers (None)
+end
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+        </item>
+        <item>
+        <title>core文件被截断问题的解决办法</title>
+        <link>https://lxb.wiki/d12416f0/</link>
+        <pubDate>Mon, 10 Apr 2017 21:09:35 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/d12416f0/</guid>
+        <description>&lt;p&gt;&lt;strong&gt;现象&lt;/strong&gt;
+通过gdb打开core，但看不到core的内容，信息如下：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;$ gdb XXX core.XXX
+GNU gdb (GDB) Red Hat Enterprise Linux ( 7.0.1-32.el5)
+Copyright (C) 2009 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later &amp;lt;http://gnu.org/licenses/gpl.html&amp;gt;
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type &amp;#34;show copying&amp;#34;
+and &amp;#34;show warranty&amp;#34; for details.
+This GDB was configured as &amp;#34;x86_64-redhat-linux-gnu&amp;#34;.
+For bug reporting instructions, please see:
+&amp;lt;http://www.gnu.org/software/gdb/bugs/&amp;gt;...
+Reading symbols from /home/XXX/XXX...done.
+BFD: Warning: /home/XXX/core.XXX is truncated: expected core file size &amp;gt;= 747175936, found: 1236992.
+ 
+warning: core file may not match specified executable file.
+Cannot access memory at address 0x344201cc88
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;调查&lt;/strong&gt;
+ulimit -a的结果如下：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;core file size          (blocks, -c) 1000
+data seg size           (kbytes, -d) unlimited
+scheduling priority             (-e) 0
+file size               (blocks, -f) unlimited
+pending signals                 (-i) 40960
+max locked memory       (kbytes, -l) 32
+max memory size         (kbytes, -m) unlimited
+open files                      (-n) 65000
+pipe size            (512 bytes, -p) 8
+POSIX message queues     (bytes, -q) 536870912
+real-time priority              (-r) 0
+stack size              (kbytes, -s) 1024000
+cpu time               (seconds, -t) unlimited
+max user processes              (-u) 40960
+virtual memory          (kbytes, -v) unlimited
+file locks                      (-x) unlimited
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;经别人指点，说是“core file size”的值太小了。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;修改core file size的方法&lt;/strong&gt;
+1 使用root用户登录，在&lt;code&gt;/etc/security/limits.conf&lt;/code&gt;文件中，添加了“* hard core   unlimited”行，添加后此文件的内容大致如下：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# /etc/security/limits.conf
+#
+# Each line describes a limit for a user in the form:
+#
+# &amp;lt;domain&amp;gt; &amp;lt;type&amp;gt; &amp;lt;item&amp;gt; &amp;lt;value&amp;gt;
+#
+* - msgqueue 536870912
+* soft nofile 65000
+* hard nofile 65000
+* soft core   unlimited
+* hard core   unlimited
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;2 修改这个文件后，退出root用户
+3 退出自己的账户的全部登录的终端，然后关闭telnet工具，重新使用自己的账户登录系统，键入下面的命令，都会返回unlimited&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;$ ulimit -S -c
+unlimited
+$ ulimit -H -c
+unlimited
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;此时core文件就不会被截断了。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;参考资料&lt;/strong&gt;
+How do I enable core dumps for everybody
+&lt;a class=&#34;link&#34; href=&#34;http://www.akadia.com/services/ora_enable_core.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;http://www.akadia.com/services/ora_enable_core.html&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;原文地址: &lt;a class=&#34;link&#34; href=&#34;http://blog.sina.com.cn/s/blog_537f4d9b0100wi88.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;http://blog.sina.com.cn/s/blog_537f4d9b0100wi88.html&lt;/a&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>用GDB调试程序</title>
+        <link>https://lxb.wiki/13b68d49/</link>
+        <pubDate>Thu, 23 Feb 2017 19:12:02 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/13b68d49/</guid>
+        <description>&lt;h3 id=&#34;使用gdb&#34;&gt;使用GDB&lt;/h3&gt;
+&lt;p&gt;一般来说GDB主要调试的是C/C++的程序。要调试C/C++的程序，首先在编译时，我们必须要把调试信息加到可执行文件中。使用编译器（cc/gcc/g++）的 -g 参数可以做到这一点。如：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$gcc -g -Wall hello.c -o hello
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$g++ -g -Wall hello.cpp -o hello
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果没有-g，你将看不见程序的函数名、变量名，所代替的全是运行时的内存地址。当你用-g把调试信息加入之后，并成功编译目标代码以后，让我们来看看如何用gdb来调试他。 启动GDB的方法有以下几种： &lt;code&gt;gdb &amp;lt;program&amp;gt;&lt;/code&gt; program也就是你的执行文件，一般在当前目录下。 &lt;code&gt;gdb &amp;lt;program&amp;gt; core&lt;/code&gt; 用gdb同时调试一个运行程序和core文件，core是程序非法执行后core dump后产生的文件。 &lt;code&gt;gdb &amp;lt;program&amp;gt; &amp;lt;pid&amp;gt;&lt;/code&gt; 如果你的程序是一个服务程序，那么你可以指定这个服务程序运行时的进程ID。gdb会自动attach上去，并调试他。program应该在PATH环境变量中搜索得到。 以上三种都是进入gdb环境和加载被调试程序同时进行的。也可以先进入gdb环境，在加载被调试程序，方法如下：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;*在终端输入：gdb
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;*在gdb环境中：file &amp;lt;program&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;这两步等价于：gdb &amp;lt;program&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;GDB启动时，可以加上一些GDB的启动开关，详细的开关可以用gdb -help查看。我在下面只例举一些比较常用的参数：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-symbols &amp;lt;file&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-s &amp;lt;file&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;从指定文件中读取符号表。
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-se file
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;从指定文件中读取符号表信息，并把他用在可执行文件中。
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-core &amp;lt;file&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-c &amp;lt;file&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;调试时core dump的core文件。
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-directory &amp;lt;directory&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-d &amp;lt;directory&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;加入一个源文件的搜索路径。默认搜索路径是环境变量中PATH所定义的路径。
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;```&lt;/span&gt;&amp;lt;/directory&amp;gt;&amp;lt;/directory&amp;gt;&amp;lt;/file&amp;gt;&amp;lt;/file&amp;gt;&amp;lt;/file&amp;gt;&amp;lt;/file&amp;gt;&amp;lt;/program&amp;gt;&amp;lt;/program&amp;gt;&amp;lt;/pid&amp;gt;&amp;lt;/program&amp;gt;&amp;lt;/program&amp;gt;&amp;lt;/program&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;###GDB的命令概貌&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;启动gdb后，你就被带入gdb的调试环境中，就可以使用gdb的命令开始调试程序了，gdb的命令可以使用help命令来查看，如下所示：
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;```&lt;/span&gt;bash
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ gdb
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;GNU gdb 6.7.1-debian
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Copyright &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;C&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2007&lt;/span&gt; Free Software Foundation, Inc.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;License GPLv3+: GNU GPL version &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; or later &amp;lt;http: gnu.org&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt; licenses&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt; gpl.html&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;This is free software: you are free to change and redistribute it.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;There is NO WARRANTY, to the extent permitted by law.  Type &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;show copying&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;and &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;show warranty&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; details.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;This GDB was configured as &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;i486-linux-gnu&amp;#34;&lt;/span&gt;.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;gdb&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; help
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;List of classes of commands:&amp;lt;/http:&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;aliases -- Aliases of other commands
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;breakpoints -- Making program stop at certain points
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;data -- Examining data
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;files -- Specifying and examining files
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;internals -- Maintenance commands
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;obscure -- Obscure features
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;running -- Running the program
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;stack -- Examining the stack
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;status -- Status inquiries
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;support -- Support facilities
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;tracepoints -- Tracing of program execution without stopping the program
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;user-defined -- User-defined commands
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Type &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;help&amp;#34;&lt;/span&gt; followed by a class name &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; a list of commands in that class.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Type &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;help all&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; the list of all commands.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Type &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;help&amp;#34;&lt;/span&gt; followed by command name &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; full documentation.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Type &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;apropos word&amp;#34;&lt;/span&gt; to search &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; commands related to &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;word&amp;#34;&lt;/span&gt;.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Command name abbreviations are allowed &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; unambiguous.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;gdb&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;gdb 的命令很多，gdb把之分成许多个种类。help命令只是例出gdb的命令种类，如果要看种类中的命令，可以使用&lt;code&gt;help &amp;lt;class&amp;gt;&lt;/code&gt;命令，如：help breakpoints，查看设置断点的所有命令。也可以直接&lt;code&gt;help &amp;lt;command&amp;gt;&amp;lt;/command&amp;gt;&lt;/code&gt;来查看命令的帮助。 gdb中，输入命令时，可以不用打全命令，只用打命令的前几个字符就可以了，当然，命令的前几个字符应该要标志着一个唯一的命令，在Linux下，你可以敲击两次TAB键来补齐命令的全称，如果有重复的，那么gdb会把其列出来。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;示例一&lt;/strong&gt;：在进入函数func时，设置一个断点。可以敲入break func，或是直接就是b func&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;gdb&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; b func
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Breakpoint &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; at 0x804837a: file tst.c, line 5.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;示例二&lt;/strong&gt;：敲入b按两次TAB键，你会看到所有b打头的命令：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;gdb&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; b
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;backtrace break bt
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;gdb&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;示例三&lt;/strong&gt;：只记得函数的前缀，可以这样：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;gdb&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; b make_ &amp;amp;lt;按TAB键&amp;amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;（再按下一次TAB键，你会看到:）
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;make_a_section_from_file make_environ
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;make_abs_section make_function_type
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;make_blockvector make_pointer_type
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;make_cleanup make_reference_type
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;make_command make_symbol_completion_list
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;gdb&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; b make_
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;GDB把所有make开头的函数全部列出来给你查看。
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;示例四&lt;/strong&gt;：调试C++的程序时，有可以函数名一样。如：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;gdb&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; b &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bubble( M-?
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;bubble(double,double) bubble(int,int)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;(gdb) b &amp;#39;&lt;/span&gt;bubble&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;你可以查看到C++中的所有的重载函数及参数。（注：M-?和“按两次TAB键”是一个意思） 要退出gdb时，只用发quit或命令简称q就行了&lt;/p&gt;
+&lt;h3 id=&#34;gdb中运行unix的shell程序&#34;&gt;GDB中运行UNIX的shell程序&lt;/h3&gt;
+&lt;p&gt;在gdb环境中，你可以执行UNIX的shell的命令，使用gdb的shell命令来完成： &lt;code&gt;shell &amp;lt;command string=&amp;quot;&amp;quot;&amp;gt;&amp;lt;/command&amp;gt;&lt;/code&gt; 调用UNIX的shell来执行&lt;code&gt;&amp;lt;command string=&amp;quot;&amp;quot;&amp;gt;&amp;lt;/command&amp;gt;&lt;/code&gt;，环境变量SHELL中定义的UNIX的shell将会被用来执行&lt;code&gt;&amp;lt;command string=&amp;quot;&amp;quot;&amp;gt;&amp;lt;/command&amp;gt;&lt;/code&gt;，如果SHELL没有定义，那就使用UNIX的标准&lt;code&gt;shell：/bin/sh&lt;/code&gt;。（在Windows中使用Command.com或cmd.exe） 还有一个gdb命令是make： &lt;code&gt;make &amp;lt;make-args&amp;gt;&lt;/code&gt; 可以在gdb中执行make命令来重新build自己的程序。这个命令等价于&lt;code&gt;shell make &amp;lt;make-args&amp;gt;&lt;/code&gt;。&lt;/p&gt;
+&lt;h3 id=&#34;在gdb中运行程序&#34;&gt;在GDB中运行程序&lt;/h3&gt;
+&lt;p&gt;当以&lt;code&gt;gdb &amp;lt;program&amp;gt;&lt;/code&gt;方式启动gdb后，gdb会在PATH路径和当前目录中搜索&lt;code&gt;&amp;lt;program&amp;gt;&lt;/code&gt;的源文件。如要确认gdb是否读到源文件，可使用l或list命令，看看gdb是否能列出源代码。 在gdb中，运行程序使用r或是run命令。程序的运行，你有可能需要设置下面四方面的事。 &lt;strong&gt;1、程序运行参数。&lt;/strong&gt; set args 可指定运行时参数。（如：set args 10 20 30 40 50） show args 命令可以查看设置好的运行参数。 &lt;strong&gt;2、运行环境。&lt;/strong&gt; `path&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;可设定程序的运行路径。 show paths 查看程序的运行路径。 set environment varname [=value] 设置环境变量。如：set env USER=hchen show environment [varname] 查看环境变量。 **3、工作目录。**&lt;/code&gt;cd&lt;/p&gt;
+&lt;p&gt;` 相当于shell的cd命令。 pwd 显示当前的所在目录。 &lt;strong&gt;4、程序的输入输出。&lt;/strong&gt; info terminal 显示你程序用到的终端的模式。 使用重定向控制程序输出。如：run &amp;gt; outfile tty命令可以指写输入输出的终端设备。如：tty /dev/ttyb&lt;/p&gt;
+&lt;h3 id=&#34;调试已运行的程序&#34;&gt;调试已运行的程序&lt;/h3&gt;
+&lt;p&gt;两种方法： 1. 在UNIX下用ps查看正在运行的程序的PID（进程ID），然后用&lt;code&gt;gdb &amp;lt;program&amp;gt; PID&lt;/code&gt;格式挂接正在运行的程序。 2. 先用&lt;code&gt;gdb &amp;lt;program&amp;gt;&lt;/code&gt;关联上源代码，并进行gdb，在gdb中用attach命令来挂接进程的PID。并用detach来取消挂接的进程。&lt;/p&gt;
+&lt;h3 id=&#34;暂停恢复程序运行&#34;&gt;暂停/恢复程序运行&lt;/h3&gt;
+&lt;p&gt;调试程序中，暂停程序运行是必须的，GDB可以方便地暂停程序的运行。你可以设置程序的在哪行停住，在什么条件下停住，在收到什么信号时停往等等。以便于你查看运行时的变量，以及运行时的流程。 当进程被gdb停住时，你可以使用&lt;code&gt;info program&lt;/code&gt; 来查看程序的是否在运行，进程号，被暂停的原因。 在gdb中，我们可以有以下几种暂停方式：断点（BreakPoint）、观察点（Watch Point）、捕捉点（Catch Point）、信号（Signals）、线程停止（Thread Stops）。如果要恢复程序运行，可以使用c或是 continue命令。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;下面为重要的使用步骤, 只摘抄了部分必要的信息, 如设置断点, 查看栈信息, 其余操作, 可以在&lt;a class=&#34;link&#34; href=&#34;http://wiki.ubuntu.org.cn/%E7%94%A8GDB%E8%B0%83%E8%AF%95%E7%A8%8B%E5%BA%8F&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;wiki.ubuntu&lt;/a&gt;查看&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;设置断点（Break Points）&lt;/strong&gt; 我们用break命令来设置断点。下面有几点设置断点的方法： &lt;code&gt;break &amp;lt;function&amp;gt;&lt;/code&gt; 在进入指定函数时停住。C++中可以使用&lt;code&gt;class::function&lt;/code&gt;或&lt;code&gt;function(type,type)&lt;/code&gt;格式来指定函数名。 &lt;code&gt;break &amp;lt;linenum&amp;gt;&lt;/code&gt; 在指定行号停住。 &lt;code&gt;break +offset&lt;/code&gt; &lt;code&gt;break -offset&lt;/code&gt; 在当前行号的前面或后面的offset行停住。offiset为自然数。 &lt;code&gt;break filename：linenum&lt;/code&gt; 在源文件filename的linenum行处停住。 &lt;code&gt;break filename：function&lt;/code&gt; 在源文件filename的function函数的入口处停住。 &lt;code&gt;break *address&lt;/code&gt; 在程序运行的内存地址处停住。 &lt;code&gt;break&lt;/code&gt; break命令没有参数时，表示在下一条指令处停住。 &lt;code&gt;break ... if &amp;lt;condition&amp;gt;&lt;/code&gt; &amp;hellip;可以是上述的参数，condition表示条件，在条件成立时停住。比如在循环体中，可以设置&lt;code&gt;break if i==100&lt;/code&gt;，表示当i为100时停住程序。 查看断点时，可使用info命令，如下所示：（注：n表示断点号） &lt;code&gt;info breakpoints [n]&lt;/code&gt; &lt;code&gt;info break [n]&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;维护停止点&lt;/strong&gt; 上面说了如何设置程序的停止点，GDB中的停止点也就是上述的三类。在GDB中，如果你觉得已定义好的停止点没有用了，你可以使用&lt;code&gt;delete&lt;/code&gt;、&lt;code&gt;clear&lt;/code&gt;、&lt;code&gt;disable&lt;/code&gt;、&lt;code&gt;enable&lt;/code&gt;这几个命令来进行维护。 &lt;code&gt;clear&lt;/code&gt; 清除所有的已定义的停止点。 &lt;code&gt;clear &amp;lt;function&amp;gt;&lt;/code&gt; &lt;code&gt;clear &amp;lt;filename：function&amp;gt;&lt;/code&gt; 清除所有设置在函数上的停止点。 &lt;code&gt;clear &amp;lt;linenum&amp;gt;&lt;/code&gt; &lt;code&gt;clear &amp;lt;filename：linenum&amp;gt;&lt;/code&gt; 清除所有设置在指定行上的停止点。 &lt;code&gt;delete [breakpoints] [range...]&lt;/code&gt; 删除指定的断点，breakpoints为断点号。如果不指定断点号，则表示删除所有的断点。range 表示断点号的范围（如：3-7）。其简写命令为d。&amp;lt;/filename：linenum&amp;gt;&amp;lt;/filename：function&amp;gt;&lt;/p&gt;
+&lt;p&gt;比删除更好的一种方法是disable停止点，disable了的停止点，GDB不会删除，当你还需要时，enable即可，就好像回收站一样。 &lt;code&gt;disable [breakpoints] [range...]&lt;/code&gt; disable所指定的停止点，breakpoints为停止点号。如果什么都不指定，表示disable所有的停止点。简写命令是dis. &lt;code&gt;enable [breakpoints] [range...]&lt;/code&gt; enable所指定的停止点，breakpoints为停止点号。 &lt;code&gt;enable [breakpoints] once range...&lt;/code&gt; enable所指定的停止点一次，当程序停止后，该停止点马上被GDB自动disable。 &lt;code&gt;enable [breakpoints] delete range...&lt;/code&gt; enable所指定的停止点一次，当程序停止后，该停止点马上被GDB自动删除。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;恢复程序运行和单步调试&lt;/strong&gt; 当程序被停住了，你可以用continue命令恢复程序的运行直到程序结束，或下一个断点到来。也可以使用step或next命令单步跟踪程序。 &lt;code&gt;continue [ignore-count]&lt;/code&gt; &lt;code&gt;c [ignore-count]&lt;/code&gt; &lt;code&gt;fg [ignore-count]&lt;/code&gt; 恢复程序运行，直到程序结束，或是下一个断点到来。ignore-count表示忽略其后的断点次数。continue，c，fg三个命令都是一样的意思。 &lt;code&gt;step &amp;lt;count&amp;gt;&lt;/code&gt; 单步跟踪，如果有函数调用，他会进入该函数。进入函数的前提是，此函数被编译有debug信息。很像VC等工具中的step in。后面可以加count也可以不加，不加表示一条条地执行，加表示执行后面的count条指令，然后再停住。 &lt;code&gt;next &amp;lt;count&amp;gt;&lt;/code&gt; 同样单步跟踪，如果有函数调用，他不会进入该函数。很像VC等工具中的step over。后面可以加count也可以不加，不加表示一条条地执行，加表示执行后面的count条指令，然后再停住。 &lt;code&gt;set step-mode&lt;/code&gt; &lt;code&gt;set step-mode on&lt;/code&gt; 打开step-mode模式，于是，在进行单步跟踪时，程序不会因为没有debug信息而不停住。这个参数很有利于查看机器码。 &lt;code&gt;set step-mode off&lt;/code&gt; 关闭step-mode模式。 &lt;code&gt;finish&lt;/code&gt; 运行程序，直到当前函数完成返回。并打印函数返回时的堆栈地址和返回值及参数值等信息。 &lt;code&gt;until 或 u&lt;/code&gt; 当你厌倦了在一个循环体内单步跟踪时，这个命令可以运行程序直到退出循环体。 &lt;code&gt;stepi 或 si&lt;/code&gt; &lt;code&gt;nexti 或 ni&lt;/code&gt; 单步跟踪一条机器指令！一条程序代码有可能由数条机器指令完成，stepi和nexti可以单步执行机器指令。与之一样有相同功能的命令是&lt;code&gt;“display/i $pc”&lt;/code&gt; ，当运行完这个命令后，单步跟踪会在打出程序代码的同时打出机器指令（也就是汇编代码）&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;查看栈信息&lt;/strong&gt; 当程序被停住了，你需要做的第一件事就是查看程序是在哪里停住的。当你的程序调用了一个函数，函数的地址，函数参数，函数内的局部变量都会被压入“栈”（Stack）中。你可以用GDB命令来查看当前的栈中的信息。 下面是一些查看函数调用栈信息的GDB命令： &lt;code&gt;backtrace&lt;/code&gt; &lt;code&gt;bt&lt;/code&gt; 打印当前的函数调用栈的所有信息。如：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;gdb&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; bt
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#0  func (n=250) at tst.c:6&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#1  0x08048524 in main (argc=1, argv=0xbffff674) at tst.c:30&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#2  0x400409ed in __libc_start_main () from /lib/libc.so.6&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;从上可以看出函数的调用栈信息：&lt;code&gt;__libc_start_main --&amp;amp;gt; main() --&amp;amp;gt; func()&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;backtrace &amp;lt;n&amp;gt;&lt;/code&gt; &lt;code&gt;bt &amp;lt;n&amp;gt;&lt;/code&gt; n是一个正整数，表示只打印栈顶上n层的栈信息。 &lt;code&gt;backtrace &amp;amp;lt;-n&amp;amp;gt;&lt;/code&gt; &lt;code&gt;bt &amp;amp;lt;-n&amp;amp;gt;&lt;/code&gt; -n表一个负整数，表示只打印栈底下n层的栈信息。 如果你要查看某一层的信息，你需要切换当前栈，一般来说，程序停止时，最顶层的栈就是当前栈，如果你要查看栈下面层的详细信息，首先要做的是切换当前栈。 &lt;code&gt;frame &amp;lt;n&amp;gt;&lt;/code&gt; &lt;code&gt;f &amp;lt;n&amp;gt;&lt;/code&gt; n是一个从0开始的整数，是栈中的层编号。比如：frame 0，表示栈顶，frame 1，表示栈的第二层。 &lt;code&gt;up &amp;lt;n&amp;gt;&lt;/code&gt; 表示向栈的上面移动n层，可以不打n，表示向上移动一层。 &lt;code&gt;down &amp;lt;n&amp;gt;&lt;/code&gt; 表示向栈的下面移动n层，可以不打n，表示向下移动一层。&lt;/p&gt;
+&lt;p&gt;上面的命令，都会打印出移动到的栈层的信息。如果你不想让其打出信息。你可以使用这三个命令： &lt;code&gt;select-frame &amp;lt;n&amp;gt;&lt;/code&gt; 对应于 frame 命令。 &lt;code&gt;up-silently &amp;lt;n&amp;gt;&lt;/code&gt;对应于 up 命令。 &lt;code&gt;down-silently &amp;lt;n&amp;gt;&lt;/code&gt; 对应于 down 命令。 查看当前栈层的信息，你可以用以下GDB命令： &lt;code&gt;frame&lt;/code&gt; 或 &lt;code&gt;f&lt;/code&gt; 会打印出这些信息：栈的层编号，当前的函数名，函数参数值，函数所在文件及行号，函数执行到的语句。 &lt;code&gt;info frame&lt;/code&gt; &lt;code&gt;info f&lt;/code&gt; 这个命令会打印出更为详细的当前栈层的信息，只不过，大多数都是运行时的内存地址。比如：函数地址，调用函数的地址，被调用函数的地址，目前的函数是由什么样的程序语言写成的、函数参数地址及值、局部变量的地址等等。如： &lt;code&gt;bash (gdb) info f Stack level 0, frame at 0xbffff5d4: eip = 0x804845d in func (tst.c:6); saved eip 0x8048524 called by frame at 0xbffff60c source language c. Arglist at 0xbffff5d4, args: n=250 Locals at 0xbffff5d4, Previous frame&#39;s sp is 0x0 Saved registers: ebp at 0xbffff5d4, eip at 0xbffff5d8&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;info args&lt;/code&gt; 打印出当前函数的参数名及其值。 &lt;code&gt;info locals&lt;/code&gt; 打印出当前函数中所有局部变量及其值。 &lt;code&gt;info catch&lt;/code&gt; 打印出当前的函数中的异常处理信息。&lt;/p&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>

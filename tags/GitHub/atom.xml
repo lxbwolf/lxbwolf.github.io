@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>GitHub on Xiaobin&#39;s Blog</title>
+        <link>https://lxb.wiki/tags/GitHub/</link>
+        <description>Recent content in GitHub on Xiaobin&#39;s Blog</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <lastBuildDate>Tue, 10 Mar 2020 19:03:42 +0000</lastBuildDate><atom:link href="https://lxb.wiki/tags/GitHub/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <title>树莓派搭建GitHub镜像服务</title>
+        <link>https://lxb.wiki/2073ae8b/</link>
+        <pubDate>Tue, 10 Mar 2020 19:03:42 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/2073ae8b/</guid>
+        <description>&lt;h3 id=&#34;1--树莓派上创建-git-账号创建用于存放代码的目录&#34;&gt;1.  树莓派上创建 git 账号，创建用于存放代码的目录&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;/srv/&lt;/code&gt;&lt;/p&gt;
+&lt;h3 id=&#34;2-github-库-clone-到树莓派&#34;&gt;2. GitHub 库 clone 到树莓派&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;git clone git@github.com:user/XXXX.git /srv/&lt;/code&gt;&lt;/p&gt;
+&lt;h3 id=&#34;3-添加-remote&#34;&gt;3. 添加 remote&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;git remote add upstream https://github.com/abcd/XXXX&lt;/code&gt;&lt;/p&gt;
+&lt;h3 id=&#34;4-修改-hook&#34;&gt;4. 修改 hook&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#.git/hooks/post-update&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;param&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;$1&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;push_branch&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;param##refs/heads/&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;#获取到更新的分支名&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git push origin $push_branch
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;5-添加定时任务&#34;&gt;5. 添加定时任务&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;5,35 * * * * cd /srv/XXXX &amp;amp;&amp;amp; git pull upstream master&lt;/code&gt;&lt;/p&gt;
+&lt;h3 id=&#34;6-在本地代码添加-remote&#34;&gt;6. 在本地代码添加 remote&lt;/h3&gt;
+&lt;h4 id=&#34;61-有多个项目时为避免修改每个项目的-remote直接添加-host&#34;&gt;6.1 有多个项目时，为避免修改每个项目的 remote，直接添加 host&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;192.168.1.8 gitsrv&lt;/code&gt;&lt;/p&gt;
+&lt;h4 id=&#34;62-在每个项目在添加一次-remote&#34;&gt;6.2 在每个项目在添加一次 remote&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;git remote add pi git@192.168.1.8:/srv/XXXX&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;这样即使以后地址改变，只需要改一次 host 就可以了&lt;/p&gt;
+&lt;h3 id=&#34;7-推拉代码时从-pi-推拉&#34;&gt;7. 推拉代码时，从 pi 推拉&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;git pull pi branch&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;git push pi branch&lt;/code&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>如何使用GitHub搜索</title>
+        <link>https://lxb.wiki/a813d59a/</link>
+        <pubDate>Mon, 28 Oct 2019 23:03:30 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/a813d59a/</guid>
+        <description>&lt;p&gt;&lt;strong&gt;1. 明确搜索仓库标题、仓库描述、README&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;in:name 关键词&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;如果想查找描述的内容，可以使用这样的方式：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;in:descripton 关键词&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;这里就是搜索上面项目描述的内容。&lt;/p&gt;
+&lt;p&gt;一般项目，都会有个README文件，如果要查该文件包含特定关键词的话&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;in:readme 关键词&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;2. 明确搜索 star、fork 数大于多少的&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;一个项目 star 数的多少，一般代表该项目有受欢迎程度。虽然现在也有垃圾项目刷 star ，但毕竟是少数， star 依然是个不错的衡量标准。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;stars:&amp;gt; 数字 关键字&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;比如要找 star 数大于 3000 的Spring Cloud 仓库，就可以这样&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;stars:&amp;gt;3000 spring cloud&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;如果不加 &amp;gt;= 的话，是要精确找 star 数等于具体数字的，这个一般有点困难。&lt;/p&gt;
+&lt;p&gt;如果要找在指定数字区间的话，使用&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;stars: 10..20 关键词&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;fork 数同理，将上面的 stars 换成 &lt;strong&gt;fork&lt;/strong&gt;，其它语法相同&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;3. 明确搜索仓库大小的&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;比如只想看个简单的 Demo，不想找特别复杂的且占用磁盘空间较多的，可以在搜索的时候直接限定仓库的 &lt;strong&gt;size&lt;/strong&gt; 。&lt;/p&gt;
+&lt;p&gt;使用方式：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;size:&amp;gt;=5000 关键词&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;这里注意下，这个数字代表K, 5000代表着5M。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;4. 明确仓库是否还在更新维护&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;我们在确认是否要使用一些开源产品，框架的时候，是否继续维护是很重要的一点。如果已经过时没人维护的东西，踩了坑就不好办了。而在 GitHub 上找项目的时候，不再需要每个都点到项目里看看最近 push 的时间，直接在搜索框即可完成。&lt;/p&gt;
+&lt;p&gt;元旦刚过，比如咱们要找临近年底依然在勤快更新的项目，就可以直接指定&lt;strong&gt;更新时间&lt;/strong&gt;在哪个时间前或后的&lt;/p&gt;
+&lt;p&gt;通过这样一条搜索 &lt;code&gt;pushed:&amp;gt;2019-01-03 spring cloud&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;就找到了1月3号之后，还在更新的项目&lt;/p&gt;
+&lt;p&gt;想找指定时间之前或之后创建的仓库也是可以的，把 &lt;strong&gt;pushed&lt;/strong&gt; 改成 &lt;strong&gt;created&lt;/strong&gt; 就行。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;5. 明确搜索仓库的 LICENSE&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;经常使用开源软件，一定都知道，开源软件也是分不同的「门派」不同的&lt;strong&gt;LICENSE&lt;/strong&gt;。开源不等于一切免费，不同的许可证要求也大不相同。 2018年就出现了 Facebook 修改 React 的许可协议导致各个公司纷纷修改自己的代码，寻找替换的框架。&lt;/p&gt;
+&lt;p&gt;例如要找协议是最为宽松的 Apache License 2 的代码，可以这样&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;license:apache-2.0 spring cloud&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;其它协议就把 apache-2.0 替换一下即可，比如换成 &lt;strong&gt;mit&lt;/strong&gt; 之类的。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;6. 明确搜索仓库的语言&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;比如咱们就找 Java 的库， 除了像上面在左侧点击选择之外，还可以在搜索中过滤。像这样：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;language:java 关键词&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;7.明确搜索某个人或组织的仓库&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;user:joshlong&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;组合使用一下，把 Java 项目过滤出来，多个查询之间「空格」分隔即可。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;user:joshlong language:java&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;找某个组织的代码话，可以这样：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;org:spring-cloud&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;就可以列出具体org 的仓库。&lt;/p&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>

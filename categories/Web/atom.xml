@@ -1,0 +1,2470 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Web on Xiaobin&#39;s Blog</title>
+        <link>https://lxb.wiki/categories/Web/</link>
+        <description>Recent content in Web on Xiaobin&#39;s Blog</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <lastBuildDate>Wed, 16 Nov 2022 22:20:00 +0000</lastBuildDate><atom:link href="https://lxb.wiki/categories/Web/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <title>【译】域名末尾带个点</title>
+        <link>https://lxb.wiki/a258db2c/</link>
+        <pubDate>Wed, 16 Nov 2022 22:20:00 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/a258db2c/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;大家好！今年早些时候，我在写《[DNS 是如何工作的][1]》 时，有人问我——为什么人们有时在域名的末尾加一个点？例如，如果你通过运行 &lt;code&gt;dig example.com&lt;/code&gt; 查询 &lt;code&gt;example.com&lt;/code&gt; 的 IP，你会看到一下内容：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;
+$ dig example.com
+example.com.        5678    IN  A   93.184.216.34
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;执行完 &lt;code&gt;dig&lt;/code&gt; 命令后，&lt;code&gt;example.com&lt;/code&gt; 有一个 &lt;code&gt;.&lt;/code&gt; ——变成了 &lt;code&gt;example.com.&lt;/code&gt;！发生了什么？&lt;/p&gt;
+&lt;p&gt;有些 DNS 工具也要求传给它的域名后加一个 &lt;code&gt;.&lt;/code&gt;：如果你在使用 [miekg/dns][2] 时传给它 &lt;code&gt;example.com&lt;/code&gt;，它会报错：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;
+// trying to send this message will return an error
+m := new(dns.Msg)
+m.SetQuestion(&amp;#34;example.com&amp;#34;, dns.TypeA)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;最初我以为我知道这个问题的答案（“呃，末尾的点意味着域名是完全限定的？”）。这是对的 —— 一个&lt;!-- raw HTML omitted --&gt;完全限定域名&lt;!-- raw HTML omitted --&gt;fully qualified domain name&lt;!-- raw HTML omitted --&gt;&lt;!-- raw HTML omitted --&gt;（FQDN）是一个末尾有 &lt;code&gt;.&lt;/code&gt; 的域名！&lt;/p&gt;
+&lt;p&gt;但是&lt;em&gt;为什么&lt;/em&gt;末尾的点是有用且重要的呢？&lt;/p&gt;
+&lt;h3 id=&#34;在-dns-的请求响应中域名的末尾并没有-&#34;&gt;在 DNS 的请求/响应中，域名的末尾并没有 “.”&lt;/h3&gt;
+&lt;p&gt;我曾经（错误地）认为 “为什么末尾有一个点？”的答案可能是 “在 DNS 请求/响应中，域名末尾有一个 &lt;code&gt;.&lt;/code&gt;，所以我们把它放进去，以匹配你的计算机实际发送/接收的内容”。但事实并不是这样！&lt;/p&gt;
+&lt;p&gt;当计算机发送 DNS 请求/响应时，域名的末尾并没有点。实际上，域名中&lt;em&gt;没有&lt;/em&gt;点。&lt;/p&gt;
+&lt;p&gt;域名会被编码成一系列的长度/字符串对。例如，域名 &lt;code&gt;example.com&lt;/code&gt; 被编码为这 13 个字节。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;
+7example3com0
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;编码后的内容一个点也没有。一个 ASCII 域名（如 &lt;code&gt;example.com&lt;/code&gt;）被转成了各种 DNS 软件的 DNS 请求/响应中使用的格式。&lt;/p&gt;
+&lt;p&gt;今天我们来讨论域名被转成 DNS 响应的一个地方：区域文件。&lt;/p&gt;
+&lt;h3 id=&#34;区域文件中域名末尾的-&#34;&gt;区域文件中域名末尾的 “.”&lt;/h3&gt;
+&lt;p&gt;一些人管理域名的 DNS 记录的方法是创建一个被称为 “区域文件” 的文本文件，然后配置一些 DNS 服务器软件（如 &lt;code&gt;nsd&lt;/code&gt; 或 &lt;code&gt;bind&lt;/code&gt;）来为该区域文件中指定的 DNS 记录提供服务。&lt;/p&gt;
+&lt;p&gt;下面是一个对应 &lt;code&gt;example.com&lt;/code&gt; 的示例区域文件：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;
+orange  300   IN    A     1.2.3.4
+fruit   300   IN    CNAME orange
+grape   3000  IN    CNAME example.com.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;在这个文件中，任何不以 &lt;code&gt;.&lt;/code&gt; 结尾的域名（比如 &lt;code&gt;orange&lt;/code&gt;）后都会自动加上 &lt;code&gt;.example.com&lt;/code&gt;。所以 &lt;code&gt;orange&lt;/code&gt; 成了 &lt;code&gt;orange.example.com&lt;/code&gt; 的简称。DNS 服务器从它的配置中得知这是一个 &lt;code&gt;example.com&lt;/code&gt; 的区域文件，所以它知道在所有不以点结尾的名字后面自动添加 &lt;code&gt;example.com&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;我想这里的想法只是为了少打几个字符——如果要打出全称，区域文件会是这样：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;
+    orange.example.com.  300   IN    A     1.2.3.4
+    fruit.example.com.   300   IN    CNAME orange.example.com.
+    grape.example.com.   3000  IN    CNAME example.com.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;确实多了很多字符。&lt;/p&gt;
+&lt;h3 id=&#34;你也可以不通过区域文件来使用-dns&#34;&gt;你也可以不通过区域文件来使用 DNS&lt;/h3&gt;
+&lt;p&gt;尽管官方的 DNS RFC（[RFC 1035][3]）中定义了区域文件格式，但你也可以不通过区域文件来使用 DNS。例如，AWS Route 53 就不用区域文件来存储 DNS 记录！你可以通过 Web 界面或 API 来创建记录，我猜他们是用某种数据库而不是一堆文本文件来存储记录。&lt;/p&gt;
+&lt;p&gt;不过，Route 53（像许多其他 DNS 工具一样）确实支持导入和导出区域文件，这个功能或许在你更换 DNS 提供商时很有用。&lt;/p&gt;
+&lt;h3 id=&#34;dig-命令输出中末尾的-&#34;&gt;dig 命令输出中末尾的 “.”&lt;/h3&gt;
+&lt;p&gt;现在我们来讨论下 &lt;code&gt;dig&lt;/code&gt; 命令的输出：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;
+$ dig example.com
+; &amp;lt;&amp;lt;&amp;gt;&amp;gt; DiG 9.18.1-1ubuntu1.1-Ubuntu &amp;lt;&amp;lt;&amp;gt;&amp;gt; +all example.com
+;; global options: +cmd
+;; Got answer:
+;; -&amp;gt;&amp;gt;HEADER&amp;lt;&amp;lt;- opcode: QUERY, status: NOERROR, id: 10712
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 65494
+;; QUESTION SECTION:
+;example.com.           IN  A
+
+;; ANSWER SECTION:
+example.com.        81239   IN  A   93.184.216.34
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;有一件奇怪的事是，几乎每一行都以 &lt;code&gt;;;&lt;/code&gt; 开头，这是怎么回事？&lt;code&gt;;&lt;/code&gt; 是区域文件中的注释字符！&lt;/p&gt;
+&lt;p&gt;我想 &lt;code&gt;dig&lt;/code&gt; 以这种奇怪的方式输出的原因可能是为了方便你粘贴这些内容到区域文件时，不用修改就可以直接用。&lt;/p&gt;
+&lt;p&gt;这也是 &lt;code&gt;example.com&lt;/code&gt; 末尾有个 &lt;code&gt;.&lt;/code&gt; 的原因 —— 区域文件要求域名末尾必须有点（否则它们会被解释为是相对于该区域的）。因此 &lt;code&gt;dig&lt;/code&gt; 也这么处理了。&lt;/p&gt;
+&lt;p&gt;我真的希望 dig 有一个 &lt;code&gt;+human&lt;/code&gt; 选项，以更人性化的方式打印出这些信息，但现在我太懒了，懒得花工夫去实际贡献代码来做这件事（而且我并不擅长 C），所以我只能在我的博客上抱怨一下 :)&lt;/p&gt;
+&lt;h3 id=&#34;curl-命令输出中末尾的-&#34;&gt;curl 命令输出中末尾的 “.”&lt;/h3&gt;
+&lt;p&gt;我们来看下另一个末尾有 &lt;code&gt;.&lt;/code&gt; 的例子：&lt;code&gt;curl&lt;/code&gt;！&lt;/p&gt;
+&lt;p&gt;我家里有台计算机名为 &lt;code&gt;grapefruit&lt;/code&gt;，其上运行着 Web 服务器。当我执行 &lt;code&gt;curl grapefruit&lt;/code&gt; 时，会输出：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;
+$ curl grapefruit
+
+&amp;lt;!DOCTYPE HTML PUBLIC &amp;#34;-//W3C//DTD HTML 4.01//EN&amp;#34; &amp;#34;http://www.w3.org/TR/html4/strict.dtd&amp;#34;&amp;gt;
+
+&amp;lt;html&amp;gt;
+&amp;lt;head&amp;gt;
+......
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这样运行没问题！但是如果我在域名后加一个 &lt;code&gt;.&lt;/code&gt; 会怎样呢？它报错了：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;$ curl grapefruit.
+curl: (6) Could not resolve host: grapefruit.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;发生了什么？为了搞清楚，我们需要先来学习下搜索域：&lt;/p&gt;
+&lt;h3 id=&#34;初识搜索域&#34;&gt;初识搜索域&lt;/h3&gt;
+&lt;p&gt;当我执行 &lt;code&gt;curl grapefrult&lt;/code&gt; 时，它是怎么被转成一个 DNS 请求的？你可能会认为我的计算机会向域名 &lt;code&gt;grapefruit&lt;/code&gt; 发送一个请求，对吗？但事实并不是这样。&lt;/p&gt;
+&lt;p&gt;让我们用 &lt;code&gt;tcpdump&lt;/code&gt; 来看看到底是什么域名在被查询。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;$ sudo tcpdump -i any port 53
+[...] A? grapefruit.lan. (32)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;实际上是向 &lt;code&gt;grapefruit.lan.&lt;/code&gt; 发送的请求。为什么呢？&lt;/p&gt;
+&lt;p&gt;解释一下：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;curl&lt;/code&gt; 调用函数 &lt;code&gt;getaddrinfo&lt;/code&gt; 来查询 &lt;code&gt;grapefruit&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;getaddrinfo&lt;/code&gt; 查询了我计算机上的文件 &lt;code&gt;/etc/resolv.conf&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;/etc/resolv.conf&lt;/code&gt; 包含两行内容：
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;nameserver 127.0.0.53
+search lan
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;li&gt;因为有 &lt;code&gt;search lan&lt;/code&gt; 这行内容，所以 &lt;code&gt;getaddrinfo&lt;/code&gt; 在 &lt;code&gt;grapefruit&lt;/code&gt; 的末尾添加了一个 &lt;code&gt;lan&lt;/code&gt;，去查询 &lt;code&gt;grapefruit.lan&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;什么时候搜索域被使用&#34;&gt;什么时候搜索域被使用?&lt;/h3&gt;
+&lt;p&gt;现在我们知道了一些奇怪的事情：当我们查询一个域名时，有时会有一个额外的东西（如 &lt;code&gt;lan&lt;/code&gt;）被加到最后。但是什么时候会发生这种情况呢？&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;如果我们在域名&lt;strong&gt;末尾&lt;/strong&gt;添加一个 &lt;code&gt;.&lt;/code&gt;，那么这时不会用到搜索域&lt;/li&gt;
+&lt;li&gt;如果域名&lt;strong&gt;中间包含&lt;/strong&gt;一个 &lt;code&gt;.&lt;/code&gt;（如 &lt;code&gt;example.com&lt;/code&gt;），那么默认也不会用到搜索域。但是可以通过修改配置来改变处理逻辑（在 [ndots][4] 里有更详细的说明）&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;我们现在知道了 &lt;code&gt;curl grapefruit.&lt;/code&gt; 与 &lt;code&gt;curl grapefruit&lt;/code&gt; 结果不一样的原因——因为一个查询的是 &lt;code&gt;grapefruit.&lt;/code&gt;，而另一个查询的是 &lt;code&gt;grapefruit.lan.&lt;/code&gt;。&lt;/p&gt;
+&lt;h3 id=&#34;我的计算机怎么知道使用哪个搜索域呢&#34;&gt;我的计算机怎么知道使用哪个搜索域呢？&lt;/h3&gt;
+&lt;p&gt;当我连接路由时，它会通过 DHCP 告诉我它的搜索域是 &lt;code&gt;lan&lt;/code&gt; —— 它也是通过这个方式给我的计算机分配 IP。&lt;/p&gt;
+&lt;h3 id=&#34;所以为什么要在域名末尾加一个点呢&#34;&gt;所以为什么要在域名末尾加一个点呢？&lt;/h3&gt;
+&lt;p&gt;现在我们已经了解了区域文件和搜索域，下面是我认为的人们要在域名末尾加点的原因：&lt;/p&gt;
+&lt;p&gt;有两种情况下，域名会被修改，并在末尾添加其他东西。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;在 &lt;code&gt;example.com&lt;/code&gt; 的区域文件中，&lt;code&gt;grapefruit&lt;/code&gt; 会被转为 &lt;code&gt;grapefruit.example.com&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;在我的本地网络（我的计算机已经配置了使用搜索域 &lt;code&gt;lan&lt;/code&gt;），&lt;code&gt;grapefruit&lt;/code&gt; 被转为 &lt;code&gt;grapefruit.lan&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;因此，由于域名在某些情况下实际上可能被转成其他名字，人们就在结尾处加一个 &lt;code&gt;.&lt;/code&gt;，以此来表示 “&lt;strong&gt;这是域名，末尾不需要添加任何东西，这就是全部内容&lt;/strong&gt;”。否则会引起混乱。&lt;/p&gt;
+&lt;p&gt;“这就是全部内容”的技术术语是**“完全限定域名”&lt;strong&gt;，简称为&lt;/strong&gt;“FQDN”**。所以 &lt;code&gt;google.com.&lt;/code&gt; 是一个完全限定域名，而 &lt;code&gt;google.com&lt;/code&gt; 不是。&lt;/p&gt;
+&lt;p&gt;我总是要提醒自己这样做的原因，因为我很少使用区域文件和搜索域，所以我经常觉得——“我当然是指 &lt;code&gt;google.com&lt;/code&gt; 而不是 &lt;code&gt;google.com.something.else&lt;/code&gt;! 我为什么要指其他东西？那太傻了！”&lt;/p&gt;
+&lt;p&gt;但是有些人确实在使用区域文件和搜索域（例如 Kubernetes 中使用了搜索域！），所以结尾的 &lt;code&gt;.&lt;/code&gt; 很有用，可以让人确切的知道，不应该再添加其他东西。&lt;/p&gt;
+&lt;h3 id=&#34;什么时候在末尾添加-&#34;&gt;什么时候在末尾添加 “.”？&lt;/h3&gt;
+&lt;p&gt;以下是关于何时在域名末尾加 &amp;ldquo;. &amp;quot; 的几个简单说明：&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;需要添加：配置 DNS 时&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;在配置 DNS 时，使用完全限定域名从来都不是坏事。你不一定要这样做：非完全限定域名通常也能正常工作，但我从来没有遇到过不接受完全限定域名的 DNS 软件。&lt;/p&gt;
+&lt;p&gt;有些 DNS 软件需要这样做：现在我为 &lt;code&gt;jvns.ca&lt;/code&gt; 使用的 DNS 服务器让我在域名的末尾加上 &lt;code&gt;.&lt;/code&gt;（例如在 CNAME 记录中），并提示如果我不添加，它将在我输入的内容末尾加上 &lt;code&gt;.jvns.ca&lt;/code&gt;。我不同意这个设计决定，但这不是什么大问题，我只是在最后加一个 &lt;code&gt;.&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;不需要加：在浏览器中&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;令人困惑的是，在浏览器中，在域名结尾处加一个 &lt;code&gt;.&lt;/code&gt; &lt;em&gt;不能&lt;/em&gt;正常运行。例如，如果我在浏览器中输入 &lt;code&gt;https://twitter.com.&lt;/code&gt;，它就会报错。它会返回 404。&lt;/p&gt;
+&lt;p&gt;我认为这里发生的事情是，它将 HTTP &lt;code&gt;Host&lt;/code&gt; 标头设置为 &lt;code&gt;Host：twitter.com.&lt;/code&gt;，而对端的 Web 服务器则期望 &lt;code&gt;Host：twitter.com&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;同样地，&lt;code&gt;https://jvns.ca.&lt;/code&gt; 由于某种原因，返回了一个 SSL 错误。&lt;/p&gt;
+&lt;h3 id=&#34;我认为相对域名在过去是比较常见的&#34;&gt;我认为相对域名在过去是比较常见的&lt;/h3&gt;
+&lt;p&gt;最后一件事：我认为“相对”域名（比如我用 &lt;code&gt;grapefruit&lt;/code&gt; 来指代我家的另一台计算机 &lt;code&gt;grapefruit.lan&lt;/code&gt;）在过去更常用，因为 DNS 是在大学或其他有大型内部网络的大机构中开发的。&lt;/p&gt;
+&lt;p&gt;在今天的互联网上，使用“绝对”域名（如 &lt;code&gt;example.com&lt;/code&gt;）似乎更为普遍。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;via: &lt;a class=&#34;link&#34; href=&#34;https://jvns.ca/blog/2022/09/12/why-do-domain-names-end-with-a-dot-/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://jvns.ca/blog/2022/09/12/why-do-domain-names-end-with-a-dot-/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;作者：&lt;a class=&#34;link&#34; href=&#34;https://jvns.ca/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Julia Evans&lt;/a&gt;
+选题：&lt;a class=&#34;link&#34; href=&#34;https://github.com/lujun9972&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;lujun9972&lt;/a&gt;
+译者：&lt;a class=&#34;link&#34; href=&#34;https://github.com/lxbwolf&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Xiaobin.Liu&lt;/a&gt;
+校对：&lt;a class=&#34;link&#34; href=&#34;https://github.com/wxy&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;wxy&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;本文由 &lt;a class=&#34;link&#34; href=&#34;https://github.com/LCTT/TranslateProject&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;LCTT&lt;/a&gt; 原创编译，&lt;a class=&#34;link&#34; href=&#34;https://linux.cn/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Linux中国&lt;/a&gt; 荣誉推出&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;</description>
+        </item>
+        <item>
+        <title>TCP协议中的三次握手和四次挥手</title>
+        <link>https://lxb.wiki/5fa4c221/</link>
+        <pubDate>Thu, 21 Oct 2021 22:54:29 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/5fa4c221/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;h1 id=&#34;1-准备&#34;&gt;1. 准备&lt;/h1&gt;
+&lt;p&gt;TCP是属于网络分层中的运输层(有的书也翻译为传输层)，
+分层以及每层的协议，TCP是属于运输层(有的书也翻译为传输层)，如下两张图：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311145804.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311145821.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;TCP&lt;a class=&#34;link&#34; href=&#34;https://so.csdn.net/so/search?q=%e4%b8%89%e6%ac%a1%e6%8f%a1%e6%89%8b&amp;amp;spm=1001.2101.3001.7020&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;三次握手&lt;/a&gt;会涉及到状态转换所以这里贴出TCP的状态转换图如下：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311145910.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h1 id=&#34;2tcp三次握手简述&#34;&gt;2.TCP三次握手简述&lt;/h1&gt;
+&lt;p&gt;要想简单了解TCP三次握手，我们首先要了解TCP头部结构，如下：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311145957.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;TCP传递给IP层的信息单位称为&lt;strong&gt;报文段或段&lt;/strong&gt;，下面都用&lt;strong&gt;段&lt;/strong&gt;做单位。&lt;/p&gt;
+&lt;p&gt;TCP三次握手如图：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311150026.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;21-第一次握手&#34;&gt;2.1 第一次握手&lt;/h2&gt;
+&lt;p&gt;客户端给服务器发送一个SYN段(在 TCP 标头中 SYN 位字段为 &lt;strong&gt;1&lt;/strong&gt; 的 TCP/IP 数据包), 该段中也包含客户端的初始序列号(Sequence number = J)。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;SYN是同步的缩写，SYN 段是发送到另一台计算机的 TCP 数据包，请求在它们之间建立连接&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;2.2 第二次握手
+服务器返回客户端 SYN +ACK 段(在 TCP 标头中SYN和ACK位字段都为 1 的 TCP/IP 数据包)， 该段中包含服务器的初始序列号(Sequence number = K)；同时使 Acknowledgment number = J + 1来表示确认已收到客户端的 SYN段(Sequence number = J)。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;ACK 是“确认”的缩写。 ACK 数据包是任何确认收到一条消息或一系列数据包的 TCP 数据包&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;23-第三次握手&#34;&gt;2.3 第三次握手&lt;/h2&gt;
+&lt;p&gt;客户端给服务器响应一个ACK段(在 TCP 标头中 ACK 位字段为 &lt;strong&gt;1&lt;/strong&gt; 的 TCP/IP 数据包), 该段中使 Acknowledgment number = K + 1来表示确认已收到服务器的 SYN段(Sequence number = K)。&lt;/p&gt;
+&lt;h2 id=&#34;24-实例观察&#34;&gt;2.4 实例观察&lt;/h2&gt;
+&lt;h3 id=&#34;241-tcpdump&#34;&gt;2.4.1 tcpdump&lt;/h3&gt;
+&lt;p&gt;使用tcpdump观察如下：因为都是在本机同时运行client和server所以命令为：&lt;code&gt;tcpdump -i lo port 5555&lt;/code&gt;, 只能监听回路lo接口，结果如下&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311150222.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;如图用红色圈起来的就是3次握手，但是为什么最后一次握手，为什么ack = 1,而不是369535922 呢，
+这是因为这里的第三次握手tcpdump显示的是相对的顺序号。但是为了便于观察我们需要把tcpdump的
+顺序号变为绝对的顺序号。&lt;/p&gt;
+&lt;p&gt;命令只需要加-S(大写)便可，即：&lt;code&gt;tcpdump -i lo port 5555 -S&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;加上之后结果就正常了如下图：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311150312.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;从tcpdump的数据，可以明显的看到三次握手的过程是：
+第一次握手：client SYN=1, Sequence number=2322326583 —&amp;gt; server
+第二次握手：server SYN=1,Sequence number=3573692787; ACK=1, Acknowledgment number=2322326583 + 1 —&amp;gt; client
+第三次握手：client ACK=1, Acknowledgment number=3573692787 + 1 &amp;ndash;&amp;gt;server&lt;/p&gt;
+&lt;p&gt;想简单了解一下TCP三次握手的话, 看到这里就可以了.&lt;/p&gt;
+&lt;h1 id=&#34;3tcp三次握手详细解析过程&#34;&gt;3.TCP三次握手详细解析过程：&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311151642.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;31-第一次握手&#34;&gt;3.1 第一次握手&lt;/h2&gt;
+&lt;p&gt;客户在socket() connect()后主动(active open)连接上服务器, 发送SYN ，这时客户端的状态是SYN_SENT
+服务器在进行socket(),bind(),listen()后等待客户的连接，收到客户端的 SYN 后，&lt;/p&gt;
+&lt;h3 id=&#34;311-半连接队列syn-queue未满&#34;&gt;3.1.1 半连接队列(syn queue)未满&lt;/h3&gt;
+&lt;p&gt;服务器将该连接的状态变为SYN_RCVD, 服务器把连接信息放到半连接队列(syn queue)里面。&lt;/p&gt;
+&lt;h3 id=&#34;312-半连接队列syn-queue已满&#34;&gt;3.1.2 半连接队列(syn queue)已满&lt;/h3&gt;
+&lt;p&gt;服务器不会将该连接的状态变为SYN_RCVD，且将该连接丢弃(SYN flood攻击就是利用这个原理，
+对于SYN foold攻击，应对方法之一是使syncookies生效，将其值置1即可，路径/proc/sys/net/ipv4/tcp_syncookies，
+即使是半连接队列syn queue已经满了，也可以接收正常的非恶意攻击的客户端的请求，
+但是这种方法只在无计可施的情况下使用，man tcp里面的解析是这样说的，
+&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311151743.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;Centos6.9默认是置为1&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311151840.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;半连接队列(syn queue)最大值 &lt;code&gt;/proc/sys/net/ipv4/tcp_max_syn_backlog&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311151858.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;SYN flood攻击&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;攻击方的客户端只发送SYN分节给服务器，然后对服务器发回来的SYN+ACK什么也不做，直接忽略掉，
+不发送ACK给服务器；这样就可以占据着服务器的半连接队列的资源，导致正常的客户端连接无法连接上服务器。&lt;a class=&#34;link&#34; href=&#34;https://zh.wikipedia.org/wiki/SYN_flood&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;维基百科&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;(SYN flood攻击的方式其实也分两种，第一种，攻击方的客户端一直发送SYN，对于服务器回应的SYN+ACK什么也不做，不回应ACK, 第二种，攻击方的客户端发送SYN时，将源IP改为一个虚假的IP, 然后服务器将SYN+ACK发送到虚假的IP, 这样当然永远也得不到ACK的回应。)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;32-第二次握手&#34;&gt;3.2 第二次握手&lt;/h2&gt;
+&lt;p&gt;服务器返回SYN+ACK段给到客户端，客户端收到SYN+ACK段后，客户端的状态从SYN_SENT变为ESTABLISHED，
+也即是connect()函数的返回。&lt;/p&gt;
+&lt;h2 id=&#34;33-第三次握手&#34;&gt;3.3 第三次握手&lt;/h2&gt;
+&lt;p&gt;全连接队列(accept queue)的最大值 /proc/sys/net/core/somaxconn (默认128)&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311152107.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;全连接队列值 = min(backlog, somaxconn)
+这里的backlog是listen(int sockfd, int backlog)函数里面的那个参数backlog&lt;/p&gt;
+&lt;h3 id=&#34;331-全连接队列accept-queue未满&#34;&gt;3.3.1 全连接队列(accept queue)未满&lt;/h3&gt;
+&lt;p&gt;服务器收到客户端发来的ACK, 服务端该连接的状态从SYN_RCVD变为ESTABLISHED,
+然后服务器将该连接从半连接队列(syn queue)里面移除，且将该连接的信息放到全连接队列(accept queue)里面。&lt;/p&gt;
+&lt;h3 id=&#34;332-全连接队列accept-queue已满&#34;&gt;3.3.2 全连接队列(accept queue)已满&lt;/h3&gt;
+&lt;p&gt;服务器收到客户端发来的ACK, 不会将该连接的状态从SYN_RCVD变为ESTABLISHED。
+当然全连接队列(accept queue)已满时，则根据 tcp_abort_on_overflow 的值来执行相应动作
+/proc/sys/net/ipv4/tcp_abort_on_overflow 查看参数值
+&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311152138.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h4 id=&#34;3321-tcp_abort_on_overflow--0&#34;&gt;3.3.2.1 tcp_abort_on_overflow = 0&lt;/h4&gt;
+&lt;p&gt;则服务器建立该连接的定时器，&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;这个定时器是一个服务器的规则是从新发送syn+ack的时间间隔成倍的增加，
+比如从新了第二次握手，进行了5次，这五次的时间分别是 1s, 2s,4s,8s,16s,
+这种倍数规则叫“二进制指数退让”(binary exponential backoff)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;给客户端定时从新发回SYN+ACK即从新进行第二次握手，(如果客户端设定的超时时间比较短就很容易出现异常)
+&lt;code&gt;服务器从新进行第二次握手的次数/proc/sys/net/ipv4/tcp_synack_retries&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311152221.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h4 id=&#34;3322-tcp_abort_on_overflow--1&#34;&gt;3.3.2.2 tcp_abort_on_overflow = 1&lt;/h4&gt;
+&lt;p&gt;关于tcp_abort_on_overflow的解析如下：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311152247.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;意思应该是，当 tcp_abort_on_overflow 等于1 时,重置连接(一般是发送RST给客户端)，
+至于怎么重置连接是系统的事情了。
+不过我在查资料的过程发现，阿里中间件团队博客说并不是发送RST， —[阿里中间件团队博客]&lt;/p&gt;
+&lt;p&gt;这个博客跑的实例观察到的是服务器会忽略client传过来的包，然后client重传，一定次数后client认为异常，然后断开连接。
+当然，我们写代码的都知道代码是第一手的注释，实践是检验真理的唯一标准，
+最好还是自己以自己实践为准，因为可能你的环境跟别人的不一样。)&lt;/p&gt;
+&lt;p&gt;查看全连接队列(accept queue)的使用情况&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311152314.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;如上图，第二列Recv-Q是，全连接队列接收到达的连接，第三列是Send-Q全连接队列的所能容纳最大值，
+如果，Recv-Q 大于 Send-Q 那么大于的那部分，是要溢出的即要被丢弃overflow掉的。&lt;/p&gt;
+&lt;p&gt;希望热心的网友帮忙提改进意见时可以直接指出哪一段第几句(比如 2.4.1 tcpdump 第一段第一句, 命令tcpdump -i lo port 5555 里参数 i 用错了，应该用 I)，这样比较快速找到好改正。&lt;/p&gt;
+&lt;h1 id=&#34;4-四次挥手&#34;&gt;4 四次挥手&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311152407.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311152602.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;【注意】中断连接端可以是Client端，也可以是Server端。&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;假设Client端发起中断连接请求，也就是发送FIN报文。Server端接到FIN报文后，意思是说&amp;quot;我Client端没有数据要发给你了&amp;quot;，但是如果你还有数据没有发送完成，则不必急着关闭Socket，可以继续发送数据。所以你先发送ACK，&amp;ldquo;告诉Client端，你的请求我收到了，但是我还没准备好，请继续你等我的消息&amp;rdquo;。这个时候Client端就进入FIN_WAIT状态，继续等待Server端的FIN报文。当Server端确定数据已发送完成，则向Client端发送FIN报文，&amp;ldquo;告诉Client端，好了，我这边数据发完了，准备好关闭连接了&amp;rdquo;。Client端收到FIN报文后，&amp;ldquo;就知道可以关闭连接了，但是他还是不相信网络，怕Server端不知道要关闭，所以发送ACK后进入TIME_WAIT状态，如果Server端没有收到ACK则可以重传。“，Server端收到ACK后，&amp;ldquo;就知道可以断开连接了&amp;rdquo;。Client端等待了2MSL后依然没有收到回复，则证明Server端已正常关闭，那好，我Client端也可以关闭连接了。Ok，TCP连接就这样关闭了！&lt;/p&gt;
+&lt;p&gt;整个过程Client端所经历的状态如下：
+&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311152636.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;而Server端所经历的过程如下：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220311152709.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;【注意】&lt;/strong&gt; 在TIME_WAIT状态中，如果TCP client端最后一次发送的ACK丢失了，它将重新发送。TIME_WAIT状态中所需要的时间是依赖于实现方法的。典型的值为30秒、1分钟和2分钟。等待之后连接正式关闭，并且所有的资源(包括端口号)都被释放。&lt;/p&gt;
+&lt;p&gt;【问题1】为什么连接的时候是三次握手，关闭的时候却是四次握手？
+答：因为当Server端收到Client端的SYN连接请求报文后，可以直接发送SYN+ACK报文。其中ACK报文是用来应答的，SYN报文是用来同步的。但是关闭连接时，当Server端收到FIN报文时，很可能并不会立即关闭SOCKET，所以只能先回复一个ACK报文，告诉Client端，&amp;ldquo;你发的FIN报文我收到了&amp;rdquo;。只有等到我Server端所有的报文都发送完了，我才能发送FIN报文，因此不能一起发送。故需要四步握手。&lt;/p&gt;
+&lt;p&gt;【问题2】为什么TIME_WAIT状态需要经过2MSL(最大报文段生存时间)才能返回到CLOSE状态？&lt;/p&gt;
+&lt;p&gt;答：虽然按道理，四个报文都发送完毕，我们可以直接进入CLOSE状态了，但是我们必须假象网络是不可靠的，有可以最后一个ACK丢失。所以TIME_WAIT状态就是用来重发可能丢失的ACK报文。&lt;/p&gt;
+&lt;p&gt;根据第三版《UNIX网络编程 卷1》2.7节，TIME_WAIT状态的主要目的有两个：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;优雅的关闭TCP连接，也就是尽量保证被动关闭的一端收到它自己发出去的FIN报文的ACK确认报文；&lt;/li&gt;
+&lt;li&gt;处理延迟的重复报文，这主要是为了避免前后两个使用相同四元组的连接中的前一个连接的报文干扰后一个连接。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;　　很明显，要实现上述两个目标，TIME_WAIT状态需要持续一段时间，但这段时间应该是多长呢？&lt;/p&gt;
+&lt;p&gt;　　如果只考虑上述第一个目标，则TIME_WAIT状态需要持续的时间应该参考对端的RTO（重传超时时间）以及MSL（报文在网络中的最大生存时间）来计算而不是仅仅按MSL来计算，因为只要对端没有收到针对FIN报文的ACK，就会一直持续重传FIN报文直到重传超时，所以最能实现完美关闭连接的时长计算方式应该是从对端发送第一个FIN报文开始计时到它最后一次重传FIN报文这段时长加上MSL，但这个计算方式过于保守，只有在所有的ACK报文都丢失的情况下才需要这么长的时间；另外，第一个目标虽然重要，但并不十分关键，因为既然已经到了关闭连接的最后一步，说明在这个TCP连接上的所有用户数据已经完成可靠传输，所以要不要完美的关闭这个连接其实已经不是那么关键了。因此，（我猜）RFC标准的制定者才决定以网络丢包不太严重为前提条件，然后根据第二个目标来计算TIME_WAIT状态应该持续的时长。&lt;/p&gt;
+&lt;p&gt;对于刚才说的第二点，如何理解TIME_WAIT状态持续2MSL的时间就可以避免前后两个使用相同四元组的连接中的前一个连接的报文干扰后一个连接呢？&lt;/p&gt;
+&lt;p&gt;首先我们需要了解如下要点：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;TCP连接中的一端发送了FIN报文之后如果收不到对端针对该FIN的ACK，则会反复多次重传FIN报文，大约持续几分钟；&lt;/li&gt;
+&lt;li&gt;被动关闭处于LAST_ACK状态的一端在收到最后一个ACK之后不会发送任何报文，立即进入CLOSED状态；&lt;/li&gt;
+&lt;li&gt;主动关闭的一端在收到被动关闭端发送过来的FIN报文并回复ACK之后进入TIME_WAIT状态；&lt;/li&gt;
+&lt;li&gt;之所以TIME_WAIT状态需要维持一段时间而不是进入CLOSED状态，是因为需要处理对端可能重传的FIN报文或其它一些因网络原因而延迟的数据报文，不处理这些报文可能导致前后两个使用相同四元组的连接中的后一个连接出现异常(详见UNIX网络编程卷1的2.7节 第三版)；&lt;/li&gt;
+&lt;li&gt;处于TIME_WAIT状态的一端在收到重传的FIN时会重新计时(rfc793 以及 linux kernel源代码tcp_timewait_state_process函数)。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;　　下面我们开始分析为什么在发送了最后一个ACK报文之后需要等待2MSL时长来确保没有任何属于当前连接的报文还存活于网络之中（前提是在这2MSL时间内不再收到对方的FIN报文，但即使收到了对端的FIN报文也并不影响我们的讨论，因为如果收到FIN则会回复ACK并重新计时）。&lt;/p&gt;
+&lt;p&gt;　　为了便于描述，我们设想有一个处于拆链过程中的TCP连接，这个连接的两端分别是A和B，其中A是主动关闭连接的一端，因为刚刚向对端发送了针对对端发送过来的FIN报文的ACK，此时正处于TIME_WAIT状态；而B是被动关闭的一端，此时正处于LAST_ACK状态，在收到最后一个ACK之前它会一直重传FIN报文直至超时。随着时间的流逝，A发送给B的ACK报文将会有两种结局：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;ACK报文在网络中丢失；如前所述，这种情况我们不需要考虑，因为除非多次重传失败，否则AB两端的状态不会发生变化直至某一个ACK不再丢失。&lt;/li&gt;
+&lt;li&gt;ACK报文被B接收到。我们假设A发送了ACK报文后过了一段时间t之后B才收到该ACK，则有 0 &amp;lt; t &amp;lt;= MSL。因为A并不知道它发送出去的ACK要多久对方才能收到，所以A至少要维持MSL时长的TIME_WAIT状态才能保证它的ACK从网络中消失。同时处于LAST_ACK状态的B因为收到了ACK，所以它直接就进入了CLOSED状态，而不会向网络发送任何报文。所以晃眼一看，A只需要等待1个MSL就够了，但仔细想一下其实1个MSL是不行的，因为在B收到ACK前的一刹那，B可能因为没收到ACK而重传了一个FIN报文，这个FIN报文要从网络中消失最多还需要一个MSL时长，所以A还需要多等一个MSL。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;　　综上所述，TIME_WAIT至少需要持续2MSL时长，这2个MSL中的第一个MSL是为了等自己发出去的最后一个ACK从网络中消失，而第二MSL是为了等在对端收到ACK之前的一刹那可能重传的FIN报文从网络中消失。另外，虽然说维持TIME_WAIT状态一段时间有2个目的，但这段时间具体应该多长主要是为了达成上述第二个目的而设计的。&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Kafka 主从同步</title>
+        <link>https://lxb.wiki/4c6cb38f/</link>
+        <pubDate>Sun, 26 Sep 2021 22:01:43 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/4c6cb38f/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;Kafka允许topic的分区拥有若干副本，这个数量是可以配置的，你可以为每个topci配置副本的数量。Kafka会自动在每个个副本上备份数据，所以当一个节点down掉时数据依然是可用的。&lt;/p&gt;
+&lt;p&gt;Kafka的副本功能不是必须的，你可以配置只有一个副本，这样其实就相当于只有一份数据。&lt;/p&gt;
+&lt;p&gt;创建副本的单位是topic的分区，每个分区都有一个leader和零或多个followers.所有的读写操作都由leader处理，一般分区的数量都比broker的数量多的多，各分区的leader均匀的分布在brokers中。所有的followers都复制leader的日志，日志中的消息和顺序都和leader中的一致。flowers向普通的consumer那样从leader那里拉取消息并保存在自己的日志文件中。
+许多分布式的消息系统自动的处理失败的请求，它们对一个节点是否
+着（alive）”有着清晰的定义。Kafka判断一个节点是否活着有两个条件：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;节点必须可以维护和ZooKeeper的连接，Zookeeper通过心跳机制检查每个节点的连接。&lt;/li&gt;
+&lt;li&gt;如果节点是个follower,他必须能及时的同步leader的写操作，延时不能太久。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;符合以上条件的节点准确的说应该是“同步中的（in sync）”，而不是模糊的说是“活着的”或是“失败的”。Leader会追踪所有“同步中”的节点，一旦一个down掉了，或是卡住了，或是延时太久，leader就会把它移除。至于延时多久算是“太久”，是由参数replica.lag.max.messages决定的，怎样算是卡住了，怎是由参数replica.lag.time.max.ms决定的。
+只有当消息被所有的副本加入到日志中时，才算是“committed”，只有committed的消息才会发送给consumer，这样就不用担心一旦leader down掉了消息会丢失。Producer也可以选择是否等待消息被提交的通知，这个是由参数request.required.acks决定的。&lt;/p&gt;
+&lt;p&gt;Kafka保证只要有一个“同步中”的节点，“committed”的消息就不会丢失。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Leader的选择&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Kafka的核心是日志文件，日志文件在集群中的同步是分布式数据系统最基础的要素。&lt;/p&gt;
+&lt;p&gt;如果leaders永远不会down的话我们就不需要followers了！一旦leader down掉了，需要在followers中选择一个新的leader.但是followers本身有可能延时太久或者crash，所以必须选择高质量的follower作为leader.必须保证，一旦一个消息被提交了，但是leader down掉了，新选出的leader必须可以提供这条消息。大部分的分布式系统采用了多数投票法则选择新的leader,对于多数投票法则，就是根据所有副本节点的状况动态的选择最适合的作为leader.Kafka并不是使用这种方法。&lt;/p&gt;
+&lt;p&gt;Kafaka动态维护了一个同步状态的副本的集合（a set of in-sync replicas），简称ISR，在这个集合中的节点都是和leader保持高度一致的，任何一条消息必须被这个集合中的每个节点读取并追加到日志中了，才回通知外部这个消息已经被提交了。因此这个集合中的任何一个节点随时都可以被选为leader.ISR在ZooKeeper中维护。ISR中有f+1个节点，就可以允许在f个节点down掉的情况下不会丢失消息并正常提供服。ISR的成员是动态的，如果一个节点被淘汰了，当它重新达到“同步中”的状态时，他可以重新加入ISR.这种leader的选择方式是非常快速的，适合kafka的应用场景。&lt;/p&gt;
+&lt;p&gt;一个邪恶的想法：如果所有节点都down掉了怎么办？Kafka对于数据不会丢失的保证，是基于至少一个节点是存活的，一旦所有节点都down了，这个就不能保证了。
+实际应用中，当所有的副本都down掉时，必须及时作出反应。可以有以下两种选择:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;等待ISR中的任何一个节点恢复并担任leader。&lt;/li&gt;
+&lt;li&gt;选择所有节点中（不只是ISR）第一个恢复的节点作为leader.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这是一个在可用性和连续性之间的权衡。如果等待ISR中的节点恢复，一旦ISR中的节点起不起来或者数据都是了，那集群就永远恢复不了了。如果等待ISR意外的节点恢复，这个节点的数据就会被作为线上数据，有可能和真实的数据有所出入，因为有些数据它可能还没同步到。Kafka目前选择了第二种策略，在未来的版本中将使这个策略的选择可配置，可以根据场景灵活的选择。&lt;/p&gt;
+&lt;p&gt;这种窘境不只Kafka会遇到，几乎所有的分布式数据系统都会遇到。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;副本管理&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;以上仅仅以一个topic一个分区为例子进行了讨论，但实际上一个Kafka将会管理成千上万的topic分区.Kafka尽量的使所有分区均匀的分布到集群所有的节点上而不是集中在某些节点上，另外主从关系也尽量均衡这样每个几点都会担任一定比例的分区的leader.&lt;/p&gt;
+&lt;p&gt;优化leader的选择过程也是很重要的，它决定了系统发生故障时的空窗期有多久。Kafka选择一个节点作为“controller”,当发现有节点down掉的时候它负责在游泳分区的所有节点中选择新的leader,这使得Kafka可以批量的高效的管理所有分区节点的主从关系。如果controller down掉了，活着的节点中的一个会备切换为新的controller.&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Kafka 架构</title>
+        <link>https://lxb.wiki/44075289/</link>
+        <pubDate>Sat, 25 Sep 2021 21:55:19 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/44075289/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;h2 id=&#34;一简介&#34;&gt;一、简介&lt;/h2&gt;
+&lt;h3 id=&#34;11-概述&#34;&gt;1.1 概述&lt;/h3&gt;
+&lt;p&gt;Kafka主要设计目标如下：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;以时间复杂度为O(1)的方式提供消息持久化能力，即使对TB级以上数据也能保证常数时间的访问性能。&lt;/li&gt;
+&lt;li&gt;高吞吐率。即使在非常廉价的商用机器上也能做到单机支持每秒100K条消息的传输。&lt;/li&gt;
+&lt;li&gt;支持Kafka Server间的消息分区，及分布式消费，同时保证每个partition内的消息顺序传输。&lt;/li&gt;
+&lt;li&gt;同时支持离线数据处理和实时数据处理。&lt;/li&gt;
+&lt;li&gt;支持在线水平扩展&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;12-消息系统介绍&#34;&gt;1.2 消息系统介绍&lt;/h3&gt;
+&lt;p&gt;一个消息系统负责将数据从一个应用传递到另外一个应用，应用只需关注于数据，无需关注数据在两个或多个应用间是如何传递的。分布式消息传递基于可靠的消息队列，在客户端应用和消息系统之间异步传递消息。有两种主要的消息传递模式：&lt;strong&gt;点对点传递模式、发布-订阅模式&lt;/strong&gt;。大部分的消息系统选用发布-订阅模式。&lt;strong&gt;Kafka就是一种发布-订阅模式&lt;/strong&gt;。&lt;/p&gt;
+&lt;h3 id=&#34;13-点对点消息传递&#34;&gt;1.3 点对点消息传递&lt;/h3&gt;
+&lt;p&gt;在点对点消息系统中，消息持久化到一个队列中。此时，将有一个或多个消费者消费队列中的数据。但是一条消息只能被消费一次。当一个消费者消费了队列中的某条数据之后，该条数据则从消息队列中删除。该模式即使有多个消费者同时消费数据，也能保证数据处理的顺序。这种架构描述示意图如下：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220305215705.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;生产者发送一条消息到queue，只有一个消费者能收到&lt;/strong&gt;。&lt;/p&gt;
+&lt;h3 id=&#34;14-发布-订阅消息传递&#34;&gt;1.4 发布-订阅消息传递&lt;/h3&gt;
+&lt;p&gt;在发布-订阅消息系统中，消息被持久化到一个topic中。与点对点消息系统不同的是，消费者可以订阅一个或多个topic，消费者可以消费该topic中所有的数据，同一条数据可以被多个消费者消费，数据被消费后不会立马删除。在发布-订阅消息系统中，消息的生产者称为发布者，消费者称为订阅者。该模式的示例图如下：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220305215731.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;发布者发送到topic的消息，只有订阅了topic的订阅者才会收到消息&lt;/strong&gt;。&lt;/p&gt;
+&lt;h3 id=&#34;15-kafka的优点&#34;&gt;1.5 Kafka的优点&lt;/h3&gt;
+&lt;p&gt;1）解耦：&lt;/p&gt;
+&lt;p&gt;在项目启动之初来预测将来项目会碰到什么需求，是极其困难的。消息系统在处理过程中间插入了一个隐含的、基于数据的接口层，两边的处理过程都要实现这一接口。这允许你独立的扩展或修改两边的处理过程，只要确保它们遵守同样的接口约束。&lt;/p&gt;
+&lt;p&gt;2）冗余：（副本）&lt;/p&gt;
+&lt;p&gt;有些情况下，处理数据的过程会失败。除非数据被持久化，否则将造成丢失。消息队列把数据进行持久化直到它们已经被完全处理，通过这一方式规避了数据丢失风险。许多消息队列所采用的&amp;quot;插入-获取-删除&amp;quot;范式中，在把一个消息从队列中删除之前，需要你的处理系统明确的指出该消息已经被处理完毕，从而确保你的数据被安全的保存直到你使用完毕。&lt;/p&gt;
+&lt;p&gt;3）扩展性&lt;/p&gt;
+&lt;p&gt;因为消息队列解耦了你的处理过程，所以增大消息入队和处理的频率是很容易的，只要另外增加处理过程即可。不需要改变代码、不需要调节参数。扩展就像调大电力按钮一样简单。&lt;/p&gt;
+&lt;p&gt;4）灵活性&amp;amp;峰值处理能力&lt;/p&gt;
+&lt;p&gt;在访问量剧增的情况下，应用仍然需要继续发挥作用，但是这样的突发流量并不常见；如果为以能处理这类峰值访问为标准来投入资源随时待命无疑是巨大的浪费。使用消息队列能够使关键组件顶住突发的访问压力，而不会因为突发的超负荷的请求而完全崩溃。&lt;/p&gt;
+&lt;p&gt;5）可恢复性&lt;/p&gt;
+&lt;p&gt;系统的一部分组件失效时，不会影响到整个系统。消息队列降低了进程间的耦合度，所以即使一个处理消息的进程挂掉，加入队列中的消息仍然可以在系统恢复后被处理。&lt;/p&gt;
+&lt;p&gt;6）顺序保证&lt;/p&gt;
+&lt;p&gt;在大多使用场景下，数据处理的顺序都很重要。大部分消息队列本来就是排序的，并且能保证数据会按照特定的顺序来处理。Kafka保证一个Partition内的消息的有序性。&lt;/p&gt;
+&lt;p&gt;7）缓冲&lt;/p&gt;
+&lt;p&gt;在任何重要的系统中，都会有需要不同的处理时间的元素。例如，加载一张图片比应用过滤器花费更少的时间。消息队列通过一个缓冲层来帮助任务最高效率的执行———写入队列的处理会尽可能的快速。该缓冲有助于控制和优化数据流经过系统的速度。&lt;/p&gt;
+&lt;p&gt;8）异步通信&lt;/p&gt;
+&lt;p&gt;很多时候，用户不想也不需要立即处理消息。消息队列提供了异步处理机制，允许用户把一个消息放入队列，但并不立即处理它。想向队列中放入多少消息就放多少，然后在需要的时候再去处理它们。&lt;/p&gt;
+&lt;h3 id=&#34;16-常用mq对比&#34;&gt;1.6 常用MQ对比&lt;/h3&gt;
+&lt;p&gt;1）RabbitMQ&lt;/p&gt;
+&lt;p&gt;RabbitMQ是使用Erlang编写的一个开源的消息队列，本身支持很多的协议：AMQP，XMPP, SMTP, STOMP，也正因如此，它非常重量级，更适合于企业级的开发。同时实现了Broker构架，这意味着消息在发送给客户端时先在中心队列排队。对路由，负载均衡或者数据持久化都有很好的支持。&lt;/p&gt;
+&lt;p&gt;2）Redis&lt;/p&gt;
+&lt;p&gt;Redis是一个基于Key-Value对的NoSQL数据库，开发维护很活跃。虽然它是一个Key-Value数据库存储系统，但它本身支持MQ功能，所以完全可以当做一个轻量级的队列服务来使用。对于RabbitMQ和Redis的入队和出队操作，各执行100万次，每10万次记录一次执行时间。测试数据分为128Bytes、512Bytes、1K和10K四个不同大小的数据。实验表明：入队时，当数据比较小时Redis的性能要高于RabbitMQ，而如果数据大小超过了10K，Redis则慢的无法忍受；出队时，无论数据大小，Redis都表现出非常好的性能，而RabbitMQ的出队性能则远低于Redis。&lt;/p&gt;
+&lt;p&gt;3）ZeroMQ&lt;/p&gt;
+&lt;p&gt;ZeroMQ号称最快的消息队列系统，尤其针对大吞吐量的需求场景。ZeroMQ能够实现RabbitMQ不擅长的高级/复杂的队列，但是开发人员需要自己组合多种技术框架，技术上的复杂度是对这MQ能够应用成功的挑战。ZeroMQ具有一个独特的非中间件的模式，你不需要安装和运行一个消息服务器或中间件，因为你的应用程序将扮演这个服务器角色。你只需要简单的引用ZeroMQ程序库，可以使用NuGet安装，然后你就可以愉快的在应用程序之间发送消息了。但是ZeroMQ仅提供非持久性的队列，也就是说如果宕机，数据将会丢失。其中，Twitter的Storm 0.9.0以前的版本中默认使用ZeroMQ作为数据流的传输（Storm从0.9版本开始同时支持ZeroMQ和Netty作为传输模块）。&lt;/p&gt;
+&lt;p&gt;4）ActiveMQ&lt;/p&gt;
+&lt;p&gt;ActiveMQ是Apache下的一个子项目。 类似于ZeroMQ，它能够以代理人和点对点的技术实现队列。同时类似于RabbitMQ，它少量代码就可以高效地实现高级应用场景。&lt;/p&gt;
+&lt;p&gt;5）Kafka/Jafka&lt;/p&gt;
+&lt;p&gt;Kafka是Apache下的一个子项目，是一个高性能跨语言分布式发布/订阅消息队列系统，而Jafka是在Kafka之上孵化而来的，即Kafka的一个升级版。具有以下特性：快速持久化，可以在O(1)的系统开销下进行消息持久化；高吞吐，在一台普通的服务器上既可以达到10W/s的吞吐速率；完全的分布式系统，Broker、Producer、Consumer都原生自动支持分布式，自动实现负载均衡；支持Hadoop数据并行加载，对于像Hadoop的一样的日志数据和离线分析系统，但又要求实时处理的限制，这是一个可行的解决方案。Kafka通过Hadoop的并行加载机制统一了在线和离线的消息处理。Apache Kafka相对于ActiveMQ是一个非常轻量级的消息系统，除了性能非常好之外，还是一个工作良好的分布式系统。&lt;/p&gt;
+&lt;h3 id=&#34;17-kafka中的术语解释&#34;&gt;1.7 Kafka中的术语解释&lt;/h3&gt;
+&lt;h4 id=&#34;概述&#34;&gt;概述&lt;/h4&gt;
+&lt;p&gt;在深入理解Kafka之前，先介绍一下Kafka中的术语。下图展示了Kafka的相关术语以及之间的关系：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220305215821.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;上图中一个topic配置了3个partition。Partition1有两个offset：0和1。Partition2有4个offset。Partition3有1个offset。副本的id和副本所在的机器的id恰好相同。&lt;/p&gt;
+&lt;p&gt;如果一个topic的副本数为3，那么Kafka将在集群中为每个partition创建3个相同的副本。集群中的每个broker存储一个或多个partition。多个producer和consumer可同时生产和消费数据。&lt;/p&gt;
+&lt;h4 id=&#34;1-broker&#34;&gt;1 broker&lt;/h4&gt;
+&lt;p&gt;Kafka 集群包含一个或多个服务器，服务器节点称为broker。&lt;/p&gt;
+&lt;p&gt;broker存储topic的数据。如果某topic有N个partition，集群有N个broker，那么每个broker存储该topic的一个partition。&lt;/p&gt;
+&lt;p&gt;如果某topic有N个partition，集群有(N+M)个broker，那么其中有N个broker存储该topic的一个partition，剩下的M个broker不存储该topic的partition数据。&lt;/p&gt;
+&lt;p&gt;如果某topic有N个partition，集群中broker数目少于N个，那么一个broker存储该topic的一个或多个partition。在实际生产环境中，尽量避免这种情况的发生，这种情况容易导致Kafka集群数据不均衡。&lt;/p&gt;
+&lt;h4 id=&#34;2-topic&#34;&gt;2 Topic&lt;/h4&gt;
+&lt;p&gt;每条发布到Kafka集群的消息都有一个类别，这个类别被称为Topic。（物理上不同Topic的消息分开存储，逻辑上一个Topic的消息虽然保存于一个或多个broker上但用户只需指定消息的Topic即可生产或消费数据而不必关心数据存于何处）&lt;/p&gt;
+&lt;p&gt;类似于数据库的表名&lt;/p&gt;
+&lt;h4 id=&#34;3-partition&#34;&gt;3 &lt;strong&gt;Partition&lt;/strong&gt;&lt;/h4&gt;
+&lt;p&gt;topic中的数据分割为一个或多个partition。每个topic至少有一个partition。每个partition中的数据使用多个segment文件存储。partition中的数据是有序的，不同partition间的数据丢失了数据的顺序。如果topic有多个partition，消费数据时就不能保证数据的顺序。在需要严格保证消息的消费顺序的场景下，需要将partition数目设为1。&lt;/p&gt;
+&lt;h4 id=&#34;4-producer&#34;&gt;4 Producer&lt;/h4&gt;
+&lt;p&gt;生产者即数据的发布者，该角色将消息发布到Kafka的topic中。broker接收到生产者发送的消息后，broker将该消息&lt;strong&gt;追加&lt;/strong&gt;到当前用于追加数据的segment文件中。生产者发送的消息，存储到一个partition中，生产者也可以指定数据存储的partition。&lt;/p&gt;
+&lt;h4 id=&#34;5-consumer&#34;&gt;5 Consumer&lt;/h4&gt;
+&lt;p&gt;消费者可以从broker中读取数据。消费者可以消费多个topic中的数据。&lt;/p&gt;
+&lt;h4 id=&#34;6-consumer-group&#34;&gt;6 Consumer Group&lt;/h4&gt;
+&lt;p&gt;每个Consumer属于一个特定的Consumer Group（可为每个Consumer指定group name，若不指定group name则属于默认的group）。这是kafka用来实现一个topic消息的广播（发给所有的consumer）和单播（发给任意一个consumer）的手段。一个topic可以有多个CG。topic的消息会复制-给consumer。如果需要实现广播，只要每个consumer有一个独立的CG就可以了。要实现单播只要所有的consumer在同一个CG。用CG还可以将consumer进行自由的分组而不需要多次发送消息到不同的topic。&lt;/p&gt;
+&lt;h4 id=&#34;7-leader&#34;&gt;7 Leader&lt;/h4&gt;
+&lt;p&gt;每个partition有多个副本，其中有且仅有一个作为Leader，Leader是当前负责数据的读写的partition。&lt;/p&gt;
+&lt;h4 id=&#34;8-follower&#34;&gt;8 Follower&lt;/h4&gt;
+&lt;p&gt;Follower跟随Leader，所有写请求都通过Leader路由，数据变更会广播给所有Follower，Follower与Leader保持数据同步。如果Leader失效，则从Follower中选举出一个新的Leader。当Follower与Leader挂掉、卡住或者同步太慢，leader会把这个follower从“in sync replicas”（ISR）列表中删除，重新创建一个Follower。&lt;/p&gt;
+&lt;h4 id=&#34;9-offset&#34;&gt;9 Offset&lt;/h4&gt;
+&lt;p&gt;kafka的存储文件都是按照offset.kafka来命名，用offset做名字的好处是方便查找。例如你想找位于2049的位置，只要找到2048.kafka的文件即可。当然the first offset就是00000000000.kafka&lt;/p&gt;
+&lt;h2 id=&#34;一kafka的架构&#34;&gt;一、Kafka的架构&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220305215857.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;如上图所示，一个典型的Kafka集群中包含若干Producer（可以是web前端产生的Page View，或者是服务器日志，系统CPU、Memory等），若干broker（Kafka支持水平扩展，一般broker数量越多，集群吞吐率越高），若干Consumer Group，以及一个Zookeeper集群。Kafka通过Zookeeper管理集群配置，选举leader，以及在Consumer Group发生变化时进行rebalance。Producer使用push模式将消息发布到broker，Consumer使用pull模式从broker订阅并消费消息。&lt;/p&gt;
+&lt;h3 id=&#34;21-分布式模型&#34;&gt;2.1 分布式模型&lt;/h3&gt;
+&lt;p&gt;Kafka每个主题的多个分区日志分布式地存储在Kafka集群上，同时为了故障容错，每个分区都会以副本的方式复制到多个消息代理节点上。其中一个节点会作为主副本（Leader），其他节点作为备份副本（Follower，也叫作从副本）。主副本会负责所有的客户端读写操作，备份副本仅仅从主副本同步数据。当主副本出现故障时，备份副本中的一个副本会被选择为新的主副本。因为每个分区的副本中只有主副本接受读写，所以每个服务器端都会作为某些分区的主副本，以及另外一些分区的备份副本，这样Kafka集群的所有服务端整体上对客户端是负载均衡的。&lt;/p&gt;
+&lt;p&gt;Kafka的生产者和消费者相对于服务器端而言都是客户端。&lt;/p&gt;
+&lt;p&gt;Kafka生产者客户端发布消息到服务端的指定主题，会指定消息所属的分区。生产者发布消息时根据消息是否有键，采用不同的分区策略。消息没有键时，通过轮询方式进行客户端负载均衡；消息有键时，根据分区语义（例如hash）确保相同键的消息总是发送到同一分区。&lt;/p&gt;
+&lt;p&gt;Kafka的消费者通过订阅主题来消费消息，并且每个消费者都会设置一个消费组名称。因为生产者发布到主题的每一条消息都只会发送给消费者组的一个消费者。所以，如果要实现传统消息系统的“队列”模型，可以让每个消费者都拥有相同的消费组名称，这样消息就会负责均衡到所有的消费者；如果要实现“发布-订阅”模型，则每个消费者的消费者组名称都不相同，这样每条消息就会广播给所有的消费者。&lt;/p&gt;
+&lt;p&gt;分区是消费者现场模型的最小并行单位。如下图（图1）所示，生产者发布消息到一台服务器的3个分区时，只有一个消费者消费所有的3个分区。在下图（图2）中，3个分区分布在3台服务器上，同时有3个消费者分别消费不同的分区。假设每个服务器的吞吐量时300MB，在下图（图1）中分摊到每个分区只有100MB，而在下图（图2）中，集群整体的吞吐量有900MB。可以看到，增加服务器节点会提升集群的性能，增加消费者数量会提升处理性能。&lt;/p&gt;
+&lt;p&gt;同一个消费组下多个消费者互相协调消费工作，Kafka会将所有的分区平均地分配给所有的消费者实例，这样每个消费者都可以分配到数量均等的分区。Kafka的消费组管理协议会动态地维护消费组的成员列表，当一个新消费者加入消费者组，或者有消费者离开消费组，都会触发再平衡操作。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220305215916.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;Kafka的消费者消费消息时，只保证在一个分区内的消息的完全有序性，并不保证同一个主题汇中多个分区的消息顺序。而且，消费者读取一个分区消息的顺序和生产者写入到这个分区的顺序是一致的。比如，生产者写入“hello”和“Kafka”两条消息到分区P1，则消费者读取到的顺序也一定是“hello”和“Kafka”。如果业务上需要保证所有消息完全一致，只能通过设置一个分区完成，但这种做法的缺点是最多只能有一个消费者进行消费。一般来说，只需要保证每个分区的有序性，再对消息假设键来保证相同键的所有消息落入同一分区，就可以满足绝大多数的应用。&lt;/p&gt;
+&lt;h2 id=&#34;二topics和partition&#34;&gt;二、Topics和Partition&lt;/h2&gt;
+&lt;p&gt;Topic在逻辑上可以被认为是一个queue，每条消费都必须指定它的Topic，可以简单理解为必须指明把这条消息放进哪个queue里。为了使得Kafka的吞吐率可以线性提高，物理上把Topic分成一个或多个Partition，每个Partition在物理上对应一个文件夹，该文件夹下存储这个Partition的所有消息和索引文件。创建一个topic时，同时可以指定分区数目，分区数越多，其吞吐量也越大，但是需要的资源也越多，同时也会导致更高的不可用性，kafka在接收到生产者发送的消息之后，会根据均衡策略将消息存储到不同的分区中。因为每条消息都被append到该Partition中，属于顺序写磁盘，因此效率非常高（经验证，顺序写磁盘效率比随机写内存还要高，这是Kafka高吞吐率的一个很重要的保证）。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220305215934.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;对于传统的message queue而言，一般会删除已经被消费的消息，而Kafka集群会保留所有的消息，无论其被消费与否。当然，因为磁盘限制，不可能永久保留所有数据（实际上也没必要），因此Kafka提供两种策略删除旧数据。一是基于时间，二是基于Partition文件大小。例如可以通过配置$KAFKA_HOME/config/server.properties，让Kafka删除一周前的数据，也可在Partition文件超过1GB时删除旧数据，配置如下所示：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# The minimum age of a log file to be eligible for deletion&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;log.retention.hours&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;168&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# The maximum size of a log segment file. When this size is reached a new log segment will be created.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;log.segment.bytes&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1073741824&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# The interval at which log segments are checked to see if they can be deleted according to the retention policies&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;log.retention.check.interval.ms&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;300000&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# If log.cleaner.enable=true is set the cleaner will be enabled and individual logs can then be marked for log compaction.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;log.cleaner.enable&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;false
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;因为Kafka读取特定消息的时间复杂度为O(1)，即与文件大小无关，所以这里删除过期文件与提高Kafka性能无关。选择怎样的删除策略只与磁盘以及具体的需求有关。另外，Kafka会为每一个Consumer Group保留一些metadata信息——当前消费的消息的position，也即offset。这个offset由Consumer控制。正常情况下Consumer会在消费完一条消息后递增该offset。当然，Consumer也可将offset设成一个较小的值，重新消费一些消息。因为offet由Consumer控制，所以Kafka broker是无状态的，它不需要标记哪些消息被哪些消费过，也不需要通过broker去保证同一个Consumer Group只有一个Consumer能消费某一条消息，因此也就不需要锁机制，这也为Kafka的高吞吐率提供了有力保障。&lt;/p&gt;
+&lt;h2 id=&#34;三producer消息路由&#34;&gt;三、Producer消息路由&lt;/h2&gt;
+&lt;p&gt;Producer发送消息到broker时，会根据Paritition机制选择将其存储到哪一个Partition。如果Partition机制设置合理，所有消息可以均匀分布到不同的Partition里，这样就实现了负载均衡。如果一个Topic对应一个文件，那这个文件所在的机器I/O将会成为这个Topic的性能瓶颈，而有了Partition后，不同的消息可以并行写入不同broker的不同Partition里，极大的提高了吞吐率。可以在$KAFKA_HOME/config/server.properties中通过配置项num.partitions来指定新建Topic的默认Partition数量，也可在创建Topic时通过参数指定，同时也可以在Topic创建之后通过Kafka提供的工具修改。&lt;/p&gt;
+&lt;p&gt;在发送一条消息时，可以指定这条消息的key，Producer根据这个key和Partition机制来判断应该将这条消息发送到哪个Parition。Paritition机制可以通过指定Producer的paritition. class这一参数来指定，该class必须实现kafka.producer.Partitioner接口。&lt;/p&gt;
+&lt;h2 id=&#34;四consumer-group&#34;&gt;四、Consumer Group&lt;/h2&gt;
+&lt;p&gt;使用Consumer high level API时，同一Topic的一条消息只能被同一个Consumer Group内的一个Consumer消费，但多个Consumer Group可同时消费这一消息。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220305220015.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;这是Kafka用来实现一个Topic消息的广播（发给所有的Consumer）和单播（发给某一个Consumer）的手段。一个Topic可以对应多个Consumer Group。如果需要实现广播，只要每个Consumer有一个独立的Group就可以了。要实现单播只要所有的Consumer在同一个Group里。用Consumer Group还可以将Consumer进行自由的分组而不需要多次发送消息到不同的Topic。&lt;/p&gt;
+&lt;p&gt;实际上，Kafka的设计理念之一就是同时提供离线处理和实时处理。根据这一特性，可以使用Storm这种实时流处理系统对消息进行实时在线处理，同时使用Hadoop这种批处理系统进行离线处理，还可以同时将数据实时备份到另一个数据中心，只需要保证这三个操作所使用的Consumer属于不同的Consumer Group即可。&lt;/p&gt;
+&lt;h2 id=&#34;五push-vs-pull&#34;&gt;五、Push vs. Pull&lt;/h2&gt;
+&lt;p&gt;作为一个消息系统，Kafka遵循了传统的方式，选择由Producer向broker push消息并由Consumer从broker pull消息。一些logging-centric system，比如Facebook的Scribe和Cloudera的Flume，采用push模式。事实上，push模式和pull模式各有优劣。&lt;/p&gt;
+&lt;p&gt;push模式很难适应消费速率不同的消费者，因为消息发送速率是由broker决定的。push模式的目标是尽可能以最快速度传递消息，但是这样很容易造成Consumer来不及处理消息，典型的表现就是拒绝服务以及网络拥塞。而pull模式则可以根据Consumer的消费能力以适当的速率消费消息。&lt;/p&gt;
+&lt;p&gt;对于Kafka而言，pull模式更合适。pull模式可简化broker的设计，Consumer可自主控制消费消息的速率，同时Consumer可以自己控制消费方式——即可批量消费也可逐条消费，同时还能选择不同的提交方式从而实现不同的传输语义。&lt;/p&gt;
+&lt;h2 id=&#34;六kafka-delivery-guarantee&#34;&gt;六、Kafka delivery guarantee&lt;/h2&gt;
+&lt;p&gt;有这么几种可能的delivery guarantee：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;At most once 　　消息可能会丢，但绝不会重复传输&lt;/p&gt;
+&lt;p&gt;At least one 　　 消息绝不会丢，但可能会重复传输&lt;/p&gt;
+&lt;p&gt;Exactly once 　　 每条消息肯定会被传输一次且仅传输一次，很多时候这是用户所想要的。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;当Producer向broker发送消息时，一旦这条消息被commit，因数replication的存在，它就不会丢。但是如果Producer发送数据给broker后，遇到网络问题而造成通信中断，那Producer就无法判断该条消息是否已经commit。虽然Kafka无法确定网络故障期间发生了什么，但是Producer可以生成一种类似于主键的东西，发生故障时幂等性的重试多次，这样就做到了Exactly once。&lt;/p&gt;
+&lt;p&gt;接下来讨论的是消息从broker到Consumer的delivery guarantee语义。（仅针对Kafka consumer high level API）。Consumer在从broker读取消息后，可以选择commit，该操作会在Zookeeper中保存该Consumer在该Partition中读取的消息的offset。该Consumer下一次再读该Partition时会从下一条开始读取。如未commit，下一次读取的开始位置会跟上一次commit之后的开始位置相同。当然可以将Consumer设置为autocommit，即Consumer一旦读到数据立即自动commit。如果只讨论这一读取消息的过程，那Kafka是确保了Exactly once。但实际使用中应用程序并非在Consumer读取完数据就结束了，而是要进行进一步处理，而数据处理与commit的顺序在很大程度上决定了消息从broker和consumer的delivery guarantee semantic。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Kafka默认保证At least once&lt;/strong&gt;，并且允许通过设置Producer异步提交来实现At most once。而Exactly once要求与外部存储系统协作，幸运的是Kafka提供的offset可以非常直接非常容易得使用这种方式。&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>网络 IO 模型</title>
+        <link>https://lxb.wiki/3af5472b/</link>
+        <pubDate>Mon, 16 Aug 2021 22:52:32 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/3af5472b/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;h2 id=&#34;互联网服务端处理网络请求的原理&#34;&gt;互联网服务端处理网络请求的原理&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;一个典型互联网服务端处理网络请求的典型过程：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226140211.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;由上图可以看到，主要处理步骤包括：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;1）获取请求数据，客户端与服务器建立连接发出请求，服务器接受请求（1-3）；&lt;/p&gt;
+&lt;p&gt;2）构建响应，当服务器接收完请求，并在用户空间处理客户端的请求，直到构建响应完成（4）；&lt;/p&gt;
+&lt;p&gt;3）返回数据，服务器将已构建好的响应再通过内核空间的网络 I/O 发还给客户端（5-7）。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;设计服务端并发模型时，主要有如下两个关键点：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;1）服务器如何管理连接，获取输入数据；&lt;/p&gt;
+&lt;p&gt;2）服务器如何处理请求。&lt;/p&gt;
+&lt;p&gt;以上两个关键点最终都与操作系统的 I/O 模型以及线程(进程)模型相关，这也是本文和下篇《高性能网络编程(六)：一文读懂高性能网络编程中的线程模型》将要介绍的内容。下面先详细介绍这I/O模型。&lt;/p&gt;
+&lt;h2 id=&#34;io-模型的基本认识&#34;&gt;“I/O 模型”的基本认识&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;介绍操作系统的 I/O 模型之前，先了解一下几个概念：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;1）阻塞调用与非阻塞调用；&lt;/p&gt;
+&lt;p&gt;2）阻塞调用是指调用结果返回之前，当前线程会被挂起，调用线程只有在得到结果之后才会返回；&lt;/p&gt;
+&lt;p&gt;3）非阻塞调用指在不能立刻得到结果之前，该调用不会阻塞当前线程。&lt;/p&gt;
+&lt;p&gt;两者的最大区别在于被调用方在收到请求到返回结果之前的这段时间内，调用方是否一直在等待。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;阻塞&lt;/strong&gt;是指调用方一直在等待而且别的事情什么都不做；&lt;strong&gt;非阻塞&lt;/strong&gt;是指调用方先去忙别的事情。&lt;/p&gt;
+&lt;p&gt;**同步处理与异步处理：**同步处理是指被调用方得到最终结果之后才返回给调用方；异步处理是指被调用方先返回应答，然后再计算调用结果，计算完最终结果后再通知并返回给调用方。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;阻塞、非阻塞和同步、异步的区别（&lt;strong&gt;阻塞、非阻塞和同步、异步其实针对的对象是不一样的）&lt;/strong&gt;：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;1）阻塞、非阻塞的讨论对象是调用者；&lt;/p&gt;
+&lt;p&gt;2）同步、异步的讨论对象是被调用者。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;recvfrom 函数：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;recvfrom 函数(经 Socket 接收数据)，这里把它视为系统调用。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;一个输入操作通常包括两个不同的阶段：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;1）等待数据准备好；&lt;/p&gt;
+&lt;p&gt;2）从内核向进程复制数据。&lt;/p&gt;
+&lt;p&gt;对于一个套接字上的输入操作，第一步通常涉及等待数据从网络中到达。当所等待分组到达时，它被复制到内核中的某个缓冲区。第二步就是把数据从内核缓冲区复制到应用进程缓冲区。&lt;/p&gt;
+&lt;p&gt;实际应用程序在系统调用完成上面的 2 步操作时，调用方式的阻塞、非阻塞，操作系统在处理应用程序请求时，处理方式的同步、异步处理的不同，可以分为 5 种 I/O 模型&lt;/p&gt;
+&lt;h2 id=&#34;网络io模型&#34;&gt;网络IO模型&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;网络IO的本质是socket的读取，socket在linux系统被抽象为流，IO可以理解为对流的操作&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;IO其实我们并不陌生，站在操作系统的角度上说，io一般指访问磁盘数据，可以分为两步，以read操作举例的话：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;第一阶段：等待数据准备 (Waiting for the data to be ready)。&lt;/li&gt;
+&lt;li&gt;第二阶段：将数据从内核拷贝到进程中 (Copying the data from the kernel to the process)。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;而网络IO也是如此，只不过它是读取的不是磁盘，而是socket：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;第一步：通常涉及等待网络上的数据分组到达，然后被复制到内核的某个缓冲区。&lt;/li&gt;
+&lt;li&gt;第二步：把数据从内核缓冲区复制到应用进程缓冲区。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;在理解网络IO模型之前，我们得先准备些IO模型的基础知识&lt;/p&gt;
+&lt;h3 id=&#34;io模型&#34;&gt;IO模型&lt;/h3&gt;
+&lt;p&gt;Unix 有五种 I/O 模型：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;阻塞IO（bloking IO）&lt;/li&gt;
+&lt;li&gt;非阻塞IO（non-blocking IO）&lt;/li&gt;
+&lt;li&gt;多路复用IO（multiplexing IO）&lt;/li&gt;
+&lt;li&gt;信号驱动式IO（signal-driven IO）&lt;/li&gt;
+&lt;li&gt;异步IO（asynchronous IO）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;每个 IO 模型都有自己的使用模式，它们对于特定的应用程序都有自己的优点。下面提供一个简单的图片以供了解。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226140555.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h4 id=&#34;阻塞式-io&#34;&gt;阻塞式 IO&lt;/h4&gt;
+&lt;p&gt;应用进程被阻塞，直到数据复制到应用进程缓冲区中才返回。&lt;/p&gt;
+&lt;p&gt;应该注意到，在阻塞的过程中，其它程序还可以执行，因此阻塞不意味着整个操作系统都被阻塞。因为其他程序还可以执行，因此不消耗 CPU 时间，这种模型的 CPU 利用率效率会比较高。&lt;/p&gt;
+&lt;p&gt;下图中，recvfrom 用于接收 Socket 传来的数据，并复制到应用进程的缓冲区 buf 中。这里把 recvfrom() 当成系统调用。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226140921.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://upload-images.jianshu.io/upload_images/16533261-a71605af7a6d472c?imageMogr2/auto-orient/strip%7cimageView2/2/w/640/format/webp&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;img&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h4 id=&#34;非阻塞式-io&#34;&gt;非阻塞式 IO&lt;/h4&gt;
+&lt;p&gt;应用进程执行系统调用之后，内核返回一个错误码。应用进程可以继续执行，但是需要不断的执行系统调用来获知 I/O 是否完成，这种方式称为轮询（polling）。&lt;/p&gt;
+&lt;p&gt;由于 CPU 要处理更多的系统调用，因此这种模型的 CPU 利用率是比较低的。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226141038.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226141052.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h4 id=&#34;多路复用io&#34;&gt;多路复用IO&lt;/h4&gt;
+&lt;p&gt;由于阻塞式IO通过轮询得到的只是一个IO任务是否完成，而可能有多个任务在同时进行，因此就想到了能否轮询多个IO任务的状态，只要有任何一个任务完成，就去处理它。这就是所谓的IO多路复用。LINUX下具体的实现方式就是select、poll、epoll。&lt;/p&gt;
+&lt;p&gt;这种机制可以让单个进程具有处理多个 IO 事件的能力。又被称为 Event Driven IO，即事件驱动 IO。&lt;/p&gt;
+&lt;p&gt;最实际的应用场景就是web服务器响应连接的方式，IO 复用可支持&lt;strong&gt;更多的连接&lt;/strong&gt;，同时不需要进程线程创建和切换的开销，系统开销更小。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226141126.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226141140.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;多路复用的特点是通过一种机制一个进程能同时等待多个IO文件描述符，内核监视这些文件描述符（套接字描述符），其中的任意一个进入读就绪状态，select， poll，epoll函数就可以返回。对于监视的方式，又可以分为 select， poll， epoll三种方式。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;在IO多路复用中，实际中，对于每一个socket，一般都设置成为non-blocking，但是，如上图所示，整个用户的进程其实是一直被block的。只不过进程是被select这个函数block，而不是被socket IO给block。所以IO多路复用是阻塞在select，epoll这样的系统调用之上，而没有阻塞在真正的I/O系统调用如recvfrom之上。&lt;/p&gt;
+&lt;h4 id=&#34;信号驱动-io&#34;&gt;信号驱动 IO&lt;/h4&gt;
+&lt;p&gt;应用进程使用 sigaction 系统调用，内核立即返回，应用进程可以继续执行，也就是说等待数据阶段应用进程是非阻塞的。内核在数据到达时向应用进程发送 SIGIO 信号，应用进程收到之后在信号处理程序中调用 recvfrom 将数据从内核复制到应用进程中。&lt;/p&gt;
+&lt;p&gt;相比于非阻塞式 I/O 的轮询方式，信号驱动 I/O 的 CPU 利用率更高。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226141353.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h4 id=&#34;异步-io&#34;&gt;异步 IO&lt;/h4&gt;
+&lt;p&gt;应用进程执行 aio_read 系统调用会立即返回，应用进程可以继续执行，不会被阻塞，内核会在所有操作完成之后向应用进程发送信号。&lt;/p&gt;
+&lt;p&gt;异步 IO 与信号驱动 IO 的区别在于，异步 IO 的信号是通知应用进程 IO 完成，而信号驱动 IO 的信号是通知应用进程可以开始 IO。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226141447.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226141502.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;五大-io-模型比较&#34;&gt;五大 IO 模型比较&lt;/h3&gt;
+&lt;p&gt;前四种 I/O 模型的主要区别在于第一个阶段，而第二个阶段是一样的：将数据从内核复制到应用进程过程中，应用进程会被阻塞。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226141649.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226141702.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;从上图中我们可以看出，越往后，阻塞越少，理论上效率也是最优。&lt;/p&gt;
+&lt;p&gt;这五种 I/O 模型中，前四种属于同步 I/O，因为其中真正的 I/O 操作(recvfrom)将阻塞进程/线程，只有异步 I/O 模型才与 POSIX 定义的异步 I/O 相匹配。&lt;/p&gt;
+&lt;h4 id=&#34;blocking和non-blocking区别&#34;&gt;blocking和non-blocking区别&lt;/h4&gt;
+&lt;p&gt;调用blocking IO会一直block住对应的进程直到操作完成，而non-blocking IO在kernel还准备数据的情况下会立刻返回。&lt;/p&gt;
+&lt;h4 id=&#34;synchronous-io和asynchronous-io区别&#34;&gt;synchronous IO和asynchronous IO区别&lt;/h4&gt;
+&lt;p&gt;在说明synchronous IO和asynchronous IO的区别之前，需要先给出两者的定义。POSIX的定义是这样子的：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;A synchronous I/O operation causes the requesting process to be blocked until that I/O operation completes;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;An asynchronous I/O operation does not cause the requesting process to be blocked;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;同步 I/O：应用进程在调用 recvfrom 操作时会阻塞。&lt;/li&gt;
+&lt;li&gt;异步 I/O：不会阻塞。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;阻塞式 I/O、非阻塞式 I/O、I/O 复用和信号驱动 I/O 都是同步 I/O，虽然非阻塞式 I/O 和信号驱动 I/O 在等待数据阶段不会阻塞，但是在之后的将数据从内核复制到应用进程这个操作会阻塞。&lt;/p&gt;
+&lt;h3 id=&#34;selectpollepoll比较&#34;&gt;select，poll，epoll比较&lt;/h3&gt;
+&lt;p&gt;select，poll，epoll都是IO多路复用的机制。I/O多路复用就通过一种机制，可以监视多个描述符，一旦某个描述符就绪（一般是读就绪或者写就绪），能够通知程序进行相应的读写操作。&lt;/p&gt;
+&lt;h4 id=&#34;select&#34;&gt;select&lt;/h4&gt;
+&lt;p&gt;select的调用过程如下所示：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226141946.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;（1）使用copy_from_user从用户空间拷贝fd_set到内核空间&lt;/p&gt;
+&lt;p&gt;（2）注册回调函数__pollwait&lt;/p&gt;
+&lt;p&gt;（3）遍历所有fd，调用其对应的poll方法（对于socket，这个poll方法是sock_poll，sock_poll根据情况会调用到tcp_poll,udp_poll或者datagram_poll）&lt;/p&gt;
+&lt;p&gt;（4）以tcp_poll为例，其核心实现就是__pollwait，也就是上面注册的回调函数。&lt;/p&gt;
+&lt;p&gt;（5）__pollwait的主要工作就是把current（当前进程）挂到设备的等待队列中，不同的设备有不同的等待队列，对于tcp_poll来说，其等待队列是sk-&amp;gt;sk_sleep（注意把进程挂到等待队列中并不代表进程已经睡眠了）。在设备收到一条消息（网络设备）或填写完文件数据（磁盘设备）后，会唤醒设备等待队列上睡眠的进程，这时current便被唤醒了。&lt;/p&gt;
+&lt;p&gt;（6）poll方法返回时会返回一个描述读写操作是否就绪的mask掩码，根据这个mask掩码给fd_set赋值。&lt;/p&gt;
+&lt;p&gt;（7）如果遍历完所有的fd，还没有返回一个可读写的mask掩码，则会调用schedule_timeout是调用select的进程（也就是current）进入睡眠。当设备驱动发生自身资源可读写后，会唤醒其等待队列上睡眠的进程。如果超过一定的超时时间（schedule_timeout指定），还是没人唤醒，则调用select的进程会重新被唤醒获得CPU，进而重新遍历fd，判断有没有就绪的fd。&lt;/p&gt;
+&lt;p&gt;（8）把fd_set从内核空间拷贝到用户空间。&lt;/p&gt;
+&lt;h5 id=&#34;总结&#34;&gt;总结：&lt;/h5&gt;
+&lt;p&gt;select的几大缺点：&lt;/p&gt;
+&lt;p&gt;（1）每次调用select，都需要把fd集合从用户态拷贝到内核态，这个开销在fd很多时会很大&lt;/p&gt;
+&lt;p&gt;（2）同时每次调用select都需要在内核遍历传递进来的所有fd，这个开销在fd很多时也很大&lt;/p&gt;
+&lt;p&gt;（3）select支持的文件描述符数量太小了，默认是1024&lt;/p&gt;
+&lt;h4 id=&#34;poll&#34;&gt;poll&lt;/h4&gt;
+&lt;p&gt;poll的实现和select非常相似，只是描述fd集合的方式不同，poll使用pollfd结构而不是select的fd_set结构，其他的都差不多。&lt;/p&gt;
+&lt;h4 id=&#34;epoll&#34;&gt;epoll&lt;/h4&gt;
+&lt;p&gt;epoll既然是对select和poll的改进，就应该能避免上述的三个缺点。那epoll都是怎么解决的呢？在此之前，我们先看一下epoll和select和poll的调用接口上的不同，select和poll都只提供了一个函数——select或者poll函数。而epoll提供了三个函数，epoll_create,epoll_ctl和epoll_wait，epoll_create是创建一个epoll句柄；epoll_ctl是注册要监听的事件类型；epoll_wait则是等待事件的产生。&lt;/p&gt;
+&lt;p&gt;对于第一个缺点，epoll的解决方案在epoll_ctl函数中。每次注册新的事件到epoll句柄中时（在epoll_ctl中指定EPOLL_CTL_ADD），会把所有的fd拷贝进内核，而不是在epoll_wait的时候重复拷贝。epoll保证了每个fd在整个过程中只会拷贝一次。&lt;/p&gt;
+&lt;p&gt;对于第二个缺点，epoll的解决方案不像select或poll一样每次都把current轮流加入fd对应的设备等待队列中，而只在epoll_ctl时把current挂一遍（这一遍必不可少）并为每个fd指定一个回调函数，当设备就绪，唤醒等待队列上的等待者时，就会调用这个回调函数，而这个回调函数会把就绪的fd加入一个就绪链表）。epoll_wait的工作实际上就是在这个就绪链表中查看有没有就绪的fd（利用schedule_timeout()实现睡一会，判断一会的效果，和select实现中的第7步是类似的）。&lt;/p&gt;
+&lt;p&gt;对于第三个缺点，epoll没有这个限制，它所支持的FD上限是最大可以打开文件的数目，这个数字一般远大于2048,举个例子,在1GB内存的机器上大约是10万左右，具体数目可以cat /proc/sys/fs/file-max察看,一般来说这个数目和系统内存关系很大。&lt;/p&gt;
+&lt;h5 id=&#34;总结-1&#34;&gt;总结&lt;/h5&gt;
+&lt;p&gt;（1）select，poll实现需要自己不断轮询所有fd集合，直到设备就绪，期间可能要睡眠和唤醒多次交替。而epoll其实也需要调用epoll_wait不断轮询就绪链表，期间也可能多次睡眠和唤醒交替，但是它是设备就绪时，调用回调函数，把就绪fd放入就绪链表中，并唤醒在epoll_wait中进入睡眠的进程。虽然都要睡眠和交替，但是select和poll在“醒着”的时候要遍历整个fd集合，而epoll在“醒着”的时候只要判断一下就绪链表是否为空就行了，这节省了大量的CPU时间。这就是回调机制带来的性能提升。&lt;/p&gt;
+&lt;p&gt;（2）select，poll每次调用都要把fd集合从用户态往内核态拷贝一次，并且要把current往设备等待队列中挂一次，而epoll只要一次拷贝，而且把current往等待队列上挂也只挂一次（在epoll_wait的开始，注意这里的等待队列并不是设备等待队列，只是一个epoll内部定义的等待队列）。这也能节省不少的开销。&lt;/p&gt;
+&lt;h4 id=&#34;应用场景&#34;&gt;应用场景&lt;/h4&gt;
+&lt;p&gt;很容易产生一种错觉认为只要用 epoll 就可以了，select 和 poll 都已经过时了，其实它们都有各自的使用场景。&lt;/p&gt;
+&lt;h5 id=&#34;1-select-应用场景&#34;&gt;1. select 应用场景&lt;/h5&gt;
+&lt;p&gt;select 的 timeout 参数精度为 1ns，而 poll 和 epoll 为 1ms，因此 select 更加适用于实时要求更高的场景，比如核反应堆的控制。&lt;/p&gt;
+&lt;p&gt;select 可移植性更好，几乎被所有主流平台所支持。&lt;/p&gt;
+&lt;h5 id=&#34;2-poll-应用场景&#34;&gt;2. poll 应用场景&lt;/h5&gt;
+&lt;p&gt;poll 没有最大描述符数量的限制，如果平台支持并且对实时性要求不高，应该使用 poll 而不是 select。&lt;/p&gt;
+&lt;p&gt;需要同时监控小于 1000 个描述符，就没有必要使用 epoll，因为这个应用场景下并不能体现 epoll 的优势。&lt;/p&gt;
+&lt;p&gt;需要监控的描述符状态变化多，而且都是非常短暂的，也没有必要使用 epoll。因为 epoll 中的所有描述符都存储在内核中，造成每次需要对描述符的状态改变都需要通过 epoll_ctl() 进行系统调用，频繁系统调用降低效率。并且epoll 的描述符存储在内核，不容易调试。&lt;/p&gt;
+&lt;h5 id=&#34;3-epoll-应用场景&#34;&gt;3. epoll 应用场景&lt;/h5&gt;
+&lt;p&gt;只需要运行在 Linux 平台上，并且有非常大量的描述符需要同时轮询，而且这些连接最好是长连接。&lt;/p&gt;
+&lt;h3 id=&#34;web服务器设计模型&#34;&gt;web服务器设计模型&lt;/h3&gt;
+&lt;h4 id=&#34;并发并行&#34;&gt;并发&amp;amp;并行&lt;/h4&gt;
+&lt;blockquote&gt;
+&lt;p&gt;并发是指宏观上在一段时间内能同时运行多个程序，而并行则指同一时刻能运行多个指令。
+并行需要硬件支持，如多流水线或者多处理器。
+操作系统通过引入进程和线程，使得程序能够并发运行。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;对于web服务而言，并发是指同时进行的任务数（如同时服务的 HTTP 请求），而并行是可以同时工作的物理资源数量（如 CPU 核数）。&lt;/p&gt;
+&lt;p&gt;而针对并发IO而言，Reactor模型是一种常见的处理方式&lt;/p&gt;
+&lt;h4 id=&#34;reactor模型&#34;&gt;Reactor模型&lt;/h4&gt;
+&lt;p&gt;Reactor的中心思想是将所有要处理的I/O事件注册到一个中心I/O多路复用器上，同时主线程/进程阻塞在多路复用器上；一旦有I/O事件到来或是准备就绪(文件描述符或socket可读、写)，多路复用器返回并将事先注册的相应I/O事件分发到对应的处理器中。&lt;/p&gt;
+&lt;p&gt;Reactor是一种事件驱动机制，用“好莱坞原则”来形容Reactor再合适不过了：不要打电话给我们，我们会打电话通知你。
+Reactor模式与Observer模式在某些方面极为相似：当一个主体发生改变时，所有依属体都得到通知。不过，观察者模式与单个事件源关联，而反应器模式则与多个事件源关联 。&lt;/p&gt;
+&lt;p&gt;在Reactor模式中，有5个关键的参与者：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;描述符（handle）&lt;/strong&gt;：由操作系统提供的资源，用于识别每一个事件，如Socket描述符、文件描述符、信号的值等。在Linux中，它用一个整数来表示。事件可以来自外部，如来自客户端的连接请求、数据等。事件也可以来自内部，如信号、定时器事件。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;同步事件多路分离器（event demultiplexer）&lt;/strong&gt;：事件的到来是随机的、异步的，无法预知程序何时收到一个客户连接请求或收到一个信号。所以程序要循环等待并处理事件，这就是事件循环。在事件循环中，等待事件一般使用I/O复用技术实现。在linux系统上一般是select、poll、epol_waitl等系统调用，用来等待一个或多个事件的发生。I/O框架库一般将各种I/O复用系统调用封装成统一的接口，称为事件多路分离器。调用者会被阻塞，直到分离器分离的描述符集上有事件发生。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;事件处理器（event handler）&lt;/strong&gt;：I/O框架库提供的事件处理器通常是由一个或多个模板函数组成的接口。这些模板函数描述了和应用程序相关的对某个事件的操作，用户需要继承它来实现自己的事件处理器，即具体事件处理器。因此，事件处理器中的回调函数一般声明为虚函数，以支持用户拓展。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;具体的事件处理器（concrete event handler）&lt;/strong&gt;：是事件处理器接口的实现。它实现了应用程序提供的某个服务。每个具体的事件处理器总和一个描述符相关。它使用描述符来识别事件、识别应用程序提供的服务。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Reactor 管理器（reactor）&lt;/strong&gt;：定义了一些接口，用于应用程序控制事件调度，以及应用程序注册、删除事件处理器和相关的描述符。它是事件处理器的调度核心。 Reactor管理器使用同步事件分离器来等待事件的发生。一旦事件发生，Reactor管理器先是分离每个事件，然后调度事件处理器，最后调用相关的模 板函数来处理这个事件。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226142433.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;可以看出，是Reactor管理器并不是应用程序负责等待事件、分离事件和调度事件。Reactor并没有被具体的事件处理器调度，而是管理器调度具体的事件处理器，由事件处理器对发生的事件作出处理，这就是Hollywood原则。应用程序要做的仅仅是实现一个具体的事件处理器，然后把它注册到Reactor管理器中。接下来的工作由管理器来完成：如果有相应的事件发生，Reactor会主动调用具体的事件处理器，由事件处理器对发生的事件作出处理。&lt;/p&gt;
+&lt;h5 id=&#34;为什么使用reactor&#34;&gt;为什么使用Reactor&lt;/h5&gt;
+&lt;p&gt;有了I/O复用，有了epoll已经可以使服务器并发几十万连接的同时，维持高TPS了，难道这还不够吗？&lt;/p&gt;
+&lt;p&gt;答案是，技术层面足够了，但在软件工程层面却是不够的。&lt;/p&gt;
+&lt;p&gt;程序使用IO复用的难点在哪里呢？&lt;/p&gt;
+&lt;p&gt;1个请求可能由多次IO处理完成，但相比传统的单线程完整处理请求生命期的方法，IO复用在人的大脑思维中并不自然，因为，程序员编程中，处理请求A的时候，假定A请求必须经过多个IO操作A1-An（两次IO间可能间隔很长时间），每经过一次IO操作，再调用IO复用时，IO复用的调用返回里，非常可能不再有A，而是返回了请求B。即请求A会经常被请求B打断，处理请求B时，又被C打断。这种思维下，编程容易出错。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;在程序中：&lt;/strong&gt;
+某一瞬间，服务器共有10万个并发连接，此时，一次IO复用接口的调用返回了100个活跃的连接等待处理。先根据这100个连接找出其对应的对象，这并不难，epoll的返回连接数据结构里就有这样的指针可以用。接着，循环的处理每一个连接，找出这个对象此刻的上下文状态，再使用read、write这样的网络IO获取此次的操作内容，结合上下文状态查询此时应当选择哪个业务方法处理，调用相应方法完成操作后，若请求结束，则删除对象及其上下文。&lt;/p&gt;
+&lt;p&gt;这样，我们就陷入了&lt;strong&gt;面向过程编程&lt;/strong&gt;方法之中了，在面向应用、快速响应为王的移动互联网时代，这样做早晚得把自己玩死。我们的主程序需要关注各种不同类型的请求，在不同状态下，对于不同的请求命令选择不同的业务处理方法。这会导致随着请求类型的增加，请求状态的增加，请求命令的增加，&lt;strong&gt;主程序复杂度快速膨胀&lt;/strong&gt;，导致维护越来越困难，苦逼的程序员再也不敢轻易接新需求、重构。&lt;/p&gt;
+&lt;p&gt;反应堆是解决上述软件工程问题的一种途径，它也许并不优雅，开发效率上也不是最高的，但其执行效率与面向过程的使用IO复用却几乎是等价的，所以，无论是nginx、memcached、redis等等这些高性能组件的代名词，都义无反顾的一头扎进了反应堆的怀抱中。&lt;/p&gt;
+&lt;p&gt;反应堆模式可以在软件工程层面，将事件驱动框架分离出具体业务，将不同类型请求之间用OO的思想分离。通常，反应堆不仅使用IO复用处理网络事件驱动，还会实现定时器来处理时间事件的驱动（请求的超时处理或者定时任务的处理）&lt;/p&gt;
+&lt;h5 id=&#34;reactor的几种模式&#34;&gt;Reactor的几种模式&lt;/h5&gt;
+&lt;h6 id=&#34;1-单线程模式&#34;&gt;1 单线程模式&lt;/h6&gt;
+&lt;p&gt;这是最简单的单Reactor单线程模型。Reactor线程是个多面手，负责多路分离套接字，Accept新连接，并分派请求到处理器链中。该模型适用于处理器链中业务处理组件能快速完成的场景。不过这种单线程模型不能充分利用多核资源，所以实际使用的不多。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226142550.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h6 id=&#34;2-多线程模式单reactor&#34;&gt;2 多线程模式（单Reactor）&lt;/h6&gt;
+&lt;p&gt;该模型在事件处理器（Handler）链部分采用了多线程（线程池），也是后端程序常用的模型。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226142614.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h6 id=&#34;3-多线程模式多个reactor&#34;&gt;3 多线程模式（多个Reactor）&lt;/h6&gt;
+&lt;p&gt;比起第二种模型，它是将Reactor分成两部分，mainReactor负责监听并accept新连接，然后将建立的socket通过多路复用器（Acceptor）分派给subReactor。subReactor负责多路分离已连接的socket，读写网络数据；业务处理功能，其交给worker线程池完成。通常，subReactor个数上可与CPU个数等同。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220226142645.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h4 id=&#34;proacotr模型&#34;&gt;Proacotr模型&lt;/h4&gt;
+&lt;p&gt;Proactor是和异步I/O相关的。&lt;/p&gt;
+&lt;h5 id=&#34;比较&#34;&gt;比较&lt;/h5&gt;
+&lt;p&gt;以读操作为例：
+在Reactor（同步）中实现读：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;注册读就绪事件和相应的事件处理器&lt;/li&gt;
+&lt;li&gt;事件分离器等待事件&lt;/li&gt;
+&lt;li&gt;事件到来，激活分离器，分离器调用事件对应的处理器。&lt;/li&gt;
+&lt;li&gt;事件处理器完成实际的读操作，处理读到的数据，注册新的事件，然后返还控制权。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Proactor（异步）中的读：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;处理器发起异步读操作（注意：操作系统必须支持异步IO）。在这种情况下，处理器无视IO就绪事件，它关注的是完成事件。&lt;/li&gt;
+&lt;li&gt;事件分离器等待操作完成事件&lt;/li&gt;
+&lt;li&gt;在分离器等待过程中，操作系统利用并行的内核线程执行实际的读操作，并将结果数据存入用户自定义缓冲区，最后通知事件分离器读操作完成。&lt;/li&gt;
+&lt;li&gt;事件分离器呼唤处理器。&lt;/li&gt;
+&lt;li&gt;事件处理器处理用户自定义缓冲区中的数据，然后启动一个新的异步操作，并将控制权返回事件分离器。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;参考资料&#34;&gt;参考资料&lt;/h3&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://zhuanlan.zhihu.com/p/43933717&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;一文读懂高性能网络编程中的I/O模型 - 知乎 (zhihu.com)&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://www.cnblogs.com/Zhangyq-yard/p/10114785.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;网络I/O模型&amp;ndash;5种常见的网络I/O模型 - QiangAnan - 博客园 (cnblogs.com)&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://www.jianshu.com/p/ad548bb816ec&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;如何理解高性能网络模型&lt;/a&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>epoll高效运行的原理</title>
+        <link>https://lxb.wiki/3bdc8aea/</link>
+        <pubDate>Sun, 06 Jun 2021 22:18:57 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/3bdc8aea/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;h1 id=&#34;概念&#34;&gt;概念&lt;/h1&gt;
+&lt;p&gt;epoll是一种I/O事件通知机制，是linux 内核实现IO多路复用的一个实现。
+IO多路复用是指，在一个操作里同时监听多个输入输出源，在其中一个或多个输入输出源可用的时候返回，然后对其的进行读写操作。&lt;/p&gt;
+&lt;h1 id=&#34;io&#34;&gt;I/O&lt;/h1&gt;
+&lt;p&gt;输入输出(input/output)的对象可以是文件(file)， 网络(socket)，进程之间的管道(pipe)。在linux系统中，都用文件描述符(fd)来表示。&lt;/p&gt;
+&lt;h1 id=&#34;事件&#34;&gt;事件&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;可读事件，当文件描述符关联的内核读缓冲区可读，则触发可读事件。(可读：内核缓冲区非空，有数据可以读取)&lt;/li&gt;
+&lt;li&gt;可写事件，当文件描述符关联的内核写缓冲区可写，则触发可写事件。(可写：内核缓冲区不满，有空闲空间可以写入）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;通知机制&#34;&gt;通知机制&lt;/h1&gt;
+&lt;p&gt;通知机制，就是当事件发生的时候，则主动通知。通知机制的反面，就是轮询机制。&lt;/p&gt;
+&lt;h1 id=&#34;epoll-的通俗解释&#34;&gt;epoll 的通俗解释&lt;/h1&gt;
+&lt;p&gt;结合以上三条，epoll的通俗解释是一种当文件描述符的内核缓冲区非空的时候，发出可读信号进行通知，当写缓冲区不满的时候，发出可写信号通知的机制&lt;/p&gt;
+&lt;p&gt;epoll 的 API&lt;/p&gt;
+&lt;p&gt;epoll的核心是3个API，核心数据结构是：1个红黑树和1个链表&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220211152245.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;1-int-epoll_createint-size&#34;&gt;1. int epoll_create(int size)&lt;/h2&gt;
+&lt;p&gt;功能：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;内核会产生一个epoll 实例数据结构并返回一个文件描述符，这个特殊的描述符就是epoll实例的句柄，后面的两个接口都以它为中心（即epfd形参）。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;size参数表示所要监视文件描述符的最大值，不过在后来的Linux版本中已经被弃用（同时，size不要传0，会报invalid argument错误）&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-int-epoll_ctlint-epfd-int-op-int-fd-struct-epoll_event-event&#34;&gt;2. int epoll_ctl(int epfd， int op， int fd， struct epoll_event *event)&lt;/h2&gt;
+&lt;p&gt;功能：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;将被监听的描述符添加到红黑树或从红黑树中删除或者对监听事件进行修改&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;typedef&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;union&lt;/span&gt; epoll_data {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;ptr; &lt;span style=&#34;color:#75715e&#34;&gt;/* 指向用户自定义数据 */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; fd; &lt;span style=&#34;color:#75715e&#34;&gt;/* 注册的文件描述符 */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;uint32_t&lt;/span&gt; u32; &lt;span style=&#34;color:#75715e&#34;&gt;/* 32-bit integer */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;uint64_t&lt;/span&gt; u64; &lt;span style=&#34;color:#75715e&#34;&gt;/* 64-bit integer */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;} &lt;span style=&#34;color:#66d9ef&#34;&gt;epoll_data_t&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; epoll_event {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;uint32_t&lt;/span&gt; events; &lt;span style=&#34;color:#75715e&#34;&gt;/* 描述epoll事件 */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;epoll_data_t&lt;/span&gt; data; &lt;span style=&#34;color:#75715e&#34;&gt;/* 见上面的结构体 */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;对于需要监视的文件描述符集合，epoll_ctl对红黑树进行管理，红黑树中每个成员由描述符值和所要监控的文件描述符指向的文件表项的引用等组成。&lt;/p&gt;
+&lt;p&gt;op参数说明操作类型：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;EPOLL_CTL_ADD：向interest list添加一个需要监视的描述符&lt;/li&gt;
+&lt;li&gt;EPOLL_CTL_DEL：从interest list中删除一个描述符&lt;/li&gt;
+&lt;li&gt;EPOLL_CTL_MOD：修改interest list中一个描述符&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;struct epoll_event结构描述一个文件描述符的epoll行为。在使用epoll_wait函数返回处于ready状态的描述符列表时，&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;data域是唯一能给出描述符信息的字段，所以在调用epoll_ctl加入一个需要监测的描述符时，一定要在此域写入描述符相关信息&lt;/li&gt;
+&lt;li&gt;events域是bit mask，描述一组epoll事件，在epoll_ctl调用中解释为：描述符所期望的epoll事件，可多选。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;常用的epoll事件描述如下：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;EPOLLIN：描述符处于可读状态&lt;/li&gt;
+&lt;li&gt;EPOLLOUT：描述符处于可写状态&lt;/li&gt;
+&lt;li&gt;EPOLLET：将epoll event通知模式设置成edge triggered&lt;/li&gt;
+&lt;li&gt;EPOLLONESHOT：第一次进行通知，之后不再监测&lt;/li&gt;
+&lt;li&gt;EPOLLHUP：本端描述符产生一个挂断事件，默认监测事件&lt;/li&gt;
+&lt;li&gt;EPOLLRDHUP：对端描述符产生一个挂断事件&lt;/li&gt;
+&lt;li&gt;EPOLLPRI：由带外数据触发&lt;/li&gt;
+&lt;li&gt;EPOLLERR：描述符产生错误时触发，默认检测事件&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-int-epoll_waitint-epfd-struct-epoll_event-events-int-maxevents-int-timeout&#34;&gt;3. int epoll_wait(int epfd， struct epoll_event *events， int maxevents， int timeout)&lt;/h2&gt;
+&lt;p&gt;功能：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;阻塞等待注册的事件发生，返回事件的数目，并将触发的事件写入events数组中。&lt;/li&gt;
+&lt;li&gt;events: 用来记录被触发的events，其大小应该和maxevents一致&lt;/li&gt;
+&lt;li&gt;maxevents: 返回的events的最大个数&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;处于ready状态的那些文件描述符会被复制进ready list中，epoll_wait用于向用户进程返回ready list。events和maxevents两个参数描述一个由用户分配的struct epoll event数组，调用返回时，内核将ready list复制到这个数组中，并将实际复制的个数作为返回值。注意，如果ready list比maxevents长，则只能复制前maxevents个成员；反之，则能够完全复制ready list。
+另外，struct epoll event结构中的events域在这里的解释是：在被监测的文件描述符上实际发生的事件。
+参数timeout描述在函数调用中阻塞时间上限，单位是ms：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;timeout = -1表示调用将一直阻塞，直到有文件描述符进入ready状态或者捕获到信号才返回；&lt;/li&gt;
+&lt;li&gt;timeout = 0用于非阻塞检测是否有描述符处于ready状态，不管结果怎么样，调用都立即返回；&lt;/li&gt;
+&lt;li&gt;timeout &amp;gt; 0表示调用将最多持续timeout时间，如果期间有检测对象变为ready状态或者捕获到信号则返回，否则直到超时。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;epoll的两种触发方式&#34;&gt;epoll的两种触发方式&lt;/h1&gt;
+&lt;p&gt;epoll监控多个文件描述符的I/O事件。epoll支持边缘触发(edge trigger，ET)或水平触发（level trigger，LT)，通过epoll_wait等待I/O事件，如果当前没有可用的事件则阻塞调用线程。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;select和poll只支持LT工作模式，epoll的默认的工作模式是LT模式。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;1水平触发的时机&#34;&gt;1.水平触发的时机&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;对于读操作，只要缓冲内容不为空，LT模式返回读就绪。&lt;/li&gt;
+&lt;li&gt;对于写操作，只要缓冲区还不满，LT模式会返回写就绪。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;当被监控的文件描述符上有可读写事件发生时，epoll_wait()会通知处理程序去读写。如果这次没有把数据一次性全部读写完(如读写缓冲区太小)，那么下次调用 epoll_wait()时，它还会通知你在上没读写完的文件描述符上继续读写，当然如果你一直不去读写，它会一直通知你。如果系统中有大量你不需要读写的就绪文件描述符，而它们每次都会返回，这样会大大降低处理程序检索自己关心的就绪文件描述符的效率。&lt;/p&gt;
+&lt;h2 id=&#34;2边缘触发的时机&#34;&gt;2.边缘触发的时机&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;对于读操作&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol&gt;
+&lt;li&gt;当缓冲区由不可读变为可读的时候，即缓冲区由空变为不空的时候。&lt;/li&gt;
+&lt;li&gt;当有新数据到达时，即缓冲区中的待读数据变多的时候。&lt;/li&gt;
+&lt;li&gt;当缓冲区有数据可读，且应用进程对相应的描述符进行EPOLL_CTL_MOD 修改EPOLLIN事件时。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;对于写操作&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol&gt;
+&lt;li&gt;当缓冲区由不可写变为可写时。&lt;/li&gt;
+&lt;li&gt;当有旧数据被发送走，即缓冲区中的内容变少的时候。&lt;/li&gt;
+&lt;li&gt;当缓冲区有空间可写，且应用进程对相应的描述符进行EPOLL_CTL_MOD 修改EPOLLOUT事件时。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;当被监控的文件描述符上有可读写事件发生时，epoll_wait()会通知处理程序去读写。如果这次没有把数据全部读写完(如读写缓冲区太小)，那么下次调用epoll_wait()时，它不会通知你，也就是它只会通知你一次，直到该文件描述符上出现第二次可读写事件才会通知你。这种模式比水平触发效率高，系统不会充斥大量你不关心的就绪文件描述符。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;在ET模式下， 缓冲区从不可读变成可读，会唤醒应用进程，缓冲区数据变少的情况，则不会再唤醒应用进程。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;举例1：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;读缓冲区刚开始是空的&lt;/li&gt;
+&lt;li&gt;读缓冲区写入2KB数据&lt;/li&gt;
+&lt;li&gt;水平触发和边缘触发模式此时都会发出可读信号&lt;/li&gt;
+&lt;li&gt;收到信号通知后，读取了1KB的数据，读缓冲区还剩余1KB数据&lt;/li&gt;
+&lt;li&gt;水平触发会再次进行通知，而边缘触发不会再进行通知&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;举例2：（以脉冲的高低电平为例）&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;水平触发：0为无数据，1为有数据。缓冲区有数据则一直为1，则一直触发。&lt;/li&gt;
+&lt;li&gt;边缘触发发：0为无数据，1为有数据，只要在0变到1的上升沿才触发。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;JDK并没有实现边缘触发，Netty重新实现了epoll机制，采用边缘触发方式；另外像Nginx也采用边缘触发。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;JDK在Linux已经默认使用epoll方式，但是JDK的epoll采用的是水平触发，而Netty重新实现了epoll机制，采用边缘触发方式，netty epoll transport 暴露了更多的nio没有的配置参数，如 TCP_CORK, SO_REUSEADDR等等；另外像Nginx也采用边缘触发。&lt;/p&gt;
+&lt;h1 id=&#34;epoll与selectpoll的对比&#34;&gt;epoll与select、poll的对比&lt;/h1&gt;
+&lt;h2 id=&#34;1-用户态将文件描述符传入内核的方式&#34;&gt;1. 用户态将文件描述符传入内核的方式&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;select：创建3个文件描述符集并拷贝到内核中，分别监听读、写、异常动作。这里受到单个进程可以打开的fd数量限制，默认是1024。&lt;/li&gt;
+&lt;li&gt;poll：将传入的struct pollfd结构体数组拷贝到内核中进行监听。&lt;/li&gt;
+&lt;li&gt;epoll：执行epoll_create会在内核的高速cache区中建立一颗红黑树以及就绪链表(该链表存储已经就绪的文件描述符)。接着用户执行的epoll_ctl函数添加文件描述符会在红黑树上增加相应的结点。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;2-内核态检测文件描述符读写状态的方式&#34;&gt;2. 内核态检测文件描述符读写状态的方式&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;select：采用轮询方式，遍历所有fd，最后返回一个描述符读写操作是否就绪的mask掩码，根据这个掩码给fd_set赋值。&lt;/li&gt;
+&lt;li&gt;poll：同样采用轮询方式，查询每个fd的状态，如果就绪则在等待队列中加入一项并继续遍历。&lt;/li&gt;
+&lt;li&gt;epoll：采用回调机制。在执行epoll_ctl的add操作时，不仅将文件描述符放到红黑树上，而且也注册了回调函数，内核在检测到某文件描述符可读/可写时会调用回调函数，该回调函数将文件描述符放在就绪链表中。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-找到就绪的文件描述符并传递给用户态的方式&#34;&gt;3. 找到就绪的文件描述符并传递给用户态的方式&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;select：将之前传入的fd_set拷贝传出到用户态并返回就绪的文件描述符总数。用户态并不知道是哪些文件描述符处于就绪态，需要遍历来判断。&lt;/li&gt;
+&lt;li&gt;poll：将之前传入的fd数组拷贝传出用户态并返回就绪的文件描述符总数。用户态并不知道是哪些文件描述符处于就绪态，需要遍历来判断。&lt;/li&gt;
+&lt;li&gt;epoll：epoll_wait只用观察就绪链表中有无数据即可，最后将链表的数据返回给数组并返回就绪的数量。内核将就绪的文件描述符放在传入的数组中，所以只用遍历依次处理即可。这里返回的文件描述符是通过mmap让内核和用户空间共享同一块内存实现传递的，减少了不必要的拷贝。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;4-重复监听的处理方式&#34;&gt;4. 重复监听的处理方式&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;select：将新的监听文件描述符集合拷贝传入内核中，继续以上步骤。&lt;/li&gt;
+&lt;li&gt;poll：将新的struct pollfd结构体数组拷贝传入内核中，继续以上步骤。&lt;/li&gt;
+&lt;li&gt;epoll：无需重新构建红黑树，直接沿用已存在的即可。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;epoll更高效的原因&#34;&gt;epoll更高效的原因&lt;/h1&gt;
+&lt;ol&gt;
+&lt;li&gt;select和poll的动作基本一致，只是poll采用链表来进行文件描述符的存储，而select采用fd标注位来存放，所以select会受到最大连接数的限制，而poll不会。&lt;/li&gt;
+&lt;li&gt;select、poll、epoll虽然都会返回就绪的文件描述符数量。但是select和poll并不会明确指出是哪些文件描述符就绪，而epoll会。造成的区别就是，系统调用返回后，调用select和poll的程序需要遍历监听的整个文件描述符找到是谁处于就绪，而epoll则直接处理即可。&lt;/li&gt;
+&lt;li&gt;select、poll都需要将有关文件描述符的数据结构拷贝进内核，最后再拷贝出来。而epoll创建的有关文件描述符的数据结构本身就存于内核态中，系统调用返回时利用mmap()文件映射内存加速与内核空间的消息传递：即epoll使用mmap减少复制开销。&lt;/li&gt;
+&lt;li&gt;select、poll采用轮询的方式来检查文件描述符是否处于就绪态，而epoll采用回调机制。造成的结果就是，随着fd的增加，select和poll的效率会线性降低，而epoll不会受到太大影响，除非活跃的socket很多。&lt;/li&gt;
+&lt;li&gt;epoll的边缘触发模式效率高，系统不会充斥大量不关心的就绪文件描述符&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+&lt;p&gt;虽然epoll的性能最好，但是在连接数少并且连接都十分活跃的情况下，select和poll的性能可能比epoll好，毕竟epoll的通知机制需要很多函数回调。&lt;/p&gt;
+&lt;/blockquote&gt;
+</description>
+        </item>
+        <item>
+        <title>URL特殊字符处理</title>
+        <link>https://lxb.wiki/c587a198/</link>
+        <pubDate>Fri, 10 Jul 2020 06:45:47 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/c587a198/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; hexVals[&lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;0&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;2&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;3&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;4&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;5&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;6&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;7&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;8&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;9&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;A&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;B&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;C&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;D&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;E&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;F&amp;#39;&lt;/span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;string CURLEncode&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;csUnsafeString&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;\&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;&amp;gt;%&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;\\&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;^[]`+$,@:;/!#?=&amp;amp;&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;string &lt;span style=&#34;color:#a6e22e&#34;&gt;convert&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; val) 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    string csRet;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    csRet &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    csRet &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; decToHex(val, &lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;);   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;  csRet;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;string &lt;span style=&#34;color:#a6e22e&#34;&gt;decToHex&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; num, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; radix)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;     temp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    string  csTmp;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; num_char;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    num_char &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;) num;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// ISO-8859-1 
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// IF THE IF LOOP IS COMMENTED, THE CODE WILL FAIL TO GENERATE A 
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// PROPER URL ENCODE FOR THE CHARACTERS WHOSE RANGE IN 127-255(DECIMAL)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (num_char &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        num_char &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;256&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; num_char;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (num_char &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;=&lt;/span&gt; radix)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        temp &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; num_char &lt;span style=&#34;color:#f92672&#34;&gt;%&lt;/span&gt; radix;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        num_char &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;)floor((num_char &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; radix) &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1.0&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        csTmp &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; hexVals[temp];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    csTmp &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; hexVals[num_char];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(csTmp.length() &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        csTmp &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;0&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    string strdecToHex &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; csTmp;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// Reverse the String
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;reverse(strdecToHex.begin(), strdecToHex.end());
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;         
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; strdecToHex;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;bool&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;isUnsafe&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; compareChar)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;bool&lt;/span&gt; bcharfound &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; false;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; tmpsafeChar;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; m_strLen &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    m_strLen &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; csUnsafeString.length();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; ichar_pos &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; ichar_pos &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; m_strLen ;ichar_pos&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        tmpsafeChar &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; csUnsafeString[ichar_pos]; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(tmpsafeChar &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; compareChar)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        { 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            bcharfound &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; true;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;break&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        } 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; char_ascii_value &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;//char_ascii_value = __toascii(compareChar);
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    char_ascii_value &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;) compareChar;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(bcharfound &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; false &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt;  char_ascii_value &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;32&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; char_ascii_value &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;123&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; false;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// found no unsafe chars, return false       
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; true;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; true;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;string &lt;span style=&#34;color:#a6e22e&#34;&gt;URLEncode&lt;/span&gt;(string strEncode)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    string  strSrc;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    string    strDest;   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    strSrc &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; strEncode;   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; strSrc.length(); i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; ch &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; strSrc[i];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (ch &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;) 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            ch &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ch;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;isUnsafe(ch))
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// Safe Character               
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;            strDest &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; ch;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// get Hex Value of the Character
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;            strDest &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; convert(ch);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; strDest;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description>
+        </item>
+        <item>
+        <title>url编码解码</title>
+        <link>https://lxb.wiki/fdc9c210/</link>
+        <pubDate>Thu, 25 Jun 2020 06:37:14 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/fdc9c210/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;string.h&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#define BURSIZE 2048
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;hex2dec&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; c)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;0&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;9&amp;#39;&lt;/span&gt;) 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;0&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;a&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;f&amp;#39;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;a&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;A&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;F&amp;#39;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;A&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;dec2hex&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;short&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; c)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;) 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;0&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;15&lt;/span&gt;) 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;A&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;//编码一个url
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;urlencode&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; url[])
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; len &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; strlen(url);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; res_len &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; res[BURSIZE];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; len; &lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;i) 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; url[i];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (    (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;0&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;9&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;a&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;z&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;A&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Z&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                c &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt;) 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            res[res_len&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; c;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        } 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; j &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;short&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;)c;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (j &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                j &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;256&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; i1, i0;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            i1 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; j &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            i0 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; j &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; i1 &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            res[res_len&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            res[res_len&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dec2hex(i1);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            res[res_len&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dec2hex(i0);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    res[res_len] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\0&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    strcpy(url, res);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 解码url
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;urldecode&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; url[])
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; len &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; strlen(url);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; res_len &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; res[BURSIZE];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; len; &lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;i) 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; c &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; url[i];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (c &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%&amp;#39;&lt;/span&gt;) 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            res[res_len&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; c;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; c1 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; url[&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;i];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; c0 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; url[&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;i];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; num &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            num &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; hex2dec(c1) &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; hex2dec(c0);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            res[res_len&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; num;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    res[res_len] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\0&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    strcpy(url, res);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; argc, &lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;argv[])
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; url[&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://&amp;#39;测试/@mike&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    urlencode(url); &lt;span style=&#34;color:#75715e&#34;&gt;//编码后
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    printf(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://&amp;#39;测试/@mike  ----&amp;gt; %s&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;\n&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;, url);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; buf[&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http%3A//%27%E6%B5%8B%E8%AF%95/%40mike&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    urldecode(buf); &lt;span style=&#34;color:#75715e&#34;&gt;//解码后
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    printf(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http%%3A//%%27%%E6%%B5%%8B%%E8%%AF%%95/%%40mike  ----&amp;gt; %s&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;\n&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;, buf);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description>
+        </item>
+        <item>
+        <title>github 博客绑定域名</title>
+        <link>https://lxb.wiki/e9fbcad9/</link>
+        <pubDate>Fri, 27 Sep 2019 00:54:15 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/e9fbcad9/</guid>
+        <description>&lt;p&gt;某篇文章说, CNAME 解析只支持 www 不支持@
+所以@ 只能 解析到一个一个的 IP&lt;/p&gt;
+&lt;h4 id=&#34;1-source-添加-cname-文件&#34;&gt;1. source 添加 CNAME 文件&lt;/h4&gt;
+&lt;p&gt;在源码的&lt;code&gt;source&lt;/code&gt; 目录下, 添加一个&lt;code&gt;CNAME&lt;/code&gt;文件
+文件内容为&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;lxb.wiki
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;2-dns-设置&#34;&gt;2. DNS 设置&lt;/h4&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;记录类型&lt;/th&gt;
+&lt;th&gt;主机记录&lt;/th&gt;
+&lt;th&gt;解析路线(isp)&lt;/th&gt;
+&lt;th&gt;记录值&lt;/th&gt;
+&lt;th&gt;MX优先级&lt;/th&gt;
+&lt;th&gt;TTL&lt;/th&gt;
+&lt;th&gt;状态&lt;/th&gt;
+&lt;th&gt;操作&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;CNAME&lt;/td&gt;
+&lt;td&gt;www&lt;/td&gt;
+&lt;td&gt;默认&lt;/td&gt;
+&lt;td&gt;lxbwolf.github.io&lt;/td&gt;
+&lt;td&gt;&amp;ndash;&lt;/td&gt;
+&lt;td&gt;10 分钟&lt;/td&gt;
+&lt;td&gt;正常&lt;/td&gt;
+&lt;td&gt;修改暂停删除备注&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;A&lt;/td&gt;
+&lt;td&gt;@&lt;/td&gt;
+&lt;td&gt;默认&lt;/td&gt;
+&lt;td&gt;185.199.108.153&lt;/td&gt;
+&lt;td&gt;&amp;ndash;&lt;/td&gt;
+&lt;td&gt;10 分钟&lt;/td&gt;
+&lt;td&gt;正常&lt;/td&gt;
+&lt;td&gt;修改暂停删除备注&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;A&lt;/td&gt;
+&lt;td&gt;@&lt;/td&gt;
+&lt;td&gt;默认&lt;/td&gt;
+&lt;td&gt;185.199.111.153&lt;/td&gt;
+&lt;td&gt;&amp;ndash;&lt;/td&gt;
+&lt;td&gt;10 分钟&lt;/td&gt;
+&lt;td&gt;正常&lt;/td&gt;
+&lt;td&gt;修改暂停删除备注&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;A&lt;/td&gt;
+&lt;td&gt;@&lt;/td&gt;
+&lt;td&gt;默认&lt;/td&gt;
+&lt;td&gt;185.199.110.153&lt;/td&gt;
+&lt;td&gt;&amp;ndash;&lt;/td&gt;
+&lt;td&gt;10 分钟&lt;/td&gt;
+&lt;td&gt;正常&lt;/td&gt;
+&lt;td&gt;修改暂停删除备注&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;A&lt;/td&gt;
+&lt;td&gt;@&lt;/td&gt;
+&lt;td&gt;默认&lt;/td&gt;
+&lt;td&gt;185.199.109.153&lt;/td&gt;
+&lt;td&gt;&amp;ndash;&lt;/td&gt;
+&lt;td&gt;10 分钟&lt;/td&gt;
+&lt;td&gt;正常&lt;/td&gt;
+&lt;td&gt;修改暂停删除备注&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h4 id=&#34;3-hexo-部署&#34;&gt;3. hexo 部署&lt;/h4&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;hexo clean &amp;amp;&amp;amp; hexo g &amp;amp;&amp;amp; hexo d
+&lt;/code&gt;&lt;/pre&gt;</description>
+        </item>
+        <item>
+        <title>升级https</title>
+        <link>https://lxb.wiki/ddf7de45/</link>
+        <pubDate>Thu, 08 Aug 2019 02:53:34 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/ddf7de45/</guid>
+        <description>&lt;p&gt;&lt;em&gt;环境&lt;/em&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;CentOS
+nginx
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;获取证书&#34;&gt;获取证书&lt;/h3&gt;
+&lt;p&gt;HTTPS 证书分三类：1. DV 域名验证证书 2. OV 组织机构验证证书 3. EV 增强的组织机构验证证书。每类证书的审核要求不同，在浏览器地址栏也会有区分，对于个人网站而言，使用免费的 DV 证书就足够了。 我使用了大名鼎鼎的 Let&amp;rsquo;s Encrypt 来生成证书。&lt;/p&gt;
+&lt;h4 id=&#34;1-安装-certbot&#34;&gt;1. 安装 certbot&lt;/h4&gt;
+&lt;p&gt;certbot 是 Let&amp;rsquo;s Encrypt 提供的一套自动化工具。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;yum install epel-release
+yum install certbot
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;2-生成证书&#34;&gt;2. 生成证书&lt;/h4&gt;
+&lt;p&gt;这里采用 webroot 作为 Let&amp;rsquo;s Encrypt 的认证方式。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;certbot certonly -a webroot --webroot-path=/your/project/path -d example.com -d www.example.com
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;webroot-path就是项目根路径，使用 -d 可以添加多个域名。这时证书就已经生成成功了，默认保存在 /etc/letsencrypt/live/example.com/ 下。证书文件包括：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;cert.pem: 服务端证书&lt;/li&gt;
+&lt;li&gt;chain.pem: 浏览器需要的所有证书但不包括服务端证书，比如根证书和中间证书&lt;/li&gt;
+&lt;li&gt;fullchain.pem: 包括了cert.pem和chain.pem的内容&lt;/li&gt;
+&lt;li&gt;privkey.pem: 证书私钥&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;3-生成迪菲-赫尔曼密钥交换组-strong-diffie-hellman-group&#34;&gt;3. 生成迪菲-赫尔曼密钥交换组（ Strong Diffie-Hellman Group）&lt;/h4&gt;
+&lt;p&gt;为了进一步提高安全性，也可以生成一个 Strong Diffie-Hellman Group。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;配置nginx&#34;&gt;配置nginx&lt;/h3&gt;
+&lt;p&gt;编辑 Nginx 配置文件，如果你不知道配置文件在哪，可以用 locate /nginx.conf 命令查找。添加以下内容，具体参数以你的实际情况为准。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;server {
+        listen 443 ssl;
+        # 启用http2
+        # 需要安装 Nginx Http2 Module
+        # listen 443 http2 ssl;
+        server_name my_server_name;
+        #证书文件
+        ssl_certificate /etc/letsencrypt/live/my_server_name/fullchain.pem;
+        #私钥文件
+        ssl_certificate_key /etc/letsencrypt/live/my_server_name/privkey.pem;
+
+        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+        # 优先采取服务器算法
+        ssl_prefer_server_ciphers on;
+        # 定义算法
+        ssl_ciphers &amp;amp;quot;EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH&amp;amp;quot;;
+        ssl_ecdh_curve secp384r1;
+        ssl_session_cache shared:SSL:10m;
+        ssl_session_tickets off;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        resolver 8.8.8.8 8.8.4.4 valid=300s;
+        resolver_timeout 5s;
+
+        add_header Strict-Transport-Security &amp;amp;quot;max-age=63072000; includeSubdomains&amp;amp;quot;;
+        add_header X-Frame-Options DENY;
+        add_header X-Content-Type-Options nosniff;
+        # 使用DH文件
+        ssl_dhparam /etc/ssl/certs/dhparam.pem;
+
+        location ~ /.well-known {
+            allow all;
+        }
+
+        location ~ \.php$ {
+            root           my_root;
+            fastcgi_pass   my_host:my_port;
+            fastcgi_index  index.php;
+            fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+            include        fastcgi_params;
+        }
+
+        root my_root;
+        index index.html index.php;
+
+        location / {
+            root my_root;
+            autoindex on;
+            index index.html index.php;
+            client_max_body_size 1024m;
+        }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;其中的几项配置: &lt;code&gt;ssl_stapling on;&lt;/code&gt; 开启 OCSP Stapling，使服务端主动获取 OCSP 查询结果并随着证书一起发送给客户端，从而让客户端跳过自己去验证的过程，提高 TLS 握手效率。 &lt;code&gt;add_header Strict-Transport-Security &amp;amp;quot;max-age=63072000; includeSubdomains&amp;amp;quot;;&lt;/code&gt; 启用 HSTS 策略，强制浏览器使用 HTTPS 连接，max-age设置单位时间内強制使用 HTTPS 连接；includeSubDomains 可选，设置所有子域同时生效。浏览器在获取该响应头后，在 max-age 的时间内，如果遇到 HTTP 连接，就会通过 307 跳转強制使用 HTTPS 进行连接 &lt;code&gt;add_header X-Frame-Options DENY;&lt;/code&gt; 添加 X-Frame-Options 响应头，可以禁止网站被嵌入到 iframe 中，减少点击劫持 (clickjacking)攻击。 &lt;code&gt;add_header X-Content-Type-Options nosniff;&lt;/code&gt; 添加 X-Content-Type-Options 响应头，防止 MIME 类型嗅探攻击 测试nginx.conf 是否有语法错误 &lt;code&gt;nginx -t&lt;/code&gt; 重启nginx &lt;code&gt;nginx -s reload&lt;/code&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>升级到php7.1之后wordpress 网站出现Error establishing a database connection的解决方法</title>
+        <link>https://lxb.wiki/b6b408b2/</link>
+        <pubDate>Wed, 12 Jun 2019 23:37:00 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/b6b408b2/</guid>
+        <description>&lt;p&gt;现在很多WordPress的插件都推荐将php版本升级到7.0或者7.1以上，于是就折腾了一下把几个blog升级到了7.1.5，升级的过程不难，无非就是额外安装一个php，然后启动自带的配套php-fpm7，然后nginx里location转发到新的php socket文件，这里就不表了。 升级完了，phpinfo()发现一切都正常，但是访问WordPress，却意外提示Error establishing a database connection，但是db的连接信息明明没有问题，经过反复搜索尝试，发现只要将 &lt;code&gt;/usr/share/nginx/html/wp-config.php&lt;/code&gt; 文件里的 &lt;code&gt;define(&#39;DB_HOST&#39;, &#39;localhost&#39;);&lt;/code&gt; 修改为 &lt;code&gt;define(&#39;DB_HOST&#39;, &#39;127.0.0.1&#39;);&lt;/code&gt; 即可解决，猜测原因可能是php7.1中对域的resolve问题 另外, 为了 Debug, 可以把 &lt;code&gt;/usr/share/nginx/html/wp-config.php&lt;/code&gt; 的 debug 改为 true &lt;code&gt;define(&#39;WP_DEBUG&#39;, true);&lt;/code&gt; 改好了, 再改成 false.&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>nginx 配置中的rewrite</title>
+        <link>https://lxb.wiki/389c639/</link>
+        <pubDate>Sat, 02 Jun 2018 22:35:47 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/389c639/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;&lt;strong&gt;语法&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;rewrite regex replacement flag&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;flag有如下:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;last&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;break 中止 rewrite, 不再继续匹配&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;redirect 返回临时重定向的 HTTP 状态302&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;permanet 返回永久重定向的 HTTP 状态301&lt;/p&gt;
+&lt;p&gt;last 和 break 的不同:&lt;br&gt;
+break 是终止当前location 的 rewrite 检测, 且不再进行 location 匹配;&lt;br&gt;
+last是终止当前location的rewrite检测,但会继续重试location匹配并处理区块中的rewrite规则&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol&gt;
+&lt;li&gt;下面是可以用来判断的表达式:
+&lt;code&gt;-f&lt;/code&gt; 和&lt;code&gt;!-f&lt;/code&gt; 判断是否存在文件
+&lt;code&gt;-d&lt;/code&gt; 和&lt;code&gt;!-d&lt;/code&gt; 判断是否存在目录
+&lt;code&gt;-e&lt;/code&gt; 和&lt;code&gt;!-e&lt;/code&gt; 判断是否存在文件或目录
+&lt;code&gt;-x&lt;/code&gt; 和&lt;code&gt;!-x&lt;/code&gt; 判断文件是否可执行&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;2.下面是可以用作判断的全局变量&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;$args 等于请求行中的参数&lt;/li&gt;
+&lt;li&gt;$content_length 请求头中的&lt;code&gt;Content-length&lt;/code&gt; 字段&lt;/li&gt;
+&lt;li&gt;$content_type 请求头中的&lt;code&gt;Content-Type&lt;/code&gt; 字段&lt;/li&gt;
+&lt;li&gt;$document_root 当前请求在&lt;code&gt;root&lt;/code&gt; 指令中指定的值&lt;/li&gt;
+&lt;li&gt;$host 请求主机头字段, 否则为服务器名称&lt;/li&gt;
+&lt;li&gt;$http_user_agent 客户端&lt;code&gt;agent&lt;/code&gt; 信息&lt;/li&gt;
+&lt;li&gt;$http_cookie 客户端&lt;code&gt;cookie&lt;/code&gt; 信息&lt;/li&gt;
+&lt;li&gt;$limit_rate 这个变量可以限制连接速率&lt;/li&gt;
+&lt;li&gt;$request_body_file 客户端请求主题信息的临时文件名&lt;/li&gt;
+&lt;li&gt;$request_method #客户端请求的动作，通常为GET或POST。&lt;/li&gt;
+&lt;li&gt;$remote_addr #客户端的IP地址。&lt;/li&gt;
+&lt;li&gt;$remote_port #客户端的端口。&lt;/li&gt;
+&lt;li&gt;$remote_user #已经经过Auth Basic Module验证的用户名。&lt;/li&gt;
+&lt;li&gt;$request_filename #当前请求的文件路径，由root或alias指令与URI请求生成。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$query_string&lt;/code&gt; #与$args相同。&lt;/li&gt;
+&lt;li&gt;$scheme #HTTP方法（如http，https）。&lt;/li&gt;
+&lt;li&gt;$server_protocol #请求使用的协议，通常是HTTP/1.0或HTTP/1.1。&lt;/li&gt;
+&lt;li&gt;$server_addr #服务器地址，在完成一次系统调用后可以确定这个值。&lt;/li&gt;
+&lt;li&gt;$server_name #服务器名称。&lt;/li&gt;
+&lt;li&gt;$server_port #请求到达服务器的端口号。&lt;/li&gt;
+&lt;li&gt;$request_uri #包含请求参数的原始URI，不包含主机名，如：”/foo/bar.php?arg=baz”。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$uri&lt;/code&gt; 不带请求参数的当前URI，$uri不包含主机名，如”/foo/bar.html”。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$document_uri&lt;/code&gt; #与&lt;code&gt;$uri&lt;/code&gt;相同&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;例:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-nginx&#34; data-lang=&#34;nginx&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;http://localhost:88/test1/test2/test.php&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$host: &lt;span style=&#34;color:#e6db74&#34;&gt;localhost&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$server_post: &lt;span style=&#34;color:#ae81ff&#34;&gt;88&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$request_uri: &lt;span style=&#34;color:#e6db74&#34;&gt;http://localhost:88/test1/test2/test.php&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$document_uri: &lt;span style=&#34;color:#e6db74&#34;&gt;/test1/test2/test.php&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$document_root: &lt;span style=&#34;color:#e6db74&#34;&gt;/usr/share/nginx/html&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;(在nginx.conf里配置的)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$request_filename: &lt;span style=&#34;color:#e6db74&#34;&gt;/usr/share/nginx/html/test1/test2/test.php&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;(在nginx.conf里配置的)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;详例:&lt;/strong&gt;&lt;br&gt;
+&lt;em&gt;多目录转成参数&lt;/em&gt;&lt;br&gt;
+&lt;code&gt;abc.domain.com/sort/2&lt;/code&gt; =&amp;gt; &lt;code&gt;abc.domain.com/index.php?act=sort&amp;amp;name=abc&amp;amp;id=2&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-nginx&#34; data-lang=&#34;nginx&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;(&lt;/span&gt;$host ~&lt;span style=&#34;color:#e6db74&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;(.*)\.domain\.com)&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;set&lt;/span&gt; $sub_name $1;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;rewrite&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;^/sort\/(\d+)\/?&lt;/span&gt;$ &lt;span style=&#34;color:#e6db74&#34;&gt;/index.php?act=sort&amp;amp;cid=&lt;/span&gt;$sub_name&amp;amp;id=$1 &lt;span style=&#34;color:#e6db74&#34;&gt;last&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;em&gt;目录对换&lt;/em&gt;&lt;br&gt;
+&lt;code&gt;/123456/xxxx&lt;/code&gt; =&amp;gt; &lt;code&gt;/xxxx?id=123456&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-nginx&#34; data-lang=&#34;nginx&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;rewrite&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;^/(\d+)\/(.+)/&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/&lt;/span&gt;$2?id=$1 &lt;span style=&#34;color:#e6db74&#34;&gt;last&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;//&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;rewrite&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;^/\/(\d+)\/(\w+)\/?&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/&lt;/span&gt;$2?id=$1 &lt;span style=&#34;color:#e6db74&#34;&gt;last&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;em&gt;如果使用IE浏览器, 则重定向到/nginx-ie 目录下&lt;/em&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-nginx&#34; data-lang=&#34;nginx&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;(&lt;/span&gt;$http_user_agent ~ &lt;span style=&#34;color:#e6db74&#34;&gt;MSIE)&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#f92672&#34;&gt;rewrite&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;^(.*)&lt;/span&gt;$ &lt;span style=&#34;color:#e6db74&#34;&gt;/nginx-ie/&lt;/span&gt;$1 &lt;span style=&#34;color:#e6db74&#34;&gt;break&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;em&gt;目录自动加 /&lt;/em&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-nginx&#34; data-lang=&#34;nginx&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;(-d&lt;/span&gt; $request_filename&lt;span style=&#34;color:#e6db74&#34;&gt;)&lt;/span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;rewrite&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;^/(.*)([^/])&lt;/span&gt;$ &lt;span style=&#34;color:#e6db74&#34;&gt;http://&lt;/span&gt;$host/$1$2/ &lt;span style=&#34;color:#e6db74&#34;&gt;permanent&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;em&gt;禁止htaccess&lt;/em&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-nginx&#34; data-lang=&#34;nginx&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;location&lt;/span&gt; ~&lt;span style=&#34;color:#e6db74&#34;&gt;/\.ht&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;deny&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;all&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;em&gt;禁止多个目录&lt;/em&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-nginx&#34; data-lang=&#34;nginx&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;location&lt;/span&gt; ~ &lt;span style=&#34;color:#e6db74&#34;&gt;^/(cron|templates)/&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;deny&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;all&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;break&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;em&gt;禁止以/data开头的文件&lt;/em&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-nginx&#34; data-lang=&#34;nginx&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;可以禁止/data/下多级目录下.log.txt等请求&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;location&lt;/span&gt; ~ &lt;span style=&#34;color:#e6db74&#34;&gt;^/data&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;deny&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;all&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;em&gt;禁止单个目录&lt;/em&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-nginx&#34; data-lang=&#34;nginx&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;不能禁止.log.txt能请求&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;location&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/searchword/cron/&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;deny&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;all&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;em&gt;禁止单个文件&lt;/em&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-nginx&#34; data-lang=&#34;nginx&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;location&lt;/span&gt; ~ &lt;span style=&#34;color:#e6db74&#34;&gt;/data/sql/data.sql&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;deny&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;all&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;em&gt;给 favicon.ico和 robots.txt设置过期时间;&lt;/em&gt;&lt;br&gt;
+这里为 favicon.ico为99 天,robots.txt 为 7 天并不记录 404 错误日志&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-nginx&#34; data-lang=&#34;nginx&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;1.&lt;/span&gt;     &lt;span style=&#34;color:#e6db74&#34;&gt;location&lt;/span&gt; ~&lt;span style=&#34;color:#e6db74&#34;&gt;(favicon.ico)&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;2.&lt;/span&gt;                      &lt;span style=&#34;color:#e6db74&#34;&gt;log_not_found&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;off&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;3.&lt;/span&gt;     &lt;span style=&#34;color:#e6db74&#34;&gt;expires&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;99d&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;4.&lt;/span&gt;     &lt;span style=&#34;color:#e6db74&#34;&gt;break&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;5.&lt;/span&gt;          &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;.&lt;/span&gt;      
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;.&lt;/span&gt;          &lt;span style=&#34;color:#e6db74&#34;&gt;location&lt;/span&gt; ~&lt;span style=&#34;color:#e6db74&#34;&gt;(robots.txt)&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;8.&lt;/span&gt;                      &lt;span style=&#34;color:#e6db74&#34;&gt;log_not_found&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;off&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;9.&lt;/span&gt;     &lt;span style=&#34;color:#e6db74&#34;&gt;expires&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;7d&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;10.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;break&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;11.&lt;/span&gt;      &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;em&gt;设定某个文件的过期时间;这里为600秒，并不记录访问日志&lt;/em&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1.     location ^~ /html/scripts/loadhead_1.js {
+2.                      access_log   off;
+3.                      root /opt/lampp/htdocs/web;
+4.     expires 600;
+5.     break;
+6.            }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;em&gt;文件反盗链并设置过期时间&lt;/em&gt;&lt;br&gt;
+这里的return 412 为自定义的http状态码，默认为403，方便找出正确的盗链的请求&lt;br&gt;
+“rewrite ^/ &lt;a class=&#34;link&#34; href=&#34;http://leech.c1gstudio.com/leech.gif;&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;http://leech.c1gstudio.com/leech.gif;&lt;/a&gt;”显示一张防盗链图片&lt;br&gt;
+“access_log off;”不记录访问日志，减轻压力&lt;br&gt;
+“expires 3d”所有文件3天的浏览器缓存&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1.     location ~* ^.+\.(jpg|jpeg|gif|png|swf|rar|zip|css|js)$ {
+2.     valid_referers none blocked *.c1gstudio.com *.c1gstudio.net localhost 208.97.167.194;
+3.     if ($invalid_referer) {
+4.         rewrite ^/ http://leech.c1gstudio.com/leech.gif;
+5.         return 412;
+6.         break;
+7.     }
+8.                      access_log   off;
+9.                      root /opt/lampp/htdocs/web;
+10. expires 3d;
+11. break;
+12.      }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;em&gt;只充许固定ip访问网站，并加上密码&lt;/em&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1.     root  /opt/htdocs/www;
+2.     allow   208.97.167.194;
+3.     allow   222.33.1.2;
+4.     allow   231.152.49.4;
+5.     deny    all;
+6.     auth_basic &amp;quot;C1G_ADMIN&amp;quot;;
+7.     auth_basic_user_file htpasswd;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;em&gt;将多级目录下的文件转成一个文件，增强seo效果&lt;/em&gt;&lt;br&gt;
+&lt;code&gt;/job-123-456-789.html&lt;/code&gt; 指向 &lt;code&gt;/job/123/456/789.html&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1.     rewrite ^/job-([0-9]+)-([0-9]+)-([0-9]+)\.html$ /job/$1/$2/jobshow_$3.html last;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;em&gt;将根目录下某个文件夹指向2级目录&lt;/em&gt;&lt;br&gt;
+如&lt;code&gt;/shanghaijob/&lt;/code&gt; 指向 &lt;code&gt;/area/shanghai/&lt;/code&gt; 如果你将last改成permanent，那么浏览器地址栏显是 &lt;code&gt;/location/shanghai/&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1.     rewrite ^/([0-9a-z]+)job/(.*)$ /area/$1/$2 last;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;上面例子有个问题是访问/shanghai 时将不会匹配&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1.     rewrite ^/([0-9a-z]+)job$ /area/$1/ last;
+2.     rewrite ^/([0-9a-z]+)job/(.*)$ /area/$1/$2 last;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;这样/shanghai 也可以访问了，但页面中的相对链接无法使用， 如&lt;code&gt;./list_1.html&lt;/code&gt;真实地址是&lt;code&gt;/area /shanghia/list_1.html&lt;/code&gt;会变成&lt;code&gt;/list_1.html&lt;/code&gt;,导至无法访问。&lt;br&gt;
+那我加上自动跳转也是不行咯 &lt;code&gt;(-d $request_filename)&lt;/code&gt;它有个条件是必需为真实目录，而我的rewrite不是的，所以没有效果&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1.     if (-d $request_filename){
+2.     rewrite ^/(.*)([^/])$ http://$host/$1$2/ permanent;
+3.     }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;知道原因后就好办了，让我手动跳转吧&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1.     rewrite ^/([0-9a-z]+)job$ /$1job/ permanent;
+2.     rewrite ^/([0-9a-z]+)job/(.*)$ /area/$1/$2 last;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;em&gt;文件和目录不存在的时候重定向：&lt;/em&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1.     if (!-e $request_filename) {
+2.     proxy_pass http://127.0.0.1;
+3.     }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;em&gt;域名跳转&lt;/em&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1.     server
+2.          {
+3.                  listen       80;
+4.                  server_name  jump.c1gstudio.com;
+5.                  index index.html index.htm index.php;
+6.                  root  /opt/lampp/htdocs/www;
+7.                  rewrite ^/ http://www.c1gstudio.com/;
+8.                  access_log  off;
+9.          }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;em&gt;多域名转向&lt;/em&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1.     server_name  www.c1gstudio.com www.c1gstudio.net;
+2.                  index index.html index.htm index.php;
+3.                  root  /opt/lampp/htdocs;
+4.     if ($host ~ &amp;quot;c1gstudio\.net&amp;quot;) {
+5.     rewrite ^(.*) http://www.c1gstudio.com$1 permanent;
+6.     }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;em&gt;三级域名跳转&lt;/em&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1.     if ($http_host ~* &amp;quot;^(.*)\.i\.c1gstudio\.com$&amp;quot;) {
+2.     rewrite ^(.*) http://top.yingjiesheng.com$1;
+3.     break;
+4.     }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;em&gt;域名镜向&lt;/em&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1.     server
+2.          {
+3.                  listen       80;
+4.                  server_name  mirror.c1gstudio.com;
+5.                  index index.html index.htm index.php;
+6.                  root  /opt/lampp/htdocs/www;
+7.                  rewrite ^/(.*) http://www.c1gstudio.com/$1 last;
+8.                  access_log  off;
+9.          }
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+        </item>
+        <item>
+        <title>nginx配置中的location</title>
+        <link>https://lxb.wiki/a209000e/</link>
+        <pubDate>Sat, 02 Jun 2018 22:30:30 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/a209000e/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;&lt;strong&gt;语法&lt;/strong&gt;&lt;br&gt;
+&lt;code&gt;location [=|~|~*|^~] /uri/ {...}&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;上下文: &lt;code&gt;server&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;此命令随URL 不同而接受不同的结构. 可以配置使用常规字符串和正则表达式. 若使用正则表达式, 则必须使用&lt;code&gt;~*&lt;/code&gt;前缀(选择不区分大小写的匹配) 或&lt;code&gt;~&lt;/code&gt;前缀(区分大小写的匹配)&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;=&lt;/code&gt; 表示&lt;code&gt;uri&lt;/code&gt; 以某个常规字符串开头, 理解为匹配url 路径即可. nginx 不对url 做编码, 因此请求为&lt;code&gt;/static/%20%/aa&lt;/code&gt; 可以被规则&lt;code&gt;^~ /static/ /aa&lt;/code&gt; (有空格) 匹配到.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;~&lt;/code&gt; 表示区分大小写的正则匹配&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;~*&lt;/code&gt; 表示不区分大小写的正则匹配&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;!~&lt;/code&gt; 和 &lt;code&gt;!~*&lt;/code&gt; 分别为区分大小写不匹配 和 不区分大小写不匹配 的正则&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;/&lt;/code&gt; 通用匹配, 任何请求都会匹配到&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;多个&lt;code&gt;location&lt;/code&gt; 配置的情况下, 匹配顺序为:&lt;/p&gt;
+&lt;p&gt;先匹配&lt;code&gt;=&lt;/code&gt;, 其次匹配&lt;code&gt;^~&lt;/code&gt;, 再匹配按文件中顺序的正则匹配, 最后匹配&lt;code&gt;/&lt;/code&gt;. 当有匹配成功的时候, 停止匹配, 按当前匹配规则处理请求.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;例1:&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-nginx&#34; data-lang=&#34;nginx&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;location&lt;/span&gt; = &lt;span style=&#34;color:#e6db74&#34;&gt;/&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 规则A
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;location&lt;/span&gt; = &lt;span style=&#34;color:#e6db74&#34;&gt;/login&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 规则B
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;location&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;^~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/static&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 规则C
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;location&lt;/span&gt; ~ &lt;span style=&#34;color:#e6db74&#34;&gt;\.(gif|jpg|png|js|css)$&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 规则D
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;location&lt;/span&gt; ~&lt;span style=&#34;color:#e6db74&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;\.png&lt;/span&gt;$ {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 规则E
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;location&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;!~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;\.xhtml&lt;/span&gt;$ {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 规则F
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;location&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;!~*&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;\.xhtml&lt;/span&gt;$ {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 规则G
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;location&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 规则H
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;产生效果如下:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;访问&lt;code&gt;/&lt;/code&gt; 根目录, 如&lt;code&gt;http://localhost/&lt;/code&gt; 将匹配规则A&lt;/li&gt;
+&lt;li&gt;访问&lt;code&gt;http://localhost/login&lt;/code&gt; 将匹配规则B; &lt;code&gt;http://localhost/register&lt;/code&gt; 将匹配规则H&lt;/li&gt;
+&lt;li&gt;访问&lt;code&gt;http://localhost/static/a.html&lt;/code&gt; 将匹配规则C&lt;/li&gt;
+&lt;li&gt;访问&lt;code&gt;http://localhost/a.png&lt;/code&gt; 讲匹配规则D 和规则E, 但规则D 顺序优先, 规则E 不起作用&lt;/li&gt;
+&lt;li&gt;访问&lt;code&gt;http://localhost/static/c.png&lt;/code&gt; 优先匹配到规则C&lt;/li&gt;
+&lt;li&gt;访问&lt;code&gt;http://localhost/a.PNG&lt;/code&gt; 将匹配规则E&lt;/li&gt;
+&lt;li&gt;访问&lt;code&gt;http://localhost/a.xhtml&lt;/code&gt; 不会匹配到规则F 和规则G, &lt;code&gt;http://localhost/a.XHTML&lt;/code&gt; 不会匹配到规则G&lt;/li&gt;
+&lt;li&gt;访问&lt;code&gt;http://localhost/category/id/1111&lt;/code&gt; 匹配到规则H, 因为以上规则都不匹配, 这个时候应该是nginx 转发给后端应用服务器, 如FastCGI(php), tomcat(jsp), nginx 作为反向代理服务器存在.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;所以实际使用中, 通常有至少三个匹配规则定义, 如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-nginx&#34; data-lang=&#34;nginx&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 第一个必选规则 直接匹配网站根, 通过域名访问网站首页比较频繁, 使用这个会加速处理; 这里直接转发给后端应用服务器了, 也可以是一个静态首页
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;location&lt;/span&gt; = &lt;span style=&#34;color:#e6db74&#34;&gt;/&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;proxy_pass&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;http://tomcat:8080/index&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 第二个必选规则 处理静态文件请求, 这是nginx 作为http 服务器的强项. 有如下两种配置模式, 目录匹配或后缀匹配, 任选其一或搭配使用
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;location&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;^~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/static/&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;root&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/webroot/static/&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;location&lt;/span&gt; ~&lt;span style=&#34;color:#e6db74&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;\.(gif|jpg|jpeg|png|css|js|ico)&lt;/span&gt;$ {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;root&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/webroot/res/&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 第三个必选规则 通用规则, 用来转发动态请求到后端应用服务器. 非静态文件请求就默认是动态请求. 
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;location&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;proxy_pass&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;http://tomcat:8080/&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description>
+        </item>
+        <item>
+        <title>nginx 寻找index 原理</title>
+        <link>https://lxb.wiki/ab14d5fa/</link>
+        <pubDate>Fri, 01 Jun 2018 22:32:04 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/ab14d5fa/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;&lt;strong&gt;1. nginx 是怎么找index.php 文件的&lt;/strong&gt;&lt;br&gt;
+当nginx发现需要&lt;code&gt;/web/echo/index.php&lt;/code&gt; 文件时, 就会向内核发起 IO 系统调用(因为要跟硬件打交道, 这里的硬件是指硬盘, 通常需要靠内核来操作, 而内核提供的这些功能是通过系统调用来实现的), 告诉内核, 我需要这个文件, 内核从&lt;code&gt;/&lt;/code&gt; 开始找到&lt;code&gt;web&lt;/code&gt; 目录, 再在&lt;code&gt;web&lt;/code&gt; 目录下找到&lt;code&gt;echo&lt;/code&gt; 目录, 最后在&lt;code&gt;echo&lt;/code&gt; 目录下找到&lt;code&gt;index.php&lt;/code&gt; 文件, 于是把这个&lt;code&gt;index.php&lt;/code&gt; 从硬盘上读取到内核自身的内存空间, 然后再把这个文件复制到nginx进程所在的内存空间, 于是 nginx就得到了自己想要的文件了&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;2. 寻找文件在文件系统层面是怎么操作的&lt;/strong&gt;&lt;br&gt;
+如, nginx 需要得到&lt;code&gt;/web/echo/index.php&lt;/code&gt; 这个文件 每个分区(像ext3 等文件系统, block块是文件存储的最小单元, 默认是4096字节) 都是包含元数据区和数据区, 每个文件在元数据区都有元数据条目(一般是128字节大小), 每个条目都有一个编号, 称之为 inode(index node), 这个inode 里包含 文件类型, 权限, 连接次数, 属主和数组的 ID&amp;amp;时间戳, 这个文件占据了哪些磁盘块也就是块的编号(block, 每个文件可以占用多个 block, 且 block 不一定是连续的, 每个 block 都有编号), 如下图:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201207010354.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;目录其实也是普通文件, 也需要占用磁盘块, 目录不是一个容器. 默认创建的目录大小为4096字节, 即只需要占用一个磁盘块, 但这是不确定的. 所以要找到目录也是需要到元数据区里找到对应的条目, 只要找到对应的inode就可以找到目录所占用的磁盘块. 目录里存着一张表(映射表), 里面放着 目录或文件的名称和对应的inode号, 如下:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;-&lt;/th&gt;
+&lt;th&gt;-&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;文件名称(只是字符串)&lt;/td&gt;
+&lt;td&gt;inode 号&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;test.txt&lt;/td&gt;
+&lt;td&gt;100&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;假如&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/           在数据区占据1, 2号 block, &lt;span style=&#34;color:#e6db74&#34;&gt;`&lt;/span&gt;/&lt;span style=&#34;color:#e6db74&#34;&gt;`&lt;/span&gt; 其实也是一个目录, 里面有两个目录, web 和 &lt;span style=&#34;color:#ae81ff&#34;&gt;111&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;web         占据5号 block, 是目录, 里面有2个目录 echo 和 data
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;echo        占据11号 block, 是目录, 里面有一个文件 index.php
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;index.php   占据15, 16号 block, 是文件
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;其在文件系统中分布如下图:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201207010430.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;那么内核究竟是怎么找到&lt;code&gt;index.php&lt;/code&gt; 这个文件的呢? 内核拿到 nginx 的 IO 系统调用要获取&lt;code&gt;/web/echo/index.php&lt;/code&gt; 这个文件请求之后,&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1. 内核读取元数据区 / 的inode, 从 inode 里读取 / 所对应的数据块的编号, 然后在数据区找到其对应的块(1, 2号块), 读取1号块上的映射表找到 web 这个名称在元数据区对应的 inode 号
+2. 内核读取 web 对应的 inode(3号), 从中得到 web 在数据区对应的块是5号块, 于是到数据区找到5号块, 从中读取映射表, 知道 echo 对应的 inode 是5号, 于是到元数据区找到5号 inode
+3. 内核读取5号 inode, 得到 echo 在数据区对应的事11号块, 于是到数据区读取11号块得到映射表, 得到index.php 对应的 inode 事9号
+4. 内核到元数据区读取9号 inode, 得到 index.php 对应的事15号和16号数据块, 于是就到数据区域找到15 16号块, 读取其中的内容, 得到 index.php 的完整内容
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+        </item>
+        <item>
+        <title>HTTP协议笔记</title>
+        <link>https://lxb.wiki/4e7c79/</link>
+        <pubDate>Wed, 30 May 2018 23:11:26 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/4e7c79/</guid>
+        <description>&lt;p&gt;HTTP协议的特点: 1. 支持客户端/服务器模式 2. 简单快速: 客户端向服务器请求服务时, 只需传送请求方法和路径. 请求方法常用的有GET, HEAD, POST. 每种方法规定了客户端与服务器联系的类型. 由于HTTP协议简单, 使得HTTP服务器的程序规模小, 因而通信速度很快. 3. 灵活: HTTP 允许传输任意类型的数据对象. 正在传输的类型由Content-Type加以标记. 4. 无连接: 限制每次连接只处理一个请求. 服务器处理完客户端的请求, 并收到客户端的应答后, 即断开连接. 采用着用方式可以节省传输时间. 5. 无状态: 无状态是指协议对于事务处理没有记忆能力. 缺少状态意味着如果后续处理需要前面的信息, 则它必须重传, 这样可能导致每次传送的数据量增大. 另一方面, 在服务器不需要先前信息时, 它的应答就较快.&lt;/p&gt;
+&lt;h5 id=&#34;url&#34;&gt;URL&lt;/h5&gt;
+&lt;p&gt;HTTP是一种基于请求与响应模式的, 无状态的, 应用层的协议, 常基于TCP的连接方式, HTTP1.1版本中给出一种持续连接的机制, 绝大多数的web开发, 都是构建在HTTP协议之上的web应用.&lt;/p&gt;
+&lt;p&gt;HTTP URL(URL是一种特殊类型的URI, 包含了用于查找某个资源的足够的信息)的格式如下: &lt;code&gt;http://host[:port][abs_path]&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;http 表示要通过HTTP协议来定位网络资源&lt;/li&gt;
+&lt;li&gt;host 表示合法的Internet主机域名或者IP地址&lt;/li&gt;
+&lt;li&gt;port 指定端口号, 缺省端口为80&lt;/li&gt;
+&lt;li&gt;abs_path 指定请求资源的URI&lt;/li&gt;
+&lt;li&gt;若URI 中没有给出abs_path, 那当它作为请求URI时, 必须以&amp;quot;/&amp;quot; 的形式给出, 通常这个工作浏览器会自动完成&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;请求&#34;&gt;请求&lt;/h5&gt;
+&lt;p&gt;HTTP请求由三部分组成: 请求行, 消息报头, 请求正文&lt;/p&gt;
+&lt;h6 id=&#34;请求行&#34;&gt;请求行&lt;/h6&gt;
+&lt;p&gt;以一个方法符号开头, 以空格分开, 后面跟请求的URI和协议的版本, 格式如下: &lt;code&gt;Method Request-URI HTTP-Version CRLF&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;请求方法有以下几种 - GET 请求获取Request-URI 所标识的资源 - POST 在Request-URI 表标识的资源后附加新的数据 - HEAD 请求获取由Request-URI 所标识的资源的响应消息报头 - PUT 请求服务器存储一个资源, 并用Request-URI 作为其标识 - DELETE 请求服务器删除Request-URI 所标识的资源 - TRACE 请求服务器会送收到的请求信息, 主要用于测试或诊断 - CONNECT 保留将来使用 - OPTIONS 请求查询服务器的性能, 或查询与资源相关的选项和需求&lt;/p&gt;
+&lt;h5 id=&#34;响应&#34;&gt;响应&lt;/h5&gt;
+&lt;p&gt;HTTP响应由三部分组成: 状态行, 消息报头, 响应正文&lt;/p&gt;
+&lt;h6 id=&#34;状态行&#34;&gt;状态行&lt;/h6&gt;
+&lt;p&gt;格式: &lt;code&gt;HTTP-Version Status-Code Reason-Phrase CRLF&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;状态码由三位数字组成, 第一个数字定义了响应的类别: - 1xx: 指示信息 &amp;ndash; 表示请求已接受, 继续处理 - 2xx: 成功 &amp;ndash; 表示请求已被成功接收, 理解, 接受 - 3xx: 重定向 &amp;ndash; 要完成请求必须进行更进一步的操作 - 4xx: 客户端错误 &amp;ndash; 请求有语法错误或请求无法实现 - 5xx: 服务器端错误 &amp;ndash; 服务器未能实现合法的请求&lt;/p&gt;
+&lt;h5 id=&#34;报头&#34;&gt;报头&lt;/h5&gt;
+&lt;p&gt;HTTP 消息由客户端到服务器的请求和服务器到客户端的响应组成. 请求消息和相应消息都是由开始行(对于请求消息, 开始行就是请求行, 对于响应消息, 开始行就是状态行), 消息报头(可选), 空行(只有CRLF的行), 消息正文(可选) 组成&lt;/p&gt;
+&lt;p&gt;HTTP 消息报头包括 普通报头, 请求报头, 响应报头, 实体报头 每一个报头域都是由&lt;code&gt;名字 + &amp;quot;:&amp;quot; + 空格 + 值&lt;/code&gt; 组成, 消息报头域的名字是大小写无关的.&lt;/p&gt;
+&lt;h6 id=&#34;普通报头&#34;&gt;普通报头&lt;/h6&gt;
+&lt;p&gt;在普通报头中, 有少数报头域用于所有的请求和响应消息, 但并用于被传输的实体, 只用于传输的消息 &lt;strong&gt;例:&lt;/strong&gt; Cache-Control 用于指定缓存指令, 缓存指令是单向的(响应中出现的缓存指令在请求中未必会出现), 且是独立的(一个消息的缓存指令不会影响另一个消息处理的缓存机制), HTTP1.0使用类似的报头域为Pragma. 请求时的缓存指令包括: no-cache(用于指示请求或相应消息不能缓存), no-store, max-age, max-stale, min-fresh, only-if-cached; 响应时的缓存指令包括: public, private, no-cache, no-store, no-transform, must-revalidate, proxy-revalidate, max-age, s-maxage &lt;strong&gt;eg:&lt;/strong&gt; 为了指示IE浏览器(客户端)不要缓存页面, 服务器端的JSP程序可以编写如下: &lt;code&gt;response.setHeader(&amp;quot;Cache-Control&amp;quot;, &amp;quot;no-cache&amp;quot;);&lt;/code&gt; 或 &lt;code&gt;response.setHeader(&amp;quot;Pragma&amp;quot;, &amp;quot;no-cache&amp;quot;);&lt;/code&gt; 两者作用相同, 在发送的响应消息中设置普通报头域: Cache-Control: no-cache.&lt;/p&gt;
+&lt;h6 id=&#34;请求报头&#34;&gt;请求报头&lt;/h6&gt;
+&lt;p&gt;请求报头允许客户端向服务器端传递请求的附加信息以及客户端自身的信息.&lt;/p&gt;
+&lt;p&gt;常用的请求报头域: &lt;em&gt;Accept&lt;/em&gt; Accept 请求报头域用于指定客户端接收哪些类型的信息. 如: &lt;code&gt;Accept:image/gif&lt;/code&gt;, 表明客户端希望接收GIF图像格式的资源; &lt;code&gt;Accept:text/html&lt;/code&gt;, 表明客户端希望接受html 文本&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Accept-Charset&lt;/em&gt; 指定客户端接受的字符集. 如: &lt;code&gt;Accept-Charset:iso-8859-1,GB2312&lt;/code&gt;. 如果请求消息中没有设置这个域, 缺省是任何字符集都可以接受.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Accept-Encoding&lt;/em&gt; 指定可接受的内容编码. 如&lt;code&gt;Accept-Encoding:gzip.deflate&lt;/code&gt; 缺省是任何内容编码都可以接受&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Accept-Language&lt;/em&gt; 指定一种自然语言. 如 &lt;code&gt;Accept-Language:zh-cn&lt;/code&gt; 缺省是任何语言都可以接受&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Authorization&lt;/em&gt; 用于证明客户端有权查看某个资源. 当浏览器访问一个页面时, 如果收到服务器的响应代码为401, 可以发送一个包含Authorization请求报头域的请求, 要求服务器对其进行验证&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Host&lt;/em&gt;(发送请求时, 该报头域是必需的) 指定被请求资源的Internet主机和端口号, 通常从HTTP URL中提取出来&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;User-Agent&lt;/em&gt; 允许客户端将它的操作系统, 浏览器和其他属性告诉服务器. 不过这个报头域不是必需的, 如果我们自己写一个浏览器, 不使用User-Agent 请求报头域, 那么服务器端就无法得知我们的信息了.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;请求报头示例&lt;/em&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;GET /form.html HTTP/1.1 (CRLF)
+Accept:image/gif,image/x-xbigmap,image/jpeg,application/x-shockwave-flash,application/vnd.ms-excel,application/vnd.ms-powerpoint,application/msword,*/* (CRLF)
+Accept-Language:zh-cn (CRLF)
+Acdept-Encoding:gzip,deflate (CRLF)
+If-Modified-Since:Wed,05 Jan 2007 11:21:25 GMT (CRLF)
+If-None-Match:Mozilla/4.0(compatible;MSIE6.0,Windows NT 5.0) (CRLF)
+Host:www.guet.edu.cn (CRLF)
+Connection:Keep-Alive (CRLF)
+(CRLF)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h6 id=&#34;响应报头&#34;&gt;响应报头&lt;/h6&gt;
+&lt;p&gt;响应报头允许服务器传递不能放在状态行中的附加响应信息, 以及关于服务器的信息和对Request-URI所标识的资源进行下一步访问的信息&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Location&lt;/em&gt; 重定向接受者到一个新的位置. Location响应报头域常用在更换域名的时候&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Server&lt;/em&gt; 包含了服务器用来处理请求的软件信息. 与&lt;code&gt;User-Agent&lt;/code&gt; 请求报头域是相对应的 例: &lt;code&gt;Server:Apache-Coyote/1.1&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;WWW-Authenticate&lt;/em&gt; WWW-Authenticate 响应报头域必须包含在401响应消息中, 客户端收到401响应消息的时候, 并发送Authorization报头域请求服务器对其进行验证时, 服务端响应报头就包含该报头域 例: &lt;code&gt;WWW-Authenticate:Basic realm=&amp;quot;Basic Auth Test!&lt;/code&gt;&lt;/p&gt;
+&lt;h6 id=&#34;实体报头&#34;&gt;实体报头&lt;/h6&gt;
+&lt;p&gt;请求和响应消息都可以传送一个实体. 一个实体由实体报头域和实体正文组成, 但并不是实体报头域和实体正文要在一起发送, 可以只发送实体报头域. 实体报头定义了关于实体正文(如: 有无实体正文) 和请求所标识的资源的元信息.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Content-Encoding&lt;/em&gt; 被用作媒体类型的修饰符, 它的值指示了已经被应用到实体正文的附加内容的编码, 因而要获得Content-Type 报头域中所引用的媒体类型, 必须采用相应的解码机制.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Content-Language&lt;/em&gt; 描述了资源所用的自然语言. 没有设置该域则认为实体内容将提供给所有的语言阅读&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Content-Length&lt;/em&gt; 指明实体正文的长度, 以字节方式存储的十进制数字来表示&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Content-Type&lt;/em&gt; 指明发送给接受者的实体正文的媒体类型 例: &lt;code&gt;Content-Type:text/html;charset=ISO-8859-1&lt;/code&gt; &lt;code&gt;Content-Type:text/html;charset=GB2312&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Last-Modified&lt;/em&gt; 指示资源的最后修改日期和时间&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Expires&lt;/em&gt; 给出响应国企的日期和时间. 为了让代理服务器或浏览器在一段时间以后更新缓存中(再次访问曾访问过的页面时, 直接从缓存中加载, 缩短响应时间和降低服务器负载) 的页面, 我们可以使用Expires 实体报头域指定页面过期的时间. 例: &lt;code&gt;Expires:Thu, 15 Sep 2006 16:23:12 GMT&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;HTTP1.1 的客户端和缓存必须将其他非法的日期格式(包括0) 看作已经过期 为了让浏览器不要缓存页面, 我们也可以利用Expires 实体报头域设置为0, jsp中程序如下: &lt;code&gt;response.setDateHeader(&amp;quot;Expires&amp;quot;, &amp;quot;0&amp;quot;);&lt;/code&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Gerrit &#43; apache 安装</title>
+        <link>https://lxb.wiki/2eb2e06d/</link>
+        <pubDate>Wed, 02 May 2018 23:56:55 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/2eb2e06d/</guid>
+        <description>&lt;p&gt;使用gerrit自带的数据库h2, 验证方式为HTTP, SMTP 服务器未配置&lt;/p&gt;
+&lt;h6 id=&#34;git-安装&#34;&gt;git 安装&lt;/h6&gt;
+&lt;p&gt;可直接从yum 源安装&lt;/p&gt;
+&lt;h6 id=&#34;gerrit-安装&#34;&gt;gerrit 安装&lt;/h6&gt;
+&lt;p&gt;先添加gerrit 用户. gerrit 从2.10开始, 换成了新版界面. 几乎国内所有的镜像都会下载失败, 需要翻墙下载. 下载完成后, 初始化命令为: &lt;code&gt;java -jar gerrrit-war init -d /home/gerrit/repository&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;初始化启动时, &amp;ldquo;Authentication method&amp;rdquo; 设为&amp;quot;http&amp;quot; ,其他默认 &amp;ldquo;Listen on port [8080]&amp;rdquo; 可用默认, 如端口被占用, 初始化后也可在配置文件修改&lt;/p&gt;
+&lt;h6 id=&#34;apache-安装&#34;&gt;apache 安装&lt;/h6&gt;
+&lt;p&gt;直接从yum源安装 apache名字为httpd, 服务名也是httpd. 服务启动后, 默认以apache用户运行. 如需访问其他用户的文件, 如&lt;code&gt;/home/gerrit/repository/htpasswd&lt;/code&gt;, 需要确保apache 用户有足够的权限&lt;/p&gt;
+&lt;h6 id=&#34;配置-apache&#34;&gt;配置 apache&lt;/h6&gt;
+&lt;p&gt;修改 apache 的conf 文件, 一般路径为&lt;code&gt;/etc/httpd/conf/httpd.conf&lt;/code&gt; windows 下的配置文件路径为 &lt;code&gt;INSTALL_DIR/conf/httpd.conf&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;去掉下面几行的注释&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;LoadModule proxy_module modules/mod_proxy.so
+LoadModule proxy_connect_module modules/mod_proxy_connect.so
+LoadModule proxy_http_module modules/mod_proxy_http.so
+LoadModule proxy_ftp_module modules/mod_proxy_ftp.so
+LoadModule negotiation_module modules/mod_negotiation.so
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;在最后追加下面配置&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;VirtualHost *:8080&amp;gt;  
+  ServerName v3server
+  ProxyRequests Off  
+  ProxyVia Off  
+  ProxyPreserveHost On  
+
+
+  &amp;lt;Proxy *:8080&amp;gt;  
+        Order deny,allow  
+        Allow from all  
+  &amp;lt;/Proxy&amp;gt;  
+
+
+    &amp;lt;Location /login/&amp;gt;
+      AuthType Basic
+      AuthName &amp;quot;Gerrit Code Review&amp;quot;
+      Require valid-user
+     AuthUserFile D:/git/htpasswd
+    &amp;lt;/Location&amp;gt;
+
+
+  ProxyPass / http://10.14.132.179:9080/
+  ProxyPassReverse / http://10.14.132.179:9080/
+&amp;lt;/VirtualHost&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;如端口被占用, 修改conf文件的&amp;quot;Listen 8080&amp;quot; 字段, 换成其他的端口 查看某个端口是否被占用 : &lt;code&gt;netstat -lnp | grep 8080&lt;/code&gt; &lt;code&gt;ProxyPass&lt;/code&gt; 和 &lt;code&gt;proxyPassReverse&lt;/code&gt; 的端口需与gerrit的conf文件里端口一致&lt;/p&gt;
+&lt;h6 id=&#34;配置-gerrit&#34;&gt;配置 gerrit&lt;/h6&gt;
+&lt;p&gt;修改&lt;code&gt;GERRIT_DIR/etc/gerrit.config&lt;/code&gt; 文件&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;[gerrit]
+basePath = git
+canonicalWebUrl = http://10.14.132.179:9080/
+[database]
+type = H2
+database = db/ReviewDB
+[auth]
+type = HTTP
+logoutUrl = http://aa:aa@10.14.132.179:8080/
+[sendemail]
+smtpServer = smtp.163.com
+smtpUser = useremail@163.com
+  smtpPass = userpass
+  from = useremail@163.com
+[container]
+user = admin
+javaHome = C:\\Program Files\\Java\\jdk1.6.0_27\\jre
+[sshd]
+listenAddress = *:29418
+[httpd]
+listenUrl = http://10.14.132.179:9080/
+[cache]
+directory = cache
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;需要修改的内容: - canonicalWebUrl - auth/type&lt;/p&gt;
+&lt;p&gt;需要注意: canonicalWebUrl 和 listenAddress 不是8080. apache 的端口和 gerrit 的端口是不同的, 用户访问地址为 apache 的地址&lt;/p&gt;
+&lt;h6 id=&#34;启动-gerrit&#34;&gt;启动 gerrit&lt;/h6&gt;
+&lt;p&gt;&lt;code&gt;GERRIT_DIR/bin/gerrit.sh start&lt;/code&gt;&lt;/p&gt;
+&lt;h6 id=&#34;启动-apache&#34;&gt;启动 apache&lt;/h6&gt;
+&lt;p&gt;&lt;code&gt;service httpd start&lt;/code&gt;&lt;/p&gt;
+&lt;h6 id=&#34;添加账号和密码&#34;&gt;添加账号和密码&lt;/h6&gt;
+&lt;p&gt;&lt;code&gt;htpasswd -cm /home/gerrit/repository/htpasswd USER_NAME&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;htpasswd 为apache 的命令工具&lt;/li&gt;
+&lt;li&gt;参数c 意为新建文件, 即 &lt;code&gt;/home/gerrit/repository/htpasswd&lt;/code&gt; 文件不存在时, 新建名为htpasswd的文件&lt;/li&gt;
+&lt;li&gt;参数m 为使用md5 加密&lt;/li&gt;
+&lt;li&gt;当htpasswd文件存在时, 可以使用&lt;code&gt;htpasswd -m /PATH_TO_HTPASSWD USER_NAME&lt;/code&gt; 添加账号&lt;/li&gt;
+&lt;li&gt;保存账号密码信息的文件(htpasswd), 名字为自定义的, 但需要与apache 的conf 配置文件里 &lt;code&gt;AuthUserFile&lt;/code&gt; 一致&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        </item>
+        <item>
+        <title>protocol buffer</title>
+        <link>https://lxb.wiki/66065582/</link>
+        <pubDate>Wed, 21 Mar 2018 17:47:31 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/66065582/</guid>
+        <description>&lt;h5 id=&#34;developer-guide&#34;&gt;Developer Guide&lt;/h5&gt;
+&lt;p&gt;&lt;code&gt;.proto&lt;/code&gt; 文件&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;message Person {
+  required string name = 1;
+  required int32 id = 2;
+  optional string email = 3;
+
+  enum PhoneType {
+    MOBILE = 0;
+    HOME = 1;
+    WORK = 2;
+  }
+
+  message PhoneNumber {
+    required string number = 1;
+    optional PhoneType type = 2 [default = HOME];
+  }
+
+  repeated PhoneNumber phone = 4;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Once you&amp;rsquo;ve defined your messages, you run the protocol buffer compiler for your application&amp;rsquo;s language on your .proto file to generate data access classes. These provide simple accessors for each field (like name() and set_name()) as well as methods to serialize/parse the whole structure to/from raw bytes&lt;/p&gt;
+&lt;p&gt;You can add new fields to your message formats without breaking backwards-compatibility; old binaries simply ignore the new field when parsing. So if you have a communications protocol that uses protocol buffers as its data format, you can extend your protocol without having to worry about breaking existing code.&lt;/p&gt;
+&lt;h5 id=&#34;language-guide&#34;&gt;Language Guide&lt;/h5&gt;
+&lt;h6 id=&#34;defining-a-message-type&#34;&gt;Defining A Message Type&lt;/h6&gt;
+&lt;pre&gt;&lt;code&gt;syntax = &amp;quot;proto3&amp;quot;; // First non-empty; first non-comment line
+
+message SearchRequest {
+  string query = 1; // unique numbered tag
+  int32 page_number = 2;
+  int32 result_per_page = 3;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h6 id=&#34;specifying-field-types&#34;&gt;Specifying Field Types&lt;/h6&gt;
+&lt;h6 id=&#34;assigning-tags&#34;&gt;Assigning Tags&lt;/h6&gt;
+&lt;p&gt;1-15 one byte 16-2047 two bytes you should reserve the tags 1 through 15 for very frequently occurring message elements. Remember to leave some room for frequently occurring elements that might be added in the future.&lt;/p&gt;
+&lt;p&gt;range: 1 to 536,870,911 You also cannot use the numbers 19000 through 19999 (FieldDescriptor::kFirstReservedNumber through FieldDescriptor::kLastReservedNumber)&lt;/p&gt;
+&lt;h6 id=&#34;specifying-field-rules&#34;&gt;Specifying Field Rules&lt;/h6&gt;
+&lt;ul&gt;
+&lt;li&gt;singular zero or one of this field&lt;/li&gt;
+&lt;li&gt;repeated any number of times&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h6 id=&#34;adding-more-message-types&#34;&gt;Adding More Message Types&lt;/h6&gt;
+&lt;h6 id=&#34;reserved-fields&#34;&gt;Reserved Fields&lt;/h6&gt;
+&lt;pre&gt;&lt;code&gt;message Foo {
+  reserved 2, 15, 9 to 11;
+  reserved &amp;quot;foo&amp;quot;, &amp;quot;bar&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Note that you can&amp;rsquo;t mix field names and tag numbers in the same reserved statement.&lt;/p&gt;
+&lt;h6 id=&#34;whats-generated-from-your-proto&#34;&gt;What&amp;rsquo;s Generated From Your .proto?&lt;/h6&gt;
+&lt;h6 id=&#34;default-values&#34;&gt;Default Values&lt;/h6&gt;
+&lt;p&gt;sigular: - string - byte - bool - numeric type - enum - message field&lt;/p&gt;
+&lt;p&gt;repeated: - repeated filed&lt;/p&gt;
+&lt;h6 id=&#34;enumerations&#34;&gt;Enumerations&lt;/h6&gt;
+&lt;pre&gt;&lt;code&gt;message SearchRequest {
+  string query = 1;
+  int32 page_number = 2;
+  int32 result_per_page = 3;
+  enum Corpus {
+    UNIVERSAL = 0;
+    WEB = 1;
+    IMAGES = 2;
+    LOCAL = 3;
+    NEWS = 4;
+    PRODUCTS = 5;
+    VIDEO = 6;
+  }
+  Corpus corpus = 4;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;You can define aliases by assigning the same value to different enum constants&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;enum EnumAllowingAlias {
+  option allow_alias = true;
+  UNKNOWN = 0;
+  STARTED = 1;
+  RUNNING = 1;
+}
+
+enum EnumNotAllowingAlias {
+  UNKNOWN = 0;
+  STARTED = 1;
+  // RUNNING = 1;  // Uncommenting this line will cause a compile error inside Google and a warning message outside.
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h6 id=&#34;reserved-values&#34;&gt;Reserved Values&lt;/h6&gt;
+&lt;pre&gt;&lt;code&gt;enum Foo {
+  reserved 2, 15, 9 to 11, 40 to max;
+  reserved &amp;quot;FOO&amp;quot;, &amp;quot;BAR&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Note that you can&amp;rsquo;t mix field names and numeric values in the same reserved statement.&lt;/p&gt;
+&lt;h6 id=&#34;using-other-message-types&#34;&gt;Using Other Message Types&lt;/h6&gt;
+&lt;p&gt;Define a message in the same &lt;code&gt;.proto&lt;/code&gt; file.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;message SearchResponse {
+  repeated Result results = 1;
+}
+
+message Result {
+  string url = 1;
+  string title = 2;
+  repeated string snippets = 3;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h6 id=&#34;importing-definitions&#34;&gt;Importing Definitions&lt;/h6&gt;
+&lt;p&gt;By default you can only use definitions from directly imported .proto files. &lt;code&gt;import &amp;quot;myproject/other_protos.proto&amp;quot;;&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;// new.proto
+// All definitions are moved here
+======================================================
+// old.proto
+// This is the proto that all clients are importing.
+import public &amp;quot;new.proto&amp;quot;;
+import &amp;quot;other.proto&amp;quot;;
+======================================================
+// client.proto
+import &amp;quot;old.proto&amp;quot;;
+// You use definitions from old.proto and new.proto, but not other.proto
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The protocol compiler searches for imported files in a set of directories specified on the protocol compiler command line using the -I/&amp;ndash;proto_path flag. If no flag was given, it looks in the directory in which the compiler was invoked. In general you should set the &amp;ndash;proto_path flag to the root of your project and use fully qualified names for all imports.&lt;/p&gt;
+&lt;h6 id=&#34;using-proto2-message-types&#34;&gt;Using proto2 Message Types&lt;/h6&gt;
+&lt;p&gt;It&amp;rsquo;s possible to import proto2 message types and use them in your proto3 messages, and vice versa. However, proto2 enums cannot be used directly in proto3 syntax (it&amp;rsquo;s okay if an imported proto2 message uses them).&lt;/p&gt;
+&lt;h6 id=&#34;nested-types&#34;&gt;Nested Types&lt;/h6&gt;
+&lt;pre&gt;&lt;code&gt;message SearchResponse {
+  message Result {
+    string url = 1;
+    string title = 2;
+    repeated string snippets = 3;
+  }
+  repeated Result results = 1;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;If you want to reuse this message type outside its parent message type, you refer to it as &lt;code&gt;Parent.Type&lt;/code&gt;:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;message SomeOtherMessage {
+  SearchResponse.Result result = 1;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;You can nest messages as deeply as you like&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;message Outer {                  // Level 0
+  message MiddleAA {  // Level 1
+    message Inner {   // Level 2
+      int64 ival = 1;
+      bool  booly = 2;
+    }
+  }
+  message MiddleBB {  // Level 1
+    message Inner {   // Level 2
+      int32 ival = 1;
+      bool  booly = 2;
+    }
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h6 id=&#34;updating-a-message-type&#34;&gt;Updating A Message Type&lt;/h6&gt;
+&lt;ul&gt;
+&lt;li&gt;Don&amp;rsquo;t change the numeric tags for any existing fields&lt;/li&gt;
+&lt;li&gt;If you add new fields, any messages serialized by code using your &amp;ldquo;old&amp;rdquo; message format can still be parsed by your new generated code&lt;/li&gt;
+&lt;li&gt;Fields can be removed, as long as the tag number is not used again in your updated message type
+&lt;ul&gt;
+&lt;li&gt;You may want to rename the field instead, perhaps adding the prefix &amp;ldquo;OBSOLETE_&amp;rdquo;, or make the tag reserved, so that future users of your .proto can&amp;rsquo;t accidentally reuse the number.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Compatibility
+&lt;ul&gt;
+&lt;li&gt;int32, uint32, int64, uint64, and bool are all compatible&lt;/li&gt;
+&lt;li&gt;sint32 and sint64 are compatible with each other but are not compatible with the other integer types&lt;/li&gt;
+&lt;li&gt;string and bytes are compatible as long as the bytes are valid UTF-8&lt;/li&gt;
+&lt;li&gt;Embedded messages are compatible with bytes if the bytes contain an encoded version of the message&lt;/li&gt;
+&lt;li&gt;fixed32 is compatible with sfixed32, and fixed64 with sfixed64&lt;/li&gt;
+&lt;li&gt;enum is compatible with int32, uint32, int64, and uint64 in terms of wire format (note that values will be truncated if they don&amp;rsquo;t fit)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Moving any fields into an existing oneof is not safe&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h6 id=&#34;any&#34;&gt;Any&lt;/h6&gt;
+&lt;pre&gt;&lt;code&gt;import &amp;quot;google/protobuf/any.proto&amp;quot;;
+
+message ErrorStatus {
+  string message = 1;
+  repeated google.protobuf.Any details = 2;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h6 id=&#34;oneof&#34;&gt;Oneof&lt;/h6&gt;
+&lt;p&gt;You can add fields of any type, but cannot use &lt;code&gt;repeated&lt;/code&gt; fields&lt;/p&gt;
+&lt;p&gt;Features: - Setting a oneof field will automatically clear all other members of the oneof - If the parser encounters multiple members of the same oneof on the wire, only the last member seen is used in the parsed message - If you&amp;rsquo;re using C++, make sure your code doesn&amp;rsquo;t cause memory crashes - Again in C++, if you Swap() two messages with oneofs, each message will end up with the other’s oneof case&lt;/p&gt;
+&lt;h6 id=&#34;maps&#34;&gt;Maps&lt;/h6&gt;
+&lt;p&gt;&lt;code&gt;map&amp;lt;key_type, value_type&amp;gt; map_field = N&lt;/code&gt; The &lt;code&gt;key_type&lt;/code&gt; can be any integral or string type. The &lt;code&gt;value_type&lt;/code&gt; can be any type except another map.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Map fields cannot be &lt;code&gt;repeated&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Wire format ordering and map iteration ordering of map values is undefined&lt;/li&gt;
+&lt;li&gt;When generating text format for a &lt;code&gt;.proto&lt;/code&gt;, maps are sorted by key&lt;/li&gt;
+&lt;li&gt;When parsing from the wire or when merging, if there are duplicate map keys the last key seen is used. When parsing a map from text format, parsing may fail if there are duplicate keys&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;backwords compatibility:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;message MapFieldEntry {
+  key_type key = 1;
+  value_type value = 2;
+}
+
+repeated MapFieldEntry map_field = N;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h6 id=&#34;packages&#34;&gt;Packages&lt;/h6&gt;
+&lt;h6 id=&#34;json-mapping&#34;&gt;JSON Mapping&lt;/h6&gt;
+</description>
+        </item>
+        <item>
+        <title>邮件发送原理</title>
+        <link>https://lxb.wiki/b0248f59/</link>
+        <pubDate>Thu, 08 Jun 2017 10:34:08 +0000</pubDate>
+        
+        <guid>https://lxb.wiki/b0248f59/</guid>
+        <description>&lt;p&gt;SMTP(Simple Mail Transfer Protocol)是电子邮件从客户机传输到服务器或从某一个服务器传输到另一个服务器使用的传输协议。SMTP 是请求/响应协议，命令和响应都是基于 ASCII 文本，并以 CR 和 LF 符结束。响应包括一个表示返回状态的三位数字代码。在 TCP 协议 25 端口监听连接请求。其命令如下：&lt;/p&gt;
+&lt;p&gt;SMTP命令&lt;/p&gt;
+&lt;p&gt;命令说明&lt;/p&gt;
+&lt;p&gt;HELO ＜domain＞＜CRLF＞&lt;/p&gt;
+&lt;p&gt;识别发送方到接收SMTP的一个HELO命令&lt;/p&gt;
+&lt;p&gt;AUTH LOGIN&lt;/p&gt;
+&lt;p&gt;登陆服务器的命令。在这条命令之后，要发送用Base64编码后的用户名与密码进行登陆&lt;/p&gt;
+&lt;p&gt;MAIL FROM:＜reverse-path＞＜CRLF＞&lt;/p&gt;
+&lt;p&gt;＜reverse-path＞为发送者地址。此命令告诉接收方一个新邮件发送的开始，并对所有的状态和缓冲区进行初始化。此命令开始一个邮件传输处理，最终完成将邮件数据传送到一个或多个邮箱中&lt;/p&gt;
+&lt;p&gt;RCPT TO:＜forward-path＞＜CRLF＞&lt;/p&gt;
+&lt;p&gt;＜forward-path＞标识各个邮件接收者的地址&lt;/p&gt;
+&lt;p&gt;DATA ＜CRLF＞&lt;/p&gt;
+&lt;p&gt;接收SMTP将把其后的行为看作邮件数据去处理，以＜CRLF＞.＜CRLF＞标识数据的结尾&lt;/p&gt;
+&lt;p&gt;REST ＜CRLF＞&lt;/p&gt;
+&lt;p&gt;退出/复位当前的邮件传输&lt;/p&gt;
+&lt;p&gt;NOOP ＜CRLF＞&lt;/p&gt;
+&lt;p&gt;要求接收SMTP仅做OK应答。（用于测试）&lt;/p&gt;
+&lt;p&gt;QUIT ＜CRLF＞&lt;/p&gt;
+&lt;p&gt;要求接收SMTP返回一个OK应答并关闭传输。&lt;/p&gt;
+&lt;p&gt;VRFY ＜string＞ ＜CRLF＞&lt;/p&gt;
+&lt;p&gt;验证指定的邮箱是否存在，由于安全因素，服务器多禁止此命令。&lt;/p&gt;
+&lt;p&gt;EXPN ＜string＞ ＜CRLF＞&lt;/p&gt;
+&lt;p&gt;验证给定的邮箱列表是否存在，扩充邮箱列表，也常禁止使用。&lt;/p&gt;
+&lt;p&gt;HELP ＜CRLF＞&lt;/p&gt;
+&lt;p&gt;查询服务器支持什么命令&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;邮件交互图&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;A-&amp;gt;B: 1. 建立TCP连接(host:port, 默认port为25)
+B-&amp;gt;A: 220. Anti-spam GT for Coremail System
+Note over A: 
+A-&amp;gt;B: 2. 向服务器标识用户身份(HELO host\r\/n)
+B-&amp;gt;A: 250 OK
+Note over A: 
+A-&amp;gt;B: 3. 登录服务器(AUTH LOGIN\r\/n)
+B-&amp;gt;A: 334. username: (这里是解密后的信息)
+A-&amp;gt;B: &amp;lt;my_username&amp;gt;(要用Base64加密)
+B-&amp;gt;A: 334. password: (这里是解密后的信息)
+A-&amp;gt;B: &amp;lt;my_password&amp;gt;(要用Base64加密)
+B-&amp;gt;A: 235. Authentication successful
+Note over A: 
+A-&amp;gt;B: 4. 指定发信者(MAIL FROM: &amp;lt;my_sender@gmail.com&amp;gt;\r\/n)
+B-&amp;gt;A: 250. Mail OK
+Note over A: 
+A-&amp;gt;B: 5. 指定收信者(RCPT TO: &amp;lt;my_receiver@gmail.com&amp;gt;\r\/n)
+B-&amp;gt;A: 250. Mail OK
+Note over A: 
+A-&amp;gt;B: 6. 发送数据(DATA\r\/n)
+B-&amp;gt;A: 354. End data with &amp;lt;CR&amp;gt;&amp;lt;LF&amp;gt;.&amp;lt;CR&amp;gt;&amp;lt;LF&amp;gt;
+Note over A: 
+A-&amp;gt;B: 7. to: &amp;lt;my_receiver@gmail.com\r\/nsubject:&amp;lt;my_subject&amp;gt;\r\/nSome Context\r\/n.\r\/n&amp;gt;
+B-&amp;gt;A: 250. Mail OK
+Note over A: 
+A-&amp;gt;B: 8. QUIT\r\/n
+B-&amp;gt;A: 221. Bye
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;因markdown里不能打出&amp;quot;\n&amp;quot;, 因此使用&amp;quot;\/n&amp;quot; 代替&amp;quot;\n&amp;quot;&lt;/strong&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;SMTP发信操作及返回码&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;[crazywill@localhost crazywill]$ telnet smtp.163.com 25 #telnet登录25端口
+Trying 202.108.5.81...
+Connected to smtp.163.com.
+Escape character is &#39;^]&#39;.
+220 163.com Coremail SMTP(Anti Spam) System
+EHLO smtp.163.com # 握手 :)
+250-mail
+250-PIPELINING
+250-AUTH LOGIN PLAIN
+250-AUTH=LOGIN PLAIN
+250 8BITMIME
+AUTH LOGIN # 开始认证登录
+334 dXNlcm5hbWU6
+crazywill
+334 UGFzc3dvcmQ6
+mypassword
+535 Error: authentication failed # 直接用户名密码不能登录
+AUTH LOGIN
+334 dXNlcm5hbWU6
+Y3Jhenl3aWxs
+334 UGFzc3dvcmQ6
+bXlwYXNzd29yZA==
+235 Authentication successful # 使用Base64编码则成功登录
+MAIL FROM:&amp;lt;test@163.com&amp;gt; # 邮件发送方
+553 You are not authorized to send mail, authentication is required # 不可伪造发送邮件 
+MAIL FROM:&amp;lt;crazywill@163.com&amp;gt; # 邮件发送方
+250 Mail OK
+RCPT TO:&amp;lt;crazywill@163.com&amp;gt; # 邮件的接收方，若有多个收件人，则重复这一语句多次。
+250 Mail OK
+DATA # 邮件体内容
+354 Please start mail input.
+TO: crazywill@163.com # 此处的TO，FROM，等内容，可以随便造假 :) 可以骗人但骗不了懂得查看邮件源码的。
+FROM: cccc@163.com
+SUBJECT: test by telnet/smtp 
+
+test, just a test. # 邮件正文内容，与Header部分空一行开始写
+. # 邮件写完，以一个句点加回车结果。
+250 Mail OK queued as smtp10,wKjADQ2ApxRnnqBE0CWaEw==.38326S3 # 返回250 表示发送成功。
+NOOP # 空语句，不执行任何操作，一般用来保持和服务器连接，不要掉线
+250 OK
+QUIT # 退出
+221 Closing connection. Good bye.
+Connection closed by foreign host.
+[crazywill@localhost crazywill]$
+&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;p&gt;参考资料: &lt;a class=&#34;link&#34; href=&#34;http://www.cnblogs.com/FengYan/archive/2013/01/01/2840982.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;用c++发邮件&lt;/a&gt; &lt;a class=&#34;link&#34; href=&#34;http://blog.csdn.net/lishuhuakai/article/details/27503503&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;电子邮件发送的原理以及简易实现&lt;/a&gt; &lt;a class=&#34;link&#34; href=&#34;http://blog.csdn.net/lishuhuakai/article/details/27852009&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;邮件正文及其附件的发送的C++实现&lt;/a&gt; &lt;a class=&#34;link&#34; href=&#34;http://blog.csdn.net/zbird1988/article/details/11592137&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;C++通过SMTP发送邮件总结&lt;/a&gt; &lt;a class=&#34;link&#34; href=&#34;http://blog.csdn.net/zbird1988/article/details/11592137&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;C++实现向多人发送邮件&lt;/a&gt;&lt;/p&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>
