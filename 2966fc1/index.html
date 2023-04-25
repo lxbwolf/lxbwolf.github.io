@@ -417,102 +417,102 @@
 <p>开始使用 Tekton 的最简单方法是自己编写一个简单的流水线。如果你每天都在使用 Kubernetes，那你可能对 YAML 很熟悉，这正是 Tekton 流水线的定义方式。下面是一个克隆代码库的简单流水线的例子。</p>
 <p>首先，创建一个 <code>task.yaml</code> 文件，用你喜欢的文本编辑器打开它。这个文件定义了你要执行的 <!-- raw HTML omitted -->步骤<!-- raw HTML omitted -->Step<!-- raw HTML omitted --><!-- raw HTML omitted -->。在这个例子中，就是克隆一个仓库，所以我把这个步骤命名为 “clone”。该文件设置了一些环境变量，然后使用一个简单的 shell 脚本来执行克隆。</p>
 <p>接下来是 <!-- raw HTML omitted -->任务<!-- raw HTML omitted -->Task<!-- raw HTML omitted --><!-- raw HTML omitted -->。你可以把步骤看作是一个被任务调用的函数，而任务则设置步骤所需的参数和工作空间。</p>
-<pre tabindex="0"><code>apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
- name: git-clone
-spec:
- workspaces:
-   - name: output
-     description: The git repo will be cloned onto the volume backing this Workspace.
- params:
-   - name: url
-     description: Repository URL to clone from.
-     type: string
-   - name: revision
-     description: Revision to checkout. (branch, tag, sha, ref, etc...)
-     type: string
-     default: &#34;&#34;
- steps:
-   - name: clone
-     image: &#34;gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.21.0&#34;
-     env:
-       - name: PARAM_URL
-         value: $(params.url)
-       - name: PARAM_REVISION
-         value: $(params.revision)
-       - name: WORKSPACE_OUTPUT_PATH
-         value: $(workspaces.output.path)
-     script: |
-      #!/usr/bin/env sh
-       set -eu
-
-       CHECKOUT_DIR=&#34;${WORKSPACE_OUTPUT_PATH}&#34;
-
-       /ko-app/git-init \
-         -url=&#34;${PARAM_URL}&#34; \
-         -revision=&#34;${PARAM_REVISION}&#34; \
-         -path=&#34;${CHECKOUT_DIR}&#34;
-       cd &#34;${CHECKOUT_DIR}&#34;
-       EXIT_CODE=&#34;$?&#34;
-       if [ &#34;${EXIT_CODE}&#34; != 0 ] ; then
-         exit &#34;${EXIT_CODE}&#34;
-       fi
-       # Verify clone is success by reading readme file.
-       cat ${CHECKOUT_DIR}/README.md
-</code></pre><p>创建第二个文件 <code>pipeline.yaml</code>，并用你喜欢的文本编辑器打开它。这个文件通过设置诸如可以运行和处理任务的工作区等重要参数来定义流水线。</p>
-<pre tabindex="0"><code>apiVersion: tekton.dev/v1beta1
-kind: Pipeline
-metadata:
- name: cat-branch-readme
-spec:
- params:
-   - name: repo-url
-     type: string
-     description: The git repository URL to clone from.
-   - name: branch-name
-     type: string
-     description: The git branch to clone.
- workspaces:
-   - name: shared-data
-     description: |
-      This workspace will receive the cloned git repo and be passed
-       to the next Task for the repo&#39;s README.md file to be read.
- tasks:
-   - name: fetch-repo
-     taskRef:
-       name: git-clone
-     workspaces:
-       - name: output
-         workspace: shared-data
-     params:
-       - name: url
-         value: $(params.repo-url)
-       - name: revision
-         value: $(params.branch-name)
-</code></pre><p>最后，创建一个 <code>pipelinerun.yaml</code> 文件，用喜欢的文本编辑器打开它。这个文件真正的运行流水线。它调用流水线中定义的参数（继而调用任务文件中定义的任务）。</p>
-<pre tabindex="0"><code>apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
- name: git-clone-checking-out-a-branch
-spec:
- pipelineRef:
-   name: cat-branch-readme
- workspaces:
-   - name: shared-data
-     volumeClaimTemplate:
-       spec:
-         accessModes:
-          - ReadWriteOnce
-         resources:
-           requests:
-             storage: 1Gi
- params:
-   - name: repo-url
-     value: &lt;https://github.com/tektoncd/pipeline.git&gt;
-   - name: branch-name
-     value: release-v0.12.x
-</code></pre><p>把不同工作分在不同的文件中的好处是，<code>git-clone</code> 任务可以在多条流水线中复用。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">tekton.dev/v1beta1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Task</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672"> name</span>: <span style="color:#ae81ff">git-clone</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672"> workspaces</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">output</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     description</span>: <span style="color:#ae81ff">The git repo will be cloned onto the volume backing this Workspace.</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672"> params</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">url</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     description</span>: <span style="color:#ae81ff">Repository URL to clone from.</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     type</span>: <span style="color:#ae81ff">string</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">revision</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     description</span>: <span style="color:#ae81ff">Revision to checkout. (branch, tag, sha, ref, etc...)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     type</span>: <span style="color:#ae81ff">string</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     default</span>: <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672"> steps</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">clone</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     image</span>: <span style="color:#e6db74">&#34;gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.21.0&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     env</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">       - name</span>: <span style="color:#ae81ff">PARAM_URL</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">         value</span>: <span style="color:#ae81ff">$(params.url)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">       - name</span>: <span style="color:#ae81ff">PARAM_REVISION</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">         value</span>: <span style="color:#ae81ff">$(params.revision)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">       - name</span>: <span style="color:#ae81ff">WORKSPACE_OUTPUT_PATH</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">         value</span>: <span style="color:#ae81ff">$(workspaces.output.path)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     script</span>: <span style="color:#ae81ff">|</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">     </span> <span style="color:#75715e">#!/usr/bin/env sh</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       set -eu</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       CHECKOUT_DIR=&#34;${WORKSPACE_OUTPUT_PATH}&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       /ko-app/git-init \</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">         -url=&#34;${PARAM_URL}&#34; \</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">         -revision=&#34;${PARAM_REVISION}&#34; \</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">         -path=&#34;${CHECKOUT_DIR}&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       cd &#34;${CHECKOUT_DIR}&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       EXIT_CODE=&#34;$?&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       if [ &#34;${EXIT_CODE}&#34; != 0 ] ; then</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">         exit &#34;${EXIT_CODE}&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       # Verify clone is success by reading readme file.</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       cat ${CHECKOUT_DIR}/README.md</span>
+</span></span></code></pre></div><p>创建第二个文件 <code>pipeline.yaml</code>，并用你喜欢的文本编辑器打开它。这个文件通过设置诸如可以运行和处理任务的工作区等重要参数来定义流水线。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">tekton.dev/v1beta1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pipeline</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672"> name</span>: <span style="color:#ae81ff">cat-branch-readme</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672"> params</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">repo-url</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     type</span>: <span style="color:#ae81ff">string</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     description</span>: <span style="color:#ae81ff">The git repository URL to clone from.</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">branch-name</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     type</span>: <span style="color:#ae81ff">string</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     description</span>: <span style="color:#ae81ff">The git branch to clone.</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672"> workspaces</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">shared-data</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     description</span>: <span style="color:#ae81ff">|</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">      This workspace will receive the cloned git repo and be passed</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       to the next Task for the repo&#39;s README.md file to be read.</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672"> tasks</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">fetch-repo</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     taskRef</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">       name</span>: <span style="color:#ae81ff">git-clone</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     workspaces</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">       - name</span>: <span style="color:#ae81ff">output</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">         workspace</span>: <span style="color:#ae81ff">shared-data</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     params</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">       - name</span>: <span style="color:#ae81ff">url</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">         value</span>: <span style="color:#ae81ff">$(params.repo-url)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">       - name</span>: <span style="color:#ae81ff">revision</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">         value</span>: <span style="color:#ae81ff">$(params.branch-name)</span>
+</span></span></code></pre></div><p>最后，创建一个 <code>pipelinerun.yaml</code> 文件，用喜欢的文本编辑器打开它。这个文件真正的运行流水线。它调用流水线中定义的参数（继而调用任务文件中定义的任务）。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">tekton.dev/v1beta1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">PipelineRun</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672"> name</span>: <span style="color:#ae81ff">git-clone-checking-out-a-branch</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672"> pipelineRef</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">   name</span>: <span style="color:#ae81ff">cat-branch-readme</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672"> workspaces</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">shared-data</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     volumeClaimTemplate</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">       spec</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">         accessModes</span>:
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">          - ReadWriteOnce</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">         resources</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">           requests</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">             storage</span>: <span style="color:#ae81ff">1Gi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672"> params</span>:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">repo-url</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     value</span>: <span style="color:#ae81ff">&lt;https://github.com/tektoncd/pipeline.git&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">branch-name</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">     value</span>: <span style="color:#ae81ff">release-v0.12.x</span>
+</span></span></code></pre></div><p>把不同工作分在不同的文件中的好处是，<code>git-clone</code> 任务可以在多条流水线中复用。</p>
 <p>例如，假设你想为一个流水线项目做端到端的测试。你可以使用 <code>git-clone</code> 任务 <strong>来让每一次测试都基于最新的代码</strong>。</p>
 <h3 id="总结">总结</h3>
 <p>只要你熟悉 Kubernetes，那 Tekton 对你来说就像其他 Kubernetes 原生应用一样简单。它有很多工具可以帮助你创建流水线并与之交互。如果你喜欢自动化，不妨试试 Tekton!</p>

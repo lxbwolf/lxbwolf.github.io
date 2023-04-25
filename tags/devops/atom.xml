@@ -82,102 +82,102 @@
 &lt;p&gt;开始使用 Tekton 的最简单方法是自己编写一个简单的流水线。如果你每天都在使用 Kubernetes，那你可能对 YAML 很熟悉，这正是 Tekton 流水线的定义方式。下面是一个克隆代码库的简单流水线的例子。&lt;/p&gt;
 &lt;p&gt;首先，创建一个 &lt;code&gt;task.yaml&lt;/code&gt; 文件，用你喜欢的文本编辑器打开它。这个文件定义了你要执行的 &lt;!-- raw HTML omitted --&gt;步骤&lt;!-- raw HTML omitted --&gt;Step&lt;!-- raw HTML omitted --&gt;&lt;!-- raw HTML omitted --&gt;。在这个例子中，就是克隆一个仓库，所以我把这个步骤命名为 “clone”。该文件设置了一些环境变量，然后使用一个简单的 shell 脚本来执行克隆。&lt;/p&gt;
 &lt;p&gt;接下来是 &lt;!-- raw HTML omitted --&gt;任务&lt;!-- raw HTML omitted --&gt;Task&lt;!-- raw HTML omitted --&gt;&lt;!-- raw HTML omitted --&gt;。你可以把步骤看作是一个被任务调用的函数，而任务则设置步骤所需的参数和工作空间。&lt;/p&gt;
-&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
- name: git-clone
-spec:
- workspaces:
-   - name: output
-     description: The git repo will be cloned onto the volume backing this Workspace.
- params:
-   - name: url
-     description: Repository URL to clone from.
-     type: string
-   - name: revision
-     description: Revision to checkout. (branch, tag, sha, ref, etc...)
-     type: string
-     default: &amp;#34;&amp;#34;
- steps:
-   - name: clone
-     image: &amp;#34;gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.21.0&amp;#34;
-     env:
-       - name: PARAM_URL
-         value: $(params.url)
-       - name: PARAM_REVISION
-         value: $(params.revision)
-       - name: WORKSPACE_OUTPUT_PATH
-         value: $(workspaces.output.path)
-     script: |
-      #!/usr/bin/env sh
-       set -eu
-
-       CHECKOUT_DIR=&amp;#34;${WORKSPACE_OUTPUT_PATH}&amp;#34;
-
-       /ko-app/git-init \
-         -url=&amp;#34;${PARAM_URL}&amp;#34; \
-         -revision=&amp;#34;${PARAM_REVISION}&amp;#34; \
-         -path=&amp;#34;${CHECKOUT_DIR}&amp;#34;
-       cd &amp;#34;${CHECKOUT_DIR}&amp;#34;
-       EXIT_CODE=&amp;#34;$?&amp;#34;
-       if [ &amp;#34;${EXIT_CODE}&amp;#34; != 0 ] ; then
-         exit &amp;#34;${EXIT_CODE}&amp;#34;
-       fi
-       # Verify clone is success by reading readme file.
-       cat ${CHECKOUT_DIR}/README.md
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;创建第二个文件 &lt;code&gt;pipeline.yaml&lt;/code&gt;，并用你喜欢的文本编辑器打开它。这个文件通过设置诸如可以运行和处理任务的工作区等重要参数来定义流水线。&lt;/p&gt;
-&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;apiVersion: tekton.dev/v1beta1
-kind: Pipeline
-metadata:
- name: cat-branch-readme
-spec:
- params:
-   - name: repo-url
-     type: string
-     description: The git repository URL to clone from.
-   - name: branch-name
-     type: string
-     description: The git branch to clone.
- workspaces:
-   - name: shared-data
-     description: |
-      This workspace will receive the cloned git repo and be passed
-       to the next Task for the repo&amp;#39;s README.md file to be read.
- tasks:
-   - name: fetch-repo
-     taskRef:
-       name: git-clone
-     workspaces:
-       - name: output
-         workspace: shared-data
-     params:
-       - name: url
-         value: $(params.repo-url)
-       - name: revision
-         value: $(params.branch-name)
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;最后，创建一个 &lt;code&gt;pipelinerun.yaml&lt;/code&gt; 文件，用喜欢的文本编辑器打开它。这个文件真正的运行流水线。它调用流水线中定义的参数（继而调用任务文件中定义的任务）。&lt;/p&gt;
-&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
- name: git-clone-checking-out-a-branch
-spec:
- pipelineRef:
-   name: cat-branch-readme
- workspaces:
-   - name: shared-data
-     volumeClaimTemplate:
-       spec:
-         accessModes:
-          - ReadWriteOnce
-         resources:
-           requests:
-             storage: 1Gi
- params:
-   - name: repo-url
-     value: &amp;lt;https://github.com/tektoncd/pipeline.git&amp;gt;
-   - name: branch-name
-     value: release-v0.12.x
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;把不同工作分在不同的文件中的好处是，&lt;code&gt;git-clone&lt;/code&gt; 任务可以在多条流水线中复用。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;apiVersion&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;tekton.dev/v1beta1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;kind&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;Task&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;metadata&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt; name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;git-clone&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spec&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt; workspaces&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;   - name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;output&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     description&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;The git repo will be cloned onto the volume backing this Workspace.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt; params&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;   - name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;url&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     description&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;Repository URL to clone from.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     type&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;string&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;   - name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;revision&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     description&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;Revision to checkout. (branch, tag, sha, ref, etc...)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     type&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;string&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     default&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt; steps&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;   - name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;clone&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     image&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.21.0&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     env&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;       - name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;PARAM_URL&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;         value&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;$(params.url)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;       - name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;PARAM_REVISION&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;         value&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;$(params.revision)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;       - name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;WORKSPACE_OUTPUT_PATH&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;         value&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;$(workspaces.output.path)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     script&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;|&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;     &lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env sh&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;       set -eu&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;       CHECKOUT_DIR=&amp;#34;${WORKSPACE_OUTPUT_PATH}&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;       /ko-app/git-init \&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;         -url=&amp;#34;${PARAM_URL}&amp;#34; \&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;         -revision=&amp;#34;${PARAM_REVISION}&amp;#34; \&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;         -path=&amp;#34;${CHECKOUT_DIR}&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;       cd &amp;#34;${CHECKOUT_DIR}&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;       EXIT_CODE=&amp;#34;$?&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;       if [ &amp;#34;${EXIT_CODE}&amp;#34; != 0 ] ; then&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;         exit &amp;#34;${EXIT_CODE}&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;       fi&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;       # Verify clone is success by reading readme file.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;       cat ${CHECKOUT_DIR}/README.md&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;创建第二个文件 &lt;code&gt;pipeline.yaml&lt;/code&gt;，并用你喜欢的文本编辑器打开它。这个文件通过设置诸如可以运行和处理任务的工作区等重要参数来定义流水线。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;apiVersion&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;tekton.dev/v1beta1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;kind&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;Pipeline&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;metadata&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt; name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;cat-branch-readme&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spec&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt; params&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;   - name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;repo-url&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     type&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;string&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     description&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;The git repository URL to clone from.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;   - name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;branch-name&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     type&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;string&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     description&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;The git branch to clone.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt; workspaces&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;   - name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;shared-data&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     description&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;|&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;      This workspace will receive the cloned git repo and be passed&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;       to the next Task for the repo&amp;#39;s README.md file to be read.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt; tasks&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;   - name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;fetch-repo&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     taskRef&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;       name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;git-clone&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     workspaces&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;       - name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;output&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;         workspace&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;shared-data&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     params&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;       - name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;url&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;         value&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;$(params.repo-url)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;       - name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;revision&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;         value&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;$(params.branch-name)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;最后，创建一个 &lt;code&gt;pipelinerun.yaml&lt;/code&gt; 文件，用喜欢的文本编辑器打开它。这个文件真正的运行流水线。它调用流水线中定义的参数（继而调用任务文件中定义的任务）。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;apiVersion&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;tekton.dev/v1beta1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;kind&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;PipelineRun&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;metadata&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt; name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;git-clone-checking-out-a-branch&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spec&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt; pipelineRef&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;   name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;cat-branch-readme&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt; workspaces&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;   - name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;shared-data&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     volumeClaimTemplate&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;       spec&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;         accessModes&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;          - ReadWriteOnce&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;         resources&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;           requests&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;             storage&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;1Gi&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt; params&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;   - name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;repo-url&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     value&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;&amp;lt;https://github.com/tektoncd/pipeline.git&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;   - name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;branch-name&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;     value&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;release-v0.12.x&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;把不同工作分在不同的文件中的好处是，&lt;code&gt;git-clone&lt;/code&gt; 任务可以在多条流水线中复用。&lt;/p&gt;
 &lt;p&gt;例如，假设你想为一个流水线项目做端到端的测试。你可以使用 &lt;code&gt;git-clone&lt;/code&gt; 任务 &lt;strong&gt;来让每一次测试都基于最新的代码&lt;/strong&gt;。&lt;/p&gt;
 &lt;h3 id=&#34;总结&#34;&gt;总结&lt;/h3&gt;
 &lt;p&gt;只要你熟悉 Kubernetes，那 Tekton 对你来说就像其他 Kubernetes 原生应用一样简单。它有很多工具可以帮助你创建流水线并与之交互。如果你喜欢自动化，不妨试试 Tekton!&lt;/p&gt;
