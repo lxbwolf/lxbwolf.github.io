@@ -6,7 +6,338 @@
         <description>Recent content in 翻译 on Xiaobin&#39;s Blog</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>zh-cn</language>
-        <lastBuildDate>Sat, 01 Apr 2023 23:09:26 +0000</lastBuildDate><atom:link href="https://lxb.wiki/tags/%E7%BF%BB%E8%AF%91/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <lastBuildDate>Fri, 05 May 2023 08:14:34 +0800</lastBuildDate><atom:link href="https://lxb.wiki/tags/%E7%BF%BB%E8%AF%91/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <title>【译】使用 Lens Desktop 监控和调试 Kubernetes</title>
+        <link>https://lxb.wiki/e94f2376/</link>
+        <pubDate>Fri, 05 May 2023 08:14:34 +0800</pubDate>
+        
+        <guid>https://lxb.wiki/e94f2376/</guid>
+        <description>&lt;p&gt;&lt;img src=&#34;https://img.linux.net.cn/data/attachment/album/202305/04/193543uvvdi14469ngnop4.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Lens Desktop 是一个令人兴奋的 Kubernetes 工作平台。它是基于 OpenLens 资源库的一个定制化发行版本。通过本文来了解下 Lens Desktop 能做什么以及它是如何工作的。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Lens Desktop 是免费的。你可以查看 &lt;a class=&#34;link&#34; href=&#34;https://app.k8slens.dev/subscribe&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://app.k8slens.dev/subscribe&lt;/a&gt; 来了解更多内容。Lens Desktop 有如下优势：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;简单高效 —— 你无需学习 &lt;code&gt;kubectl&lt;/code&gt; 命令&lt;/li&gt;
+&lt;li&gt;可视化已有的 Kubernetes 资源&lt;/li&gt;
+&lt;li&gt;基于开源代码构建&lt;/li&gt;
+&lt;li&gt;可观测性 —— 实时的统计数据、事件和日志流&lt;/li&gt;
+&lt;li&gt;错误和警告可以直接在 Lens 仪表盘上看到&lt;/li&gt;
+&lt;li&gt;支持 EKS、AKS、GKE、Minikube、Rancher、k0s、k3s、OpenShift&lt;/li&gt;
+&lt;li&gt;强大的社区支持 —— 有 450000 用户，在 GitHub 上共获得 17000 星&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;minikube-安装&#34;&gt;Minikube 安装&lt;/h3&gt;
+&lt;p&gt;Minikube 是一个用于本地运行 Kubernetes 的工具。它运行一个单节点的 Kubernetes 集群，这样就可以在 Kubernetes 上进行日常软件开发的实践工作。&lt;/p&gt;
+&lt;p&gt;我们将使用 Minikube 并验证 Lens 的用法。首先让我们在基于 Windows 的系统上安装 Minikube。你也可以把它安装在其他操作系统、虚拟机或笔记本电脑上。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;2 核以上 CPU&lt;/li&gt;
+&lt;li&gt;2GB RAM&lt;/li&gt;
+&lt;li&gt;20GB 空闲硬盘空间&lt;/li&gt;
+&lt;li&gt;能连接网络&lt;/li&gt;
+&lt;li&gt;容器或虚拟机管理器，如 Docker、VirtualBox&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;在终端或命令提示符处，运行 &lt;code&gt;minikube start&lt;/code&gt; 命令：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;minikube start --driver&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;virtualbox
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* minikube v1.12.3 on Microsoft Windows &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; Home Single Language 10.0.19044 Build &lt;span style=&#34;color:#ae81ff&#34;&gt;19044&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* Using the virtualbox driver based on existing profile
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* minikube 1.26.0 is available! Download it: https://github.com/kubernetes/minikube/releases/tag/v1.26.0
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* To disable this notice, run: ‘minikube config set WantUpdateNotification false’
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* Starting control plane node minikube in cluster minikube
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* virtualbox “minikube” VM is missing, will recreate.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* Creating virtualbox VM &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;CPUs&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;2, Memory&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;3000MB, Disk&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;20000MB&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; ...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;! This VM is having trouble accessing https://k8s.gcr.io
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* To pull new external images, you may need to configure a proxy: https://minikube.sigs.k8s.io/docs/reference/networking/proxy/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* Preparing Kubernetes v1.18.3 on Docker 19.03.12 ...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* Verifying Kubernetes components...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* Enabled addons: default-storageclass, storage-provisioner
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* Done! kubectl is now configured to use “minikube”
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;进入你的 VirtualBox，并验证刚安装的 Minikube 虚拟机功能正常（图 1）。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://www.opensourceforu.com/wp-content/uploads/2022/08/Figure-1-Minikube-virtual-machine-in-virtual-box.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;Figure 1: Minikube virtual machine in virtual box&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;使用 &lt;code&gt;minikube status&lt;/code&gt; 命令，查看状态是否与下面的输出一致：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;C:&lt;span style=&#34;color:#ae81ff&#34;&gt;\&amp;gt;&lt;/span&gt;minikube status
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;minikube
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;type: Control Plane
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;host: Running
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;kubelet: Running
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;apiserver: Running
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;kubeconfig: Configured
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;然后，使用 &lt;code&gt;kubectl cluster-info&lt;/code&gt; 命令查看 KubeDNS 详情：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;kubectl cluster-info
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Kubernetes master is running at https://192.168.99.103:8443
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;KubeDNS is running at https://192.168.99.103:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;你可以使用 &lt;code&gt;kubectl cluster-info dump&lt;/code&gt; 命令来调试和诊断集群问题。&lt;/p&gt;
+&lt;p&gt;当 Minikube 安装完成后，安装 &lt;code&gt;kubectl&lt;/code&gt;（&lt;a class=&#34;link&#34; href=&#34;https://kubernetes.io/docs/tasks/tools/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://kubernetes.io/docs/tasks/tools/&lt;/a&gt;）。它是一个命令行集群，用于对 Kubernetes 集群和 Minikube 执行命令。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050826151.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;Figure 2: Lens&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;执行 &lt;code&gt;kubectl get nodes&lt;/code&gt; 命令获取所有 node 的详情，在本例中是获取 Minikube 的详情：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;C:&lt;span style=&#34;color:#ae81ff&#34;&gt;\&amp;gt;&lt;/span&gt;kubectl get nodes
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;NAME       STATUS   ROLES    AGE     VERSION
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;minikube   Ready    master   7m57s   v1.18.3
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;使用 &lt;code&gt;kubectl get all&lt;/code&gt; 命令获取默认命名空间下的所有详情：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;C:&lt;span style=&#34;color:#ae81ff&#34;&gt;\&amp;gt;&lt;/span&gt;kubectl get all
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;S&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;   AGE
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;service/kubernetes   ClusterIP   10.96.0.1    &amp;lt;none&amp;gt;        443/TCP   7m58s
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;我们现在已经有一个 Minikube 集群，并准备好了 Kubectl。下一步是安装和配置 Lens，并用示例应用程序来验证。&lt;/p&gt;
+&lt;h3 id=&#34;lens-的安装和配置&#34;&gt;Lens 的安装和配置&lt;/h3&gt;
+&lt;p&gt;打开 &lt;a class=&#34;link&#34; href=&#34;https://k8slens.dev/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://k8slens.dev/&lt;/a&gt; ，下载与你的操作系统匹配的安装包。&lt;/p&gt;
+&lt;p&gt;然后，参照屏幕上的教程来安装 Lens，安装完成后打开 Lens。你会发现在目录中有一个 &lt;code&gt;minikube&lt;/code&gt;（图 3）。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050828133.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;Figure 3: Lens catalogue&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;点击 “minikube” 后，你就进入了 Minikube 的世界，你会爱上它的。&lt;/p&gt;
+&lt;p&gt;点击 nodes 获取有关 &lt;code&gt;kubectl get nodes&lt;/code&gt; 命令输出的 node 详情。&lt;/p&gt;
+&lt;p&gt;现在，你可以使用 Lens 了。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050829353.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;Figure 4: Lens cluster&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;我们现在部署 &lt;a class=&#34;link&#34; href=&#34;https://github.com/GoogleCloudPlatform/microservices-demo&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://github.com/GoogleCloudPlatform/microservices-demo&lt;/a&gt;，这是一个云原生微服务演示应用程序。它有 11 层的微服务应用，是一个基于网络的电子商务应用。&lt;/p&gt;
+&lt;p&gt;下载这个应用程序，把它解压到与 Minikube 相同的目录。&lt;/p&gt;
+&lt;p&gt;进入 &lt;code&gt;release&lt;/code&gt; 目录，执行以下命令。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;kubectl apply -f kubernetes-manifests.yaml
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;deployment.apps/emailservice created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;service/emailservice created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;deployment.apps/checkoutservice created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;service/checkoutservice created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;deployment.apps/recommendationservice created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;service/recommendationservice created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;deployment.apps/frontend created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;service/frontend created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;service/frontend-external created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;deployment.apps/paymentservice created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;service/paymentservice created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;deployment.apps/productcatalogservice created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;service/productcatalogservice created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;deployment.apps/cartservice created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;service/cartservice created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;deployment.apps/loadgenerator created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;deployment.apps/currencyservice created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;service/currencyservice created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;deployment.apps/shippingservice created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;service/shippingservice created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;deployment.apps/redis-cart created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;service/redis-cart created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;deployment.apps/adservice created
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;service/adservice created
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;安装过程现在应该已经开始了，不过它需要一些时间来反映出我们使用了 &lt;code&gt;kubectl&lt;/code&gt; 命令。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050829421.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;Figure 5: Lens nodes&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;kubectl get pods
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;NAME                 READY   STATUS    RESTARTS   AGE
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;adservice-775d8b9bf5-cp7jr   0/1     Pending   &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;          8h
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;cartservice-79749895f5-jrq4d  1/1     Running   &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;         8h
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;checkoutservice-5645bf9c65-882m4  1/1   Running  &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;        8h
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;currencyservice-545c79d477-8rhg7  1/1  Running   &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;         8h
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;emailservice-7cc5c74b4f-hk74s     1/1  Running   &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;        8h
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;frontend-9cdf787f5-klfkh    1/1     Running   &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;          8h
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;loadgenerator-7b6874cb4c-645v9   1/1  Running   &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;        8h
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;paymentservice-5f74bc7b87-l4248  1/1  Running   &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;        8h
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;productcatalogservice-6846f59899-v4q4w  1/1  Running  &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;  8h
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;recommendationservice-d9c6c8b55-m2x9k  1/1  Running   &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;  8h
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;redis-cart-57bd646894-v7kfr    0/1   Pending   &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;         8h
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;shippingservice-8685dd9855-pmgjm  1/1  Running  &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;        8h
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;表 1 列出了你可以通过 &lt;code&gt;kubectl&lt;/code&gt; 来获取信息的几个命令。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050829835.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;Figure 6: Lens pods&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:left&#34;&gt;描述&lt;/th&gt;
+&lt;th style=&#34;text-align:left&#34;&gt;命令&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;列出节点&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;kubectl get node&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;列出集群中的所有资源&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;kubectl get all –all-namespaces&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;列出部署&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;kubectl get deployment&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;显示部署的完整状态&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;kubectl describe deployment &amp;lt;deployment_name&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;修改集群上的部署&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;kubectl edit deployment &amp;lt;deployment_name&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;删除部署&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;kubectl delete deployment &amp;lt;deployment_name&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;列出容器荚&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;kubectl get pod&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;删除容器荚&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;kubectl delete pod &amp;lt;pod_name&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;显示容器荚的完整状态&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;kubectl describe pod &amp;lt;pod_name&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;在 Shell 中运行一个单容器荚&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;kubectl exec -it &amp;lt;pod_name&amp;gt; /bin/bash&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;列出机密信息&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;kubectl get secrets&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;列出服务&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;kubectl get services&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;列出服务的完整状态&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;kubectl describe services&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;修改集群中的服务&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;kubectl edit services / kubectl edit deployment &amp;lt;deployment_name&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;列出命名空间&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;kubectl get namespace &amp;lt;namespace_name&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;打印容器荚日志&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;kubectl logs &amp;lt;pod_name&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;打印容器荚中特定容器的日志&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;kubectl logs -c &amp;lt;container_name&amp;gt; &amp;lt;pod_name&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Lens 不仅可以帮你获取表 1 中列出的所有信息，它还可以获取指定集群的信息。我们还能用 Lens 来对 Kubernetes 资源进行编辑和删除操作。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050830403.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;Figure 7: Lens deployments&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;我们来看下是如何操作的。在 Workloads 部分选择 Pods（图 6），我们能通过 Lens 来编辑、删除、查看日志、访问 Pod 的终端，这是不是很酷？&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050830853.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;Figure 8: Lens Replicasets&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;你可以验证 Workloads 区域中所有 deployments（图 7），Workloads 区域中所有 Replicasets （图 8），Config 区域中所有 Secrets （图 9），以及 Network 区域中所有 Services 是否都正常（图 10），&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050830883.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;Figure 9: Lens Secrets&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;你可以看到，跳转到所有的资源以及在一个地方高效地查看所有资源就是如此轻松。我们可以用 Lens 修改 YAML 文件，在运行时应用它来查看变更。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050831236.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;Figure 10: Lens Services&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;对于配置在不同的云服务商部署的多个集群，我们仍可以用 Lens 来进行观察和故障处理。&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;（题图：MJ/069da8c5-9043-46b3-9b14-87a0ffc6bb35）&lt;/em&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;via: &lt;a class=&#34;link&#34; href=&#34;https://www.opensourceforu.com/2022/09/monitoring-and-debugging-kubernetes-with-lens-desktop/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://www.opensourceforu.com/2022/09/monitoring-and-debugging-kubernetes-with-lens-desktop/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;作者：&lt;a class=&#34;link&#34; href=&#34;https://www.opensourceforu.com/author/mitesh_soni/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Mitesh Soni&lt;/a&gt;
+选题：&lt;a class=&#34;link&#34; href=&#34;https://github.com/lkxed&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;lkxed&lt;/a&gt;
+译者：&lt;a class=&#34;link&#34; href=&#34;https://github.com/lxbwolf&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Xiaobin.Liu&lt;/a&gt;
+校对：&lt;a class=&#34;link&#34; href=&#34;https://github.com/wxy&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;wxy&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;本文由 &lt;a class=&#34;link&#34; href=&#34;https://github.com/LCTT/TranslateProject&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;LCTT&lt;/a&gt; 原创编译，&lt;a class=&#34;link&#34; href=&#34;https://linux.cn/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Linux中国&lt;/a&gt; 荣誉推出&lt;/p&gt;
+</description>
+        </item>
+        <item>
         <title>【译】用 Tekton 在 Kubernetes 中编写你的第一条 CI/CD 流水线</title>
         <link>https://lxb.wiki/2966fc1/</link>
         <pubDate>Sat, 01 Apr 2023 23:09:26 +0000</pubDate>

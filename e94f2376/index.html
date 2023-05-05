@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='使用 Lens Desktop 监控和调试 Kubernetes'>
+
+<meta name="keywords" content="Lens Desktop , Kubernetes"><title>【译】使用 Lens Desktop 监控和调试 Kubernetes</title>
+
+<link rel='canonical' href='https://lxb.wiki/e94f2376/'>
+
+<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='【译】使用 Lens Desktop 监控和调试 Kubernetes'>
+<meta property='og:description' content='使用 Lens Desktop 监控和调试 Kubernetes'>
+<meta property='og:url' content='https://lxb.wiki/e94f2376/'>
+<meta property='og:site_name' content='Xiaobin&#39;s Blog'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='devops' /><meta property='article:tag' content='翻译' /><meta property='article:published_time' content='2023-05-05T08:14:34&#43;08:00'/><meta property='article:modified_time' content='2023-05-05T08:14:34&#43;08:00'/>
+<meta name="twitter:title" content="【译】使用 Lens Desktop 监控和调试 Kubernetes">
+<meta name="twitter:description" content="使用 Lens Desktop 监控和调试 Kubernetes">
+<link rel="shortcut icon" href="/favicon.png" />
+
+<script data-ad-client="ca-pub-5708899526501350" async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-JZ2PWLT6JY');
+</script>
+<script>
+    var _hmt = _hmt || [];
+    (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+<script>
+    (function () {
+        var el = document.createElement("script");
+        el.src = "https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?f146251743600ee0672cdcc8455ce18def91cdb255ad969a2ef5c715d5ed5baecaf7cd753709c168f20e6a2e9019123fd11e31a222d3a2fe01ad05c6b8f519b2";
+        el.id = "ttzz";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(el, s);
+    })(window)
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
+                            height="298" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">Xiaobin&#39;s Blog</a></h1>
+            <h2 class="site-description"></h2>
+        </div>
+    </header>
+
+
+    <ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/categories/' >
+                
+                
+                
+                <span>分类</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>标签</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/links/' >
+                
+                
+                
+                <span>友链</span>
+            </a>
+        </li>
+        
+
+        <div class="menu-bottom-section"><ol class="social-menu">
+                    
+                        <li>
+                            <a 
+                                href='mailto://me@liuxb.email'
+                                target="_blank"
+                                title="Email"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a 
+                                href='https://github.com/lxbwolf'
+                                target="_blank"
+                                title="GitHub"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
+</svg>
+
+
+
+                                
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a 
+                                href='https://lxb.wiki/atom.xml'
+                                target="_blank"
+                                title="Rss"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="5" cy="19" r="1" />
+  <path d="M4 4a16 16 0 0 1 16 16" />
+  <path d="M4 11a9 9 0 0 1 9 9" />
+</svg>
+
+
+
+                                
+                            </a>
+                        </li>
+                    
+                </ol>
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <span>暗色模式</span>
+                </li>
+            
+        </div>
+    </ol>
+</aside>
+
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+<section class="widget archives">
+    
+    <h2 class="widget-title section-title">目录</h2>
+
+    <div class="widget--toc">
+        <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#minikube-安装">Minikube 安装</a></li>
+        <li><a href="#lens-的安装和配置">Lens 的安装和配置</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+    </div>
+</section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+        <a href="/categories/Tools/" >
+            Tools
+        </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/e94f2376/">【译】使用 Lens Desktop 监控和调试 Kubernetes</a>
+        </h2>
+
+        
+        <h3 class="article-subtitle">
+            使用 Lens Desktop 监控和调试 Kubernetes
+        </h3>
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+            <time class="article-time--published">May 05, 2023</time>
+        </div>
+        
+
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+            <time class="article-time--reading">
+                阅读时长: 4 分钟
+            </time>
+        </div>
+        
+        <small>
+    <section class="article-tags">
+        
+            <a href="/tags/devops/">devops</a>
+        
+            <a href="/tags/%E7%BF%BB%E8%AF%91/">翻译</a>
+        
+    </section>
+</small>
+    </footer>
+    
+
+    
+</div>
+</header>
+
+    <section class="article-content">
+    
+    
+    <p><img src="https://img.linux.net.cn/data/attachment/album/202305/04/193543uvvdi14469ngnop4.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<blockquote>
+<p>Lens Desktop 是一个令人兴奋的 Kubernetes 工作平台。它是基于 OpenLens 资源库的一个定制化发行版本。通过本文来了解下 Lens Desktop 能做什么以及它是如何工作的。</p>
+</blockquote>
+<p>Lens Desktop 是免费的。你可以查看 <a class="link" href="https://app.k8slens.dev/subscribe"  target="_blank" rel="noopener"
+    >https://app.k8slens.dev/subscribe</a> 来了解更多内容。Lens Desktop 有如下优势：</p>
+<ul>
+<li>简单高效 —— 你无需学习 <code>kubectl</code> 命令</li>
+<li>可视化已有的 Kubernetes 资源</li>
+<li>基于开源代码构建</li>
+<li>可观测性 —— 实时的统计数据、事件和日志流</li>
+<li>错误和警告可以直接在 Lens 仪表盘上看到</li>
+<li>支持 EKS、AKS、GKE、Minikube、Rancher、k0s、k3s、OpenShift</li>
+<li>强大的社区支持 —— 有 450000 用户，在 GitHub 上共获得 17000 星</li>
+</ul>
+<h3 id="minikube-安装">Minikube 安装</h3>
+<p>Minikube 是一个用于本地运行 Kubernetes 的工具。它运行一个单节点的 Kubernetes 集群，这样就可以在 Kubernetes 上进行日常软件开发的实践工作。</p>
+<p>我们将使用 Minikube 并验证 Lens 的用法。首先让我们在基于 Windows 的系统上安装 Minikube。你也可以把它安装在其他操作系统、虚拟机或笔记本电脑上。</p>
+<ul>
+<li>2 核以上 CPU</li>
+<li>2GB RAM</li>
+<li>20GB 空闲硬盘空间</li>
+<li>能连接网络</li>
+<li>容器或虚拟机管理器，如 Docker、VirtualBox</li>
+</ul>
+<p>在终端或命令提示符处，运行 <code>minikube start</code> 命令：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>minikube start --driver<span style="color:#f92672">=</span>virtualbox
+</span></span><span style="display:flex;"><span>* minikube v1.12.3 on Microsoft Windows <span style="color:#ae81ff">10</span> Home Single Language 10.0.19044 Build <span style="color:#ae81ff">19044</span>
+</span></span><span style="display:flex;"><span>* Using the virtualbox driver based on existing profile
+</span></span><span style="display:flex;"><span>* minikube 1.26.0 is available! Download it: https://github.com/kubernetes/minikube/releases/tag/v1.26.0
+</span></span><span style="display:flex;"><span>* To disable this notice, run: ‘minikube config set WantUpdateNotification false’
+</span></span><span style="display:flex;"><span>* Starting control plane node minikube in cluster minikube
+</span></span><span style="display:flex;"><span>* virtualbox “minikube” VM is missing, will recreate.
+</span></span><span style="display:flex;"><span>* Creating virtualbox VM <span style="color:#f92672">(</span>CPUs<span style="color:#f92672">=</span>2, Memory<span style="color:#f92672">=</span>3000MB, Disk<span style="color:#f92672">=</span>20000MB<span style="color:#f92672">)</span> ...
+</span></span><span style="display:flex;"><span>! This VM is having trouble accessing https://k8s.gcr.io
+</span></span><span style="display:flex;"><span>* To pull new external images, you may need to configure a proxy: https://minikube.sigs.k8s.io/docs/reference/networking/proxy/
+</span></span><span style="display:flex;"><span>* Preparing Kubernetes v1.18.3 on Docker 19.03.12 ...
+</span></span><span style="display:flex;"><span>* Verifying Kubernetes components...
+</span></span><span style="display:flex;"><span>* Enabled addons: default-storageclass, storage-provisioner
+</span></span><span style="display:flex;"><span>* Done! kubectl is now configured to use “minikube”
+</span></span></code></pre></div><p>进入你的 VirtualBox，并验证刚安装的 Minikube 虚拟机功能正常（图 1）。</p>
+<p><img src="https://www.opensourceforu.com/wp-content/uploads/2022/08/Figure-1-Minikube-virtual-machine-in-virtual-box.jpg"
+	
+	
+	
+	loading="lazy"
+	
+		alt="Figure 1: Minikube virtual machine in virtual box"
+	
+	
+></p>
+<p>使用 <code>minikube status</code> 命令，查看状态是否与下面的输出一致：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>C:<span style="color:#ae81ff">\&gt;</span>minikube status
+</span></span><span style="display:flex;"><span>minikube
+</span></span><span style="display:flex;"><span>type: Control Plane
+</span></span><span style="display:flex;"><span>host: Running
+</span></span><span style="display:flex;"><span>kubelet: Running
+</span></span><span style="display:flex;"><span>apiserver: Running
+</span></span><span style="display:flex;"><span>kubeconfig: Configured
+</span></span></code></pre></div><p>然后，使用 <code>kubectl cluster-info</code> 命令查看 KubeDNS 详情：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl cluster-info
+</span></span><span style="display:flex;"><span>Kubernetes master is running at https://192.168.99.103:8443
+</span></span><span style="display:flex;"><span>KubeDNS is running at https://192.168.99.103:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+</span></span></code></pre></div><p>你可以使用 <code>kubectl cluster-info dump</code> 命令来调试和诊断集群问题。</p>
+<p>当 Minikube 安装完成后，安装 <code>kubectl</code>（<a class="link" href="https://kubernetes.io/docs/tasks/tools/"  target="_blank" rel="noopener"
+    >https://kubernetes.io/docs/tasks/tools/</a>）。它是一个命令行集群，用于对 Kubernetes 集群和 Minikube 执行命令。</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050826151.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="Figure 2: Lens"
+	
+	
+></p>
+<p>执行 <code>kubectl get nodes</code> 命令获取所有 node 的详情，在本例中是获取 Minikube 的详情：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>C:<span style="color:#ae81ff">\&gt;</span>kubectl get nodes
+</span></span><span style="display:flex;"><span>NAME       STATUS   ROLES    AGE     VERSION
+</span></span><span style="display:flex;"><span>minikube   Ready    master   7m57s   v1.18.3
+</span></span></code></pre></div><p>使用 <code>kubectl get all</code> 命令获取默认命名空间下的所有详情：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>C:<span style="color:#ae81ff">\&gt;</span>kubectl get all
+</span></span><span style="display:flex;"><span>NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT<span style="color:#f92672">(</span>S<span style="color:#f92672">)</span>   AGE
+</span></span><span style="display:flex;"><span>service/kubernetes   ClusterIP   10.96.0.1    &lt;none&gt;        443/TCP   7m58s
+</span></span></code></pre></div><p>我们现在已经有一个 Minikube 集群，并准备好了 Kubectl。下一步是安装和配置 Lens，并用示例应用程序来验证。</p>
+<h3 id="lens-的安装和配置">Lens 的安装和配置</h3>
+<p>打开 <a class="link" href="https://k8slens.dev/"  target="_blank" rel="noopener"
+    >https://k8slens.dev/</a> ，下载与你的操作系统匹配的安装包。</p>
+<p>然后，参照屏幕上的教程来安装 Lens，安装完成后打开 Lens。你会发现在目录中有一个 <code>minikube</code>（图 3）。</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050828133.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="Figure 3: Lens catalogue"
+	
+	
+></p>
+<p>点击 “minikube” 后，你就进入了 Minikube 的世界，你会爱上它的。</p>
+<p>点击 nodes 获取有关 <code>kubectl get nodes</code> 命令输出的 node 详情。</p>
+<p>现在，你可以使用 Lens 了。</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050829353.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="Figure 4: Lens cluster"
+	
+	
+></p>
+<p>我们现在部署 <a class="link" href="https://github.com/GoogleCloudPlatform/microservices-demo"  target="_blank" rel="noopener"
+    >https://github.com/GoogleCloudPlatform/microservices-demo</a>，这是一个云原生微服务演示应用程序。它有 11 层的微服务应用，是一个基于网络的电子商务应用。</p>
+<p>下载这个应用程序，把它解压到与 Minikube 相同的目录。</p>
+<p>进入 <code>release</code> 目录，执行以下命令。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl apply -f kubernetes-manifests.yaml
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>deployment.apps/emailservice created
+</span></span><span style="display:flex;"><span>service/emailservice created
+</span></span><span style="display:flex;"><span>deployment.apps/checkoutservice created
+</span></span><span style="display:flex;"><span>service/checkoutservice created
+</span></span><span style="display:flex;"><span>deployment.apps/recommendationservice created
+</span></span><span style="display:flex;"><span>service/recommendationservice created
+</span></span><span style="display:flex;"><span>deployment.apps/frontend created
+</span></span><span style="display:flex;"><span>service/frontend created
+</span></span><span style="display:flex;"><span>service/frontend-external created
+</span></span><span style="display:flex;"><span>deployment.apps/paymentservice created
+</span></span><span style="display:flex;"><span>service/paymentservice created
+</span></span><span style="display:flex;"><span>deployment.apps/productcatalogservice created
+</span></span><span style="display:flex;"><span>service/productcatalogservice created
+</span></span><span style="display:flex;"><span>deployment.apps/cartservice created
+</span></span><span style="display:flex;"><span>service/cartservice created
+</span></span><span style="display:flex;"><span>deployment.apps/loadgenerator created
+</span></span><span style="display:flex;"><span>deployment.apps/currencyservice created
+</span></span><span style="display:flex;"><span>service/currencyservice created
+</span></span><span style="display:flex;"><span>deployment.apps/shippingservice created
+</span></span><span style="display:flex;"><span>service/shippingservice created
+</span></span><span style="display:flex;"><span>deployment.apps/redis-cart created
+</span></span><span style="display:flex;"><span>service/redis-cart created
+</span></span><span style="display:flex;"><span>deployment.apps/adservice created
+</span></span><span style="display:flex;"><span>service/adservice created
+</span></span></code></pre></div><p>安装过程现在应该已经开始了，不过它需要一些时间来反映出我们使用了 <code>kubectl</code> 命令。</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050829421.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="Figure 5: Lens nodes"
+	
+	
+></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl get pods
+</span></span><span style="display:flex;"><span>NAME                 READY   STATUS    RESTARTS   AGE
+</span></span><span style="display:flex;"><span>adservice-775d8b9bf5-cp7jr   0/1     Pending   <span style="color:#ae81ff">0</span>          8h
+</span></span><span style="display:flex;"><span>cartservice-79749895f5-jrq4d  1/1     Running   <span style="color:#ae81ff">0</span>         8h
+</span></span><span style="display:flex;"><span>checkoutservice-5645bf9c65-882m4  1/1   Running  <span style="color:#ae81ff">0</span>        8h
+</span></span><span style="display:flex;"><span>currencyservice-545c79d477-8rhg7  1/1  Running   <span style="color:#ae81ff">0</span>         8h
+</span></span><span style="display:flex;"><span>emailservice-7cc5c74b4f-hk74s     1/1  Running   <span style="color:#ae81ff">0</span>        8h
+</span></span><span style="display:flex;"><span>frontend-9cdf787f5-klfkh    1/1     Running   <span style="color:#ae81ff">1</span>          8h
+</span></span><span style="display:flex;"><span>loadgenerator-7b6874cb4c-645v9   1/1  Running   <span style="color:#ae81ff">0</span>        8h
+</span></span><span style="display:flex;"><span>paymentservice-5f74bc7b87-l4248  1/1  Running   <span style="color:#ae81ff">0</span>        8h
+</span></span><span style="display:flex;"><span>productcatalogservice-6846f59899-v4q4w  1/1  Running  <span style="color:#ae81ff">0</span>  8h
+</span></span><span style="display:flex;"><span>recommendationservice-d9c6c8b55-m2x9k  1/1  Running   <span style="color:#ae81ff">0</span>  8h
+</span></span><span style="display:flex;"><span>redis-cart-57bd646894-v7kfr    0/1   Pending   <span style="color:#ae81ff">0</span>         8h
+</span></span><span style="display:flex;"><span>shippingservice-8685dd9855-pmgjm  1/1  Running  <span style="color:#ae81ff">0</span>        8h
+</span></span></code></pre></div><p>表 1 列出了你可以通过 <code>kubectl</code> 来获取信息的几个命令。</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050829835.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="Figure 6: Lens pods"
+	
+	
+></p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">描述</th>
+<th style="text-align:left">命令</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">列出节点</td>
+<td style="text-align:left"><code>kubectl get node</code></td>
+</tr>
+<tr>
+<td style="text-align:left">列出集群中的所有资源</td>
+<td style="text-align:left"><code>kubectl get all –all-namespaces</code></td>
+</tr>
+<tr>
+<td style="text-align:left">列出部署</td>
+<td style="text-align:left"><code>kubectl get deployment</code></td>
+</tr>
+<tr>
+<td style="text-align:left">显示部署的完整状态</td>
+<td style="text-align:left"><code>kubectl describe deployment &lt;deployment_name&gt;</code></td>
+</tr>
+<tr>
+<td style="text-align:left">修改集群上的部署</td>
+<td style="text-align:left"><code>kubectl edit deployment &lt;deployment_name&gt;</code></td>
+</tr>
+<tr>
+<td style="text-align:left">删除部署</td>
+<td style="text-align:left"><code>kubectl delete deployment &lt;deployment_name&gt;</code></td>
+</tr>
+<tr>
+<td style="text-align:left">列出容器荚</td>
+<td style="text-align:left"><code>kubectl get pod</code></td>
+</tr>
+<tr>
+<td style="text-align:left">删除容器荚</td>
+<td style="text-align:left"><code>kubectl delete pod &lt;pod_name&gt;</code></td>
+</tr>
+<tr>
+<td style="text-align:left">显示容器荚的完整状态</td>
+<td style="text-align:left"><code>kubectl describe pod &lt;pod_name&gt;</code></td>
+</tr>
+<tr>
+<td style="text-align:left">在 Shell 中运行一个单容器荚</td>
+<td style="text-align:left"><code>kubectl exec -it &lt;pod_name&gt; /bin/bash</code></td>
+</tr>
+<tr>
+<td style="text-align:left">列出机密信息</td>
+<td style="text-align:left"><code>kubectl get secrets</code></td>
+</tr>
+<tr>
+<td style="text-align:left">列出服务</td>
+<td style="text-align:left"><code>kubectl get services</code></td>
+</tr>
+<tr>
+<td style="text-align:left">列出服务的完整状态</td>
+<td style="text-align:left"><code>kubectl describe services</code></td>
+</tr>
+<tr>
+<td style="text-align:left">修改集群中的服务</td>
+<td style="text-align:left"><code>kubectl edit services / kubectl edit deployment &lt;deployment_name&gt;</code></td>
+</tr>
+<tr>
+<td style="text-align:left">列出命名空间</td>
+<td style="text-align:left"><code>kubectl get namespace &lt;namespace_name&gt;</code></td>
+</tr>
+<tr>
+<td style="text-align:left">打印容器荚日志</td>
+<td style="text-align:left"><code>kubectl logs &lt;pod_name&gt;</code></td>
+</tr>
+<tr>
+<td style="text-align:left">打印容器荚中特定容器的日志</td>
+<td style="text-align:left"><code>kubectl logs -c &lt;container_name&gt; &lt;pod_name&gt;</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Lens 不仅可以帮你获取表 1 中列出的所有信息，它还可以获取指定集群的信息。我们还能用 Lens 来对 Kubernetes 资源进行编辑和删除操作。</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050830403.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="Figure 7: Lens deployments"
+	
+	
+></p>
+<p>我们来看下是如何操作的。在 Workloads 部分选择 Pods（图 6），我们能通过 Lens 来编辑、删除、查看日志、访问 Pod 的终端，这是不是很酷？</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050830853.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="Figure 8: Lens Replicasets"
+	
+	
+></p>
+<p>你可以验证 Workloads 区域中所有 deployments（图 7），Workloads 区域中所有 Replicasets （图 8），Config 区域中所有 Secrets （图 9），以及 Network 区域中所有 Services 是否都正常（图 10），</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050830883.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="Figure 9: Lens Secrets"
+	
+	
+></p>
+<p>你可以看到，跳转到所有的资源以及在一个地方高效地查看所有资源就是如此轻松。我们可以用 Lens 修改 YAML 文件，在运行时应用它来查看变更。</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202305050831236.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="Figure 10: Lens Services"
+	
+	
+></p>
+<p>对于配置在不同的云服务商部署的多个集群，我们仍可以用 Lens 来进行观察和故障处理。</p>
+<p><em>（题图：MJ/069da8c5-9043-46b3-9b14-87a0ffc6bb35）</em></p>
+<hr>
+<p>via: <a class="link" href="https://www.opensourceforu.com/2022/09/monitoring-and-debugging-kubernetes-with-lens-desktop/"  target="_blank" rel="noopener"
+    >https://www.opensourceforu.com/2022/09/monitoring-and-debugging-kubernetes-with-lens-desktop/</a></p>
+<p>作者：<a class="link" href="https://www.opensourceforu.com/author/mitesh_soni/"  target="_blank" rel="noopener"
+    >Mitesh Soni</a>
+选题：<a class="link" href="https://github.com/lkxed"  target="_blank" rel="noopener"
+    >lkxed</a>
+译者：<a class="link" href="https://github.com/lxbwolf"  target="_blank" rel="noopener"
+    >Xiaobin.Liu</a>
+校对：<a class="link" href="https://github.com/wxy"  target="_blank" rel="noopener"
+    >wxy</a></p>
+<p>本文由 <a class="link" href="https://github.com/LCTT/TranslateProject"  target="_blank" rel="noopener"
+    >LCTT</a> 原创编译，<a class="link" href="https://linux.cn/"  target="_blank" rel="noopener"
+    >Linux中国</a> 荣誉推出</p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/2966fc1/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">【译】用 Tekton 在 Kubernetes 中编写你的第一条 CI/CD 流水线</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/12428ad2/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">【译】构建高效的 DevOps 文化的 6 个技巧</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/f5fbcabb/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">【译】解决 CI/CD 中的仓库阻抗失配</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/a258db2c/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">【译】域名末尾带个点</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/690c8418/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">【译】10大静态网站生成工具</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    <script src="https://utteranc.es/client.js" 
+        repo="lxbwolf/lxbwolf.github.io"
+        issue-term="pathname"
+        
+        crossorigin="anonymous"
+        async
+        >
+</script>
+
+<style>
+    .utterances {
+        max-width: unset;
+    }
+</style>
+
+<script>
+    let utterancesLoaded = false;
+
+    function setUtterancesTheme(theme) {
+        let utterances = document.querySelector('.utterances iframe');
+        if (utterances) {
+            utterances.contentWindow.postMessage(
+                {
+                    type: 'set-theme',
+                    theme: `github-${theme}`
+                },
+                'https://utteranc.es'
+            );
+        }
+    }
+
+    addEventListener('message', event => {
+        if (event.origin !== 'https://utteranc.es') return;
+
+        
+        utterancesLoaded = true;
+        setUtterancesTheme(document.documentElement.dataset.scheme)
+    });
+
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (!utterancesLoaded) return;
+        setUtterancesTheme(e.detail)
+    })
+</script>
+
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2023 Xiaobin&#39;s Blog
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>
