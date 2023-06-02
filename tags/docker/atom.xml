@@ -6,7 +6,37 @@
         <description>Recent content in docker on Xiaobin&#39;s Blog</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>zh-cn</language>
-        <lastBuildDate>Tue, 23 Jul 2019 17:32:38 +0000</lastBuildDate><atom:link href="https://lxb.wiki/tags/docker/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <lastBuildDate>Mon, 22 Aug 2022 21:07:36 +0800</lastBuildDate><atom:link href="https://lxb.wiki/tags/docker/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <title>Dockerfile修改hosts</title>
+        <link>https://lxb.wiki/265eeb54/</link>
+        <pubDate>Mon, 22 Aug 2022 21:07:36 +0800</pubDate>
+        
+        <guid>https://lxb.wiki/265eeb54/</guid>
+        <description>&lt;p&gt;[toc]&lt;/p&gt;
+&lt;p&gt;[toc]&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;在很多场景中，比如我们需要搭建一个集群，这时候容器要识别集群内的节点，就需要添加相应的host解析。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;背景&#34;&gt;背景&lt;/h2&gt;
+&lt;p&gt;hosts文件其实并不是存储在Docker镜像中的，&lt;code&gt;/etc/hosts&lt;/code&gt;, &lt;code&gt;/etc/resolv.conf&lt;/code&gt;和&lt;code&gt;/etc/hostname&lt;/code&gt;，是存在主机上的&lt;code&gt;/var/lib/docker/containers/(docker_id)&lt;/code&gt; 目录下，容器启动时是通过mount将这些文件挂载到容器内部的。因此如果在容器中修改这些文件，修改部分不会存在于容器的top layer，而是直接写入这3个文件中。容器重启后修改内容不存在的原因是Docker每次创建新容器时，会根据当前docker0下的所有节点的IP信息重新建立hosts文件。也就是说，你的修改会被Docker给自动覆盖掉。&lt;/p&gt;
+&lt;h2 id=&#34;解决办法&#34;&gt;解决办法&lt;/h2&gt;
+&lt;h3 id=&#34;opt-1-开启时加参数&#34;&gt;OPT 1 开启时加参数&lt;/h3&gt;
+&lt;p&gt;开启容器时候添加参数 &lt;code&gt;--add-host machine:ip&lt;/code&gt; 可以实现hosts修改，在容器中可以识别machine主机。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;docker run --name nginx nginx:latest --add-host&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;server:127.0.0.1&amp;#39;&lt;/span&gt; --add-host&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;server2:127.0.0.2&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;opt-2-修改容器hosts查找目录&#34;&gt;OPT 2 修改容器hosts查找目录&lt;/h3&gt;
+&lt;p&gt;让容器开启时候，不去找&lt;code&gt;/etc/hosts&lt;/code&gt;文件，而是去找自定义的hosts文件，下面是一个Dockerfile实例&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;FROM ubuntu:14.04
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;RUN cp /etc/hosts /tmp/hosts &lt;span style=&#34;color:#75715e&#34;&gt;#路径长度最好保持一致&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;RUN mkdir -p -- /lib-override &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; cp /lib/x86_64-linux-gnu/libnss_files.so.2 /lib-override
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;RUN sed -i &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;s:/etc/hosts:/tmp/hosts:g&amp;#39;&lt;/span&gt; /lib-override/libnss_files.so.2
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ENV LD_LIBRARY_PATH /lib-override
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;RUN echo &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;192.168.0.1 node1&amp;#34;&lt;/span&gt; &amp;gt;&amp;gt; /tmp/hosts
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;opt-3-在-一个-run-中-设置-etchosts-的同时运行需要dns服务的安装&#34;&gt;OPT 3 在 一个 RUN 中 设置 /etc/hosts 的同时，运行需要dns服务的安装&lt;/h3&gt;
+&lt;p&gt;由于在不同的 RUN 层中，/etc/hosts 会被docker重写覆盖掉，所以必须在同一个 RUN 层中同时设置并使用对应的域名映射&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;RUN echo &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;111.8.8.111 mirror.npm.com&amp;#34;&lt;/span&gt; &amp;gt;&amp;gt; /etc/hosts &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; npm install 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description>
+        </item>
+        <item>
         <title>docker挂载目录失败/权限拒绝</title>
         <link>https://lxb.wiki/498654c2/</link>
         <pubDate>Tue, 23 Jul 2019 17:32:38 +0000</pubDate>

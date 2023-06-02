@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html lang="zh-cn" dir="ltr">
     <head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='构建高效的 DevOps 文化'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Dockerfile修改hosts'>
 
-<meta name="keywords" content="DevOps , DevOps 文化"><title>【译】构建高效的 DevOps 文化的 6 个技巧</title>
+<meta name="keywords" content="docker , hosts , Dockerfile"><title>Dockerfile修改hosts</title>
 
-<link rel='canonical' href='https://lxb.wiki/12428ad2/'>
+<link rel='canonical' href='https://lxb.wiki/265eeb54/'>
 
-<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='【译】构建高效的 DevOps 文化的 6 个技巧'>
-<meta property='og:description' content='构建高效的 DevOps 文化'>
-<meta property='og:url' content='https://lxb.wiki/12428ad2/'>
+<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='Dockerfile修改hosts'>
+<meta property='og:description' content='Dockerfile修改hosts'>
+<meta property='og:url' content='https://lxb.wiki/265eeb54/'>
 <meta property='og:site_name' content='Xiaobin&#39;s Blog'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='devops' /><meta property='article:tag' content='翻译' /><meta property='article:published_time' content='2023-01-30T21:58:33&#43;00:00'/><meta property='article:modified_time' content='2023-01-30T21:58:33&#43;00:00'/>
-<meta name="twitter:title" content="【译】构建高效的 DevOps 文化的 6 个技巧">
-<meta name="twitter:description" content="构建高效的 DevOps 文化">
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='devops' /><meta property='article:tag' content='docker' /><meta property='article:published_time' content='2022-08-22T21:07:36&#43;08:00'/><meta property='article:modified_time' content='2022-08-22T21:07:36&#43;08:00'/>
+<meta name="twitter:title" content="Dockerfile修改hosts">
+<meta name="twitter:description" content="Dockerfile修改hosts">
 <link rel="shortcut icon" href="/favicon.png" />
 
 <script data-ad-client="ca-pub-5708899526501350" async
@@ -256,15 +256,12 @@
     <div class="widget--toc">
         <nav id="TableOfContents">
   <ul>
-    <li>
+    <li><a href="#背景">背景</a></li>
+    <li><a href="#解决办法">解决办法</a>
       <ul>
-        <li><a href="#流程的持续发展">流程的持续发展</a></li>
-        <li><a href="#随时提供反馈并积极寻求反馈">随时提供反馈并积极寻求反馈</a></li>
-        <li><a href="#不断改进">不断改进</a></li>
-        <li><a href="#为以后的开发保存当前的想法">为以后的开发保存当前的想法</a></li>
-        <li><a href="#坐在一起物理上或逻辑上">坐在一起（物理上或逻辑上）</a></li>
-        <li><a href="#致力于自动化">致力于自动化</a></li>
-        <li><a href="#探索成功的新工作方式">探索成功的新工作方式</a></li>
+        <li><a href="#opt-1-开启时加参数">OPT 1 开启时加参数</a></li>
+        <li><a href="#opt-2-修改容器hosts查找目录">OPT 2 修改容器hosts查找目录</a></li>
+        <li><a href="#opt-3-在-一个-run-中-设置-etchosts-的同时运行需要dns服务的安装">OPT 3 在 一个 RUN 中 设置 /etc/hosts 的同时，运行需要dns服务的安装</a></li>
       </ul>
     </li>
   </ul>
@@ -285,8 +282,8 @@
     
     <header class="article-category">
         
-        <a href="/categories/Design/" >
-            Design
+        <a href="/categories/Tools/" >
+            Tools
         </a>
         
     </header>
@@ -294,12 +291,12 @@
 
     <div class="article-title-wrapper">
         <h2 class="article-title">
-            <a href="/12428ad2/">【译】构建高效的 DevOps 文化的 6 个技巧</a>
+            <a href="/265eeb54/">Dockerfile修改hosts</a>
         </h2>
 
         
         <h3 class="article-subtitle">
-            构建高效的 DevOps 文化
+            Dockerfile修改hosts
         </h3>
         
     </div>
@@ -320,7 +317,7 @@
   <path d="M3 11h16" />
   <path d="M18 16.496v1.504l1 1" />
 </svg>
-            <time class="article-time--published">Jan 30, 2023</time>
+            <time class="article-time--published">Aug 22, 2022</time>
         </div>
         
 
@@ -335,7 +332,7 @@
 
 
             <time class="article-time--reading">
-                阅读时长: 5 分钟
+                阅读时长: 2 分钟
             </time>
         </div>
         
@@ -344,7 +341,7 @@
         
             <a href="/tags/devops/">devops</a>
         
-            <a href="/tags/%E7%BF%BB%E8%AF%91/">翻译</a>
+            <a href="/tags/docker/">docker</a>
         
     </section>
 </small>
@@ -358,82 +355,29 @@
     <section class="article-content">
     
     
-    <blockquote>
-<p>无论你是刚刚开始在你的组织中使用 DevOps，还是仅仅想改善你现有的文化，请考虑这些技巧以及它们与你组织的未来的关系。</p>
+    <p>[toc]</p>
+<p>[toc]</p>
+<blockquote>
+<p>在很多场景中，比如我们需要搭建一个集群，这时候容器要识别集群内的节点，就需要添加相应的host解析。</p>
 </blockquote>
-<p>你为什么要构建 <a class="link" href="https://opensource.com/resources/devops"  target="_blank" rel="noopener"
-    >DevOps</a> 文化？开发团队和运维团队的精简协作有很多好处。效率是首要目标：提高新软件部署的速度，减少等待的时间。培养同事之间的信任可以提升员工的满意度，激发新的创新，并对盈利能力产生积极的影响。</p>
-<p><a class="link" href="https://opensource.com/article/22/2/devops-documentation-maturity"  target="_blank" rel="noopener"
-    >DevOps</a> 是一个很广泛的思想，大家的理解也见仁见智。每个公司对于如何实行 DevOps 也各不相同。这种意见的多样性实际上是一件好事 —— 这么多的观点对于建立更强大的团队是很有用的。本指南将探讨在 DevOps 文化中鼓励同事之间更好地合作的最高技巧。</p>
-<p>下面每个部分从不同的视角介绍 DevOps 文化，并探讨了将它引入员工队伍的方法。</p>
-<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20230126220527.png"
-	
-	
-	
-	loading="lazy"
-	
-		alt="img"
-	
-	
-></p>
-<h3 id="流程的持续发展">流程的持续发展</h3>
-<p>DevOps 文化的这一核心原则使它与许多其他类型的工作场所的风气区别开来。DevOps 哲学说，犯错是有积极意义的，因为这表明你在尝试新的想法。</p>
-<p>DevOps 文化的核心是不停地创造。实际上，这意味着当测试结果显示事情由于你的改动而变坏时，不要懊恼。我们要认识到，进化的过程不是线性的，通往成功的道路也从来不是一条直线。</p>
-<p>DevOps 专家 <a class="link" href="https://enterprisersproject.com/user/gene-kim"  target="_blank" rel="noopener"
-    >Gene Kim</a> 主张勇于承担风险和进行实验。鼓励你的团队尝试不寻常的任务，以得到新的领悟。</p>
-<p>你的组织应该以利润为导向吗？你能允许你的团队尝试一些新东西（非指个人兴趣项目）吗？持续的流程发展意味着对升级目前的方法持开放态度。优秀的销售领导懂得，结果比出勤率更重要，因此，关注团队的工作方式而不是工作量的多少始终是关键。</p>
-<h3 id="随时提供反馈并积极寻求反馈">随时提供反馈并积极寻求反馈</h3>
-<p>成员之间增加信任是蓬勃发展的 DevOps 文化的另一个关键特征。无论你的员工是在学习如何建立联盟网络联系，还是试图设计他们的下一个 <a class="link" href="https://opensource.com/article/22/7/awesome-ux-cli-application"  target="_blank" rel="noopener"
-    >用户体验</a> 调查，每个人都应该对他们工作的反馈持开放态度。但是，除非你的团队成员尊重彼此的意见，并相信反馈是本着善意的精神提出的，否则这永远不会发生。</p>
-<p>这种文化听起来可能是很难培养的；事实上，一些公司会比其他公司更努力地实现这一点。诚然，给予和接受反馈的成功很大程度上取决于员工的个性。在招聘过程中，也可以对此进行筛选。</p>
-<p>在你期望员工随时向同事提供反馈并主动寻求反馈之前，你应该以身作则。高管应该以身作则，公开要求公司成员对其战略决策提出探究性问题，并提供相应的反馈。</p>
-<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20230126220801.png"
-	
-	
-	
-	loading="lazy"
-	
-		alt="DevOps is the intersection of development, quality assurance, and operations"
-	
-	
-></p>
-<h3 id="不断改进">不断改进</h3>
-<p>在同事之间增加对智力信任的基础上，你的团队应该寻找方法来改善其工作。DevOps 的性质意味着软件开发团队将比传统方法更迅速地进行部署。</p>
-<p>这种开放的改进文化可以对开发和运维以外的部门产生积极的影响。你也可以自己去探索企业还有哪些领域会受到积极的影响。</p>
-<p>留意培训和提高技能的机会。即使一个培训课程没有广告上说的那么突出，但有机会与行业专家建立联系，并与未来建立联系，这可以提高你的组织内的思想多样性。</p>
-<h3 id="为以后的开发保存当前的想法">为以后的开发保存当前的想法</h3>
-<p>频繁使用的 <a class="link" href="https://opensource.com/article/22/11/git-concepts"  target="_blank" rel="noopener"
-    >Git</a> 账户应该是你的 DevOps 工具链的一部分。你可以用 Git 作为软件开发和其他相关项目中产生的脚本的共同仓库。Git 作为 “版本控制” 工具而被熟知，Git 允许程序员保存他们工作的迭代、复用或改进其他人的工作。</p>
-<p>你的目标是能够保留好的想法以供将来使用。某个方法由于某种原因没有成功。然而，那套想法在当时是错误的，并不意味着它在未来永远无法成为有用的东西。</p>
-<p>由于 DevOps 的整个重点在于生产环境中的软件的端到端所有权，因此节省开发的迭代真正支持这一原则。你希望看到对手头的软件测试项目的持续关注和投入。</p>
-<p>一个简单的方法是要求开发者在开发者合同和最终项目报告中包含对未来工作的想法。确保技术服务经理知道他们应该要求提供在建设过程中出现的旁门左道的想法的例子。意识到这些小创新的人越多，在需要的时候就越有可能有人记住一个。</p>
-<h3 id="坐在一起物理上或逻辑上">坐在一起（物理上或逻辑上）</h3>
-<p>目标是对彼此的工作角色以及它们之间的相互关系有一个共同的理解。你可以通过几个简单的方法实现这一目标，用一句话概括：坐在一起。邀请其他团队参加你们的会议，完整地分享用户反馈报告。一起吃午饭，一起计划虚拟的快乐时光，一般来说，要确保你的同事都在一起。大约 90% 的拥有成熟的 DevOps 协议的团队报告说，他们清楚地了解自己对其他团队的责任，而在不成熟的 DevOps 团队中，只有大约 46% 的工作者清楚地了解自己的责任。</p>
-<p>虽然与志同道合的人结成小团体，只与被雇来执行与你相同任务的员工在一起是很诱人的，但这对整个企业来说是很糟糕的。无论你喜欢与否，所有的人都是多面手，能够在一系列的情况下贡献自己的独特才能。</p>
-<p>密切协作的理念是尊重任何人对其周围正在进行的产品或工作流程提出改进建议的能力。如果你与公司内的其他部门保持一定的距离，你将会错过无数次分享智慧想法的机会。毕竟，你往往在交流中学习得最好。</p>
-<h3 id="致力于自动化">致力于自动化</h3>
-<p>你应该以提高效率和加速流程的名义，寻求将单调的和重复的任务变为自动化。每个行业都有无聊的 —— 说得直白一点，就是愚蠢的 —— 每天或每周都要进行的工作。</p>
-<p>无论是手工将数据从一页复制到另一页，还是手工打出音频记录，每个级别的工作人员都应该坚持让机器在可能的情况下承担这些负担。现实是自动化技术每年都在进步，操作流程也应该如此。<a class="link" href="https://opensource.com/article/20/7/open-source-test-automation-frameworks"  target="_blank" rel="noopener"
-    >自动化测试</a> 对 DevOps 非常关键，它是 CALMS 框架的第二个原则（其中的 “C” 代表 “文化”）。</p>
-<p>你怎样才能实现这一点？邀请员工公开表达他们认为工作的哪些方面可以自动化，然后 —— 这里是关键的部分 —— 支持实现自动化所需的设施。这可能意味着每年花 600 美元订阅一个软件程序、一套完整的企业应用现代化解决方案，或开发人员用两天时间来建立一个在内部使用新工具。</p>
-<p>无论哪种方式，你都应该评估自动化的好处，考虑你可以为每个人节省多少时间。DevOps 的统计数据不断表明，现代公司通过整合这些有益的原则，年复一年地得到了很大的改善。</p>
-<h3 id="探索成功的新工作方式">探索成功的新工作方式</h3>
-<p>文化转变不会在一夜之间发生。不过，你越早开始，就越早看到结果。根据我的经验，当变化真正对以前进行了改进时，人们会接受它。DevOps 为这种改进提供了一个框架。无论你是刚刚在你的组织中开始使用 DevOps，还是仅仅想改善你现有的文化，请考虑以上几点以及它们与你组织的未来的关系。</p>
-<hr>
-<p>via: <a class="link" href="https://opensource.com/article/23/1/tips-effective-devops-culture"  target="_blank" rel="noopener"
-    >https://opensource.com/article/23/1/tips-effective-devops-culture</a></p>
-<p>作者：<a class="link" href="https://opensource.com/users/yauhen-zaremba"  target="_blank" rel="noopener"
-    >Yauhen Zaremba</a>
-选题：<a class="link" href="https://github.com/lkxed"  target="_blank" rel="noopener"
-    >lkxed</a>
-译者：<a class="link" href="https://github.com/lxbwolf"  target="_blank" rel="noopener"
-    >Xiaobin.Liu</a>
-校对：<a class="link" href="https://github.com/wxy"  target="_blank" rel="noopener"
-    >wxy</a></p>
-<p>本文由 <a class="link" href="https://github.com/LCTT/TranslateProject"  target="_blank" rel="noopener"
-    >LCTT</a> 原创编译，<a class="link" href="https://linux.cn/"  target="_blank" rel="noopener"
-    >Linux中国</a> 荣誉推出</p>
-
+<h2 id="背景">背景</h2>
+<p>hosts文件其实并不是存储在Docker镜像中的，<code>/etc/hosts</code>, <code>/etc/resolv.conf</code>和<code>/etc/hostname</code>，是存在主机上的<code>/var/lib/docker/containers/(docker_id)</code> 目录下，容器启动时是通过mount将这些文件挂载到容器内部的。因此如果在容器中修改这些文件，修改部分不会存在于容器的top layer，而是直接写入这3个文件中。容器重启后修改内容不存在的原因是Docker每次创建新容器时，会根据当前docker0下的所有节点的IP信息重新建立hosts文件。也就是说，你的修改会被Docker给自动覆盖掉。</p>
+<h2 id="解决办法">解决办法</h2>
+<h3 id="opt-1-开启时加参数">OPT 1 开启时加参数</h3>
+<p>开启容器时候添加参数 <code>--add-host machine:ip</code> 可以实现hosts修改，在容器中可以识别machine主机。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>docker run --name nginx nginx:latest --add-host<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;server:127.0.0.1&#39;</span> --add-host<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;server2:127.0.0.2&#39;</span>
+</span></span></code></pre></div><h3 id="opt-2-修改容器hosts查找目录">OPT 2 修改容器hosts查找目录</h3>
+<p>让容器开启时候，不去找<code>/etc/hosts</code>文件，而是去找自定义的hosts文件，下面是一个Dockerfile实例</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>FROM ubuntu:14.04
+</span></span><span style="display:flex;"><span>RUN cp /etc/hosts /tmp/hosts <span style="color:#75715e">#路径长度最好保持一致</span>
+</span></span><span style="display:flex;"><span>RUN mkdir -p -- /lib-override <span style="color:#f92672">&amp;&amp;</span> cp /lib/x86_64-linux-gnu/libnss_files.so.2 /lib-override
+</span></span><span style="display:flex;"><span>RUN sed -i <span style="color:#e6db74">&#39;s:/etc/hosts:/tmp/hosts:g&#39;</span> /lib-override/libnss_files.so.2
+</span></span><span style="display:flex;"><span>ENV LD_LIBRARY_PATH /lib-override
+</span></span><span style="display:flex;"><span>RUN echo <span style="color:#e6db74">&#34;192.168.0.1 node1&#34;</span> &gt;&gt; /tmp/hosts
+</span></span></code></pre></div><h3 id="opt-3-在-一个-run-中-设置-etchosts-的同时运行需要dns服务的安装">OPT 3 在 一个 RUN 中 设置 /etc/hosts 的同时，运行需要dns服务的安装</h3>
+<p>由于在不同的 RUN 层中，/etc/hosts 会被docker重写覆盖掉，所以必须在同一个 RUN 层中同时设置并使用对应的域名映射</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>RUN echo <span style="color:#e6db74">&#34;111.8.8.111 mirror.npm.com&#34;</span> &gt;&gt; /etc/hosts <span style="color:#f92672">&amp;&amp;</span> npm install 
+</span></span></code></pre></div>
 </section>
 
 
@@ -469,6 +413,19 @@
             
                 
 <article class="">
+    <a href="/6316d574/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Jenkins的Api</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
     <a href="/f5fbcabb/">
         
         
@@ -482,51 +439,12 @@
             
                 
 <article class="">
-    <a href="/a258db2c/">
+    <a href="/498654c2/">
         
         
 
         <div class="article-details">
-            <h2 class="article-title">【译】域名末尾带个点</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/690c8418/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】10大静态网站生成工具</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/265eeb54/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">Dockerfile修改hosts</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/6316d574/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">Jenkins的Api</h2>
+            <h2 class="article-title">docker挂载目录失败/权限拒绝</h2>
         </div>
     </a>
 </article>
