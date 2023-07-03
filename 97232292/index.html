@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html lang="zh-cn" dir="ltr">
     <head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Jenkins 僵尸任务&amp;排队任务清理'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='解决跨域问题'>
 
-<meta name="keywords" content="Jenkins , 任务排队"><title>Jenkins 僵尸任务&amp;排队任务清理</title>
+<meta name="keywords" content="跨域 , http"><title>解决跨域问题</title>
 
-<link rel='canonical' href='https://lxb.wiki/c71b015c/'>
+<link rel='canonical' href='https://lxb.wiki/97232292/'>
 
-<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='Jenkins 僵尸任务&amp;排队任务清理'>
-<meta property='og:description' content='Jenkins 僵尸任务&amp;排队任务清理'>
-<meta property='og:url' content='https://lxb.wiki/c71b015c/'>
+<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='解决跨域问题'>
+<meta property='og:description' content='解决跨域问题'>
+<meta property='og:url' content='https://lxb.wiki/97232292/'>
 <meta property='og:site_name' content='Xiaobin&#39;s Blog'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='devops' /><meta property='article:published_time' content='2022-09-06T20:52:29&#43;08:00'/><meta property='article:modified_time' content='2022-09-06T20:52:29&#43;08:00'/>
-<meta name="twitter:title" content="Jenkins 僵尸任务&amp;排队任务清理">
-<meta name="twitter:description" content="Jenkins 僵尸任务&amp;排队任务清理">
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='http' /><meta property='article:published_time' content='2022-10-23T22:20:35&#43;08:00'/><meta property='article:modified_time' content='2022-10-23T22:20:35&#43;08:00'/>
+<meta name="twitter:title" content="解决跨域问题">
+<meta name="twitter:description" content="解决跨域问题">
 <link rel="shortcut icon" href="/favicon.png" />
 
 <script data-ad-client="ca-pub-5708899526501350" async
@@ -256,12 +256,17 @@
     <div class="widget--toc">
         <nav id="TableOfContents">
   <ul>
-    <li><a href="#通过api清理排队的任务">通过API清理排队的任务</a></li>
-    <li><a href="#脚本处理排队中的任务">脚本处理排队中的任务</a></li>
-    <li><a href="#清除段时间内大量堆积的任务">清除段时间内大量堆积的任务</a>
+    <li><a href="#什么是跨域">什么是跨域</a></li>
+    <li><a href="#解决方案">解决方案：</a>
       <ul>
-        <li><a href="#单条结束任务">单条结束任务</a></li>
-        <li><a href="#清掉所有build-queue">清掉所有Build Queue</a></li>
+        <li><a href="#11-后端允许">1.1 后端允许</a></li>
+        <li><a href="#12-注册应用">1.2 注册应用</a></li>
+        <li><a href="#13-添加中间件">1.3 添加中间件</a></li>
+        <li><a href="#14-添加允许跨域ip">1.4 添加允许跨域ip</a></li>
+        <li><a href="#15-允许携带cookie">1.5 允许携带cookie</a></li>
+        <li><a href="#16-添加允许的请求头和方法">1.6 添加允许的请求头和方法</a></li>
+        <li><a href="#17-前端请求添加header">1.7 前端请求添加Header</a></li>
+        <li><a href="#21-前端配置代理">2.1 前端配置代理</a></li>
       </ul>
     </li>
   </ul>
@@ -282,8 +287,8 @@
     
     <header class="article-category">
         
-        <a href="/categories/Tools/" >
-            Tools
+        <a href="/categories/Web/" >
+            Web
         </a>
         
     </header>
@@ -291,12 +296,12 @@
 
     <div class="article-title-wrapper">
         <h2 class="article-title">
-            <a href="/c71b015c/">Jenkins 僵尸任务&amp;排队任务清理</a>
+            <a href="/97232292/">解决跨域问题</a>
         </h2>
 
         
         <h3 class="article-subtitle">
-            Jenkins 僵尸任务&amp;排队任务清理
+            解决跨域问题
         </h3>
         
     </div>
@@ -317,7 +322,7 @@
   <path d="M3 11h16" />
   <path d="M18 16.496v1.504l1 1" />
 </svg>
-            <time class="article-time--published">Sep 06, 2022</time>
+            <time class="article-time--published">Oct 23, 2022</time>
         </div>
         
 
@@ -332,14 +337,14 @@
 
 
             <time class="article-time--reading">
-                阅读时长: 1 分钟
+                阅读时长: 2 分钟
             </time>
         </div>
         
         <small>
     <section class="article-tags">
         
-            <a href="/tags/devops/">devops</a>
+            <a href="/tags/http/">http</a>
         
     </section>
 </small>
@@ -353,84 +358,104 @@
     <section class="article-content">
     
     
-    <h2 id="通过api清理排队的任务">通过API清理排队的任务</h2>
-<p>删除已经开始构建的任务（已有build_number）</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -X POST &lt;jenkins-server&gt;/job/&lt;job-name&gt;/&lt;build-number&gt;/doDelete
-</span></span></code></pre></div><p>对于排队中的任务</p>
-<p>注意下面的id 不是build_number</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -X POST <span style="color:#e6db74">&#39;http://jenkins/queue/cancelItem?id=85&#39;</span>
-</span></span></code></pre></div><p>To find x, you can parse the result of:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>http://jenkins/queue/api/json?tree<span style="color:#f92672">=</span>items<span style="color:#f92672">[</span>id,task<span style="color:#f92672">[</span>name<span style="color:#f92672">]]</span>
-</span></span></code></pre></div><p>To cancel a build that is in progress:</p>
-<pre tabindex="0"><code>http://jenkins/job/&lt;jobName&gt;/y/stop
-</code></pre><p>To find y, you can parse the result of:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>http://jenkins/job/&lt;jobName&gt;/lastBuild/api/json?tree<span style="color:#f92672">=</span>building,number
-</span></span></code></pre></div><h2 id="脚本处理排队中的任务">脚本处理排队中的任务</h2>
-<p>获取jenkins所有排队中任务，然后通过jobname过滤，然后想精确到某个任务可以在任务里通过判断任务的参数来确定：比如唯一的ID。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-groovy" data-lang="groovy"><span style="display:flex;"><span>fun JenkinsServer<span style="color:#f92672">.</span><span style="color:#a6e22e">cancelTaskInQueue</span><span style="color:#f92672">(</span>jobName: String<span style="color:#f92672">,</span> p1: String<span style="color:#f92672">,</span> p2: String<span style="color:#f92672">,</span> p3: String<span style="color:#f92672">){</span>
-</span></span><span style="display:flex;"><span>    runScript<span style="color:#f92672">(</span>runScriptHtml<span style="color:#f92672">(</span>jobName<span style="color:#f92672">,</span> URLEncoder<span style="color:#f92672">.</span><span style="color:#a6e22e">encode</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;import hudson.model.*\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34; \n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;def q = Jenkins.instance.queue\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;q.items.findAll { \n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;  \n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;  it.task.name.startsWith(\&#34;${jobName}\&#34;)\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;  \n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;}.each { \n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;  p1=\&#34;\&#34;\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;  p2=\&#34;\&#34;\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;  p3=\&#34;\&#34;\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;  it.params.eachLine{\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;    aa = it.split(\&#34;=\&#34;)\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;    \n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;    if(aa[0].equals(\&#34;p1\&#34;)){\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;      if(aa.length == 2){\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;      \tp1 = aa[1]\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;      }\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;    }\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;    if(aa[0].equals(\&#34;p2\&#34;)){\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;      if(aa.length == 2){\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;      \tp2 = aa[1]\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;      }\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;    }\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;    if(aa[0].equals(\&#34;p3\&#34;)){\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;      if(aa.length == 2){\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;      \tp3 = aa[1]\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;      }\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;    }\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;  }\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;  if(\&#34;${p1}\&#34;.equals(p1) &amp;&amp; \&#34;${p2}\&#34;.equals(p2) &amp;&amp; \&#34;${p3}\&#34;.equals(p3)){\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;    println(\&#34;cancel auto build ${p1}:${p2} is ${p3}\&#34;)\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;    q.cancel(it);\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;  }\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;}\n&#34;</span> <span style="color:#f92672">+</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;\n&#34;</span><span style="color:#f92672">,</span> <span style="color:#e6db74">&#34;UTF-8&#34;</span><span style="color:#f92672">)))</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span></code></pre></div><h2 id="清除段时间内大量堆积的任务">清除段时间内大量堆积的任务</h2>
-<p>进入 <strong>Manage Jenkins -&gt; Script Console</strong> , 然后执行后面的脚本</p>
-<h3 id="单条结束任务">单条结束任务</h3>
-<p>查看进程的名字</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-groovy" data-lang="groovy"><span style="display:flex;"><span>Thread<span style="color:#f92672">.</span><span style="color:#a6e22e">getAllStackTraces</span><span style="color:#f92672">().</span><span style="color:#a6e22e">keySet</span><span style="color:#f92672">().</span><span style="color:#a6e22e">each</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>  t <span style="color:#f92672">-&gt;</span> println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;name:&#34;</span><span style="color:#f92672">+</span>t<span style="color:#f92672">.</span><span style="color:#a6e22e">getName</span><span style="color:#f92672">())</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span></code></pre></div><p>进程名字结果示例:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>name:Thread-90
-</span></span><span style="display:flex;"><span>name:Scheduler-174573182-1
-</span></span><span style="display:flex;"><span>name:Thread-116
-</span></span><span style="display:flex;"><span>name:Thread-110
-</span></span><span style="display:flex;"><span>name:Thread-83
-</span></span><span style="display:flex;"><span>name:org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution <span style="color:#f92672">[</span><span style="color:#75715e">#52]</span>
-</span></span><span style="display:flex;"><span>name:SCMTrigger <span style="color:#f92672">[</span><span style="color:#75715e">#10]</span>
-</span></span></code></pre></div><p>停止特定进程</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-groovy" data-lang="groovy"><span style="display:flex;"><span>Thread<span style="color:#f92672">.</span><span style="color:#a6e22e">getAllStackTraces</span><span style="color:#f92672">().</span><span style="color:#a6e22e">keySet</span><span style="color:#f92672">().</span><span style="color:#a6e22e">each</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>  t <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>t<span style="color:#f92672">.</span><span style="color:#a6e22e">getName</span><span style="color:#f92672">()==</span><span style="color:#e6db74">&#34;刚才查出来的某条进程名字&#34;</span> <span style="color:#f92672">)</span> <span style="color:#f92672">{</span>   t<span style="color:#f92672">.</span><span style="color:#a6e22e">interrupt</span><span style="color:#f92672">();</span>  <span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span></code></pre></div><p>删掉所有进程</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-groovy" data-lang="groovy"><span style="display:flex;"><span>Thread<span style="color:#f92672">.</span><span style="color:#a6e22e">getAllStackTraces</span><span style="color:#f92672">().</span><span style="color:#a6e22e">keySet</span><span style="color:#f92672">().</span><span style="color:#a6e22e">each</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>  t <span style="color:#f92672">-&gt;</span>   t<span style="color:#f92672">.</span><span style="color:#a6e22e">interrupt</span><span style="color:#f92672">();</span> 
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span></code></pre></div><h3 id="清掉所有build-queue">清掉所有Build Queue</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-groovy" data-lang="groovy"><span style="display:flex;"><span>Jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">instance</span><span style="color:#f92672">.</span><span style="color:#a6e22e">queue</span><span style="color:#f92672">.</span><span style="color:#a6e22e">clear</span><span style="color:#f92672">()</span>
-</span></span></code></pre></div>
+    <blockquote>
+<p>Access to XMLHttpRequest at ‘http://127.0.0.1:8000/api/test/‘ from origin ‘http://127.0.0.1:3000’ has been blocked by CORS policy: No ‘Access-Control-Allow-Origin’ header is present on the requested resource.</p>
+</blockquote>
+<h2 id="什么是跨域">什么是跨域</h2>
+<blockquote>
+<p>由于开发模式为前后端分离式开发，故而通常情况下，前端和后端可能运行不同的ip或者port下，导致出现跨域问题，故而单独说明</p>
+</blockquote>
+<p>跨域是指一个域下的文档或脚本试图去请求另一个域下的资源，这里跨域是广义的。
+其实我们通常所说的跨域是狭义的，是由浏览器同源策略限制的一类请求场景。</p>
+<p>什么是同源策略？</p>
+<p>同源策略/SOP(Same origin policy)是一种约定，由Netscape公司1995年引入浏览器，它是浏览器最核心也最基本的安全功能，如果缺少了同源策略，浏览器很容易受到XSS、CSFR等攻击。所谓同源是指”协议+域名+端口”三者相同，即便两个不同的域名指向同一个ip地址，也非同源。</p>
+<p>同源策略限制以下几种行为：</p>
+<p>Cookie、LocalStorage 和 IndexDB 无法读取
+DOM 和 Js对象无法获得
+AJAX 请求不能发送</p>
+<h2 id="解决方案">解决方案：</h2>
+<h3 id="11-后端允许">1.1 后端允许</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install django-cors-headers
+</span></span></code></pre></div><h3 id="12-注册应用">1.2 注册应用</h3>
+<p>settings.py</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>INSTALLED_APPS <span style="color:#f92672">=</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;corsheaders&#39;</span>,		<span style="color:#75715e"># 加入这个应用描述</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>)
+</span></span></code></pre></div><h3 id="13-添加中间件">1.3 添加中间件</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>MIDDLEWARE_CLASSES <span style="color:#f92672">=</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;corsheaders.middleware.CorsMiddleware&#39;</span>,<span style="color:#75715e"># 注意顺序！！！(可以放第一个) </span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;django.middleware.common.CommonMiddleware&#39;</span>, 
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>)
+</span></span></code></pre></div><h3 id="14-添加允许跨域ip">1.4 添加允许跨域ip</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e">#直接允许所有主机跨域</span>
+</span></span><span style="display:flex;"><span>CORS_ORIGIN_ALLOW_ALL <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span> 默认为False
+</span></span></code></pre></div><h3 id="15-允许携带cookie">1.5 允许携带cookie</h3>
+<pre tabindex="0"><code>CORS_ALLOW_CREDENTIALS = True
+</code></pre><h3 id="16-添加允许的请求头和方法">1.6 添加允许的请求头和方法</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>CORS_ALLOW_METHODS <span style="color:#f92672">=</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;DELETE&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;GET&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;OPTIONS&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;PATCH&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;POST&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;PUT&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;VIEW&#39;</span>,
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>CORS_ALLOW_HEADERS <span style="color:#f92672">=</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;XMLHttpRequest&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;X_FILENAME&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;accept-encoding&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;authorization&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;content-type&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;dnt&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;origin&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;user-agent&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;x-csrftoken&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;x-requested-with&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;Pragma&#39;</span>,
+</span></span><span style="display:flex;"><span>	  <span style="color:#e6db74">&#39;Access-Control-Allow-Origin&#39;</span>,
+</span></span><span style="display:flex;"><span>)
+</span></span></code></pre></div><h3 id="17-前端请求添加header">1.7 前端请求添加Header</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">config</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">withCredentials</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">headers</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;Access-Control-Allow-Origin&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;*&#34;</span>,
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">axios</span>.<span style="color:#a6e22e">get</span>(<span style="color:#a6e22e">myUrl</span>, <span style="color:#a6e22e">config</span>).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">res</span> =&gt; <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">res</span>))
+</span></span></code></pre></div><h3 id="21-前端配置代理">2.1 前端配置代理</h3>
+<p>vite.config.js</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">import</span> { <span style="color:#a6e22e">defineConfig</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;vite&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">vue</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;@vitejs/plugin-vue&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// https://vitejs.dev/config/
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> <span style="color:#a6e22e">defineConfig</span>({
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">plugins</span><span style="color:#f92672">:</span> [<span style="color:#a6e22e">vue</span>()],
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">base</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;./&#39;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">server</span><span style="color:#f92672">:</span> { <span style="color:#75715e">//同plugins同级
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">cors</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">open</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">port</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">3000</span>, <span style="color:#75715e">//本地端口号
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">proxy</span><span style="color:#f92672">:</span> { <span style="color:#75715e">//配置代理服务器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#e6db74">&#34;/api&#34;</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">target</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;https://mydomain.com&#34;</span>,    <span style="color:#75715e">//目标url
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">changeOrigin</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,    <span style="color:#75715e">//允许跨域
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">rewrite</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">path</span>) =&gt; <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/^\/api/</span>, <span style="color:#e6db74">&#34;&#34;</span>),     <span style="color:#75715e">//重写路径,替换/api
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>})
+</span></span></code></pre></div><p>当本地开发请求 http://localhost:3000/api/xxx 时，会被代理到</p>
+<p><a class="link" href="https://mydomain.com/xxx"  target="_blank" rel="noopener"
+    >https://mydomain.com/xxx</a></p>
+
 </section>
 
 
@@ -466,12 +491,12 @@
             
                 
 <article class="">
-    <a href="/6316d574/">
+    <a href="/3632d5ff/">
         
         
 
         <div class="article-details">
-            <h2 class="article-title">Jenkins的Api</h2>
+            <h2 class="article-title">Postman 自动填充 Header</h2>
         </div>
     </a>
 </article>
@@ -479,12 +504,12 @@
             
                 
 <article class="">
-    <a href="/265eeb54/">
+    <a href="/c587a198/">
         
         
 
         <div class="article-details">
-            <h2 class="article-title">Dockerfile修改hosts</h2>
+            <h2 class="article-title">URL特殊字符处理</h2>
         </div>
     </a>
 </article>
@@ -492,12 +517,38 @@
             
                 
 <article class="">
-    <a href="/f5fbcabb/">
+    <a href="/fdc9c210/">
         
         
 
         <div class="article-details">
-            <h2 class="article-title">【译】解决 CI/CD 中的仓库阻抗失配</h2>
+            <h2 class="article-title">url编码解码</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/ddf7de45/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">升级https</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/4e7c79/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">HTTP协议笔记</h2>
         </div>
     </a>
 </article>
