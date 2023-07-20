@@ -6,7 +6,51 @@
         <description>Recent content in Linux on Xiaobin&#39;s Blog</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>zh-cn</language>
-        <lastBuildDate>Sun, 25 Sep 2022 22:05:44 +0800</lastBuildDate><atom:link href="https://lxb.wiki/categories/Linux/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <lastBuildDate>Wed, 02 Nov 2022 21:52:46 +0800</lastBuildDate><atom:link href="https://lxb.wiki/categories/Linux/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <title>Linux 文件句柄与文件描述符</title>
+        <link>https://lxb.wiki/200486d9/</link>
+        <pubDate>Wed, 02 Nov 2022 21:52:46 +0800</pubDate>
+        
+        <guid>https://lxb.wiki/200486d9/</guid>
+        <description>&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/202307202154896.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;每个进程都有一个打开的文件表（fdtable)。表中的每一项是struct file类型，包含了打开文件的一些属性比如偏移量，读写访问模式等，这是真正意义上的文件句柄。&lt;/p&gt;
+&lt;p&gt;文件描述符是一个整数。代表fdtable中的索引位置（下标），指向具体的struct file（文件句柄）。&lt;/p&gt;
+&lt;p&gt;哪些地方会分配文件句柄？&lt;/p&gt;
+&lt;p&gt;知道文件句柄最终是通过get_empty_filp函数从filp cache中分配的之后，我们顺着函数调用链路简单梳理下，就能知道有哪些地方会分配文件句柄了：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;open系统调用打开文件（path_openat内核函数)&lt;/li&gt;
+&lt;li&gt;打开一个目录（dentry_open函数)&lt;/li&gt;
+&lt;li&gt;共享内存attach （do_shmat函数）&lt;/li&gt;
+&lt;li&gt;socket套接字（sock_alloc_file函数）&lt;/li&gt;
+&lt;li&gt;管道（create_pipe_files函数）&lt;/li&gt;
+&lt;li&gt;epoll/inotify/signalfd等功能用到的匿名inode文件系统（anon_inode_getfile函数)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;file-nr文件里面的第一个字段代表的是内核分配的struct file的个数，也就是文件句柄个数，而不是文件描述符&lt;/p&gt;
+&lt;p&gt;机器上的常常会出现文件句柄使用量与常用的lsof命令的数量相去甚远的情况&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/202307202156791.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;因为文件描述符和文件句柄是两个不同的东西：lsof在用户空间，主要还是从文件描述符的角度来看文件句柄。&lt;/p&gt;
+&lt;p&gt;我们来做一个实验：只打开一次文件，然后复制1000次文件描述符。&lt;/p&gt;
+&lt;p&gt;我们启动dupfd进程打开了一次/dev/zero文件，复制了1000次文件描述符。file-nr中的文件句柄数只是个位数的变化，而lsof看到的结果涨了1000多。&lt;/p&gt;
+&lt;p&gt;如果我们把前面的代码换成open 1000次， 就可以看到file-nr和lsof的输出几乎都涨了1000。&lt;/p&gt;
+&lt;p&gt;我们循环1000次打开/dev/zero文件，之后mmap映射到进程地址空间，然后把这些打开的文件描述符都关掉。很显然，打开的描述符都被close掉了，不会有什么变化。 那为什么文件句柄数还是增加了1000个左右呢？&lt;/p&gt;
+&lt;p&gt;原来，linux内核中很多对象都是有引用计数的。 虽然文件句柄是由open先打开的，但mmap之后，引用计数被加1，尽管我们接着把文件描述符close掉了，但是底层指向的struct file由于引用数大于0，不会被回收。&lt;/p&gt;
+</description>
+        </item>
+        <item>
         <title>Linux命令行光标操作快捷键</title>
         <link>https://lxb.wiki/9eb2da78/</link>
         <pubDate>Sun, 25 Sep 2022 22:05:44 +0800</pubDate>
