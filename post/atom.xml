@@ -1,12 +1,280 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
-        <title>Posts on Xiaobin&#39;s Blog</title>
+        <title>Posts on Xiaobin&#39;s Notes</title>
         <link>https://lxb.wiki/post/</link>
-        <description>Recent content in Posts on Xiaobin&#39;s Blog</description>
+        <description>Recent content in Posts on Xiaobin&#39;s Notes</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>zh-cn</language>
-        <lastBuildDate>Fri, 05 May 2023 08:14:34 +0800</lastBuildDate><atom:link href="https://lxb.wiki/post/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <lastBuildDate>Thu, 03 Aug 2023 22:12:42 +0800</lastBuildDate><atom:link href="https://lxb.wiki/post/atom.xml" rel="self" type="application/rss+xml" /><item>
+        <title>Linux 中退出码的含义</title>
+        <link>https://lxb.wiki/e28c7f9c/</link>
+        <pubDate>Thu, 03 Aug 2023 22:12:42 +0800</pubDate>
+        
+        <guid>https://lxb.wiki/e28c7f9c/</guid>
+        <description>&lt;h1 id=&#34;linux-中退出码的含义&#34;&gt;Linux 中退出码的含义&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&#34;https://img.linux.net.cn/data/attachment/album/202308/03/154628oloxp7sl6s1z4pbl.jpg&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;揭开 Linux 中退出码的神秘面纱。了解什么是退出码，以及为什么和如何使用它们。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;退出码（退出状态）可以告诉我们最后一次执行的命令的状态。在命令结束以后，我们可以知道命令是成功完成的还是以错误结束的。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;其基本思想是，程序返回退出代码 &lt;code&gt;0&lt;/code&gt; 时表示执行成功，没有问题。代码 &lt;code&gt;1&lt;/code&gt; 或 &lt;code&gt;0&lt;/code&gt; 以外的任何代码都被视为不成功。&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;退出码除了 0 和 1 外还有很多值，我将在本文介绍它们。&lt;/p&gt;
+&lt;h3 id=&#34;linux-shell-中的各种退出码&#34;&gt;Linux Shell 中的各种退出码&lt;/h3&gt;
+&lt;p&gt;我们来快速了解一下 Linux Shell 中的主要退出码：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&#34;text-align:left&#34;&gt;退出码&lt;/th&gt;
+&lt;th style=&#34;text-align:left&#34;&gt;解释&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;0&lt;/code&gt;&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;命令成功执行&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;1&lt;/code&gt;&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;通用错误代码&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;2&lt;/code&gt;&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;命令（或参数）使用不当&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;126&lt;/code&gt;&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;权限被拒绝（或）无法执行&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;127&lt;/code&gt;&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;未找到命令，或 &lt;code&gt;PATH&lt;/code&gt; 错误&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;128+n&lt;/code&gt;&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;命令被信号从外部终止，或遇到致命错误&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;130&lt;/code&gt;&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;通过 &lt;code&gt;Ctrl+C&lt;/code&gt; 或 &lt;code&gt;SIGINT&lt;/code&gt; 终止（&lt;em&gt;终止代码 2 或键盘中断&lt;/em&gt;）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;143&lt;/code&gt;&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;通过 &lt;code&gt;SIGTERM&lt;/code&gt; 终止（&lt;em&gt;默认终止&lt;/em&gt;）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;&lt;code&gt;255/*&lt;/code&gt;&lt;/td&gt;
+&lt;td style=&#34;text-align:left&#34;&gt;退出码超过了 0-255 的范围，因此重新计算（LCTT 译注：超过 255 后，用退出码对 256 取模）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;blockquote&gt;
+&lt;p&gt;📋 &lt;code&gt;130&lt;/code&gt;（&lt;code&gt;SIGINT&lt;/code&gt; 或 &lt;code&gt;^C&lt;/code&gt;）和 &lt;code&gt;143&lt;/code&gt;（&lt;code&gt;SIGTERM&lt;/code&gt;）等终止信号是非常典型的，它们属于 &lt;code&gt;128+n&lt;/code&gt; 信号，其中 &lt;code&gt;n&lt;/code&gt; 代表终止码。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;在简单了解了退出码之后，我们来看看它们的用法。&lt;/p&gt;
+&lt;h3 id=&#34;获取退出码&#34;&gt;获取退出码&lt;/h3&gt;
+&lt;p&gt;前一个命令执行的退出码存储在 &lt;a class=&#34;link&#34; href=&#34;https://linuxhandbook.com:443/bash-special-variables/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;特殊变量&lt;/a&gt; &lt;code&gt;$?&lt;/code&gt; 中。你可以通过运行以下命令来获取：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;echo $?
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;我们在所有演示中都将使用它来获取退出代码。&lt;/p&gt;
+&lt;p&gt;请注意，&lt;code&gt;exit&lt;/code&gt; 命令支持以带着前一条命令相同的退出码退出。&lt;/p&gt;
+&lt;h3 id=&#34;退出码-0&#34;&gt;退出码 0&lt;/h3&gt;
+&lt;p&gt;退出码 &lt;code&gt;0&lt;/code&gt; 表示命令执行无误，这是完成命令的理想状态。&lt;/p&gt;
+&lt;p&gt;例如，我们运行这样一条基本命令&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;neofetch 
+
+echo $?
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&#34;https://itsfoss.com/content/images/2023/06/exit_code_0.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;这个退出码 &lt;code&gt;0&lt;/code&gt; 表示特定命令已成功执行，仅此而已。让我们再演示几个例子。&lt;/p&gt;
+&lt;p&gt;你可以尝试 &lt;a class=&#34;link&#34; href=&#34;https://itsfoss.com/how-to-find-the-process-id-of-a-program-and-kill-it-quick-tip/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;终止一个进程&lt;/a&gt;；它也会返回代码 &lt;code&gt;0&lt;/code&gt;。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;pkill lxappearance
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&#34;https://itsfoss.com/content/images/2023/06/exit_code_0.gif&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;查看文件内容也会返回退出码 0，这&lt;strong&gt;仅&lt;/strong&gt;意味着 &lt;code&gt;cat&lt;/code&gt; 命令执行成功。&lt;/p&gt;
+&lt;h3 id=&#34;退出码-1&#34;&gt;退出码 1&lt;/h3&gt;
+&lt;p&gt;退出码 &lt;code&gt;1&lt;/code&gt; 也很常见。它通常表示命令以一般错误结束。&lt;/p&gt;
+&lt;p&gt;例如，在没有 sudo 权限的情况下使用 &lt;a class=&#34;link&#34; href=&#34;https://itsfoss.com/package-manager/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;软件包管理器&lt;/a&gt;，就会返回代码 &lt;code&gt;1&lt;/code&gt;。在 Arch Linux 中，如果我运行下面的命令：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;pacman -Sy
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;它会返回 &lt;code&gt;1&lt;/code&gt;， 表示上一条命令运行出错。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://itsfoss.com/content/images/2023/06/exit_code_1.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;exit code 1 (impermissible operation resulted in this code)&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;📋 如果你在基于 Ubuntu 的发行版中尝试这样做（不使用 &lt;code&gt;sudo&lt;/code&gt; 执行 &lt;code&gt;apt update&lt;/code&gt;），运行后会得到错误码 &lt;code&gt;100&lt;/code&gt;，表示你是在没有权限的情况下运行 &lt;code&gt;apt&lt;/code&gt;。&lt;code&gt;100&lt;/code&gt; 不是标准错误码，而是 &lt;code&gt;apt&lt;/code&gt; 特有的错误码。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;虽然这是一般的理解，但我们也可以将其解释为 “不被允许的操作”。&lt;/p&gt;
+&lt;p&gt;除以 &lt;code&gt;0&lt;/code&gt; 等操作也会返回错误码 &lt;code&gt;1&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://itsfoss.com/content/images/2023/06/exit_code_1-division_by_0-.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;Division by zero results in code 1&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;退出码-2&#34;&gt;退出码 2&lt;/h3&gt;
+&lt;p&gt;这个退出码出现在当执行的命令有语法错误时。滥用命令参数也会导致此错误。&lt;/p&gt;
+&lt;p&gt;一般来说，它表示由于使用不当，命令无法执行。&lt;/p&gt;
+&lt;p&gt;例如，我在一个本应只有一个连字符的选项上添加了两个连字符，那么此时会出现退出码 2。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;grep --z file.txt
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&#34;https://itsfoss.com/content/images/2023/06/exit_status_2-misusing_arguments--1.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;Invalid argument resulted in exit code 2&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;当权限被拒绝时，比如访问 &lt;code&gt;/root&lt;/code&gt; 文件夹，就会出现错误码 &lt;code&gt;2&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://itsfoss.com/content/images/2023/06/exit_code_2-permission_denied-.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;Permission denied gives out code 2&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;退出码-126&#34;&gt;退出码 126&lt;/h3&gt;
+&lt;p&gt;126 是一个特殊的退出码，它用于表示命令或脚本因权限错误而未被执行。&lt;/p&gt;
+&lt;p&gt;当你尝试执行没有执行权限的 Shell 脚本时，就会出现这个错误。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://itsfoss.com/content/images/2023/06/exit_code_126.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;请注意，该退出码只出现在没有足够权限的脚本或命令的“&lt;em&gt;执行&lt;/em&gt;”中，这与一般的&lt;strong&gt;权限被拒绝&lt;/strong&gt;错误不同。&lt;/p&gt;
+&lt;p&gt;因此，不要把它与你之前看到的退出码为 &lt;code&gt;2&lt;/code&gt; 的示例混淆。在那个示例中，运行的是 &lt;code&gt;ls&lt;/code&gt; 命令，权限问题出自它试图执行的目录。而本例中权限问题来自脚本本身。&lt;/p&gt;
+&lt;h3 id=&#34;退出码-127&#34;&gt;退出码 127&lt;/h3&gt;
+&lt;p&gt;这是另一个常见的退出码。退出码 &lt;code&gt;127&lt;/code&gt; 指的是“&lt;a class=&#34;link&#34; href=&#34;https://itsfoss.com/bash-command-not-found/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;未找到命令&lt;/a&gt;”。它通常发生在执行的命令有错别字或所需的可执行文件不在 &lt;code&gt;$PATH&lt;/code&gt; 变量中时。&lt;/p&gt;
+&lt;p&gt;例如，当我尝试执行一个不带路径的脚本时，经常会看到这个错误。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://itsfoss.com/content/images/2023/06/exit_code_127.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;Script executed without the path gives &amp;ldquo;command not found&amp;rdquo; or code 127&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;当你想运行的可执行文件不在 &lt;code&gt;$PATH&lt;/code&gt; 变量中时，也会出现退出码 &lt;code&gt;127&lt;/code&gt;。你可以通过 &lt;a class=&#34;link&#34; href=&#34;https://itsfoss.com/add-directory-to-path-linux/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;在 PATH 变量中添加命令的目录&lt;/a&gt; 来纠正这种情况。&lt;/p&gt;
+&lt;p&gt;当你输入不存在的命令时，也会得到这样的退出码。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://itsfoss.com/content/images/2023/06/exit_code_127-command_not_found--1.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;Unmount is not a command, and Screenfetch is not installed, which resulted in code 127&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;退出码-128n-系列&#34;&gt;退出码 128+n 系列&lt;/h3&gt;
+&lt;p&gt;当应用程序或命令因致命错误而终止或执行失败时，将产生 128 系列退出码（&lt;code&gt;128+n&lt;/code&gt;），其中 &lt;code&gt;n&lt;/code&gt; 为信号编号。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;n&lt;/code&gt; 包括所有类型的终止代码，如 &lt;code&gt;SIGTERM&lt;/code&gt;、&lt;code&gt;SIGKILL&lt;/code&gt; 等。&lt;/p&gt;
+&lt;h4 id=&#34;退出码-130-或-sigint&#34;&gt;退出码 130 或 SIGINT&lt;/h4&gt;
+&lt;p&gt;在通过终止信号 &lt;code&gt;2&lt;/code&gt; 或按下 &lt;code&gt;Ctrl+C&lt;/code&gt; 中断进程时，会发出 &lt;code&gt;SIGINT&lt;/code&gt;（键盘中断信号）。&lt;/p&gt;
+&lt;p&gt;因为终止信号是 &lt;code&gt;2&lt;/code&gt;，所以我们得到的退出码是 &lt;code&gt;130&lt;/code&gt;（128+2）。下面的视频演示了 &lt;code&gt;lxappearance&lt;/code&gt; 的中断信号。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https:/itsfoss.com/content/media/2023/06/exit_code_128-n-SIGINT-_compressed.mp4&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h4 id=&#34;退出码-137-或-sigkill&#34;&gt;退出码 137 或 SIGKILL&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;SIGKILL&lt;/code&gt;（立即终止信号）表示终止信号 &lt;code&gt;9&lt;/code&gt;。这是终止应用程序时最不应该使用的方法。&lt;/p&gt;
+&lt;p&gt;因为终止信号为 &lt;code&gt;9&lt;/code&gt;，因此我们得到的退出代码为 &lt;code&gt;137&lt;/code&gt;（128+9）。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://itsfoss.com/content/media/2023/06/exit_code_128-n-SIGKILL-_compressed.mp4&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h4 id=&#34;退出码-143-或-sigterm&#34;&gt;退出码 143 或 SIGTERM&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;SIGTERM&lt;/code&gt; 是进程在未指定参数的情况下被杀死时的默认行为。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;SIGTERM&lt;/code&gt; 的终止信号为 &lt;code&gt;15&lt;/code&gt;，因此该信号的退出码为 &lt;code&gt;143&lt;/code&gt;（128+15）。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://itsfoss.com/content/media/2023/06/exit_code_128-n-SIGTERM-_compressed-1.mp4&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;还有一些你以前可能不知道的终止信号，它们也有自己类似的退出码。你可以在这里查看它们：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;📋 请注意，如果进程在启动它的同一会话中终止，这些信号可能不会出现。如果要重现这些信号，请从不同的 shell 终止。&lt;/p&gt;
+&lt;p&gt;就个人而言，信号 &lt;code&gt;128&lt;/code&gt; 是无法重现的。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;当退出码超过了-255-会怎样&#34;&gt;当退出码超过了 255 会怎样?&lt;/h3&gt;
+&lt;p&gt;最新版本的 Bash 甚至保留了超过 255 的原始退出码的值，但一般来说，如果代码超过 255，就会被重新计算。&lt;/p&gt;
+&lt;p&gt;也就是说，代码 &lt;code&gt;256&lt;/code&gt; 会变成 &lt;code&gt;0&lt;/code&gt;，&lt;code&gt;257&lt;/code&gt; 会变成 &lt;code&gt;1&lt;/code&gt;，&lt;code&gt;383&lt;/code&gt; 会变成 &lt;code&gt;127&lt;/code&gt;，以此类推。为确保更好的兼容性，请将退出码保持在 &lt;code&gt;0&lt;/code&gt; 至 &lt;code&gt;255&lt;/code&gt; 之间。&lt;/p&gt;
+&lt;h3 id=&#34;结语&#34;&gt;结语&lt;/h3&gt;
+&lt;p&gt;希望你对 Linux Shell 中的退出码有所了解。在排查各种问题时，使用它们会非常方便。&lt;/p&gt;
+&lt;p&gt;如果你要在 Shell 脚本中使用这些代码，请确保你了解每个代码的含义，以便更容易地排除故障。&lt;/p&gt;
+&lt;p&gt;这就是本文的全部内容。如有遗漏，请在评论区告诉我。&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;（题图：MJ/719ff711-1b9f-4aa9-a82e-980704acbdd8）&lt;/em&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;via: &lt;a class=&#34;link&#34; href=&#34;https://itsfoss.com/linux-exit-codes/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://itsfoss.com/linux-exit-codes/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;作者：&lt;a class=&#34;link&#34; href=&#34;https://itsfoss.com/author/pranav/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Pranav Krishna&lt;/a&gt;
+选题：&lt;a class=&#34;link&#34; href=&#34;https://github.com/lkxed/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;lkxed&lt;/a&gt;
+译者：&lt;a class=&#34;link&#34; href=&#34;https://github.com/lxbwolf&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Xiaobin.Liu&lt;/a&gt;
+校对：&lt;a class=&#34;link&#34; href=&#34;https://github.com/wxy&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;wxy&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;本文由 &lt;a class=&#34;link&#34; href=&#34;https://github.com/LCTT/TranslateProject&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;LCTT&lt;/a&gt; 原创编译，&lt;a class=&#34;link&#34; href=&#34;https://linux.cn/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Linux中国&lt;/a&gt; 荣誉推出&lt;/p&gt;
+</description>
+        </item>
+        <item>
         <title>【译】使用 Lens Desktop 监控和调试 Kubernetes</title>
         <link>https://lxb.wiki/e94f2376/</link>
         <pubDate>Fri, 05 May 2023 08:14:34 +0800</pubDate>

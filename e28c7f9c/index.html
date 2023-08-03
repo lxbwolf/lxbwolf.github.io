@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Linux 中退出码的含义'>
+
+<meta name="keywords" content="Linux , exit code"><title>Linux 中退出码的含义</title>
+
+<link rel='canonical' href='https://lxb.wiki/e28c7f9c/'>
+
+<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='Linux 中退出码的含义'>
+<meta property='og:description' content='Linux 中退出码的含义'>
+<meta property='og:url' content='https://lxb.wiki/e28c7f9c/'>
+<meta property='og:site_name' content='Xiaobin&#39;s Notes'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='linux' /><meta property='article:tag' content='exit code' /><meta property='article:published_time' content='2023-08-03T22:12:42&#43;08:00'/><meta property='article:modified_time' content='2023-08-03T22:12:42&#43;08:00'/>
+<meta name="twitter:title" content="Linux 中退出码的含义">
+<meta name="twitter:description" content="Linux 中退出码的含义">
+<link rel="shortcut icon" href="/favicon.png" />
+
+<script data-ad-client="ca-pub-5708899526501350" async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-JZ2PWLT6JY');
+</script>
+<script>
+    var _hmt = _hmt || [];
+    (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+<script>
+    (function () {
+        var el = document.createElement("script");
+        el.src = "https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?f146251743600ee0672cdcc8455ce18def91cdb255ad969a2ef5c715d5ed5baecaf7cd753709c168f20e6a2e9019123fd11e31a222d3a2fe01ad05c6b8f519b2";
+        el.id = "ttzz";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(el, s);
+    })(window)
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
+                            height="298" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">Xiaobin&#39;s Notes</a></h1>
+            <h2 class="site-description"></h2>
+        </div>
+    </header>
+
+
+    <ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/categories/' >
+                
+                
+                
+                <span>分类</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>标签</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/links/' >
+                
+                
+                
+                <span>友链</span>
+            </a>
+        </li>
+        
+
+        <div class="menu-bottom-section"><ol class="social-menu">
+                    
+                        <li>
+                            <a 
+                                href='mailto://me@liuxb.email'
+                                target="_blank"
+                                title="Email"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a 
+                                href='https://github.com/lxbwolf'
+                                target="_blank"
+                                title="GitHub"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
+</svg>
+
+
+
+                                
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a 
+                                href='https://lxb.wiki/atom.xml'
+                                target="_blank"
+                                title="Rss"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="5" cy="19" r="1" />
+  <path d="M4 4a16 16 0 0 1 16 16" />
+  <path d="M4 11a9 9 0 0 1 9 9" />
+</svg>
+
+
+
+                                
+                            </a>
+                        </li>
+                    
+                </ol>
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <span>暗色模式</span>
+                </li>
+            
+        </div>
+    </ol>
+</aside>
+
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+<section class="widget archives">
+    
+    <h2 class="widget-title section-title">目录</h2>
+
+    <div class="widget--toc">
+        <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#linux-shell-中的各种退出码">Linux Shell 中的各种退出码</a></li>
+        <li><a href="#获取退出码">获取退出码</a></li>
+        <li><a href="#退出码-0">退出码 0</a></li>
+        <li><a href="#退出码-1">退出码 1</a></li>
+        <li><a href="#退出码-2">退出码 2</a></li>
+        <li><a href="#退出码-126">退出码 126</a></li>
+        <li><a href="#退出码-127">退出码 127</a></li>
+        <li><a href="#退出码-128n-系列">退出码 128+n 系列</a></li>
+        <li><a href="#当退出码超过了-255-会怎样">当退出码超过了 255 会怎样?</a></li>
+        <li><a href="#结语">结语</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+    </div>
+</section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+        <a href="/categories/Linux/" >
+            Linux
+        </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/e28c7f9c/">Linux 中退出码的含义</a>
+        </h2>
+
+        
+        <h3 class="article-subtitle">
+            Linux 中退出码的含义
+        </h3>
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+            <time class="article-time--published">Aug 03, 2023</time>
+        </div>
+        
+
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+            <time class="article-time--reading">
+                阅读时长: 5 分钟
+            </time>
+        </div>
+        
+        <small>
+    <section class="article-tags">
+        
+            <a href="/tags/linux/">linux</a>
+        
+            <a href="/tags/exit-code/">exit code</a>
+        
+    </section>
+</small>
+    </footer>
+    
+
+    
+</div>
+</header>
+
+    <section class="article-content">
+    
+    
+    <h1 id="linux-中退出码的含义">Linux 中退出码的含义</h1>
+<p><img src="https://img.linux.net.cn/data/attachment/album/202308/03/154628oloxp7sl6s1z4pbl.jpg"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<blockquote>
+<p>揭开 Linux 中退出码的神秘面纱。了解什么是退出码，以及为什么和如何使用它们。</p>
+</blockquote>
+<p>退出码（退出状态）可以告诉我们最后一次执行的命令的状态。在命令结束以后，我们可以知道命令是成功完成的还是以错误结束的。</p>
+<p><strong>其基本思想是，程序返回退出代码 <code>0</code> 时表示执行成功，没有问题。代码 <code>1</code> 或 <code>0</code> 以外的任何代码都被视为不成功。</strong></p>
+<p>退出码除了 0 和 1 外还有很多值，我将在本文介绍它们。</p>
+<h3 id="linux-shell-中的各种退出码">Linux Shell 中的各种退出码</h3>
+<p>我们来快速了解一下 Linux Shell 中的主要退出码：</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th style="text-align:left">退出码</th>
+<th style="text-align:left">解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>0</code></td>
+<td style="text-align:left">命令成功执行</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>1</code></td>
+<td style="text-align:left">通用错误代码</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>2</code></td>
+<td style="text-align:left">命令（或参数）使用不当</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>126</code></td>
+<td style="text-align:left">权限被拒绝（或）无法执行</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>127</code></td>
+<td style="text-align:left">未找到命令，或 <code>PATH</code> 错误</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>128+n</code></td>
+<td style="text-align:left">命令被信号从外部终止，或遇到致命错误</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>130</code></td>
+<td style="text-align:left">通过 <code>Ctrl+C</code> 或 <code>SIGINT</code> 终止（<em>终止代码 2 或键盘中断</em>）</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>143</code></td>
+<td style="text-align:left">通过 <code>SIGTERM</code> 终止（<em>默认终止</em>）</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>255/*</code></td>
+<td style="text-align:left">退出码超过了 0-255 的范围，因此重新计算（LCTT 译注：超过 255 后，用退出码对 256 取模）</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>📋 <code>130</code>（<code>SIGINT</code> 或 <code>^C</code>）和 <code>143</code>（<code>SIGTERM</code>）等终止信号是非常典型的，它们属于 <code>128+n</code> 信号，其中 <code>n</code> 代表终止码。</p>
+</blockquote>
+<p>在简单了解了退出码之后，我们来看看它们的用法。</p>
+<h3 id="获取退出码">获取退出码</h3>
+<p>前一个命令执行的退出码存储在 <a class="link" href="https://linuxhandbook.com:443/bash-special-variables/"  target="_blank" rel="noopener"
+    >特殊变量</a> <code>$?</code> 中。你可以通过运行以下命令来获取：</p>
+<pre tabindex="0"><code>echo $?
+</code></pre><p>我们在所有演示中都将使用它来获取退出代码。</p>
+<p>请注意，<code>exit</code> 命令支持以带着前一条命令相同的退出码退出。</p>
+<h3 id="退出码-0">退出码 0</h3>
+<p>退出码 <code>0</code> 表示命令执行无误，这是完成命令的理想状态。</p>
+<p>例如，我们运行这样一条基本命令</p>
+<pre tabindex="0"><code>neofetch 
+
+echo $?
+</code></pre><p><img src="https://itsfoss.com/content/images/2023/06/exit_code_0.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>这个退出码 <code>0</code> 表示特定命令已成功执行，仅此而已。让我们再演示几个例子。</p>
+<p>你可以尝试 <a class="link" href="https://itsfoss.com/how-to-find-the-process-id-of-a-program-and-kill-it-quick-tip/"  target="_blank" rel="noopener"
+    >终止一个进程</a>；它也会返回代码 <code>0</code>。</p>
+<pre tabindex="0"><code>pkill lxappearance
+</code></pre><p><img src="https://itsfoss.com/content/images/2023/06/exit_code_0.gif"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>查看文件内容也会返回退出码 0，这<strong>仅</strong>意味着 <code>cat</code> 命令执行成功。</p>
+<h3 id="退出码-1">退出码 1</h3>
+<p>退出码 <code>1</code> 也很常见。它通常表示命令以一般错误结束。</p>
+<p>例如，在没有 sudo 权限的情况下使用 <a class="link" href="https://itsfoss.com/package-manager/"  target="_blank" rel="noopener"
+    >软件包管理器</a>，就会返回代码 <code>1</code>。在 Arch Linux 中，如果我运行下面的命令：</p>
+<pre tabindex="0"><code>pacman -Sy
+</code></pre><p>它会返回 <code>1</code>， 表示上一条命令运行出错。</p>
+<p><img src="https://itsfoss.com/content/images/2023/06/exit_code_1.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="exit code 1 (impermissible operation resulted in this code)"
+	
+	
+></p>
+<blockquote>
+<p>📋 如果你在基于 Ubuntu 的发行版中尝试这样做（不使用 <code>sudo</code> 执行 <code>apt update</code>），运行后会得到错误码 <code>100</code>，表示你是在没有权限的情况下运行 <code>apt</code>。<code>100</code> 不是标准错误码，而是 <code>apt</code> 特有的错误码。</p>
+</blockquote>
+<p>虽然这是一般的理解，但我们也可以将其解释为 “不被允许的操作”。</p>
+<p>除以 <code>0</code> 等操作也会返回错误码 <code>1</code>。</p>
+<p><img src="https://itsfoss.com/content/images/2023/06/exit_code_1-division_by_0-.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="Division by zero results in code 1"
+	
+	
+></p>
+<h3 id="退出码-2">退出码 2</h3>
+<p>这个退出码出现在当执行的命令有语法错误时。滥用命令参数也会导致此错误。</p>
+<p>一般来说，它表示由于使用不当，命令无法执行。</p>
+<p>例如，我在一个本应只有一个连字符的选项上添加了两个连字符，那么此时会出现退出码 2。</p>
+<pre tabindex="0"><code>grep --z file.txt
+</code></pre><p><img src="https://itsfoss.com/content/images/2023/06/exit_status_2-misusing_arguments--1.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="Invalid argument resulted in exit code 2"
+	
+	
+></p>
+<p>当权限被拒绝时，比如访问 <code>/root</code> 文件夹，就会出现错误码 <code>2</code>。</p>
+<p><img src="https://itsfoss.com/content/images/2023/06/exit_code_2-permission_denied-.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="Permission denied gives out code 2"
+	
+	
+></p>
+<h3 id="退出码-126">退出码 126</h3>
+<p>126 是一个特殊的退出码，它用于表示命令或脚本因权限错误而未被执行。</p>
+<p>当你尝试执行没有执行权限的 Shell 脚本时，就会出现这个错误。</p>
+<p><img src="https://itsfoss.com/content/images/2023/06/exit_code_126.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>请注意，该退出码只出现在没有足够权限的脚本或命令的“<em>执行</em>”中，这与一般的<strong>权限被拒绝</strong>错误不同。</p>
+<p>因此，不要把它与你之前看到的退出码为 <code>2</code> 的示例混淆。在那个示例中，运行的是 <code>ls</code> 命令，权限问题出自它试图执行的目录。而本例中权限问题来自脚本本身。</p>
+<h3 id="退出码-127">退出码 127</h3>
+<p>这是另一个常见的退出码。退出码 <code>127</code> 指的是“<a class="link" href="https://itsfoss.com/bash-command-not-found/"  target="_blank" rel="noopener"
+    >未找到命令</a>”。它通常发生在执行的命令有错别字或所需的可执行文件不在 <code>$PATH</code> 变量中时。</p>
+<p>例如，当我尝试执行一个不带路径的脚本时，经常会看到这个错误。</p>
+<p><img src="https://itsfoss.com/content/images/2023/06/exit_code_127.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="Script executed without the path gives &ldquo;command not found&rdquo; or code 127"
+	
+	
+></p>
+<p>当你想运行的可执行文件不在 <code>$PATH</code> 变量中时，也会出现退出码 <code>127</code>。你可以通过 <a class="link" href="https://itsfoss.com/add-directory-to-path-linux/"  target="_blank" rel="noopener"
+    >在 PATH 变量中添加命令的目录</a> 来纠正这种情况。</p>
+<p>当你输入不存在的命令时，也会得到这样的退出码。</p>
+<p><img src="https://itsfoss.com/content/images/2023/06/exit_code_127-command_not_found--1.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="Unmount is not a command, and Screenfetch is not installed, which resulted in code 127"
+	
+	
+></p>
+<h3 id="退出码-128n-系列">退出码 128+n 系列</h3>
+<p>当应用程序或命令因致命错误而终止或执行失败时，将产生 128 系列退出码（<code>128+n</code>），其中 <code>n</code> 为信号编号。</p>
+<p><code>n</code> 包括所有类型的终止代码，如 <code>SIGTERM</code>、<code>SIGKILL</code> 等。</p>
+<h4 id="退出码-130-或-sigint">退出码 130 或 SIGINT</h4>
+<p>在通过终止信号 <code>2</code> 或按下 <code>Ctrl+C</code> 中断进程时，会发出 <code>SIGINT</code>（键盘中断信号）。</p>
+<p>因为终止信号是 <code>2</code>，所以我们得到的退出码是 <code>130</code>（128+2）。下面的视频演示了 <code>lxappearance</code> 的中断信号。</p>
+<p><img src="https:/itsfoss.com/content/media/2023/06/exit_code_128-n-SIGINT-_compressed.mp4"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<h4 id="退出码-137-或-sigkill">退出码 137 或 SIGKILL</h4>
+<p><code>SIGKILL</code>（立即终止信号）表示终止信号 <code>9</code>。这是终止应用程序时最不应该使用的方法。</p>
+<p>因为终止信号为 <code>9</code>，因此我们得到的退出代码为 <code>137</code>（128+9）。</p>
+<p><img src="https://itsfoss.com/content/media/2023/06/exit_code_128-n-SIGKILL-_compressed.mp4"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<h4 id="退出码-143-或-sigterm">退出码 143 或 SIGTERM</h4>
+<p><code>SIGTERM</code> 是进程在未指定参数的情况下被杀死时的默认行为。</p>
+<p><code>SIGTERM</code> 的终止信号为 <code>15</code>，因此该信号的退出码为 <code>143</code>（128+15）。</p>
+<p><img src="https://itsfoss.com/content/media/2023/06/exit_code_128-n-SIGTERM-_compressed-1.mp4"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>还有一些你以前可能不知道的终止信号，它们也有自己类似的退出码。你可以在这里查看它们：</p>
+<blockquote>
+<p>📋 请注意，如果进程在启动它的同一会话中终止，这些信号可能不会出现。如果要重现这些信号，请从不同的 shell 终止。</p>
+<p>就个人而言，信号 <code>128</code> 是无法重现的。</p>
+</blockquote>
+<h3 id="当退出码超过了-255-会怎样">当退出码超过了 255 会怎样?</h3>
+<p>最新版本的 Bash 甚至保留了超过 255 的原始退出码的值，但一般来说，如果代码超过 255，就会被重新计算。</p>
+<p>也就是说，代码 <code>256</code> 会变成 <code>0</code>，<code>257</code> 会变成 <code>1</code>，<code>383</code> 会变成 <code>127</code>，以此类推。为确保更好的兼容性，请将退出码保持在 <code>0</code> 至 <code>255</code> 之间。</p>
+<h3 id="结语">结语</h3>
+<p>希望你对 Linux Shell 中的退出码有所了解。在排查各种问题时，使用它们会非常方便。</p>
+<p>如果你要在 Shell 脚本中使用这些代码，请确保你了解每个代码的含义，以便更容易地排除故障。</p>
+<p>这就是本文的全部内容。如有遗漏，请在评论区告诉我。</p>
+<p><em>（题图：MJ/719ff711-1b9f-4aa9-a82e-980704acbdd8）</em></p>
+<hr>
+<p>via: <a class="link" href="https://itsfoss.com/linux-exit-codes/"  target="_blank" rel="noopener"
+    >https://itsfoss.com/linux-exit-codes/</a></p>
+<p>作者：<a class="link" href="https://itsfoss.com/author/pranav/"  target="_blank" rel="noopener"
+    >Pranav Krishna</a>
+选题：<a class="link" href="https://github.com/lkxed/"  target="_blank" rel="noopener"
+    >lkxed</a>
+译者：<a class="link" href="https://github.com/lxbwolf"  target="_blank" rel="noopener"
+    >Xiaobin.Liu</a>
+校对：<a class="link" href="https://github.com/wxy"  target="_blank" rel="noopener"
+    >wxy</a></p>
+<p>本文由 <a class="link" href="https://github.com/LCTT/TranslateProject"  target="_blank" rel="noopener"
+    >LCTT</a> 原创编译，<a class="link" href="https://linux.cn/"  target="_blank" rel="noopener"
+    >Linux中国</a> 荣誉推出</p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/200486d9/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Linux 文件句柄与文件描述符</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    <script src="https://utteranc.es/client.js" 
+        repo="lxbwolf/lxbwolf.github.io"
+        issue-term="pathname"
+        
+        crossorigin="anonymous"
+        async
+        >
+</script>
+
+<style>
+    .utterances {
+        max-width: unset;
+    }
+</style>
+
+<script>
+    let utterancesLoaded = false;
+
+    function setUtterancesTheme(theme) {
+        let utterances = document.querySelector('.utterances iframe');
+        if (utterances) {
+            utterances.contentWindow.postMessage(
+                {
+                    type: 'set-theme',
+                    theme: `github-${theme}`
+                },
+                'https://utteranc.es'
+            );
+        }
+    }
+
+    addEventListener('message', event => {
+        if (event.origin !== 'https://utteranc.es') return;
+
+        
+        utterancesLoaded = true;
+        setUtterancesTheme(document.documentElement.dataset.scheme)
+    });
+
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (!utterancesLoaded) return;
+        setUtterancesTheme(e.detail)
+    })
+</script>
+
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2023 Xiaobin&#39;s Notes
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>
