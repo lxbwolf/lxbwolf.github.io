@@ -880,6 +880,111 @@ echo $?
 </description>
         </item>
         <item>
+        <title>几种发布策略</title>
+        <link>https://lxb.wiki/8b49ed57/</link>
+        <pubDate>Tue, 10 Jan 2023 21:48:25 +0800</pubDate>
+        
+        <guid>https://lxb.wiki/8b49ed57/</guid>
+        <description>&lt;h3 id=&#34;蓝绿发布blue-green-deployment&#34;&gt;蓝绿发布(Blue-Green Deployment)&lt;/h3&gt;
+&lt;p&gt;蓝绿发布提供了一种零宕机的部署方式。不停老版本，部署新版本进行测试，确认OK，将流量切到新版本，然后老版本同时也升级到新版本。始终有两个版本同时在线，有问题可以快速切换。&lt;br&gt;
+蓝绿部署中，一共有两套系统：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;一套是正在提供服务系统，标记为“绿色”；&lt;/li&gt;
+&lt;li&gt;另一套是准备发布的系统，标记为“蓝色”。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;优缺点&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;优点：新版本升级和老版本回滚迅速。用户可以灵活控制流量走向&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;缺点：成本较高，需要部署两套环境（蓝/绿）&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;比如日常运行时，需要10台服务器支撑业务，那么使用蓝绿部署，你就需要购置二十台服务器。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20230905233800.gif&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20230905233801.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;金丝雀发布灰度发布canary-release&#34;&gt;金丝雀发布/灰度发布(Canary Release)&lt;/h3&gt;
+&lt;p&gt;灰度发布 Gray Release（又名金丝雀发布 Canary Release）&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;金丝雀发布有一个有趣的小故事，被称为「金丝雀在矿井」。这个故事用来形象地描述金丝雀发布策略的概念。&lt;br&gt;
+故事背景是在过去的煤矿开采中，矿工们面临着一种危险的情况，即有毒气体的积累。由于无法直接检测到这些气体，矿工们需要一种警报机制来提醒他们是否面临危险。他们找到了一种解决方案：带上一只小小的金丝雀。&lt;br&gt;
+矿工们将金丝雀放入煤矿，如果气体达到了危险的水平，金丝雀会首先受到影响并死亡，从而警示矿工们立即离开矿井以避免危险。这种警报系统保护了矿工的生命安全。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;不停机旧版本，部署新版本，高比例流量（例如：95%）走旧版本，低比例流量（例如：5%）切换到新版本，通过监控观察无问题，逐步扩大范围，最终把所有流量都迁移到新版本上。属无损发布&lt;br&gt;
+在软件开发中，灰度测试通常涉及将新功能或更新推送到一小部分用户，例如5％或10％的用户。&lt;br&gt;
+这些用户将能够使用新功能或更新，而其他用户则不会看到它们。&lt;br&gt;
+通过监视这些用户的反馈和行为，开发人员可以评估新功能或更新的效果，并识别任何问题或错误。&lt;/p&gt;
+&lt;p&gt;在Java中，可以使用一些工具来实现灰度测试，例如FeatureToggle和LaunchDarkly。&lt;br&gt;
+这些工具可以帮助开发人员轻松地控制新功能或更新的推出，并监视用户反馈和行为。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;优点：灵活简单，不需要用户标记驱动。安全性高，新版本如果出现问题，只会发生在低比例的流量上&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;缺点：成本较高，需要部署稳定/灰度两套环境&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20230908233802.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;ab测试&#34;&gt;A/B测试&lt;/h3&gt;
+&lt;p&gt;首先需要明确的是，A/B测试和蓝绿部署以及金丝雀，完全是两回事。&lt;br&gt;
+蓝绿部署和金丝雀是发布策略，目标是确保新上线的系统稳定，关注的是新系统的BUG、隐患。&lt;br&gt;
+A/B测试是效果测试，同一时间有多个版本的服务对外服务，这些服务都是经过足够测试，达到了上线标准的服务，有差异但是没有新旧之分（它们上线时可能采用了蓝绿部署的方式）。&lt;br&gt;
+A/B测试关注的是不同版本的服务的实际效果，譬如说转化率、订单情况等。&lt;br&gt;
+A/B测试时，线上同时运行多个版本的服务，这些服务通常会有一些体验上的差异，譬如说页面样式、颜色、操作流程不同。相关人员通过分析各个版本服务的实际效果，选出效果最好的版本。&lt;br&gt;
+在A/B测试中，需要能够控制流量的分配，譬如说，为A版本分配10%的流量，为B版本分配10%的流量，为C版本分配80%的流量。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20230908233803.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;滚动发布rolling-release&#34;&gt;滚动发布（Rolling Release）&lt;/h3&gt;
+&lt;p&gt;每次只升级一个或多个服务，通过观察无问题，不断执行这个过程，直到集群中的全部旧版本升级到新版本。属有损发布&lt;br&gt;
+K8S 默认采用了滚动发布&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;优点：成本较低，只需要部署一套环境。出现问题影响范围，只限于发生在若干台正在滚动发布的服务上&lt;/li&gt;
+&lt;li&gt;缺点：停止旧版本的过程中，无法精确计算旧版本是否已经完成它正在执行的工作，需要靠业务自身去判断。旧版本不保留，一旦全部升级完毕后才发现问题，无法快速回滚，必须重新降级部署。发布和回滚需要较长的时间周期&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/20230908233804.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;红黑部署red-black-deployment&#34;&gt;红黑部署(Red-Black Deployment)&lt;/h3&gt;
+&lt;p&gt;这是Netflix采用的部署手段，Netflix的主要基础设施是在AWS上，所以它利用AWS的特性，在部署新的版本时，通过AutoScaling Group用包含新版本应用的AMI的LaunchConfiguration创建新的服务器。测试不通过，找到问题原因后，直接干掉新生成的服务器以及Autoscaling Group就可以，测试通过，则将ELB指向新的服务器集群，然后销毁掉旧的服务器集群以及AutoScaling Group。&lt;/p&gt;
+&lt;p&gt;红黑部署的好处是服务始终在线，同时采用不可变部署的方式，也不像蓝绿部署一样得保持冗余的服务始终在线。&lt;/p&gt;
+</description>
+        </item>
+        <item>
         <title>【译】域名末尾带个点</title>
         <link>https://lxb.wiki/a258db2c/</link>
         <pubDate>Wed, 16 Nov 2022 22:20:00 +0000</pubDate>
