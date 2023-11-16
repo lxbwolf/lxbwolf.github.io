@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html lang="zh-cn" dir="ltr">
     <head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='EasyConnect 会在后台强行添加名为 EasyMonitor 的开机自启守护进程，执行以下命令关闭 sudo launchctl unload /Library/LaunchDaemons/com.sangfor.EasyMonitor.plist 可实际上 EasyConnect 还启动了另一个“杀不掉”的后台进程 ECAgent，活动频率很低'>
-<title>Mac上移除EasyConnect常驻后台进程</title>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Jenkins中的环境变量'>
 
-<link rel='canonical' href='https://lxb.wiki/446d3604/'>
+<meta name="keywords" content="jenkins , devops"><title>Jenkins中的环境变量</title>
 
-<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='Mac上移除EasyConnect常驻后台进程'>
-<meta property='og:description' content='EasyConnect 会在后台强行添加名为 EasyMonitor 的开机自启守护进程，执行以下命令关闭 sudo launchctl unload /Library/LaunchDaemons/com.sangfor.EasyMonitor.plist 可实际上 EasyConnect 还启动了另一个“杀不掉”的后台进程 ECAgent，活动频率很低'>
-<meta property='og:url' content='https://lxb.wiki/446d3604/'>
+<link rel='canonical' href='https://lxb.wiki/a5c52f2c/'>
+
+<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='Jenkins中的环境变量'>
+<meta property='og:description' content='Jenkins中的环境变量'>
+<meta property='og:url' content='https://lxb.wiki/a5c52f2c/'>
 <meta property='og:site_name' content='Xiaobin&#39;s Notes'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='mac' /><meta property='article:published_time' content='2022-05-01T20:04:28&#43;00:00'/><meta property='article:modified_time' content='2022-05-01T20:04:28&#43;00:00'/>
-<meta name="twitter:title" content="Mac上移除EasyConnect常驻后台进程">
-<meta name="twitter:description" content="EasyConnect 会在后台强行添加名为 EasyMonitor 的开机自启守护进程，执行以下命令关闭 sudo launchctl unload /Library/LaunchDaemons/com.sangfor.EasyMonitor.plist 可实际上 EasyConnect 还启动了另一个“杀不掉”的后台进程 ECAgent，活动频率很低">
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='devops' /><meta property='article:published_time' content='2023-03-12T21:51:09&#43;08:00'/><meta property='article:modified_time' content='2023-03-12T21:51:09&#43;08:00'/>
+<meta name="twitter:title" content="Jenkins中的环境变量">
+<meta name="twitter:description" content="Jenkins中的环境变量">
 <link rel="shortcut icon" href="/favicon.png" />
 
 
@@ -254,11 +255,18 @@
     <div class="widget--toc">
         <nav id="TableOfContents">
   <ul>
-    <li>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#准备">准备</a></li>
+    <li><a href="#认识-jenkins-环境变量">认识 Jenkins 环境变量</a>
       <ul>
-        <li></li>
+        <li><a href="#查看-jenkins-系统内置环境变量">查看 Jenkins 系统内置环境变量</a></li>
+        <li><a href="#读取环境变量">读取环境变量</a></li>
       </ul>
     </li>
+    <li><a href="#自定义-jenkins-环境变量">自定义 Jenkins 环境变量</a></li>
+    <li><a href="#重写-jenkins-环境变量">重写 Jenkins 环境变量</a></li>
+    <li><a href="#jenkins-中使用-boolean-值">Jenkins 中使用 Boolean 值</a></li>
+    <li><a href="#shell-结果赋值给环境变量">Shell 结果赋值给环境变量</a></li>
   </ul>
 </nav>
     </div>
@@ -286,9 +294,13 @@
 
     <div class="article-title-wrapper">
         <h2 class="article-title">
-            <a href="/446d3604/">Mac上移除EasyConnect常驻后台进程</a>
+            <a href="/a5c52f2c/">Jenkins中的环境变量</a>
         </h2>
 
+        
+        <h3 class="article-subtitle">
+            Jenkins中的环境变量
+        </h3>
         
     </div>
 
@@ -308,7 +320,7 @@
   <path d="M3 11h16" />
   <path d="M18 16.496v1.504l1 1" />
 </svg>
-            <time class="article-time--published">May 01, 2022</time>
+            <time class="article-time--published">Mar 12, 2023</time>
         </div>
         
 
@@ -323,14 +335,14 @@
 
 
             <time class="article-time--reading">
-                阅读时长: 2 分钟
+                阅读时长: 4 分钟
             </time>
         </div>
         
         <small>
     <section class="article-tags">
         
-            <a href="/tags/mac/">mac</a>
+            <a href="/tags/devops/">devops</a>
         
     </section>
 </small>
@@ -345,29 +357,321 @@
     
     
     <!-- raw HTML omitted -->
-<p>EasyConnect 会在后台强行添加名为 EasyMonitor 的开机自启守护进程，执行以下命令关闭</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo launchctl unload /Library/LaunchDaemons/com.sangfor.EasyMonitor.plist
-</span></span></code></pre></div><p>可实际上 EasyConnect 还启动了另一个“杀不掉”的后台进程 ECAgent，活动频率很低，似乎不会造成内存泄漏，略显不起眼。但这无法作为它肆意常驻的理由。</p>
-<h4 id="禁用">禁用</h4>
-<p>首先找到 plist 文件，在 <code>/Library/LaunchAgents/com.sangfor.ECAgentProxy.plist</code>。它无法被 launchctl unload，不过没关系，你可以直接把它挪走或删除，并且今后都不再需要它。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo mv /Library/LaunchAgents/com.sangfor.ECAgentProxy.plist ~
-</span></span></code></pre></div><p>当然这时候它还是不能被 kill 掉，要想从 launchctl 中删除而不重启电脑，可以采用 launchctl remove。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>launchctl remove com.sangfor.ECAgentProxy
-</span></span></code></pre></div><h4 id="启用">启用</h4>
-<p>关闭后台进程之后，启动 EasyConnect 会弹出警告：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Alert
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>Initialization failed. Please try reinstalling!
-</span></span></code></pre></div><p>所以 需要使用时，必须重新加载 EasyMonitor。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># EasyConnect v7.6.7 开始 EasyMonitor 必须在 root 权限下运行，此前版本可以不加 sudo</span>
-</span></span><span style="display:flex;"><span>sudo launchctl load /Library/LaunchDaemons/com.sangfor.EasyMonitor.plist
-</span></span></code></pre></div><p>而 ECAgent 就没这么麻烦了，它根本不必后台常驻 —— EasyConnect 启动时会自己创建一个，并且会随着 EasyConnect 进程一起退出。最终我删掉了 <code>com.sangfor.ECAgentProxy.plist</code> 文件的备份。</p>
-<h4 id="mac-下禁用开机自启软件">Mac 下禁用开机自启软件</h4>
-<p>有部分软件的开机启动项放在 <code>/Library/LaunchDaemons</code></p>
-<p>使用 <code>sudo launchctl unload xxx.plist</code> 可以去掉某个软件的开机自启</p>
-<p>深信服的 EasyConnect 有一个进程叫做 EasyMonitor 可以说是非常流氓了，开机自启 + 常驻内存 + 内存泄露，时间长了以后会占用 1g 以上的内存。
-它的 plist 位于 <code>/Library/LaunchDaemons/com.sangfor.EasyMonitor.plist</code> 使用上述命令可以干掉它。</p>
-<p>干掉他这个进程非常开心，但是会遇到一个问题，再次启动 EasyConnect 的时候，它不乐意了，会提示初始化失败，请重新安装，这时候就得重新 load 这个 plist 了，执行 <code>sudo launchctl load /Library/LaunchDaemons/com.sangfor.EasyMonitor.plist</code></p>
+<h2 id="前言">前言</h2>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122156161.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<h2 id="准备">准备</h2>
+<p>如果你想一边阅读本文，一边实践，但是没有 Jenkins 服务可用，又想快速尝试，可以应用 Docker 一个命令快速搭建 Jenkins 服务</p>
+<pre tabindex="0"><code>docker container run --rm -p 8080:8080 -p 50000:50000 --name=jenkins -v $(pwd):/var/jenkins_home jenkins/jenkins
+</code></pre><blockquote>
+<p>2021 年了，本地没有 Docker 说不过去了，过来瞧瞧 Docker 系列是否入得了你的法眼？</p>
+</blockquote>
+<p>打开浏览器输入：<code>localhost:8080</code></p>
+<ol>
+<li>找到终端的临时密码登陆</li>
+<li>安装推荐的依赖</li>
+<li>创建新的 Pipeline 类型的 Item</li>
+<li>点击左侧 Config，然后在页面底部 Pipeline 部分输入我们接下来写的脚本进行测试就好了</li>
+</ol>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122157396.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>就是这么简单&hellip;..</p>
+<h2 id="认识-jenkins-环境变量">认识 Jenkins 环境变量</h2>
+<blockquote>
+<p>Jenkins 环境变量就是通过 <code>env</code> 关键字暴露出来的<strong>全局变量</strong>，可以在 Jenkins 文件的<strong>任何位置使用</strong></p>
+</blockquote>
+<p>其实和你使用的编程语言中的全局变量没有实质差别</p>
+<h3 id="查看-jenkins-系统内置环境变量">查看 Jenkins 系统内置环境变量</h3>
+<p>Jenkins 在系统内置了很多环境变量方便我们快速使用，查看起来有两种方式：</p>
+<h4 id="方式一">方式一：</h4>
+<p>直接在浏览器中访问 <code>${YOUR_JENKINS_HOST}/env-vars.html</code> 页面就可以，比如 <code>http://localhost:8080/env-vars.html</code> ，每个变量的用途写的都很清楚</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122157715.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<h4 id="方式二">方式二</h4>
+<p>通过执行 <code>printenv</code> shell 命令来获取：</p>
+<pre tabindex="0"><code>pipeline {
+    agent any
+
+    stages {
+        stage(&#34;Env Variables&#34;) {
+            steps {
+                sh &#34;printenv&#34;
+            }
+        }
+    }
+}
+</code></pre><p>直接 Save - Build, 在终端 log 中你会看到相应的环境变量，并且可以快速看到他们当前的值</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122157942.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>通常这两种方式可以结合使用</p>
+<h3 id="读取环境变量">读取环境变量</h3>
+<p>上面我们说了 <code>env</code> 是环境变量的关键字，但是读取 Jenkins 内置的这些环境变量，<code>env</code> 关键字是可有可无, 但不能没了底裤，都要使用 <code>${xxx}</code> 包围起来。以 <code>BUILD_NUMBER</code> 这个内置环境变量举例来说明就是这样滴：</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122157008.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>如果你在 Jenkins 文件中使用 shell 命令，使用这些内置环境变量甚至可以不用 <code>{}</code>， 来看一下：</p>
+<pre tabindex="0"><code>pipeline {
+    agent any
+
+    stages {
+        stage(&#34;Read Env Variables&#34;) {
+            steps {
+                echo &#34;带 env 的读取方式：${env.BUILD_NUMBER}&#34;
+                echo &#34;不带 env 的读取方式：${BUILD_NUMBER}&#34;
+                sh &#39;echo &#34;shell 中读取方式 $BUILD_NUMBER&#34;&#39;
+            }
+        }
+    }
+}
+</code></pre><p>可以看到结果是一样一样滴，<strong>不管有几种，记住第一种最稳妥</strong></p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122157970.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>内置的环境变量虽好，但也不能完全满足我们自定义的 pipeline 的执行逻辑，所以我们也得知道如何定义以及使用自定义环境变量</p>
+<h2 id="自定义-jenkins-环境变量">自定义 Jenkins 环境变量</h2>
+<p>Jenkins pipeline 分声明式（Declarative）和 脚本式（imperative）写法，相应的环境变量定义方式也略有不同，归纳起来有三种方式：</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122158337.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>还是看个实际例子吧：</p>
+<pre tabindex="0"><code>pipeline {
+    agent any
+
+    environment {
+        FOO = &#34;bar&#34;
+    }
+
+    stages {
+        stage(&#34;Custom Env Variables&#34;) {
+            environment {
+                NAME = &#34;RGYB&#34;
+            }
+
+            steps {
+                echo &#34;FOO = ${env.FOO}&#34;
+                echo &#34;NAME = ${env.NAME}&#34;
+
+                script {
+                    env.SCRIPT_VARIABLE = &#34;Thumb Up&#34;
+                }
+
+                echo &#34;SCRIPT_VARIABLE = ${env.SCRIPT_VARIABLE}&#34;
+
+                withEnv([&#34;WITH_ENV_VAR=Come On&#34;]) {
+                    echo &#34;WITH_ENV_VAR = ${env.WITH_ENV_VAR}&#34;
+                }
+            }
+        }
+    }
+}
+</code></pre><p>来看运行结果：</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122158815.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<blockquote>
+<p>注意：<code>withEnv([&quot;WITH_ENV_VAR=Come On&quot;]) {}</code> <strong>这里的 = 号两侧不能有空格</strong>，必须是 <code>key=value</code> 的形式</p>
+</blockquote>
+<p>一个完整的 pipeline 通常会有很多个 stage，环境变量在不同的 stage 有不同的值是很常见的，知道如何设置以及读取环境变量后，我们还得知道如何重写环境变量</p>
+<h2 id="重写-jenkins-环境变量">重写 Jenkins 环境变量</h2>
+<p>Jenkins 让人相对困惑最多的地方就是重写环境变量，但是只要记住下面这三条规则，就可以搞定一切了</p>
+<ol>
+<li><code>withEnv([&quot;WITH_ENV_VAR=Come On&quot;]) {}</code> 内置函数的这种写法，可以重写任意环境变量</li>
+<li>定义在 <code>environment {}</code> 的环境变量不能被脚本式定义的环境变量（<code>env.key=&quot;value&quot;</code>）重写</li>
+<li>脚本式环境变量只能重写脚本式环境变量</li>
+</ol>
+<p>这三点是硬规则，没涵盖在这 3 点规则之内的也就是被允许的了</p>
+<p>三条规则就有点让人头大了，农夫选豆种，举例为证吧</p>
+<pre tabindex="0"><code>pipeline {
+    agent any
+
+    environment {
+        FOO = &#34;你当像鸟飞往你的山&#34;
+        NAME = &#34;Tan&#34;
+    }
+
+    stages {
+        stage(&#34;Env Variables&#34;) {
+            environment {
+                  // 会重写第 6 行 变量
+                NAME = &#34;RGYB&#34; 
+                  // 会重写系统内置的环境变量 BUILD_NUMBER
+                BUILD_NUMBER = &#34;10&#34; 
+            }
+
+            steps {
+                  // 应该打印出 &#34;FOO = 你当像鸟飞往你的山&#34;
+                echo &#34;FOO = ${env.FOO}&#34; 
+                  // 应该打印出 &#34;NAME = RGYB&#34;
+                echo &#34;NAME = ${env.NAME}&#34; 
+                  // 应该打印出 &#34;BUILD_NUMBER = 10&#34;
+                echo &#34;BUILD_NUMBER =  ${env.BUILD_NUMBER}&#34; 
+
+                script {
+                      // 脚本式创建一个环境变量
+                    env.SCRIPT_VARIABLE = &#34;1&#34; 
+                }
+            }
+        }
+
+        stage(&#34;Override Variables&#34;) {
+            steps {
+                script {
+                      // 这里的 FOO 不会被重写，违背 Rule No.2
+                    env.FOO = &#34;Tara&#34;
+                      // SCRIPT_VARIABLE 变量会被重写，符合 Rule No.3
+                    env.SCRIPT_VARIABLE = &#34;2&#34; 
+                }
+
+                  // FOO 在第 37 行重写失败，还会打印出 &#34;FOO = 你当像鸟飞往你的山&#34;
+                echo &#34;FOO = ${env.FOO}&#34; 
+                  // 会打印出 &#34;SCRIPT_VARIABLE = 2&#34;
+                echo &#34;SCRIPT_VARIABLE = ${env.SCRIPT_VARIABLE}&#34; 
+
+                  // FOO 会被重写，符合 Rule No.1
+                withEnv([&#34;FOO=Educated&#34;]) { 
+                      // 应该打印 &#34;FOO = Educated&#34;
+                    echo &#34;FOO = ${env.FOO}&#34; 
+                }
+
+                  // 道理同上
+                withEnv([&#34;BUILD_NUMBER=15&#34;]) {
+                      // 应该打印出 &#34;BUILD_NUMBER = 15&#34;
+                    echo &#34;BUILD_NUMBER = ${env.BUILD_NUMBER}&#34;
+                }
+            }
+        }
+    }
+}
+</code></pre><p>来验证一下结果吧</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122158213.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122158747.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>看到这，基本的设置应该就没有什么问题了，相信你也发现了，Jenkins 设置环境变量和编程语言的那种设置环境变量还是略有不同的，后者可以将变量赋值为对象，但 Jenkins 就不行，因为<strong>在 Jenkins 文件中，所有设置的值都会被当成 String</strong>， 难道没办法应用 Boolean 值吗？</p>
+<h2 id="jenkins-中使用-boolean-值">Jenkins 中使用 Boolean 值</h2>
+<p>如果设置一个变量为 <code>false</code> ，Jenkins 就会将其转换为 <code>&quot;false&quot;</code>, 如果想使用 Boolean 来做条件判断，必须要调用 <code>toBoolean()</code> 方法做转换</p>
+<pre tabindex="0"><code>pipeline {
+    agent any
+
+    environment {
+        IS_BOOLEAN = false
+    }
+
+    stages {
+        stage(&#34;Env Variables&#34;) {
+            steps {
+                script {
+                      
+                    if (env.IS_BOOLEAN) {
+                        echo &#34;Hello&#34;
+                    }
+
+                      
+                    if (env.IS_BOOLEAN.toBoolean() == false) {
+                        echo &#34;日拱一兵&#34;
+                    }
+                  
+                      
+                    if (!env.IS_BOOLEAN.toBoolean()) {
+                        echo &#34;RGYB&#34;
+                    }
+                }
+            }
+        }
+    }
+}
+</code></pre><p>来看运行结果：</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122159629.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
+<p>如果你写过 Pipeline，你一定会知道，写 Pipeline 是离不开写 shell 的，有些时候，需要将 shell 的执行结果赋值给环境变量，Jenkins 也有方法支持</p>
+<h2 id="shell-结果赋值给环境变量">Shell 结果赋值给环境变量</h2>
+<p>实现这种方式很简单，只需要记住一个格式：<code>sh(script: 'cmd', returnStdout:true)</code></p>
+<pre tabindex="0"><code>pipeline {
+    agent any
+
+    environment {
+          
+        LS_RESULT = &#34;${sh(script:&#39;ls -lah&#39;, returnStdout: true).trim()}&#34;
+    }
+
+    stages {
+        stage(&#34;Env Variables&#34;) {
+            steps {
+                echo &#34;LS_RESULT = ${env.LS_RESULT}&#34;
+            }
+        }
+    }
+}
+</code></pre><p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122159489.png"
+	
+	
+	
+	loading="lazy"
+	
+	
+></p>
 
 </section>
 
@@ -404,12 +708,12 @@
             
                 
 <article class="">
-    <a href="/32451f0a/">
+    <a href="/6316d574/">
         
         
 
         <div class="article-details">
-            <h2 class="article-title">Mac iTerm2，使用rz和sz无效，解决方式</h2>
+            <h2 class="article-title">Jenkins的Api</h2>
         </div>
     </a>
 </article>
@@ -417,12 +721,12 @@
             
                 
 <article class="">
-    <a href="/ef3fb32/">
+    <a href="/12428ad2/">
         
         
 
         <div class="article-details">
-            <h2 class="article-title">误删了Mac中Chrome书签后如何恢复</h2>
+            <h2 class="article-title">【译】构建高效的 DevOps 文化的 6 个技巧</h2>
         </div>
     </a>
 </article>
@@ -430,12 +734,38 @@
             
                 
 <article class="">
-    <a href="/784beb8f/">
+    <a href="/8b49ed57/">
         
         
 
         <div class="article-details">
-            <h2 class="article-title">Mac iTerm2登陆CentOS提示warning: setlocale: LC_CTYPE: cannot change locale (UTF-8): No such file or directory</h2>
+            <h2 class="article-title">几种发布策略</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/c71b015c/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Jenkins 僵尸任务&amp;排队任务清理</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/265eeb54/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Dockerfile修改hosts</h2>
         </div>
     </a>
 </article>

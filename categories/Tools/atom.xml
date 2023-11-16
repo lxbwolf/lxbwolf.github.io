@@ -529,6 +529,330 @@
 </description>
         </item>
         <item>
+        <title>Jenkins中的环境变量</title>
+        <link>https://lxb.wiki/a5c52f2c/</link>
+        <pubDate>Sun, 12 Mar 2023 21:51:09 +0800</pubDate>
+        
+        <guid>https://lxb.wiki/a5c52f2c/</guid>
+        <description>&lt;!-- raw HTML omitted --&gt;
+&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122156161.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;准备&#34;&gt;准备&lt;/h2&gt;
+&lt;p&gt;如果你想一边阅读本文，一边实践，但是没有 Jenkins 服务可用，又想快速尝试，可以应用 Docker 一个命令快速搭建 Jenkins 服务&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;docker container run --rm -p 8080:8080 -p 50000:50000 --name=jenkins -v $(pwd):/var/jenkins_home jenkins/jenkins
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;2021 年了，本地没有 Docker 说不过去了，过来瞧瞧 Docker 系列是否入得了你的法眼？&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;打开浏览器输入：&lt;code&gt;localhost:8080&lt;/code&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;找到终端的临时密码登陆&lt;/li&gt;
+&lt;li&gt;安装推荐的依赖&lt;/li&gt;
+&lt;li&gt;创建新的 Pipeline 类型的 Item&lt;/li&gt;
+&lt;li&gt;点击左侧 Config，然后在页面底部 Pipeline 部分输入我们接下来写的脚本进行测试就好了&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122157396.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;就是这么简单&amp;hellip;..&lt;/p&gt;
+&lt;h2 id=&#34;认识-jenkins-环境变量&#34;&gt;认识 Jenkins 环境变量&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Jenkins 环境变量就是通过 &lt;code&gt;env&lt;/code&gt; 关键字暴露出来的&lt;strong&gt;全局变量&lt;/strong&gt;，可以在 Jenkins 文件的&lt;strong&gt;任何位置使用&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;其实和你使用的编程语言中的全局变量没有实质差别&lt;/p&gt;
+&lt;h3 id=&#34;查看-jenkins-系统内置环境变量&#34;&gt;查看 Jenkins 系统内置环境变量&lt;/h3&gt;
+&lt;p&gt;Jenkins 在系统内置了很多环境变量方便我们快速使用，查看起来有两种方式：&lt;/p&gt;
+&lt;h4 id=&#34;方式一&#34;&gt;方式一：&lt;/h4&gt;
+&lt;p&gt;直接在浏览器中访问 &lt;code&gt;${YOUR_JENKINS_HOST}/env-vars.html&lt;/code&gt; 页面就可以，比如 &lt;code&gt;http://localhost:8080/env-vars.html&lt;/code&gt; ，每个变量的用途写的都很清楚&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122157715.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h4 id=&#34;方式二&#34;&gt;方式二&lt;/h4&gt;
+&lt;p&gt;通过执行 &lt;code&gt;printenv&lt;/code&gt; shell 命令来获取：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;pipeline {
+    agent any
+
+    stages {
+        stage(&amp;#34;Env Variables&amp;#34;) {
+            steps {
+                sh &amp;#34;printenv&amp;#34;
+            }
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;直接 Save - Build, 在终端 log 中你会看到相应的环境变量，并且可以快速看到他们当前的值&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122157942.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;通常这两种方式可以结合使用&lt;/p&gt;
+&lt;h3 id=&#34;读取环境变量&#34;&gt;读取环境变量&lt;/h3&gt;
+&lt;p&gt;上面我们说了 &lt;code&gt;env&lt;/code&gt; 是环境变量的关键字，但是读取 Jenkins 内置的这些环境变量，&lt;code&gt;env&lt;/code&gt; 关键字是可有可无, 但不能没了底裤，都要使用 &lt;code&gt;${xxx}&lt;/code&gt; 包围起来。以 &lt;code&gt;BUILD_NUMBER&lt;/code&gt; 这个内置环境变量举例来说明就是这样滴：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122157008.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;如果你在 Jenkins 文件中使用 shell 命令，使用这些内置环境变量甚至可以不用 &lt;code&gt;{}&lt;/code&gt;， 来看一下：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;pipeline {
+    agent any
+
+    stages {
+        stage(&amp;#34;Read Env Variables&amp;#34;) {
+            steps {
+                echo &amp;#34;带 env 的读取方式：${env.BUILD_NUMBER}&amp;#34;
+                echo &amp;#34;不带 env 的读取方式：${BUILD_NUMBER}&amp;#34;
+                sh &amp;#39;echo &amp;#34;shell 中读取方式 $BUILD_NUMBER&amp;#34;&amp;#39;
+            }
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以看到结果是一样一样滴，&lt;strong&gt;不管有几种，记住第一种最稳妥&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122157970.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;内置的环境变量虽好，但也不能完全满足我们自定义的 pipeline 的执行逻辑，所以我们也得知道如何定义以及使用自定义环境变量&lt;/p&gt;
+&lt;h2 id=&#34;自定义-jenkins-环境变量&#34;&gt;自定义 Jenkins 环境变量&lt;/h2&gt;
+&lt;p&gt;Jenkins pipeline 分声明式（Declarative）和 脚本式（imperative）写法，相应的环境变量定义方式也略有不同，归纳起来有三种方式：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122158337.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;还是看个实际例子吧：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;pipeline {
+    agent any
+
+    environment {
+        FOO = &amp;#34;bar&amp;#34;
+    }
+
+    stages {
+        stage(&amp;#34;Custom Env Variables&amp;#34;) {
+            environment {
+                NAME = &amp;#34;RGYB&amp;#34;
+            }
+
+            steps {
+                echo &amp;#34;FOO = ${env.FOO}&amp;#34;
+                echo &amp;#34;NAME = ${env.NAME}&amp;#34;
+
+                script {
+                    env.SCRIPT_VARIABLE = &amp;#34;Thumb Up&amp;#34;
+                }
+
+                echo &amp;#34;SCRIPT_VARIABLE = ${env.SCRIPT_VARIABLE}&amp;#34;
+
+                withEnv([&amp;#34;WITH_ENV_VAR=Come On&amp;#34;]) {
+                    echo &amp;#34;WITH_ENV_VAR = ${env.WITH_ENV_VAR}&amp;#34;
+                }
+            }
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;来看运行结果：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122158815.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;注意：&lt;code&gt;withEnv([&amp;quot;WITH_ENV_VAR=Come On&amp;quot;]) {}&lt;/code&gt; &lt;strong&gt;这里的 = 号两侧不能有空格&lt;/strong&gt;，必须是 &lt;code&gt;key=value&lt;/code&gt; 的形式&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;一个完整的 pipeline 通常会有很多个 stage，环境变量在不同的 stage 有不同的值是很常见的，知道如何设置以及读取环境变量后，我们还得知道如何重写环境变量&lt;/p&gt;
+&lt;h2 id=&#34;重写-jenkins-环境变量&#34;&gt;重写 Jenkins 环境变量&lt;/h2&gt;
+&lt;p&gt;Jenkins 让人相对困惑最多的地方就是重写环境变量，但是只要记住下面这三条规则，就可以搞定一切了&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;withEnv([&amp;quot;WITH_ENV_VAR=Come On&amp;quot;]) {}&lt;/code&gt; 内置函数的这种写法，可以重写任意环境变量&lt;/li&gt;
+&lt;li&gt;定义在 &lt;code&gt;environment {}&lt;/code&gt; 的环境变量不能被脚本式定义的环境变量（&lt;code&gt;env.key=&amp;quot;value&amp;quot;&lt;/code&gt;）重写&lt;/li&gt;
+&lt;li&gt;脚本式环境变量只能重写脚本式环境变量&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这三点是硬规则，没涵盖在这 3 点规则之内的也就是被允许的了&lt;/p&gt;
+&lt;p&gt;三条规则就有点让人头大了，农夫选豆种，举例为证吧&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;pipeline {
+    agent any
+
+    environment {
+        FOO = &amp;#34;你当像鸟飞往你的山&amp;#34;
+        NAME = &amp;#34;Tan&amp;#34;
+    }
+
+    stages {
+        stage(&amp;#34;Env Variables&amp;#34;) {
+            environment {
+                  // 会重写第 6 行 变量
+                NAME = &amp;#34;RGYB&amp;#34; 
+                  // 会重写系统内置的环境变量 BUILD_NUMBER
+                BUILD_NUMBER = &amp;#34;10&amp;#34; 
+            }
+
+            steps {
+                  // 应该打印出 &amp;#34;FOO = 你当像鸟飞往你的山&amp;#34;
+                echo &amp;#34;FOO = ${env.FOO}&amp;#34; 
+                  // 应该打印出 &amp;#34;NAME = RGYB&amp;#34;
+                echo &amp;#34;NAME = ${env.NAME}&amp;#34; 
+                  // 应该打印出 &amp;#34;BUILD_NUMBER = 10&amp;#34;
+                echo &amp;#34;BUILD_NUMBER =  ${env.BUILD_NUMBER}&amp;#34; 
+
+                script {
+                      // 脚本式创建一个环境变量
+                    env.SCRIPT_VARIABLE = &amp;#34;1&amp;#34; 
+                }
+            }
+        }
+
+        stage(&amp;#34;Override Variables&amp;#34;) {
+            steps {
+                script {
+                      // 这里的 FOO 不会被重写，违背 Rule No.2
+                    env.FOO = &amp;#34;Tara&amp;#34;
+                      // SCRIPT_VARIABLE 变量会被重写，符合 Rule No.3
+                    env.SCRIPT_VARIABLE = &amp;#34;2&amp;#34; 
+                }
+
+                  // FOO 在第 37 行重写失败，还会打印出 &amp;#34;FOO = 你当像鸟飞往你的山&amp;#34;
+                echo &amp;#34;FOO = ${env.FOO}&amp;#34; 
+                  // 会打印出 &amp;#34;SCRIPT_VARIABLE = 2&amp;#34;
+                echo &amp;#34;SCRIPT_VARIABLE = ${env.SCRIPT_VARIABLE}&amp;#34; 
+
+                  // FOO 会被重写，符合 Rule No.1
+                withEnv([&amp;#34;FOO=Educated&amp;#34;]) { 
+                      // 应该打印 &amp;#34;FOO = Educated&amp;#34;
+                    echo &amp;#34;FOO = ${env.FOO}&amp;#34; 
+                }
+
+                  // 道理同上
+                withEnv([&amp;#34;BUILD_NUMBER=15&amp;#34;]) {
+                      // 应该打印出 &amp;#34;BUILD_NUMBER = 15&amp;#34;
+                    echo &amp;#34;BUILD_NUMBER = ${env.BUILD_NUMBER}&amp;#34;
+                }
+            }
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;来验证一下结果吧&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122158213.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122158747.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;看到这，基本的设置应该就没有什么问题了，相信你也发现了，Jenkins 设置环境变量和编程语言的那种设置环境变量还是略有不同的，后者可以将变量赋值为对象，但 Jenkins 就不行，因为&lt;strong&gt;在 Jenkins 文件中，所有设置的值都会被当成 String&lt;/strong&gt;， 难道没办法应用 Boolean 值吗？&lt;/p&gt;
+&lt;h2 id=&#34;jenkins-中使用-boolean-值&#34;&gt;Jenkins 中使用 Boolean 值&lt;/h2&gt;
+&lt;p&gt;如果设置一个变量为 &lt;code&gt;false&lt;/code&gt; ，Jenkins 就会将其转换为 &lt;code&gt;&amp;quot;false&amp;quot;&lt;/code&gt;, 如果想使用 Boolean 来做条件判断，必须要调用 &lt;code&gt;toBoolean()&lt;/code&gt; 方法做转换&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;pipeline {
+    agent any
+
+    environment {
+        IS_BOOLEAN = false
+    }
+
+    stages {
+        stage(&amp;#34;Env Variables&amp;#34;) {
+            steps {
+                script {
+                      
+                    if (env.IS_BOOLEAN) {
+                        echo &amp;#34;Hello&amp;#34;
+                    }
+
+                      
+                    if (env.IS_BOOLEAN.toBoolean() == false) {
+                        echo &amp;#34;日拱一兵&amp;#34;
+                    }
+                  
+                      
+                    if (!env.IS_BOOLEAN.toBoolean()) {
+                        echo &amp;#34;RGYB&amp;#34;
+                    }
+                }
+            }
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;来看运行结果：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122159629.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;如果你写过 Pipeline，你一定会知道，写 Pipeline 是离不开写 shell 的，有些时候，需要将 shell 的执行结果赋值给环境变量，Jenkins 也有方法支持&lt;/p&gt;
+&lt;h2 id=&#34;shell-结果赋值给环境变量&#34;&gt;Shell 结果赋值给环境变量&lt;/h2&gt;
+&lt;p&gt;实现这种方式很简单，只需要记住一个格式：&lt;code&gt;sh(script: &#39;cmd&#39;, returnStdout:true)&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;pipeline {
+    agent any
+
+    environment {
+          
+        LS_RESULT = &amp;#34;${sh(script:&amp;#39;ls -lah&amp;#39;, returnStdout: true).trim()}&amp;#34;
+    }
+
+    stages {
+        stage(&amp;#34;Env Variables&amp;#34;) {
+            steps {
+                echo &amp;#34;LS_RESULT = ${env.LS_RESULT}&amp;#34;
+            }
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202311122159489.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
         <title>开放共享协议</title>
         <link>https://lxb.wiki/c12bcad7/</link>
         <pubDate>Sun, 05 Feb 2023 21:58:44 +0800</pubDate>
@@ -2389,18 +2713,18 @@ E &amp;amp; F --&amp;gt; End
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可实际上 EasyConnect 还启动了另一个“杀不掉”的后台进程 ECAgent，活动频率很低，似乎不会造成内存泄漏，略显不起眼。但这无法作为它肆意常驻的理由。&lt;/p&gt;
 &lt;h4 id=&#34;禁用&#34;&gt;禁用&lt;/h4&gt;
 &lt;p&gt;首先找到 plist 文件，在 &lt;code&gt;/Library/LaunchAgents/com.sangfor.ECAgentProxy.plist&lt;/code&gt;。它无法被 launchctl unload，不过没关系，你可以直接把它挪走或删除，并且今后都不再需要它。&lt;/p&gt;
-&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;sudo mv /Library/LaunchAgents/com.sangfor.ECAgentProxy.plist ~
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当然这时候它还是不能被 kill 掉，要想从 launchctl 中删除而不重启电脑，可以采用 launchctl remove。&lt;/p&gt;
-&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;launchctl remove com.sangfor.ECAgentProxy
-&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;启用&#34;&gt;启用&lt;/h4&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo mv /Library/LaunchAgents/com.sangfor.ECAgentProxy.plist ~
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;当然这时候它还是不能被 kill 掉，要想从 launchctl 中删除而不重启电脑，可以采用 launchctl remove。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;launchctl remove com.sangfor.ECAgentProxy
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;启用&#34;&gt;启用&lt;/h4&gt;
 &lt;p&gt;关闭后台进程之后，启动 EasyConnect 会弹出警告：&lt;/p&gt;
-&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Alert
-
-Initialization failed. Please try reinstalling!
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;所以 需要使用时，必须重新加载 EasyMonitor。&lt;/p&gt;
-&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# EasyConnect v7.6.7 开始 EasyMonitor 必须在 root 权限下运行，此前版本可以不加 sudo
-sudo launchctl load /Library/LaunchDaemons/com.sangfor.EasyMonitor.plist
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;而 ECAgent 就没这么麻烦了，它根本不必后台常驻 —— EasyConnect 启动时会自己创建一个，并且会随着 EasyConnect 进程一起退出。最终我删掉了 &lt;code&gt;com.sangfor.ECAgentProxy.plist&lt;/code&gt; 文件的备份。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Alert
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Initialization failed. Please try reinstalling!
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;所以 需要使用时，必须重新加载 EasyMonitor。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# EasyConnect v7.6.7 开始 EasyMonitor 必须在 root 权限下运行，此前版本可以不加 sudo&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo launchctl load /Library/LaunchDaemons/com.sangfor.EasyMonitor.plist
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;而 ECAgent 就没这么麻烦了，它根本不必后台常驻 —— EasyConnect 启动时会自己创建一个，并且会随着 EasyConnect 进程一起退出。最终我删掉了 &lt;code&gt;com.sangfor.ECAgentProxy.plist&lt;/code&gt; 文件的备份。&lt;/p&gt;
 &lt;h4 id=&#34;mac-下禁用开机自启软件&#34;&gt;Mac 下禁用开机自启软件&lt;/h4&gt;
 &lt;p&gt;有部分软件的开机启动项放在 &lt;code&gt;/Library/LaunchDaemons&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;使用 &lt;code&gt;sudo launchctl unload xxx.plist&lt;/code&gt; 可以去掉某个软件的开机自启&lt;/p&gt;
