@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Mac OS守护进程优化建议'>
+
+<meta name="keywords" content="Mac OS守护进程"><title>Mac OS守护进程优化建议</title>
+
+<link rel='canonical' href='https://lxb.wiki/62d417da/'>
+
+<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='Mac OS守护进程优化建议'>
+<meta property='og:description' content='Mac OS守护进程优化建议'>
+<meta property='og:url' content='https://lxb.wiki/62d417da/'>
+<meta property='og:site_name' content='Xiaobin&#39;s Notes'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='mac' /><meta property='article:published_time' content='2023-06-04T22:03:49&#43;08:00'/><meta property='article:modified_time' content='2023-06-04T22:03:49&#43;08:00'/>
+<meta name="twitter:title" content="Mac OS守护进程优化建议">
+<meta name="twitter:description" content="Mac OS守护进程优化建议">
+<link rel="shortcut icon" href="/favicon.png" />
+
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-JZ2PWLT6JY');
+</script>
+<script>
+    var _hmt = _hmt || [];
+    (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+<script>
+    (function () {
+        var el = document.createElement("script");
+        el.src = "https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?f146251743600ee0672cdcc8455ce18def91cdb255ad969a2ef5c715d5ed5baecaf7cd753709c168f20e6a2e9019123fd11e31a222d3a2fe01ad05c6b8f519b2";
+        el.id = "ttzz";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(el, s);
+    })(window)
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
+                            height="298" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">Xiaobin&#39;s Notes</a></h1>
+            <h2 class="site-description"></h2>
+        </div>
+    </header>
+
+
+    <ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/categories/' >
+                
+                
+                
+                <span>分类</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>标签</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/links/' >
+                
+                
+                
+                <span>友链</span>
+            </a>
+        </li>
+        
+
+        <div class="menu-bottom-section"><ol class="social-menu">
+                    
+                        <li>
+                            <a 
+                                href='mailto://me@lxb.wiki'
+                                target="_blank"
+                                title="Email"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a 
+                                href='https://github.com/lxbwolf'
+                                target="_blank"
+                                title="GitHub"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
+</svg>
+
+
+
+                                
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a 
+                                href='https://lxb.wiki/atom.xml'
+                                target="_blank"
+                                title="Rss"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="5" cy="19" r="1" />
+  <path d="M4 4a16 16 0 0 1 16 16" />
+  <path d="M4 11a9 9 0 0 1 9 9" />
+</svg>
+
+
+
+                                
+                            </a>
+                        </li>
+                    
+                </ol>
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <span>暗色模式</span>
+                </li>
+            
+        </div>
+    </ol>
+</aside>
+
+    
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+        <a href="/categories/Tools/" >
+            Tools
+        </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/62d417da/">Mac OS守护进程优化建议</a>
+        </h2>
+
+        
+        <h3 class="article-subtitle">
+            Mac OS守护进程优化建议
+        </h3>
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+            <time class="article-time--published">Jun 04, 2023</time>
+        </div>
+        
+
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+            <time class="article-time--reading">
+                阅读时长: 5 分钟
+            </time>
+        </div>
+        
+        <small>
+    <section class="article-tags">
+        
+            <a href="/tags/mac/">mac</a>
+        
+    </section>
+</small>
+    </footer>
+    
+
+    
+</div>
+</header>
+
+    <section class="article-content">
+    
+    
+    <p><strong>/sbin/launchd</strong>
+系统及用户进程管理器，它是内核装载成功后在OS环境下启动的第一个进程，是Mac OS最重要的进程之一。你无法禁用它。</p>
+<p><strong>/usr/libexec/kextd</strong><br>
+内核扩展服务，响应内核或用户进程的请求，比如装载或卸载内核扩展或提供内核扩展信息给它们。这是Mac的关键守护进程，请不要去禁用它。</p>
+<p><strong>/usr/sbin/notifyd</strong><br>
+消息服务，这是Mac OS消息系统的组成部分之一。我们知道，操作系统的很多组件需要依赖异步消息来通信，这个服务能保证它们正常工作。请不要去禁用它。</p>
+<p><strong>/usr/sbin/diskarbitrationd</strong><br>
+磁盘仲裁服务，作用是为磁盘卷或其他存储部件进行挂载，取消挂载或弹出（比如光驱和dmg）。最常见的就是USB移动硬盘，MP3，IPHONE，IPAD等。<br>
+它的原理是当内核发现有新硬件插入时，内核先识别该硬件，如果能识别，则为硬件装载驱动，并通知 diskarbitrationd 挂载它。取消挂载同理。<br>
+如果这个服务被禁用，所有即插即用存储设备都会出现异常。建议不要禁用它。</p>
+<p><strong>/usr/libexec/configd</strong><br>
+保存计算机和系统环境的动态配置信息。为需要用到这些信息的进程提供变更通知。比如网络服务（tcp/ip或wins更新等）。<br>
+如果这个服务被禁用，网络和一些需要动态配置信息的组件将会出现异常。建议不要禁用它。</p>
+<p><strong>/usr/sbin/syslogd</strong><br>
+系统日志服务，用于记录系统或软件的消息日志，是系统或软件崩溃时查错的关键途径。某些工具也可能依赖与日志在提供服务。<br>
+如果这个服务被禁用，所有的消息日志都将停止记录，并可能导致某些软件工作异常。建议不要禁用它。</p>
+<p><strong>/usr/sbin/DirectoryService</strong><br>
+目录信息收集中心，它会收集各种目录的用户，用户组，权限和路径信息，并在应用程序需要时，反馈给它们。目录的介质主要是指本地磁 盘，LDAP，Netinfo, Active Directory, NIS, Bonjour/Rendesvous/, AppleTalk, Samba FS(SMB)等。<br>
+如果这个服务被禁用，可能会导致部分程序性能降低或出现异常。建议不要禁用它。</p>
+<p><strong>/usr/sbin/distnoted</strong><br>
+提供分布式的消息服务，类似notifyd，但它主要是处理系统外部的一些消息，比如 itune与iphone, ipad, itouch的连接及消息传递功能。<br>
+如果你有使用Apple的即插即用设备，为了保证其功能正常使用，建议你不要禁用它。如果没有apple设备，保险期间，还是留着它吧。</p>
+<p><strong>/usr/sbin/ntpd</strong><br>
+时间同步服务，负责与time.apple.com同步操作系统的时间。这个是基础功能，请不要禁用它。</p>
+<p><strong>/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/Resources/usbmuxd</strong><br>
+USB多路传输服务，为iphone和itouch提供原生的传输支持（无需越狱）。如果你没有iphone或ipod touch，<strong>可以禁用这个服务</strong>。</p>
+<p><strong>/usr/sbin/securityd</strong><br>
+Mac OS安全验证模块，它保存了系统的安全信息，可以仲裁一些加密操作，为软件提供安全验证。系统安全是大事，请不要禁用它。</p>
+<p><strong>/usr/sbin/mDNSResponder</strong><br>
+DNS多播响应器，与DNS服务相关，附属作用是为你搜索局域网里的共享设备。包括mac, windows, ichat, ipad等等，并且会显示在finder的右侧菜单中。<br>
+请不要禁用它，否则你的DNS将失效，并导致无法访问网络。</p>
+<p><strong>/System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow</strong><br>
+Mac OS用户登陆进程，展示登陆或注销界面，验证用户密码输入，启动Finder, Dock, 和一切需要启动时启动的第三方应用程序都是这个进程的责任。<br>
+请不要禁用它。</p>
+<p><strong>/usr/sbin/KernelEventAgent</strong><br>
+处理文件系统的状态。比如“您的磁盘看上去已经满了，您是否需要删除一些数据，以保证系统正常启动”或“一个服务器已经很久没有响应，您是否想需要重新连接它”等。请不要禁用它。</p>
+<p><strong>/usr/libexec/hidd</strong><br>
+人体学输入设备（HID）支持进程。比如键盘，鼠标，机密狗，蓝牙等。请不要禁用它。</p>
+<p><strong>/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Support/fseventsd</strong><br>
+文件系统事件系统，它可以广播文件的创建，删除等事件给Mac OS下的所有应用程序，届时，应用程序可以做出一些应对措施。请不要禁用它。</p>
+<p><strong>/sbin/dynamic_pager</strong><br>
+Mac OS下的虚拟内存。当你的物理内存不够用时，就会使用虚拟内存，有的时候，密钥等一些使用频率不高的信息也会直接从物理内存中移除并存入虚拟内存。在 Unix系统（Mac）下，不论你的物理内存有多大，都不要尝试禁用虚拟内存。因为Unix的内存管理策略是尽可能多地使用内存，再大的内存都回随着时间 慢慢被耗光。</p>
+<p><strong>autofsd</strong><br>
+自动挂载各种网络文件系统。比如NFS, SMB, AFS等。配置文件在 /etc/auto_master和/etc/auto_home，使用方式详见：<br>
+<a class="link" href="http://commandlinemac.blogspot.com/2009/09/introduction-to-autofs-in-mac-os-x.html"  target="_blank" rel="noopener"
+    >http://commandlinemac.blogspot.com/2009/09/introduction-to-autofs-in-mac-os-x.html</a><br>
+如果你不使用任何网络文件系统，<strong>可以禁用这个服务</strong>。</p>
+<p><strong>/System/Library/CoreServices/coreservicesd</strong><br>
+核心服务守护进程，禁用它可能导致系统停止运转或崩溃。请不要禁用它。</p>
+<p><strong>/usr/sbin/coreaudiod</strong><br>
+音频服务，提供声音相关的支持。请不要禁用它。</p>
+<p><strong>System/Library/Frameworks/ApplicationServices.framework/Frameworks/CoreGraphics.framework/Resources/WindowServer</strong><br>
+Mac OS的GUI界面系统。负责所有应用程序的窗口显示。请不要禁用它。</p>
+<p><strong>/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/cvmsServ</strong><br>
+OPGL服务进程，用到高级图形API的程序需要用到它。比如游戏，支持滑动或谈出特效的软件。请不要禁用它。</p>
+<p><strong>/System/Library/CoreServices/Dock.app/Contents/MacOS/Dock</strong><br>
+Mac OS经典的任务栏。请不要禁用它。</p>
+<p><strong>/System/Library/CoreServices/SystemUIServer.app/Contents/MacOS/SystemUIServer</strong><br>
+Mac OS的菜单栏。请不要禁用它。</p>
+<p><strong>/System/Library/CoreServices/Finder.app/Contents/MacOS/Finder</strong><br>
+Mac OS的资源管理器。请不要禁用它。</p>
+<p><strong>/usr/sbin/pboard</strong><br>
+剪贴板支持。除非你不想用复制，黏贴。请不要禁用它。</p>
+<p><strong>/System/Library/Frameworks/ApplicationServices.framework/Frameworks/ATS.framework/Support/fontd</strong><br>
+字体服务进程。请不要禁用它。</p>
+<p><strong>/usr/libexec/UserEventAgent</strong><br>
+高级别的系统事件处理器。请不要禁用它。</p>
+<p><strong>/System/Library/CoreServices/Menu Extras/TextInput.menu/Contents/SharedSupport/TISwitcher.app/Contents/MacOS/TISwitcher</strong><br>
+输入法切换服务。除非你不想使用中文输入法，否则，请不要禁用它。</p>
+<p><strong>/usr/libexec/taskgated</strong><br>
+task_for_pid是用来帮助某些想控制其他进程的执行的进程实现功能的服务。taskgated会被内核呼叫，用来确认”控制“这个行为是否可以发生。它本身也有权限验证的功能。请不要禁用该服务。</p>
+<p><strong>AirPortBaseStationAgent</strong><br>
+这个是Apple的无线基站设备搜索服务。如果你没有apple的无线基站设备，<strong>可以禁用它</strong>。</p>
+<p><strong>Spotlight</strong><br>
+如果你不喜欢用spotlight，<strong>可以禁用它</strong>。详见文末给出的“Mac OS启动服务优化高级篇（launchd tuning）”里的优化方法。</p>
+<p><strong>/usr/sbin/blued</strong><br>
+蓝牙支持服务。如果你不想使用蓝牙，<strong>可以禁用它</strong>。</p>
+<p><strong>cupsd</strong><br>
+打印机支持。如果你不想用打印机，<strong>可以禁用该服务</strong>。</p>
+<p><strong>SharedServices.Agent</strong><br>
+Apple的MobileMe服务，如果你不使用，<strong>可以禁用该服务</strong>。</p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/446d3604/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Mac上移除EasyConnect常驻后台进程</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/32451f0a/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Mac iTerm2，使用rz和sz无效，解决方式</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/ef3fb32/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">误删了Mac中Chrome书签后如何恢复</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/784beb8f/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Mac iTerm2登陆CentOS提示warning: setlocale: LC_CTYPE: cannot change locale (UTF-8): No such file or directory</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    <script src="https://utteranc.es/client.js" 
+        repo="lxbwolf/lxbwolf.github.io"
+        issue-term="pathname"
+        
+        crossorigin="anonymous"
+        async
+        >
+</script>
+
+<style>
+    .utterances {
+        max-width: unset;
+    }
+</style>
+
+<script>
+    let utterancesLoaded = false;
+
+    function setUtterancesTheme(theme) {
+        let utterances = document.querySelector('.utterances iframe');
+        if (utterances) {
+            utterances.contentWindow.postMessage(
+                {
+                    type: 'set-theme',
+                    theme: `github-${theme}`
+                },
+                'https://utteranc.es'
+            );
+        }
+    }
+
+    addEventListener('message', event => {
+        if (event.origin !== 'https://utteranc.es') return;
+
+        
+        utterancesLoaded = true;
+        setUtterancesTheme(document.documentElement.dataset.scheme)
+    });
+
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (!utterancesLoaded) return;
+        setUtterancesTheme(e.detail)
+    })
+</script>
+
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2024 Xiaobin&#39;s Notes
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>
