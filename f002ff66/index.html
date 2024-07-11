@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Go 1.21 新增特性'>
+
+<meta name="keywords" content="Go 1.21 新增特性 , golang"><title>Go 1.21 新增特性</title>
+
+<link rel='canonical' href='https://lxb.wiki/f002ff66/'>
+
+<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='Go 1.21 新增特性'>
+<meta property='og:description' content='Go 1.21 新增特性'>
+<meta property='og:url' content='https://lxb.wiki/f002ff66/'>
+<meta property='og:site_name' content='Xiaobin&#39;s Notes'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='go' /><meta property='article:published_time' content='2023-10-20T21:42:04&#43;08:00'/><meta property='article:modified_time' content='2023-10-20T21:42:04&#43;08:00'/>
+<meta name="twitter:title" content="Go 1.21 新增特性">
+<meta name="twitter:description" content="Go 1.21 新增特性">
+<link rel="shortcut icon" href="/favicon.png" />
+
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-JZ2PWLT6JY');
+</script>
+<script>
+    var _hmt = _hmt || [];
+    (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+<script>
+    (function () {
+        var el = document.createElement("script");
+        el.src = "https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?f146251743600ee0672cdcc8455ce18def91cdb255ad969a2ef5c715d5ed5baecaf7cd753709c168f20e6a2e9019123fd11e31a222d3a2fe01ad05c6b8f519b2";
+        el.id = "ttzz";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(el, s);
+    })(window)
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
+                            height="298" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">Xiaobin&#39;s Notes</a></h1>
+            <h2 class="site-description"></h2>
+        </div>
+    </header>
+
+
+    <ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/categories/' >
+                
+                
+                
+                <span>分类</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>标签</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/links/' >
+                
+                
+                
+                <span>友链</span>
+            </a>
+        </li>
+        
+
+        <div class="menu-bottom-section"><ol class="social-menu">
+                    
+                        <li>
+                            <a 
+                                href='mailto://me@lxb.wiki'
+                                target="_blank"
+                                title="Email"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a 
+                                href='https://github.com/lxbwolf'
+                                target="_blank"
+                                title="GitHub"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
+</svg>
+
+
+
+                                
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a 
+                                href='https://lxb.wiki/atom.xml'
+                                target="_blank"
+                                title="Rss"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="5" cy="19" r="1" />
+  <path d="M4 4a16 16 0 0 1 16 16" />
+  <path d="M4 11a9 9 0 0 1 9 9" />
+</svg>
+
+
+
+                                
+                            </a>
+                        </li>
+                    
+                </ol>
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <span>暗色模式</span>
+                </li>
+            
+        </div>
+    </ol>
+</aside>
+
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+<section class="widget archives">
+    
+    <h2 class="widget-title section-title">目录</h2>
+
+    <div class="widget--toc">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#新的内置函数">新的内置函数</a></li>
+    <li><a href="#类型推导">类型推导</a></li>
+    <li><a href="#panic的行为变化">panic的行为变化</a></li>
+    <li><a href="#modules的变化">modules的变化</a></li>
+    <li><a href="#包初始化顺序的改变">包初始化顺序的改变</a></li>
+    <li><a href="#编译器和runtime的变化">编译器和runtime的变化</a></li>
+    <li><a href="#新标准库">新标准库</a>
+      <ul>
+        <li><a href="#logslog和testingslogtest">log/slog和testing/slogtest</a></li>
+        <li><a href="#slices和maps">slices和maps</a></li>
+        <li><a href="#cmp">cmp</a></li>
+      </ul>
+    </li>
+    <li><a href="#已有的标准库的变化">已有的标准库的变化</a>
+      <ul>
+        <li><a href="#bytes">bytes</a></li>
+        <li><a href="#context">context</a></li>
+        <li><a href="#cryptosha256">crypto/sha256</a></li>
+        <li><a href="#net">net</a></li>
+        <li><a href="#reflect">reflect</a></li>
+        <li><a href="#runtime">runtime</a></li>
+        <li><a href="#sync">sync</a></li>
+        <li><a href="#errors">errors</a></li>
+        <li><a href="#unicode">unicode</a></li>
+      </ul>
+    </li>
+    <li><a href="#平台支持变化">平台支持变化</a></li>
+  </ul>
+</nav>
+    </div>
+</section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+        <a href="/categories/Lang/" >
+            Lang
+        </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/f002ff66/">Go 1.21 新增特性</a>
+        </h2>
+
+        
+        <h3 class="article-subtitle">
+            Go 1.21 新增特性
+        </h3>
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+            <time class="article-time--published">Oct 20, 2023</time>
+        </div>
+        
+
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+            <time class="article-time--reading">
+                阅读时长: 11 分钟
+            </time>
+        </div>
+        
+        <small>
+    <section class="article-tags">
+        
+            <a href="/tags/go/">go</a>
+        
+    </section>
+</small>
+    </footer>
+    
+
+    
+</div>
+</header>
+
+    <section class="article-content">
+    
+    
+    <h2 id="新的内置函数">新的内置函数</h2>
+<p>1.21添加了三个新的内置函数：<code>min</code>、<code>max</code>和<code>clear</code>。</p>
+<p><code>min</code>、<code>max</code>如其字面意思，用了选出一组变量里（数量大于等于1，只有一个变量的时候就返回那个变量的值）最大的或者最小的值。两个函数定义是这样的：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">min</span>[<span style="color:#a6e22e">T</span> <span style="color:#a6e22e">cmp</span>.<span style="color:#a6e22e">Ordered</span>](<span style="color:#a6e22e">x</span> <span style="color:#a6e22e">T</span>, <span style="color:#a6e22e">y</span> <span style="color:#f92672">...</span><span style="color:#a6e22e">T</span>) <span style="color:#a6e22e">T</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">max</span>[<span style="color:#a6e22e">T</span> <span style="color:#a6e22e">cmp</span>.<span style="color:#a6e22e">Ordered</span>](<span style="color:#a6e22e">x</span> <span style="color:#a6e22e">T</span>, <span style="color:#a6e22e">y</span> <span style="color:#f92672">...</span><span style="color:#a6e22e">T</span>) <span style="color:#a6e22e">T</span>
+</span></span></code></pre></div><p>注意那个类型约束，这是新的标准库里提供的，原型如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Ordered</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">~</span><span style="color:#66d9ef">int</span> | <span style="color:#960050;background-color:#1e0010">~</span><span style="color:#66d9ef">int8</span> | <span style="color:#960050;background-color:#1e0010">~</span><span style="color:#66d9ef">int16</span> | <span style="color:#960050;background-color:#1e0010">~</span><span style="color:#66d9ef">int32</span> | <span style="color:#960050;background-color:#1e0010">~</span><span style="color:#66d9ef">int64</span> |
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">~</span><span style="color:#66d9ef">uint</span> | <span style="color:#960050;background-color:#1e0010">~</span><span style="color:#66d9ef">uint8</span> | <span style="color:#960050;background-color:#1e0010">~</span><span style="color:#66d9ef">uint16</span> | <span style="color:#960050;background-color:#1e0010">~</span><span style="color:#66d9ef">uint32</span> | <span style="color:#960050;background-color:#1e0010">~</span><span style="color:#66d9ef">uint64</span> | <span style="color:#960050;background-color:#1e0010">~</span><span style="color:#66d9ef">uintptr</span> |
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">~</span><span style="color:#66d9ef">float32</span> | <span style="color:#960050;background-color:#1e0010">~</span><span style="color:#66d9ef">float64</span> |
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">~</span><span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>也就是说只有基于所有除了map，chan，slice以及复数之外的基本类型的变量才能使用这两个函数。或者换句话说，只有可以使用<code>&lt;</code>、<code>&gt;</code>、<code>&lt;=</code>、<code>&gt;=</code>、<code>==</code>和<code>!=</code>进行比较的类型才可以使用min和max。</p>
+<p>有了min和max，可以把许多自己手写的代码替换成新的内置函数，可以少写一些帮助函数。而且使用新的内置函数还有一个好处，在变量个数比较少的时候还有编译器的优化可用，比自己写min函数性能上要稍好一些。</p>
+<p>使用上也很简单：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#a6e22e">maxIntValue</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">max</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">7</span>, <span style="color:#ae81ff">6</span>, <span style="color:#ae81ff">5</span>, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">1</span>) <span style="color:#75715e">// 7 type int
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">minIntValue</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">min</span>(<span style="color:#ae81ff">8</span>, <span style="color:#ae81ff">7</span>, <span style="color:#ae81ff">6</span>, <span style="color:#ae81ff">5</span>, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">1</span>) <span style="color:#75715e">// 1 type int
+</span></span></span></code></pre></div><p>目前max和min都不支持slice的解包操作：<code>max(1, numbers...)</code>。</p>
+<p>对于clear来说事情比min和max复杂。clear只接受slice和map，如果是对泛型的类型参数使用clear，那么类型参数的type set必须是map或者slice，否则编译报错。</p>
+<p>clear的定义如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">clear</span>[<span style="color:#a6e22e">T</span> <span style="color:#960050;background-color:#1e0010">~</span>[]<span style="color:#a6e22e">Type</span> | <span style="color:#960050;background-color:#1e0010">~</span><span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">Type</span>]<span style="color:#a6e22e">Type1</span>](<span style="color:#a6e22e">t</span> <span style="color:#a6e22e">T</span>)
+</span></span></code></pre></div><p>对于参数是map的情况，clear会删除所有map里的元素（不过由于golang的map本身的特性，map存储的数据会被正常销毁，但map已经分配的空间不会释放）：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">m</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">int</span>]<span style="color:#66d9ef">int</span>{<span style="color:#ae81ff">1</span>:<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>:<span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>:<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">4</span>:<span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">5</span>:<span style="color:#ae81ff">5</span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(len(<span style="color:#a6e22e">m</span>)) <span style="color:#75715e">// 5
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">clear</span>(<span style="color:#a6e22e">m</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(len(<span style="color:#a6e22e">m</span>)) <span style="color:#75715e">// 0
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>然而对于slice，它的行为又不同了：会把slice里所有元素变回零值。看个例子：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">int</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">100</span>) <span style="color:#75715e">// 故意给个大的cap便于观察
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">s</span> = append(<span style="color:#a6e22e">s</span>, []<span style="color:#66d9ef">int</span>{<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">5</span>}<span style="color:#f92672">...</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">s</span>) <span style="color:#75715e">// [1 2 3 4 5]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(len(<span style="color:#a6e22e">s</span>), cap(<span style="color:#a6e22e">s</span>)) <span style="color:#75715e">// len: 5; cap: 100
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">clear</span>(<span style="color:#a6e22e">s</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">s</span>) <span style="color:#75715e">// [0 0 0 0 0]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(len(<span style="color:#a6e22e">s</span>), cap(<span style="color:#a6e22e">s</span>)) <span style="color:#75715e">// len: 5; cap: 100
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>这个就比较反直觉了，毕竟clear首先想到的应该是把所有元素删除。那它的意义是什么呢？对于map来说意义是很明确的，但对于slice来说就有点绕弯了：</p>
+<p><strong>slice的真实大小是cap所显示的那个大小，如果只是用<code>s := s[:0]</code>来把所有元素“删除”，那么这些元素实际上还是留在内存里的，直到s本身被gc回收或者往s里添加新元素把之前的对象覆盖掉，否则这些对象是不会被回收掉的，这一方面可以提高内存的利用率，另一方面也会带来泄露的问题（比如存储的是指针类型或者包含指针类型的值的时候，因为指针还存在，所以被指向的对象始终有一个有效的引用导致无法被回收），所以golang选择了折中的办法：把所有已经存在的元素设置成0值</strong></p>
+<p>如果想安全的正常删除slice的所有元素，有想复用slice的内存，该怎么办？答案是：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> make([]<span style="color:#a6e22e">T</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">100</span>) <span style="color:#75715e">// 故意给个大的cap便于观察
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">s</span> = append(<span style="color:#a6e22e">s</span>, []<span style="color:#a6e22e">T</span>{<span style="color:#f92672">*</span>new(<span style="color:#a6e22e">T</span>), <span style="color:#f92672">*</span>new(<span style="color:#a6e22e">T</span>)}<span style="color:#f92672">...</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">clear</span>(<span style="color:#a6e22e">s</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s</span> = <span style="color:#a6e22e">s</span>[:<span style="color:#ae81ff">0</span>]
+</span></span></code></pre></div><p>如果没有内置函数clear，那么我们得自己循环一个个赋值处理。而有clear的好处是，编译器会直接用memset把slice的内存里的数据设置为0，比循环会快很多。有兴趣的可以看看clear在slice上的实现：<a class="link" href="https://github.com/golang/go/blob/master/src/runtime/mbarrier.go#L330"  target="_blank" rel="noopener"
+    >代码在这</a> 。</p>
+<h2 id="类型推导">类型推导</h2>
+<p>以前类似这样的代码在某些情况下没法正常进行推导：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-scss" data-lang="scss"><span style="display:flex;"><span><span style="color:#f92672">func</span> <span style="color:#f92672">F</span><span style="color:#f92672">[</span><span style="color:#f92672">T</span> <span style="color:#f92672">~</span><span style="color:#f92672">E</span><span style="color:#f92672">[],</span> <span style="color:#f92672">E</span> <span style="color:#f92672">any</span><span style="color:#f92672">](</span><span style="color:#f92672">t</span> <span style="color:#f92672">T</span><span style="color:#f92672">,</span> <span style="color:#f92672">callable</span> <span style="color:#f92672">func</span><span style="color:#f92672">(</span><span style="color:#f92672">E</span><span style="color:#f92672">))</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">func</span> <span style="color:#f92672">generic</span><span style="color:#f92672">[</span><span style="color:#f92672">E</span> <span style="color:#f92672">any</span><span style="color:#f92672">](</span><span style="color:#f92672">e</span> <span style="color:#f92672">E</span><span style="color:#f92672">)</span> {}
+</span></span><span style="display:flex;"><span><span style="color:#f92672">F</span><span style="color:#f92672">(</span><span style="color:#f92672">t</span><span style="color:#f92672">,</span> <span style="color:#f92672">generic</span><span style="color:#f92672">)</span> <span style="color:#f92672">//</span> <span style="color:#f92672">before</span> <span style="color:#f92672">go1</span><span style="color:#a6e22e">.21</span><span style="color:#a6e22e">:</span> <span style="color:#f92672">error</span>; <span style="color:#f92672">after</span> <span style="color:#f92672">go1</span><span style="color:#a6e22e">.21</span><span style="color:#a6e22e">:</span> <span style="color:#f92672">ok</span>
+</span></span></code></pre></div><p>理论上只要能推导出E的类型，那么<code>F</code>和<code>generic</code>的所有类型参数都能推导出来，哪怕<code>generic</code>本身是个泛型函数。以前想正常使用就得这么写：<code>F(t, generic[Type])</code>。</p>
+<p>所以与其说是新特性，不如说是对类型推导的bug修复。</p>
+<p>针对类型推导还有其他一些修复和报错信息的内容优化，但这些都没上面这个变化大，所以恕不赘述。</p>
+<h2 id="panic的行为变化">panic的行为变化</h2>
+<p>1.21开始如果goroutine里有panic，那么这个goroutine里的defer里调用的recover必然不会返回nil值。</p>
+<p>这导致了一个问题：recover的返回值是传给panic的参数的值，<code>panic(nil)</code>这样的代码怎么办？</p>
+<p>先要提醒一下，<code>panic(nil)</code>本身是无意义的，且会导致recover的调用方无法判断究竟发生了什么，所以一直是被各类linter包括<code>go vet</code>命令警告的。然而这么写语法上完全正确，所以只有警告并不能解决问题。</p>
+<p>解决办法是，如果现在使用<code>panic(nil)</code>或者<code>panic(值为nil的接口)</code>，recover会收到一个新类型的error：<code>*runtime.PanicNilError</code>。</p>
+<p>总体上算是解决了问题，然而它把有类型的但值是nil的接口也给转换了，虽然从最佳实践的角度来讲panic一个空值的接口是不应该的，但多少还是会给使用上带来一些麻烦。</p>
+<p>所以目前想要禁用这一行为的话，可以设置环境变量：<code>export GODEBUG=panicnil=1</code>。如果go.mod里声明的go版本小于等于1.20，这个环境变量的功能自动启用。</p>
+<p>对于modules的变化，会在下一节讲解。</p>
+<h2 id="modules的变化">modules的变化</h2>
+<p>最大的变化是现在mod文件里写的go版本号的意义改变了。</p>
+<p>变成了：mod文件里写的go的版本意味着这个mod最低支持的golang版本是多少。</p>
+<p>比如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#a6e22e">module</span> <span style="color:#a6e22e">github</span>.<span style="color:#a6e22e">com</span><span style="color:#f92672">/</span><span style="color:#a6e22e">apocelipes</span><span style="color:#f92672">/</span><span style="color:#a6e22e">flatmap</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">go</span> <span style="color:#ae81ff">1.21.0</span>
+</span></span></code></pre></div><p>意味着这个modules最低要求go的版本是<code>go1.21.0</code>，而且可以注意到，现在patch版本也算在内里，所以一个声明为<code>go 1.21.1</code>的modules没法被1.21.0版本的go编译。</p>
+<p>这么做的好处是能严格控制自己的程序和库可以在哪些版本的golang上运行，且可以推动库版本和golang本身版本的升级。</p>
+<p>如果严格按照官方要求使用语义版本来控制自己的modules的话，这个改动没有什么明显的坏处，唯一的缺点是只有1.21及更高版本的go工具链才有这样的功能。</p>
+<p>这个变更对<code>go.work</code>文件同样适用。</p>
+<h2 id="包初始化顺序的改变">包初始化顺序的改变</h2>
+<p>现在按新的顺序来初始化包：</p>
+<ol>
+<li>把所有的packages按导入路径进行排序（字符串字典顺序）存进一个列表</li>
+<li>按要求和顺序找到列表里第一个符合条件的package，要求是这个package所有的import的包都已经完成初始化</li>
+<li>初始化这个找到的包然后把它移出列表，接着重复第二步</li>
+<li>列表为空的时候初始化流程结束</li>
+</ol>
+<p>这样做的好处是包的初始化顺序终于有明确的标准化的定义了，坏处有两点：</p>
+<ol>
+<li>以前的程序如果依赖于特定的初始化顺序，那么在新版本会出问题</li>
+<li>现在可以通过修改package的导入路径（主要能改的部分是包的名字）和控制导入的包来做到让A包始终在B包之前初始化，因此B包的初始化流程里可以对A包公开出来的接口或者数据进行修改，这样做耦合性很高也不安全，尤其是B包如果是某个包含恶意代码的包的话。</li>
+</ol>
+<p>我们能做的只有遵守最佳实践：不要依赖特定的包直接的初始化顺序；以及在使用某个第三方库前要仔细考量。</p>
+<h2 id="编译器和runtime的变化">编译器和runtime的变化</h2>
+<p>runtime的变化上，gc一如既往地得到了小幅度优化，现在对于gc压力较大的程序来说gc延迟和内存占用都会有所减少。</p>
+<p>cgo也有优化，现在cgo函数调用最大可以比原先快一个数量级。</p>
+<p>编译器的变化上比较显著的是这个：PGO已经可以正式投入生产使用。<a class="link" href="https://go.dev/doc/pgo"  target="_blank" rel="noopener"
+    >使用教程</a>。</p>
+<p>PGO可以带来6%左右的性能提升，1.21凭借PGO和上个版本的优化现在不仅没有了泛型带来的编译速度减低，相比以前还有细微提升。</p>
+<p>还有最后一个变化，这个和编译器关系：现在没有被使用的全局的map类型的变量（需要达到一定大小，且初始化的语句中没有任何副作用会产生），现在编译完成的程序里不会在包含这个变量。因为map本身占用内存且初始化需要花费一定时间（map越大花的时间越多）。这个好处是很实在的，既可以减小产生的二进制可执行文件的大小，又可以提升运行性能。但有个缺点，如果有什么程序要依赖编译好的可执行文件内部的某些数据的话，这个变更可能会带来麻烦，普通用户可以忽略这点。</p>
+<h2 id="新标准库">新标准库</h2>
+<p>这个版本添加了大把的新标准库，一起来看看。</p>
+<h3 id="logslog和testingslogtest">log/slog和testing/slogtest</h3>
+<p>官方提供的结构化日志库。</p>
+<p>可以通过实现<code>slog.Handler</code>来定义自己的日志处理器，可以把日志转换成json等格式。标准库自带了很多预定义的处理器，比如json的：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#a6e22e">logger</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">slog</span>.<span style="color:#a6e22e">New</span>(<span style="color:#a6e22e">slog</span>.<span style="color:#a6e22e">NewJSONHandler</span>(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Stdout</span>, <span style="color:#66d9ef">nil</span>))
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">logger</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;hello&#34;</span>, <span style="color:#e6db74">&#34;count&#34;</span>, <span style="color:#ae81ff">3</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// {&#34;time&#34;:&#34;2023-08-09T15:28:26.000000000+09:00&#34;,&#34;level&#34;:&#34;INFO&#34;,&#34;msg&#34;:&#34;hello&#34;,&#34;count&#34;:3}
+</span></span></span></code></pre></div><p>简单得说，就是个简化版的zap，如果想使用最基础的结构化日志的功能，又不想引入zap这样的库，那么slog是个很好的选择。</p>
+<p>testing/slogtest里有帮助函数用来测试自己实现的日志处理器是否符合标准库的要求。</p>
+<h3 id="slices和maps">slices和maps</h3>
+<p>把<code>golang.org/x/exp/slices</code>和<code>golang.org/x/exp/maps</code>引入了标准库。</p>
+<p>slices库提供了排序、二分查找、拼接、增删改查等常用功能，sort这个标准库目前可以停止使用用slices来替代了。</p>
+<p>maps提供了常见的对map的增删改查拼接合并等功能。</p>
+<p>两个库使用泛型，且针对golang的slice和map进行了细致入微的优化，性能上比自己写的版本有更多优势，比标准库sort更是有数量级的碾压。</p>
+<p>这两个库本来1.20就该被接收进标准库了，但因为需要重新设计api和进行优化，所以拖到1.21了。</p>
+<h3 id="cmp">cmp</h3>
+<p>这个也是早该进入标准库的，但拖到了现在。随着slices、maps和新内置函数都进入了新版本，这个库想不接收也不行了。</p>
+<p>这个库一共有三个东西：<code>Ordered</code>、<code>Less</code>、<code>Compare</code>。</p>
+<p>最重要的是<code>Ordered</code>，它是所有可以使用内置运算符进行比较的类型的集合。</p>
+<p><code>Less</code>和<code>Ordered</code>顾名思义用来比大小的，且只能比<code>Ordered</code>类型的大小。</p>
+<p>之所以还有单独造出这两个函数，是因为他们对Nan有检查，比如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#75715e">// Less reports whether x is less than y.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// For floating-point types, a NaN is considered less than any non-NaN,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// and -0.0 is not less than (is equal to) 0.0.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Less</span>[<span style="color:#a6e22e">T</span> <span style="color:#a6e22e">Ordered</span>](<span style="color:#a6e22e">x</span>, <span style="color:#a6e22e">y</span> <span style="color:#a6e22e">T</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> (<span style="color:#a6e22e">isNaN</span>(<span style="color:#a6e22e">x</span>) <span style="color:#f92672">&amp;&amp;</span> !<span style="color:#a6e22e">isNaN</span>(<span style="color:#a6e22e">y</span>)) <span style="color:#f92672">||</span> <span style="color:#a6e22e">x</span> &lt; <span style="color:#a6e22e">y</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>所以在泛型函数里不知道要比较的数据的类型是不是有float的时候，用cmp里提供的函数是最安全的</strong>。这就是他俩存在的意义。</p>
+<p>但如果可以100%确定没有float存在，那么就不应该用<code>Less</code>等，应该直接用运算符去比较，因为大家都看到，Less和直接比较相比效率是较低的。</p>
+<h2 id="已有的标准库的变化">已有的标准库的变化</h2>
+<p>因为是速览，所以我只挑重点说。</p>
+<h3 id="bytes">bytes</h3>
+<p><code>bytes.Buffer</code>添加了<code>AvailableBuffer</code>和<code>Available</code>两个方法，分别返回目前可用的buf切片和可用的长度。主要可以配合<code>strconv.AppendInt</code>来使用，直接把数据写入buffer对应的内存里，可以提升性能。<strong>不要对<code>AvailableBuffer</code>返回的切片扩容，否则必然踩坑</strong>。</p>
+<h3 id="context">context</h3>
+<p>新的<code>context.WithoutCancel</code>会把原来的<code>context.Context</code>复制一份，并去除cancel函数，这意味着原先被复制的上下文取消了这个新的上下文也将继续存在。例子：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">cancel</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">WithCancel</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>())
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">newCtx</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">WithoutCancel</span>(<span style="color:#a6e22e">ctx</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">cancel</span>()
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">Done</span>() <span style="color:#75715e">// ok, ctx has cancled.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">newCtx</span>.<span style="color:#a6e22e">Done</span>() <span style="color:#75715e">// error: dead lock!
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>之所以会死锁，是因为<code>newCtx</code>没有被取消，Done返回的chan会永远阻塞住。而且更根本的，<code>newCtx</code>无法被取消。</p>
+<p>新增了<code>context.WithDeadlineCause</code>和<code>context.WithTimeoutCause</code>，可以增加超时上下文被取消时的信息：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#a6e22e">d</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">shortDuration</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">cancel</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">WithDeadline</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>(), <span style="color:#a6e22e">d</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">MyError</span>{<span style="color:#e6db74">&#34;my message&#34;</span>})
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">cancel</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Cause</span>(<span style="color:#a6e22e">ctx</span>) <span style="color:#75715e">// --&gt; &amp;MyError{&#34;my message&#34;}
+</span></span></span></code></pre></div><p>虽然不如<code>context.WithCancelCause</code>灵活，但也很实用。</p>
+<h3 id="cryptosha256">crypto/sha256</h3>
+<p>现在在x86_64平台上计算sha256会尽量利用硬件指令（simd和x86_64平台的SHA256ROUND等指令），这带来了3-4倍的性能提升。</p>
+<h3 id="net">net</h3>
+<p>现在golang在Linux上已经初步支持Multipath TCP。有关Multipath TCP的信息可以在这查阅：<a class="link" href="https://www.multipath-tcp.org/"  target="_blank" rel="noopener"
+    >https://www.multipath-tcp.org/</a></p>
+<h3 id="reflect">reflect</h3>
+<p>ValueOf现在会根据逃逸分析把值分配在栈上，以前都是直接分配到堆上的。对于比较小的类型来说可以获得10%以上的性能提升。利好很多使用反射的ORM框架。</p>
+<p>新增了<code>Value.Clear</code>，对应第一节的clear内置函数，如果type不是map或者slice的话这个函数和其他反射的方法一样会panic。</p>
+<h3 id="runtime">runtime</h3>
+<p>最值得一提的变化是新增了<code>runtime.Pinner</code>。</p>
+<p>它的能力是可以让某个go的对象不会gc回收，一直到<code>Unpin</code>方法被调用。这个是为了方便cgo代码里让c使用go的对象而设计的。</p>
+<p><strong>不要滥用这个接口，如果想告诉gc某个对象暂时不能回收，应该正确使用<code>runtime.KeepAlive</code></strong>。</p>
+<p>runtime/trace现在有了很大的性能提升，因此观察程序行为的时候开销更小，更接近程序真实的负载。</p>
+<h3 id="sync">sync</h3>
+<p>添加了<code>OnceFunc</code>、<code>OnceValue</code>、<code>OnceValues</code>这三个帮助函数。主要是为了简化代码。</p>
+<p>1.21前：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">initFlag</span> <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">Once</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">GetSomeThing</span>() {
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">initFlag</span>.<span style="color:#a6e22e">Do</span>(<span style="color:#66d9ef">func</span>(){
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">真正的初始化逻辑</span>
+</span></span><span style="display:flex;"><span>})
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 后续处理
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>现在变成：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">doInit</span> = <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">OnceFunc</span>(<span style="color:#66d9ef">func</span>(){
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">真正的初始化逻辑</span>
+</span></span><span style="display:flex;"><span>})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">GetSomeThing</span>() {
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">doInit</span>()
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 后续处理
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>新代码要简单点。</p>
+<p><code>OnceValue</code>、<code>OnceValues</code>是函数带返回值的版本，支持一个和两个返回值的函数。</p>
+<h3 id="errors">errors</h3>
+<p>新增了<code>errors.ErrUnsupported</code>。这个错误表示当前操作系统、硬件、协议、或者文件系统不支持某种操作。</p>
+<p>目前os，filepath，syscall，io里的一些函数已经会返回这个错误，可以用<code>errors.Is(err, errors.ErrUnsupported)</code>来检查。</p>
+<h3 id="unicode">unicode</h3>
+<p>升级到了最新的Unicode 15.0.0。</p>
+<h2 id="平台支持变化">平台支持变化</h2>
+<p>新增了wasip1支持，这是一个对WASI（WebAssembly System Interface）的初步支持。</p>
+<p>对于macOS，go1.21需要macOS 10.15 Catalina及以上版本。</p>
+<p>龙芯上golang现在支持将代码编译为c的动态和静态链接库，基本上在龙芯上已经可以尝试投入生产环境了。</p>
+<p>发版日志 <a class="link" href="https://go.dev/doc/go1.21"  target="_blank" rel="noopener"
+    >Go 1.21 Release Notes - The Go Programming Language</a></p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/a9bb05dc/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Go语言中用exec执行命令的五种姿势</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/a51740e5/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Go 1.18 的工作区模式</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/ee1035bf/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Go 调用 GoogleSheets API 写入数据</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/e80bf483/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Go命令行库cobra</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/dfd7f257/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">【译】Go中的模糊测试</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    <script src="https://utteranc.es/client.js" 
+        repo="lxbwolf/lxbwolf.github.io"
+        issue-term="pathname"
+        
+        crossorigin="anonymous"
+        async
+        >
+</script>
+
+<style>
+    .utterances {
+        max-width: unset;
+    }
+</style>
+
+<script>
+    let utterancesLoaded = false;
+
+    function setUtterancesTheme(theme) {
+        let utterances = document.querySelector('.utterances iframe');
+        if (utterances) {
+            utterances.contentWindow.postMessage(
+                {
+                    type: 'set-theme',
+                    theme: `github-${theme}`
+                },
+                'https://utteranc.es'
+            );
+        }
+    }
+
+    addEventListener('message', event => {
+        if (event.origin !== 'https://utteranc.es') return;
+
+        
+        utterancesLoaded = true;
+        setUtterancesTheme(document.documentElement.dataset.scheme)
+    });
+
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (!utterancesLoaded) return;
+        setUtterancesTheme(e.detail)
+    })
+</script>
+
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2024 Xiaobin&#39;s Notes
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>
