@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='elastic的数据类型'>
+
+<meta name="keywords" content="elastic , elastic的数据类型"><title>Elasticsearch的数据类型</title>
+
+<link rel='canonical' href='https://lxb.wiki/ce28e9ad/'>
+
+<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='Elasticsearch的数据类型'>
+<meta property='og:description' content='elastic的数据类型'>
+<meta property='og:url' content='https://lxb.wiki/ce28e9ad/'>
+<meta property='og:site_name' content='Xiaobin&#39;s Notes'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='elastic' /><meta property='article:published_time' content='2023-11-12T21:56:53&#43;08:00'/><meta property='article:modified_time' content='2023-11-12T21:56:53&#43;08:00'/>
+<meta name="twitter:title" content="Elasticsearch的数据类型">
+<meta name="twitter:description" content="elastic的数据类型">
+<link rel="shortcut icon" href="/favicon.png" />
+
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-JZ2PWLT6JY');
+</script>
+<script>
+    var _hmt = _hmt || [];
+    (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+<script>
+    (function () {
+        var el = document.createElement("script");
+        el.src = "https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?f146251743600ee0672cdcc8455ce18def91cdb255ad969a2ef5c715d5ed5baecaf7cd753709c168f20e6a2e9019123fd11e31a222d3a2fe01ad05c6b8f519b2";
+        el.id = "ttzz";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(el, s);
+    })(window)
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
+                            height="298" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">Xiaobin&#39;s Notes</a></h1>
+            <h2 class="site-description"></h2>
+        </div>
+    </header>
+
+
+    <ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/categories/' >
+                
+                
+                
+                <span>分类</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>标签</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/links/' >
+                
+                
+                
+                <span>友链</span>
+            </a>
+        </li>
+        
+
+        <div class="menu-bottom-section"><ol class="social-menu">
+                    
+                        <li>
+                            <a 
+                                href='mailto://me@lxb.wiki'
+                                target="_blank"
+                                title="Email"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a 
+                                href='https://github.com/lxbwolf'
+                                target="_blank"
+                                title="GitHub"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
+</svg>
+
+
+
+                                
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a 
+                                href='https://lxb.wiki/atom.xml'
+                                target="_blank"
+                                title="Rss"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="5" cy="19" r="1" />
+  <path d="M4 4a16 16 0 0 1 16 16" />
+  <path d="M4 11a9 9 0 0 1 9 9" />
+</svg>
+
+
+
+                                
+                            </a>
+                        </li>
+                    
+                </ol>
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <span>暗色模式</span>
+                </li>
+            
+        </div>
+    </ol>
+</aside>
+
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+<section class="widget archives">
+    
+    <h2 class="widget-title section-title">目录</h2>
+
+    <div class="widget--toc">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#1-核心数据类型">1 核心数据类型</a></li>
+    <li><a href="#11-字符串类型---string不再支持">1.1 字符串类型 - string(不再支持)</a>
+      <ul>
+        <li><a href="#111-文本类型---text">1.1.1 文本类型 - text</a></li>
+        <li><a href="#112-关键字类型---keyword">1.1.2 关键字类型 - keyword</a></li>
+      </ul>
+    </li>
+    <li><a href="#12-数字类型---8种">1.2 数字类型 - 8种</a></li>
+    <li><a href="#13-日期类型---date">1.3 日期类型 - date</a></li>
+    <li><a href="#14-布尔类型---boolean">1.4 布尔类型 - boolean</a></li>
+    <li><a href="#15-二进制型---binary">1.5 二进制型 - binary</a></li>
+    <li><a href="#16-范围类型---range">1.6 范围类型 - range</a></li>
+    <li><a href="#2-复杂数据类型">2 复杂数据类型</a></li>
+    <li><a href="#21-数组类型---array">2.1 数组类型 - array</a></li>
+    <li><a href="#22-对象类型---object">2.2 对象类型 - object</a></li>
+    <li><a href="#23-嵌套类型---nested">2.3 嵌套类型 - nested</a>
+      <ul>
+        <li><a href="#231-对象数组是如何存储的">2.3.1 对象数组是如何存储的</a></li>
+        <li><a href="#232-用nested类型解决object类型的不足">2.3.2 用nested类型解决object类型的不足</a></li>
+      </ul>
+    </li>
+    <li><a href="#3-地理数据类型">3 地理数据类型</a></li>
+    <li><a href="#31-地理点类型---geo-point">3.1 地理点类型 - geo point</a></li>
+    <li><a href="#32-地理形状类型---geo_shape">3.2 地理形状类型 - geo_shape</a></li>
+    <li><a href="#4-专门数据类型">4 专门数据类型</a></li>
+    <li><a href="#41-ip类型">4.1 IP类型</a></li>
+    <li><a href="#42-计数数据类型---token_count">4.2 计数数据类型 - token_count</a></li>
+    <li><a href="#参考资料">参考资料</a></li>
+  </ul>
+</nav>
+    </div>
+</section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+        <a href="/categories/Lang/" >
+            Lang
+        </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/ce28e9ad/">Elasticsearch的数据类型</a>
+        </h2>
+
+        
+        <h3 class="article-subtitle">
+            elastic的数据类型
+        </h3>
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+            <time class="article-time--published">Nov 12, 2023</time>
+        </div>
+        
+
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+            <time class="article-time--reading">
+                阅读时长: 7 分钟
+            </time>
+        </div>
+        
+        <small>
+    <section class="article-tags">
+        
+            <a href="/tags/elastic/">elastic</a>
+        
+    </section>
+</small>
+    </footer>
+    
+
+    
+</div>
+</header>
+
+    <section class="article-content">
+    
+    
+    <blockquote>
+<p>本文基于 Elasticsearch 6.6.0</p>
+</blockquote>
+<h2 id="1-核心数据类型">1 核心数据类型</h2>
+<h2 id="11-字符串类型---string不再支持">1.1 字符串类型 - string(不再支持)</h2>
+<p>(1) 使用示例:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>PUT website
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;mappings&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;blog&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;properties&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;title&#34;</span>: <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;string&#34;</span><span style="color:#f92672">}</span>, 	// 全文本
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;tags&#34;</span>: <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;string&#34;</span>, <span style="color:#e6db74">&#34;index&#34;</span>: <span style="color:#e6db74">&#34;not_analyzed&#34;</span><span style="color:#f92672">}</span>	// 关键字, 不分词
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>(2) ES 5.6.10中的响应信息:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#! Deprecation: The [string] field is deprecated, please use [text] or [keyword] instead on [tags]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#! Deprecation: The [string] field is deprecated, please use [text] or [keyword] instead on [title]</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;acknowledged&#34;</span>: true,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;shards_acknowledged&#34;</span>: true,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;index&#34;</span>: <span style="color:#e6db74">&#34;website&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>(3) ES 6.6.0中的响应信息:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;error&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;root_cause&#34;</span>: <span style="color:#f92672">[</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;mapper_parsing_exception&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;reason&#34;</span>: <span style="color:#e6db74">&#34;No handler for type [string] declared on field [title]&#34;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">]</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;mapper_parsing_exception&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;reason&#34;</span>: <span style="color:#e6db74">&#34;Failed to parse mapping [blog]: No handler for type [string] declared on field [title]&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;caused_by&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;mapper_parsing_exception&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#34;reason&#34;</span>: <span style="color:#e6db74">&#34;No handler for type [string] declared on field [title]&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">}</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;status&#34;</span>: <span style="color:#ae81ff">400</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p><strong>可知string类型的field已经被移除了, 我们需要用text或keyword类型来代替string.</strong></p>
+<h3 id="111-文本类型---text">1.1.1 文本类型 - text</h3>
+<p>在Elasticsearch 5.4 版本开始, text取代了需要分词的string.</p>
+<p>—— <strong>当一个字段需要用于全文搜索(会被分词), 比如产品名称、产品描述信息, 就应该使用text类型.</strong></p>
+<blockquote>
+<p>text的内容会被分词, 可以设置是否需要存储: <code>&quot;index&quot;: &quot;true|false&quot;</code>.<br>
+text类型的字段不能用于排序, 也很少用于聚合.</p>
+</blockquote>
+<p>使用示例:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>PUT website
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;mappings&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;blog&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;properties&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        		<span style="color:#e6db74">&#34;summary&#34;</span>: <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;text&#34;</span>, <span style="color:#e6db74">&#34;index&#34;</span>: <span style="color:#e6db74">&#34;true&#34;</span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h3 id="112-关键字类型---keyword">1.1.2 关键字类型 - keyword</h3>
+<p>在Elasticsearch 5.4 版本开始, keyword取代了不需要分词的string.</p>
+<p>—— <strong>当一个字段需要按照精确值进行过滤、排序、聚合等操作时, 就应该使用keyword类型.</strong></p>
+<blockquote>
+<p>keyword的内容不会被分词, 可以设置是否需要存储: <code>&quot;index&quot;: &quot;true|false&quot;</code>.</p>
+</blockquote>
+<p>使用示例:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>PUT website
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;mappings&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;blog&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;properties&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        		<span style="color:#e6db74">&#34;tags&#34;</span>: <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;keyword&#34;</span>, <span style="color:#e6db74">&#34;index&#34;</span>: <span style="color:#e6db74">&#34;true&#34;</span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h2 id="12-数字类型---8种">1.2 数字类型 - 8种</h2>
+<p>数字类型有如下分类:</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>byte</td>
+<td>有符号的8位整数, 范围: [-128 ~ 127]</td>
+</tr>
+<tr>
+<td>short</td>
+<td>有符号的16位整数, 范围: [-32768 ~ 32767]</td>
+</tr>
+<tr>
+<td>integer</td>
+<td>有符号的32位整数, 范围: [−231 ~ 231-1]</td>
+</tr>
+<tr>
+<td>long</td>
+<td>有符号的64位整数, 范围: [−263 ~ 263-1]</td>
+</tr>
+<tr>
+<td>float</td>
+<td>32位单精度浮点数</td>
+</tr>
+<tr>
+<td>double</td>
+<td>64位双精度浮点数</td>
+</tr>
+<tr>
+<td>half_float</td>
+<td>16位半精度IEEE 754浮点类型</td>
+</tr>
+<tr>
+<td>scaled_float</td>
+<td>缩放类型的的浮点数, 比如price字段只需精确到分, 57.34缩放因子为100, 存储结果为5734</td>
+</tr>
+</tbody>
+</table></div>
+<p>使用注意事项:</p>
+<blockquote>
+<p>尽可能选择范围小的数据类型, 字段的长度越短, 索引和搜索的效率越高;<br>
+优先考虑使用带缩放因子的浮点类型.</p>
+</blockquote>
+<p>使用示例:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>PUT shop
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;mappings&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;book&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;properties&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;text&#34;</span><span style="color:#f92672">}</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;quantity&#34;</span>: <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;integer&#34;</span><span style="color:#f92672">}</span>,  // integer类型
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;price&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;scaled_float&#34;</span>,       // scaled_float类型
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;scaling_factor&#34;</span>: <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h2 id="13-日期类型---date">1.3 日期类型 - date</h2>
+<p>JSON没有日期数据类型, 所以在ES中, 日期可以是:</p>
+<ul>
+<li>包含格式化日期的字符串, &ldquo;2018-10-01&rdquo;, 或&quot;2018/10/01 12:10:30&quot;.</li>
+<li>代表时间毫秒数的长整型数字.</li>
+<li>代表时间秒数的整数.</li>
+</ul>
+<blockquote>
+<p>如果时区未指定, 日期将被转换为UTC格式, 但存储的却是长整型的毫秒值.<br>
+可以自定义日期格式, 若未指定, 则使用默认格式: <code>strict_date_optional_time||epoch_millis</code></p>
+</blockquote>
+<p>(1) 使用日期格式示例:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>// 添加映射
+</span></span><span style="display:flex;"><span>PUT website
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;mappings&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;blog&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;properties&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;pub_date&#34;</span>: <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;date&#34;</span><span style="color:#f92672">}</span>   // 日期类型
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>// 添加数据
+</span></span><span style="display:flex;"><span>PUT website/blog/11
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;pub_date&#34;</span>: <span style="color:#e6db74">&#34;2018-10-10&#34;</span> <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PUT website/blog/12
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;pub_date&#34;</span>: <span style="color:#e6db74">&#34;2018-10-10T12:00:00Z&#34;</span> <span style="color:#f92672">}</span>	// Solr中默认使用的日期格式
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PUT website/blog/13
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;pub_date&#34;</span>: <span style="color:#e6db74">&#34;1589584930103&#34;</span> <span style="color:#f92672">}</span>			// 时间的毫秒值
+</span></span></code></pre></div><p>(2) 多种日期格式:</p>
+<blockquote>
+<p>多个格式使用双竖线<code>||</code>分隔, 每个格式都会被依次尝试, 直到找到匹配的.<br>
+第一个格式用于将时间毫秒值转换为对应格式的字符串.</p>
+</blockquote>
+<p>使用示例:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>// 添加映射
+</span></span><span style="display:flex;"><span>PUT website
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;mappings&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;blog&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;properties&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;date&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;date&#34;</span>,  // 可以接受如下类型的格式
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;format&#34;</span>: <span style="color:#e6db74">&#34;yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h2 id="14-布尔类型---boolean">1.4 布尔类型 - boolean</h2>
+<p>可以接受表示真、假的字符串或数字:</p>
+<ul>
+<li>真值: true, &ldquo;true&rdquo;, &ldquo;on&rdquo;, &ldquo;yes&rdquo;, &ldquo;1&rdquo;&hellip;</li>
+<li>假值: false, &ldquo;false&rdquo;, &ldquo;off&rdquo;, &ldquo;no&rdquo;, &ldquo;0&rdquo;, &ldquo;&quot;(空字符串), 0.0, 0</li>
+</ul>
+<h2 id="15-二进制型---binary">1.5 二进制型 - binary</h2>
+<p>二进制类型是Base64编码字符串的二进制值, 不以默认的方式存储, 且不能被搜索. 有2个设置项:</p>
+<blockquote>
+<p>(1) <code>doc_values</code>: 该字段是否需要存储到磁盘上, 方便以后用来排序、聚合或脚本查询. 接受<code>true</code>和<code>false</code>(默认);<br>
+(2) <code>store</code>: 该字段的值是否要和<code>_source</code>分开存储、检索, 意思是除了<code>_source</code>中, 是否要单独再存储一份. 接受<code>true</code>或<code>false</code>(默认).</p>
+</blockquote>
+<p>使用示例:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>// 添加映射
+</span></span><span style="display:flex;"><span>PUT website
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;mappings&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;blog&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;properties&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;blob&#34;</span>: <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;binary&#34;</span><span style="color:#f92672">}</span>   // 二进制
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>// 添加数据
+</span></span><span style="display:flex;"><span>PUT website/blog/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;title&#34;</span>: <span style="color:#e6db74">&#34;Some binary blog&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;blob&#34;</span>: <span style="color:#e6db74">&#34;hED903KSrA084fRiD5JLgY==&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><blockquote>
+<p>注意: Base64编码的二进制值不能嵌入换行符<code>\n</code>, 逗号(<code>0x2c</code>)等符号.</p>
+</blockquote>
+<h2 id="16-范围类型---range">1.6 范围类型 - range</h2>
+<p>range类型支持以下几种:</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>范围</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>integer_range</td>
+<td>−231 ~ 231−1</td>
+</tr>
+<tr>
+<td>long_range</td>
+<td>−263 ~ 263−1</td>
+</tr>
+<tr>
+<td>float_range</td>
+<td>32位单精度浮点型</td>
+</tr>
+<tr>
+<td>double_range</td>
+<td>64位双精度浮点型</td>
+</tr>
+<tr>
+<td>date_range</td>
+<td>64位整数, 毫秒计时</td>
+</tr>
+<tr>
+<td>ip_range</td>
+<td>IP值的范围, 支持IPV4和IPV6, 或者这两种同时存在</td>
+</tr>
+</tbody>
+</table></div>
+<p>(1) 添加映射:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>PUT company
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;mappings&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;department&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;properties&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;expected_number&#34;</span>: <span style="color:#f92672">{</span>  // 预期员工数
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;integer_range&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">}</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;time_frame&#34;</span>: <span style="color:#f92672">{</span>       // 发展时间线
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;date_range&#34;</span>, 
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;format&#34;</span>: <span style="color:#e6db74">&#34;yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">}</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;ip_whitelist&#34;</span>: <span style="color:#f92672">{</span>     // ip白名单
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;ip_range&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>(2) 添加数据:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>PUT company/department/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;expected_number&#34;</span> : <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;gte&#34;</span> : 10,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;lte&#34;</span> : <span style="color:#ae81ff">20</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;time_frame&#34;</span> : <span style="color:#f92672">{</span> 
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;gte&#34;</span> : <span style="color:#e6db74">&#34;2018-10-01 12:00:00&#34;</span>, 
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;lte&#34;</span> : <span style="color:#e6db74">&#34;2018-11-01&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>, 
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;ip_whitelist&#34;</span>: <span style="color:#e6db74">&#34;192.168.0.0/16&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>(3) 查询数据:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>GET company/department/_search
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;query&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;term&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;expected_number&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;value&#34;</span>: <span style="color:#ae81ff">12</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>GET company/department/_search
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;query&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;range&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;time_frame&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;gte&#34;</span>: <span style="color:#e6db74">&#34;208-08-01&#34;</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;lte&#34;</span>: <span style="color:#e6db74">&#34;2018-12-01&#34;</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;relation&#34;</span>: <span style="color:#e6db74">&#34;within&#34;</span> 
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>查询结果：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;took&#34;</span>: <span style="color:#ae81ff">26</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;timed_out&#34;</span>: <span style="color:#66d9ef">false</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;_shards&#34;</span>: {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;total&#34;</span>: <span style="color:#ae81ff">5</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;successful&#34;</span>: <span style="color:#ae81ff">5</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;skipped&#34;</span>: <span style="color:#ae81ff">0</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;failed&#34;</span>: <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  },
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;hits&#34;</span>: {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;total&#34;</span>: <span style="color:#ae81ff">1</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;max_score&#34;</span>: <span style="color:#ae81ff">1.0</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;hits&#34;</span>: [
+</span></span><span style="display:flex;"><span>      {
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;_index&#34;</span>: <span style="color:#e6db74">&#34;company&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;_type&#34;</span>: <span style="color:#e6db74">&#34;department&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;_id&#34;</span>: <span style="color:#e6db74">&#34;1&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;_score&#34;</span>: <span style="color:#ae81ff">1.0</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;_source&#34;</span>: {
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">&#34;expected_number&#34;</span>: {
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&#34;gte&#34;</span>: <span style="color:#ae81ff">10</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&#34;lte&#34;</span>: <span style="color:#ae81ff">20</span>
+</span></span><span style="display:flex;"><span>          },
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">&#34;time_frame&#34;</span>: {
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&#34;gte&#34;</span>: <span style="color:#e6db74">&#34;2018-10-01 12:00:00&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&#34;lte&#34;</span>: <span style="color:#e6db74">&#34;2018-11-01&#34;</span>
+</span></span><span style="display:flex;"><span>          },
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">&#34;ip_whitelist&#34;</span> : <span style="color:#e6db74">&#34;192.168.0.0/16&#34;</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    ]
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="2-复杂数据类型">2 复杂数据类型</h2>
+<h2 id="21-数组类型---array">2.1 数组类型 - array</h2>
+<p>ES中没有专门的数组类型, 直接使用[]定义即可;</p>
+<p><strong>数组中所有的值必须是同一种数据类型, 不支持混合数据类型的数组</strong>:</p>
+<blockquote>
+<p>① 字符串数组: [&ldquo;one&rdquo;, &ldquo;two&rdquo;];<br>
+② 整数数组: [1, 2];<br>
+③ 由数组组成的数组: [1, [2, 3]], 等价于[1, 2, 3];<br>
+④ 对象数组: [{&ldquo;name&rdquo;: &ldquo;Tom&rdquo;, &ldquo;age&rdquo;: 20}, {&ldquo;name&rdquo;: &ldquo;Jerry&rdquo;, &ldquo;age&rdquo;: 18}].</p>
+</blockquote>
+<p>注意:</p>
+<blockquote>
+<ul>
+<li>动态添加数据时, 数组中第一个值的类型决定整个数组的类型;</li>
+<li>不支持混合数组类型, 比如[1, &ldquo;abc&rdquo;];</li>
+<li>数组可以包含null值, 空数组[]会被当做missing field —— 没有值的字段.</li>
+</ul>
+</blockquote>
+<h2 id="22-对象类型---object">2.2 对象类型 - object</h2>
+<p>JSON文档是分层的: 文档可以包含内部对象, 内部对象也可以包含内部对象.</p>
+<p>(1) 添加示例:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>PUT employee/developer/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;ma_shoufeng&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;address&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;region&#34;</span>: <span style="color:#e6db74">&#34;China&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;location&#34;</span>: <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;province&#34;</span>: <span style="color:#e6db74">&#34;GuangDong&#34;</span>, <span style="color:#e6db74">&#34;city&#34;</span>: <span style="color:#e6db74">&#34;GuangZhou&#34;</span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>(2) 存储方式:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;name&#34;</span>:                       <span style="color:#e6db74">&#34;ma_shoufeng&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;address.region&#34;</span>:             <span style="color:#e6db74">&#34;China&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;address.location.province&#34;</span>:  <span style="color:#e6db74">&#34;GuangDong&#34;</span>, 
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;address.location.city&#34;</span>:      <span style="color:#e6db74">&#34;GuangZhou&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>(3) 文档的映射结构类似为:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>PUT employee
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;mappings&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;developer&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;properties&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;text&#34;</span>, <span style="color:#e6db74">&#34;index&#34;</span>: <span style="color:#e6db74">&#34;true&#34;</span> <span style="color:#f92672">}</span>, 
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;address&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;properties&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                        <span style="color:#e6db74">&#34;region&#34;</span>: <span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;keyword&#34;</span>, <span style="color:#e6db74">&#34;index&#34;</span>: <span style="color:#e6db74">&#34;true&#34;</span> <span style="color:#f92672">}</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#e6db74">&#34;location&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                            <span style="color:#e6db74">&#34;properties&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                                <span style="color:#e6db74">&#34;province&#34;</span>: <span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;keyword&#34;</span>, <span style="color:#e6db74">&#34;index&#34;</span>: <span style="color:#e6db74">&#34;true&#34;</span> <span style="color:#f92672">}</span>,
+</span></span><span style="display:flex;"><span>                                <span style="color:#e6db74">&#34;city&#34;</span>: <span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;keyword&#34;</span>, <span style="color:#e6db74">&#34;index&#34;</span>: <span style="color:#e6db74">&#34;true&#34;</span> <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>                            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>                        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h2 id="23-嵌套类型---nested">2.3 嵌套类型 - nested</h2>
+<p>嵌套类型是对象数据类型的一个特例, 可以让array类型的对象被独立索引和搜索.</p>
+<h3 id="231-对象数组是如何存储的">2.3.1 对象数组是如何存储的</h3>
+<p>① 添加数据:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>PUT game_of_thrones/role/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;group&#34;</span>: <span style="color:#e6db74">&#34;stark&#34;</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;performer&#34;</span>: <span style="color:#f92672">[</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;first&#34;</span>: <span style="color:#e6db74">&#34;John&#34;</span>, <span style="color:#e6db74">&#34;last&#34;</span>: <span style="color:#e6db74">&#34;Snow&#34;</span><span style="color:#f92672">}</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;first&#34;</span>: <span style="color:#e6db74">&#34;Sansa&#34;</span>, <span style="color:#e6db74">&#34;last&#34;</span>: <span style="color:#e6db74">&#34;Stark&#34;</span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>② 内部存储结构:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;group&#34;</span>: 	         <span style="color:#e6db74">&#34;stark&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;performer.first&#34;</span>: [ <span style="color:#e6db74">&#34;john&#34;</span>, <span style="color:#e6db74">&#34;sansa&#34;</span> ],
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;performer.last&#34;</span>:  [ <span style="color:#e6db74">&#34;snow&#34;</span>, <span style="color:#e6db74">&#34;stark&#34;</span> ]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>③ 存储分析:</p>
+<p>可以看出, user.first和user.last会被平铺为多值字段, 这样一来, John和Snow之间的关联性就丢失了.</p>
+<p>在查询时, 可能出现John Stark的结果.</p>
+<h3 id="232-用nested类型解决object类型的不足">2.3.2 用nested类型解决object类型的不足</h3>
+<p>如果需要对以最对象进行索引, 且保留数组中每个对象的独立性, 就应该使用嵌套数据类型.</p>
+<p>—— 嵌套对象实质是将每个对象分离出来, 作为隐藏文档进行索引.</p>
+<p>① 创建映射:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>PUT game_of_thrones
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;mappings&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;role&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;properties&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;performer&#34;</span>: <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;nested&#34;</span> <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>② 添加数据:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>PUT game_of_thrones/role/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;group&#34;</span> : <span style="color:#e6db74">&#34;stark&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;performer&#34;</span> : <span style="color:#f92672">[</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;first&#34;</span>: <span style="color:#e6db74">&#34;John&#34;</span>, <span style="color:#e6db74">&#34;last&#34;</span>: <span style="color:#e6db74">&#34;Snow&#34;</span><span style="color:#f92672">}</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;first&#34;</span>: <span style="color:#e6db74">&#34;Sansa&#34;</span>, <span style="color:#e6db74">&#34;last&#34;</span>: <span style="color:#e6db74">&#34;Stark&#34;</span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>③ 检索数据:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>GET game_of_thrones/_search
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;query&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;nested&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;path&#34;</span>: <span style="color:#e6db74">&#34;performer&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;query&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;bool&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;must&#34;</span>: <span style="color:#f92672">[</span>
+</span></span><span style="display:flex;"><span>                        <span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;match&#34;</span>: <span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;performer.first&#34;</span>: <span style="color:#e6db74">&#34;John&#34;</span> <span style="color:#f92672">}}</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;match&#34;</span>: <span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;performer.last&#34;</span>:  <span style="color:#e6db74">&#34;Snow&#34;</span> <span style="color:#f92672">}}</span> 
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>, 
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;inner_hits&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;highlight&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;fields&#34;</span>: <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;performer.first&#34;</span>: <span style="color:#f92672">{}}</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h2 id="3-地理数据类型">3 地理数据类型</h2>
+<h2 id="31-地理点类型---geo-point">3.1 地理点类型 - geo point</h2>
+<p>地理点类型用于存储地理位置的经纬度对, 可用于:</p>
+<blockquote>
+<ul>
+<li>查找一定范围内的地理点;</li>
+<li>通过地理位置或相对某个中心点的距离聚合文档;</li>
+<li>将距离整合到文档的相关性评分中;</li>
+<li>通过距离对文档进行排序.</li>
+</ul>
+</blockquote>
+<p>(1) 添加映射:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>PUT employee
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;mappings&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;developer&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;properties&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;location&#34;</span>: <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;geo_point&#34;</span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>(2) 存储地理位置:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>// 方式一: 纬度 + 经度键值对
+</span></span><span style="display:flex;"><span>PUT employee/developer/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;text&#34;</span>: <span style="color:#e6db74">&#34;小蛮腰-键值对地理点参数&#34;</span>, 
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;location&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;lat&#34;</span>: 23.11, <span style="color:#e6db74">&#34;lon&#34;</span>: 113.33		// 纬度: latitude, 经度: longitude
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>// 方式二: <span style="color:#e6db74">&#34;纬度, 经度&#34;</span>的字符串参数
+</span></span><span style="display:flex;"><span>PUT employee/developer/2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;text&#34;</span>: <span style="color:#e6db74">&#34;小蛮腰-字符串地理点参数&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;location&#34;</span>: <span style="color:#e6db74">&#34;23.11, 113.33&#34;</span> 			// 纬度, 经度
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>// 方式三: <span style="color:#f92672">[</span><span style="color:#e6db74">&#34;经度, 纬度&#34;</span><span style="color:#f92672">]</span> 数组地理点参数
+</span></span><span style="display:flex;"><span>PUT employee/developer/3
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;text&#34;</span>: <span style="color:#e6db74">&#34;小蛮腰-数组参数&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;location&#34;</span>: <span style="color:#f92672">[</span> 113.33, 23.11 <span style="color:#f92672">]</span> 		// 经度, 纬度
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>(3) 查询示例:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>GET employee/_search
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;query&#34;</span>: <span style="color:#f92672">{</span> 
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;geo_bounding_box&#34;</span>: <span style="color:#f92672">{</span> 
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;location&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;top_left&#34;</span>: <span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;lat&#34;</span>: 24, <span style="color:#e6db74">&#34;lon&#34;</span>: <span style="color:#ae81ff">113</span> <span style="color:#f92672">}</span>,		// 地理盒子模型的上-左边
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;bottom_right&#34;</span>: <span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;lat&#34;</span>: 22, <span style="color:#e6db74">&#34;lon&#34;</span>: <span style="color:#ae81ff">114</span> <span style="color:#f92672">}</span>	// 地理盒子模型的下-右边
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h2 id="32-地理形状类型---geo_shape">3.2 地理形状类型 - geo_shape</h2>
+<p>是多边形的复杂形状. 使用较少, 这里省略.</p>
+<h2 id="4-专门数据类型">4 专门数据类型</h2>
+<h2 id="41-ip类型">4.1 IP类型</h2>
+<p>IP类型的字段用于存储IPv4或IPv6的地址, 本质上是一个长整型字段.</p>
+<p>(1) 添加映射:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>PUT employee
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;mappings&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;customer&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;properties&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;ip_addr&#34;</span>: <span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;ip&#34;</span> <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>(2) 添加数据:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>PUT employee/customer/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;ip_addr&#34;</span>: <span style="color:#e6db74">&#34;192.168.1.1&#34;</span> <span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>(3) 查询数据:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>GET employee/customer/_search
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;query&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;term&#34;</span>: <span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;ip_addr&#34;</span>: <span style="color:#e6db74">&#34;192.168.0.0/16&#34;</span> <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h2 id="42-计数数据类型---token_count">4.2 计数数据类型 - token_count</h2>
+<p>token_count类型用于统计字符串中的单词数量.</p>
+<p>本质上是一个整数型字段, 接受并分析字符串值, 然后索引字符串中单词的个数.</p>
+<p>(1) 添加映射:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>PUT employee
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;mappings&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;customer&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;properties&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#f92672">{</span> 
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;text&#34;</span>,
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;fields&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                        <span style="color:#e6db74">&#34;length&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                            <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;token_count&#34;</span>, 
+</span></span><span style="display:flex;"><span>                            <span style="color:#e6db74">&#34;analyzer&#34;</span>: <span style="color:#e6db74">&#34;standard&#34;</span>
+</span></span><span style="display:flex;"><span>                        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>(2) 添加数据:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>PUT employee/customer/1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;John Snow&#34;</span> <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>PUT employee/customer/2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;Tyrion Lannister&#34;</span> <span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>(3) 查询数据:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>GET employee/customer/_search
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;query&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;term&#34;</span>: <span style="color:#f92672">{</span> <span style="color:#e6db74">&#34;name.length&#34;</span>: <span style="color:#ae81ff">2</span> <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><blockquote>
+<h2 id="参考资料">参考资料</h2>
+<p><a class="link" href="https://www.elastic.co/guide/en/elasticsearch/reference/6.6/mapping-types.html"  target="_blank" rel="noopener"
+    >Elasticsearch 6.6 官方文档 - Field datatypes</a></p>
+</blockquote>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/be2cf138/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Elasticsearch 教程</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    <script src="https://utteranc.es/client.js" 
+        repo="lxbwolf/lxbwolf.github.io"
+        issue-term="pathname"
+        
+        crossorigin="anonymous"
+        async
+        >
+</script>
+
+<style>
+    .utterances {
+        max-width: unset;
+    }
+</style>
+
+<script>
+    let utterancesLoaded = false;
+
+    function setUtterancesTheme(theme) {
+        let utterances = document.querySelector('.utterances iframe');
+        if (utterances) {
+            utterances.contentWindow.postMessage(
+                {
+                    type: 'set-theme',
+                    theme: `github-${theme}`
+                },
+                'https://utteranc.es'
+            );
+        }
+    }
+
+    addEventListener('message', event => {
+        if (event.origin !== 'https://utteranc.es') return;
+
+        
+        utterancesLoaded = true;
+        setUtterancesTheme(document.documentElement.dataset.scheme)
+    });
+
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (!utterancesLoaded) return;
+        setUtterancesTheme(e.detail)
+    })
+</script>
+
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2024 Xiaobin&#39;s Notes
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>
