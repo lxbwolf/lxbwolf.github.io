@@ -250,6 +250,129 @@
 </description>
         </item>
         <item>
+        <title>ElasticSearch集群原理</title>
+        <link>https://lxb.wiki/fe48575b/</link>
+        <pubDate>Wed, 20 Dec 2023 22:05:31 +0800</pubDate>
+        
+        <guid>https://lxb.wiki/fe48575b/</guid>
+        <description>&lt;h2 id=&#34;1-集群分布式原理&#34;&gt;1 集群分布式原理&lt;/h2&gt;
+&lt;p&gt;ES集群可以根据节点数， 动态调整主分片与副本数， 做到整个集群有效均衡负载。&lt;/p&gt;
+&lt;p&gt;单节点状态下：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202408181548073.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;两个节点状态下， 副本数为1：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202408181549769.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;三个节点状态下， 副本数为1：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202408181550937.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;三个节点状态下， 副本数为2：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202408181550352.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-分片处理机制&#34;&gt;2 分片处理机制&lt;/h2&gt;
+&lt;p&gt;设置分片大小的时候， 需预先做好容量规划， 如果节点数过多， 分片数过小， 那么新的节点将无法分片， 不能做到水平扩展， 并且单个分片数据量太大， 导致数据重新分配耗时过大。&lt;/p&gt;
+&lt;p&gt;假设一个集群中有一个主节点、两个数据节点。orders索引的分片分布情况如下所示：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;PUT&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;orders&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;settings&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;number_of_shards&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;, &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;##&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;主分片&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;number_of_replicas&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;##&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;副分片总数&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202408181551701.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;整个集群中存在P0和P1两个主分片， P0对应的两个R0副本分片， P1对应的是两个R1副本分片。&lt;/p&gt;
+&lt;h2 id=&#34;3-新建索引处理流程&#34;&gt;3 新建索引处理流程&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202408181552857.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;写入的请求会进入主节点， 如果是NODE2副本接收到写请求， 会将它转发至主节点。&lt;/li&gt;
+&lt;li&gt;主节点接收到请求后， 根据documentId做取模运算（外部没有传递documentId，则会采用内部自增ID）， 如果取模结果为P0，则会将写请求转发至NODE3处理。&lt;/li&gt;
+&lt;li&gt;NODE3节点写请求处理完成之后， 采用异步方式， 将数据同步至NODE1和NODE2节点。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;4-读取索引处理流程&#34;&gt;4 读取索引处理流程&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202408181553285.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+	
+&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;读取的请求进入MASTER节点， 会根据取模结果， 将请求转发至不同的节点。&lt;/li&gt;
+&lt;li&gt;如果取模结果为R0，内部还会有负载均衡处理机制，如果上一次的读取请求是在NODE1的R0， 那么当前请求会转发至NODE2的R0， 保障每个节点都能够均衡的处理请求数据。&lt;/li&gt;
+&lt;li&gt;读取的请求如果是直接落至副本节点， 副本节点会做判断， 若有数据则返回，没有的话会转发至其他节点处理。&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+        </item>
+        <item>
+        <title>ElasticSearch集群节点</title>
+        <link>https://lxb.wiki/dbb730e9/</link>
+        <pubDate>Mon, 18 Dec 2023 22:01:13 +0800</pubDate>
+        
+        <guid>https://lxb.wiki/dbb730e9/</guid>
+        <description>&lt;h2 id=&#34;主节点或候选主节点&#34;&gt;主节点（或候选主节点）&lt;/h2&gt;
+&lt;p&gt;主节点负责创建索引、删除索引、分配分片、追踪集群中的节点状态等工作， 主节点负荷相对较轻， 客户端请求可以直接发往任何节点， 由对应节点负责分发和返回处理结果。&lt;/p&gt;
+&lt;p&gt;一个节点启动之后， 采用 Zen Discovery机制去寻找集群中的其他节点， 并与之建立连接， 集群会从候选主节点中选举出一个主节点， 并且一个集群只能选举一个主节点， 在某些情况下， 由于网络通信丢包等问题， 一个集群可能会出现多个主节点， 称为“脑裂现象”， 脑裂会存在丢失数据的可能， 因为主节点拥有最高权限， 它决定了什么时候可以创建索引， 分片如何移动等， 如果存在多个主节点， 就会产生冲突， 容易产生数据丢失。要尽量避免这个问题， 可以通过 discovery.zen.minimum_master_nodes 来设置最少可工作的候选主节点个数。  建议设置为（候选主节点/2） + 1 比如三个候选主节点，该配置项为 （3/2）+1 ,来保证集群中有半数以上的候选主节点， 没有足够的master候选节点， 就不会进行master节点选举，减少脑裂的可能。&lt;/p&gt;
+&lt;p&gt;主节点的参数设置：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;node.master &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; true
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;node.data &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; false
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;数据节点&#34;&gt;数据节点&lt;/h2&gt;
+&lt;p&gt;数据节点负责数据的存储和CRUD等具体操作，数据节点对机器配置要求比较高、，首先需要有足够的磁盘空间来存储数据，其次数据操作对系统CPU、Memory和IO的性能消耗都很大。通常随着集群的扩大，需要增加更多的数据节点来提高可用性。&lt;/p&gt;
+&lt;p&gt;数据节点的参数设置：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;node&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;master&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;node&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;data&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;客户端节点&#34;&gt;客户端节点&lt;/h2&gt;
+&lt;p&gt;客户端节点不做候选主节点， 也不做数据节点的节点，只负责请求的分发、汇总等等，增加客户端节点类型更多是为了负载均衡的处理。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;node&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;master&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;node&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;data&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;提取节点预处理节点&#34;&gt;提取节点（预处理节点）&lt;/h2&gt;
+&lt;p&gt;能执行预处理管道，有自己独立的任务要执行， 在索引数据之前可以先对数据做预处理操作， 不负责数据存储也不负责集群相关的事务。&lt;/p&gt;
+&lt;h2 id=&#34;协调节点&#34;&gt;协调节点&lt;/h2&gt;
+&lt;p&gt;协调节点，是一种角色，而不是真实的Elasticsearch的节点，不能通过配置项来指定哪个节点为协调节点。集群中的任何节点，都可以充当协调节点的角色。当一个节点A收到用户的查询请求后，会把查询子句分发到其它的节点，然后合并各个节点返回的查询结果，最后返回一个完整的数据集给用户。在这个过程中，节点A扮演的就是协调节点的角色。&lt;/p&gt;
+&lt;p&gt;ES的一次请求非常类似于Map-Reduce操作。在ES中对应的也是两个阶段，称之为scatter-gather。客户端发出一个请求到集群的任意一个节点，这个节点就是所谓的协调节点，它会把请求转发给含有相关数据的节点(scatter阶段)，这些数据节点会在本地执行请求然后把结果返回给协调节点。协调节点将这些结果汇总(reduce)成一个单一的全局结果集(gather阶段) 。&lt;/p&gt;
+&lt;h2 id=&#34;部落节点&#34;&gt;部落节点&lt;/h2&gt;
+&lt;p&gt;在多个集群之间充当联合客户端， 它是一个特殊的客户端 ， 可以连接多个集群，在所有连接的集群上执行搜索和其他操作。 部落节点从所有连接的集群中检索集群状态并将其合并成全局集群状态。 掌握这一信息，就可以对所有集群中的节点执行读写操作，就好像它们是本地的。 请注意，部落节点需要能够连接到每个配置的集群中的每个单个节点。&lt;/p&gt;
+</description>
+        </item>
+        <item>
         <title>Elasticsearch Mapping 参数</title>
         <link>https://lxb.wiki/7a9a148e/</link>
         <pubDate>Mon, 20 Nov 2023 21:47:07 +0800</pubDate>

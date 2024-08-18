@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='ElasticSearch集群'>
+
+<meta name="keywords" content="elastic , ElasticSearch集群"><title>ElasticSearch集群节点</title>
+
+<link rel='canonical' href='https://lxb.wiki/dbb730e9/'>
+
+<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='ElasticSearch集群节点'>
+<meta property='og:description' content='ElasticSearch集群'>
+<meta property='og:url' content='https://lxb.wiki/dbb730e9/'>
+<meta property='og:site_name' content='Xiaobin&#39;s Notes'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='elastic' /><meta property='article:published_time' content='2023-12-18T22:01:13&#43;08:00'/><meta property='article:modified_time' content='2023-12-18T22:01:13&#43;08:00'/>
+<meta name="twitter:title" content="ElasticSearch集群节点">
+<meta name="twitter:description" content="ElasticSearch集群">
+<link rel="shortcut icon" href="/favicon.png" />
+
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-JZ2PWLT6JY');
+</script>
+<script>
+    var _hmt = _hmt || [];
+    (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+<script>
+    (function () {
+        var el = document.createElement("script");
+        el.src = "https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?f146251743600ee0672cdcc8455ce18def91cdb255ad969a2ef5c715d5ed5baecaf7cd753709c168f20e6a2e9019123fd11e31a222d3a2fe01ad05c6b8f519b2";
+        el.id = "ttzz";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(el, s);
+    })(window)
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
+                            height="298" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">Xiaobin&#39;s Notes</a></h1>
+            <h2 class="site-description"></h2>
+        </div>
+    </header>
+
+
+    <ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/categories/' >
+                
+                
+                
+                <span>分类</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>标签</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/links/' >
+                
+                
+                
+                <span>友链</span>
+            </a>
+        </li>
+        
+
+        <div class="menu-bottom-section"><ol class="social-menu">
+                    
+                        <li>
+                            <a 
+                                href='mailto://me@lxb.wiki'
+                                target="_blank"
+                                title="Email"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a 
+                                href='https://github.com/lxbwolf'
+                                target="_blank"
+                                title="GitHub"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
+</svg>
+
+
+
+                                
+                            </a>
+                        </li>
+                    
+                        <li>
+                            <a 
+                                href='https://lxb.wiki/atom.xml'
+                                target="_blank"
+                                title="Rss"
+                                rel="me"
+                            >
+                                
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="5" cy="19" r="1" />
+  <path d="M4 4a16 16 0 0 1 16 16" />
+  <path d="M4 11a9 9 0 0 1 9 9" />
+</svg>
+
+
+
+                                
+                            </a>
+                        </li>
+                    
+                </ol>
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <span>暗色模式</span>
+                </li>
+            
+        </div>
+    </ol>
+</aside>
+
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+<section class="widget archives">
+    
+    <h2 class="widget-title section-title">目录</h2>
+
+    <div class="widget--toc">
+        <nav id="TableOfContents">
+  <ul>
+    <li><a href="#主节点或候选主节点">主节点（或候选主节点）</a></li>
+    <li><a href="#数据节点">数据节点</a></li>
+    <li><a href="#客户端节点">客户端节点</a></li>
+    <li><a href="#提取节点预处理节点">提取节点（预处理节点）</a></li>
+    <li><a href="#协调节点">协调节点</a></li>
+    <li><a href="#部落节点">部落节点</a></li>
+  </ul>
+</nav>
+    </div>
+</section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+        <a href="/categories/Lang/" >
+            Lang
+        </a>
+        
+    </header>
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/dbb730e9/">ElasticSearch集群节点</a>
+        </h2>
+
+        
+        <h3 class="article-subtitle">
+            ElasticSearch集群
+        </h3>
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+            <time class="article-time--published">Dec 18, 2023</time>
+        </div>
+        
+
+        
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+            <time class="article-time--reading">
+                阅读时长: 3 分钟
+            </time>
+        </div>
+        
+        <small>
+    <section class="article-tags">
+        
+            <a href="/tags/elastic/">elastic</a>
+        
+    </section>
+</small>
+    </footer>
+    
+
+    
+</div>
+</header>
+
+    <section class="article-content">
+    
+    
+    <h2 id="主节点或候选主节点">主节点（或候选主节点）</h2>
+<p>主节点负责创建索引、删除索引、分配分片、追踪集群中的节点状态等工作， 主节点负荷相对较轻， 客户端请求可以直接发往任何节点， 由对应节点负责分发和返回处理结果。</p>
+<p>一个节点启动之后， 采用 Zen Discovery机制去寻找集群中的其他节点， 并与之建立连接， 集群会从候选主节点中选举出一个主节点， 并且一个集群只能选举一个主节点， 在某些情况下， 由于网络通信丢包等问题， 一个集群可能会出现多个主节点， 称为“脑裂现象”， 脑裂会存在丢失数据的可能， 因为主节点拥有最高权限， 它决定了什么时候可以创建索引， 分片如何移动等， 如果存在多个主节点， 就会产生冲突， 容易产生数据丢失。要尽量避免这个问题， 可以通过 discovery.zen.minimum_master_nodes 来设置最少可工作的候选主节点个数。  建议设置为（候选主节点/2） + 1 比如三个候选主节点，该配置项为 （3/2）+1 ,来保证集群中有半数以上的候选主节点， 没有足够的master候选节点， 就不会进行master节点选举，减少脑裂的可能。</p>
+<p>主节点的参数设置：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>node.master <span style="color:#f92672">=</span> true
+</span></span><span style="display:flex;"><span>node.data <span style="color:#f92672">=</span> false
+</span></span></code></pre></div><h2 id="数据节点">数据节点</h2>
+<p>数据节点负责数据的存储和CRUD等具体操作，数据节点对机器配置要求比较高、，首先需要有足够的磁盘空间来存储数据，其次数据操作对系统CPU、Memory和IO的性能消耗都很大。通常随着集群的扩大，需要增加更多的数据节点来提高可用性。</p>
+<p>数据节点的参数设置：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">master</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>
+</span></span></code></pre></div><h2 id="客户端节点">客户端节点</h2>
+<p>客户端节点不做候选主节点， 也不做数据节点的节点，只负责请求的分发、汇总等等，增加客户端节点类型更多是为了负载均衡的处理。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">master</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>
+</span></span></code></pre></div><h2 id="提取节点预处理节点">提取节点（预处理节点）</h2>
+<p>能执行预处理管道，有自己独立的任务要执行， 在索引数据之前可以先对数据做预处理操作， 不负责数据存储也不负责集群相关的事务。</p>
+<h2 id="协调节点">协调节点</h2>
+<p>协调节点，是一种角色，而不是真实的Elasticsearch的节点，不能通过配置项来指定哪个节点为协调节点。集群中的任何节点，都可以充当协调节点的角色。当一个节点A收到用户的查询请求后，会把查询子句分发到其它的节点，然后合并各个节点返回的查询结果，最后返回一个完整的数据集给用户。在这个过程中，节点A扮演的就是协调节点的角色。</p>
+<p>ES的一次请求非常类似于Map-Reduce操作。在ES中对应的也是两个阶段，称之为scatter-gather。客户端发出一个请求到集群的任意一个节点，这个节点就是所谓的协调节点，它会把请求转发给含有相关数据的节点(scatter阶段)，这些数据节点会在本地执行请求然后把结果返回给协调节点。协调节点将这些结果汇总(reduce)成一个单一的全局结果集(gather阶段) 。</p>
+<h2 id="部落节点">部落节点</h2>
+<p>在多个集群之间充当联合客户端， 它是一个特殊的客户端 ， 可以连接多个集群，在所有连接的集群上执行搜索和其他操作。 部落节点从所有连接的集群中检索集群状态并将其合并成全局集群状态。 掌握这一信息，就可以对所有集群中的节点执行读写操作，就好像它们是本地的。 请注意，部落节点需要能够连接到每个配置的集群中的每个单个节点。</p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/7a9a148e/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Elasticsearch Mapping 参数</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/afde4b9b/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Elasticsearch元数据</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/ce28e9ad/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Elasticsearch的数据类型</h2>
+        </div>
+    </a>
+</article>
+
+            
+                
+<article class="">
+    <a href="/be2cf138/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Elasticsearch 教程</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    <script src="https://utteranc.es/client.js" 
+        repo="lxbwolf/lxbwolf.github.io"
+        issue-term="pathname"
+        
+        crossorigin="anonymous"
+        async
+        >
+</script>
+
+<style>
+    .utterances {
+        max-width: unset;
+    }
+</style>
+
+<script>
+    let utterancesLoaded = false;
+
+    function setUtterancesTheme(theme) {
+        let utterances = document.querySelector('.utterances iframe');
+        if (utterances) {
+            utterances.contentWindow.postMessage(
+                {
+                    type: 'set-theme',
+                    theme: `github-${theme}`
+                },
+                'https://utteranc.es'
+            );
+        }
+    }
+
+    addEventListener('message', event => {
+        if (event.origin !== 'https://utteranc.es') return;
+
+        
+        utterancesLoaded = true;
+        setUtterancesTheme(document.documentElement.dataset.scheme)
+    });
+
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (!utterancesLoaded) return;
+        setUtterancesTheme(e.detail)
+    })
+</script>
+
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2024 Xiaobin&#39;s Notes
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>
