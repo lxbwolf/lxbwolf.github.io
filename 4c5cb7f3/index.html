@@ -1,591 +1,467 @@
 <!DOCTYPE html>
-<html lang="zh-cn" dir="ltr">
-    <head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='基于阿里的零售通业务，总结出的方法论。 一个复杂业务的处理过程 业务背景 零售通是给线下小店供货的B2B模式，我们希望通过数字化重构传统供应链渠道'>
-<title>如何写好业务代码</title>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
 
-<link rel='canonical' href='https://lxb.wiki/4c5cb7f3/'>
+  
+  <title>如何写好业务代码 | Xiaobin&#39;s Notes</title>
+  <meta name="description" content="一个复杂业务的处理过程 业务背景 过程分解 过程分解后的两个问题 1、领域知识被割裂肢解 2、代码的业务表达能力缺失   过程分解+对象模型   写复杂业务的方法论 上下结合 能力下沉 套概念阶段 融会贯通阶段     业务技术要怎么做    基于阿里的零售通业务，总结出的方法论。 一个复杂业务的处理过程业务背景零售通是给线下小店供货的B2B模式，我们希望通过数字化重构传统供应链渠道，提升供">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何写好业务代码">
+<meta property="og:url" content="https://lxb.wiki/4c5cb7f3/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Notes">
+<meta property="og:description" content="一个复杂业务的处理过程 业务背景 过程分解 过程分解后的两个问题 1、领域知识被割裂肢解 2、代码的业务表达能力缺失   过程分解+对象模型   写复杂业务的方法论 上下结合 能力下沉 套概念阶段 融会贯通阶段     业务技术要怎么做    基于阿里的零售通业务，总结出的方法论。 一个复杂业务的处理过程业务背景零售通是给线下小店供货的B2B模式，我们希望通过数字化重构传统供应链渠道，提升供">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328105411.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328105454.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328105631.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328105756.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110024.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110230.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110335.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110449.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110552.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110806.png">
+<meta property="article:published_time" content="2021-12-08T13:51:01.000Z">
+<meta property="article:modified_time" content="2025-02-02T11:48:02.437Z">
+<meta property="article:author" content="lxb">
+<meta property="article:tag" content="架构">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328105411.png">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/4c5cb7f3/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Notes" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
 
-<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='如何写好业务代码'>
-<meta property='og:description' content='基于阿里的零售通业务，总结出的方法论。 一个复杂业务的处理过程 业务背景 零售通是给线下小店供货的B2B模式，我们希望通过数字化重构传统供应链渠道'>
-<meta property='og:url' content='https://lxb.wiki/4c5cb7f3/'>
-<meta property='og:site_name' content='Xiaobin&#39;s Notes'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='架构' /><meta property='article:published_time' content='2021-12-08T21:51:01&#43;00:00'/><meta property='article:modified_time' content='2021-12-08T21:51:01&#43;00:00'/>
-<meta name="twitter:title" content="如何写好业务代码">
-<meta name="twitter:description" content="基于阿里的零售通业务，总结出的方法论。 一个复杂业务的处理过程 业务背景 零售通是给线下小店供货的B2B模式，我们希望通过数字化重构传统供应链渠道">
-<link rel="shortcut icon" href="/favicon.png" />
+  
+  
+  
+  
 
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
 
-
-
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-
-    gtag('config', 'G-JZ2PWLT6JY');
-</script>
-<script>
-    var _hmt = _hmt || [];
-    (function () {
-        var hm = document.createElement("script");
-        hm.src = "https://hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-<script>
-    (function () {
-        var el = document.createElement("script");
-        el.src = "https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?f146251743600ee0672cdcc8455ce18def91cdb255ad969a2ef5c715d5ed5baecaf7cd753709c168f20e6a2e9019123fd11e31a222d3a2fe01ad05c6b8f519b2";
-        el.id = "ttzz";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(el, s);
-    })(window)
-</script>
-    </head>
-    <body class="
-    article-page
-    ">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
     <script>
-        (function() {
-            const colorSchemeKey = 'StackColorScheme';
-            if(!localStorage.getItem(colorSchemeKey)){
-                localStorage.setItem(colorSchemeKey, "auto");
-            }
-        })();
-    </script><script>
-    (function() {
-        const colorSchemeKey = 'StackColorScheme';
-        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
-        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
-            
-
-            document.documentElement.dataset.scheme = 'dark';
-        } else {
-            document.documentElement.dataset.scheme = 'light';
-        }
-    })();
-</script>
-<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
-    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
-        <span class="hamburger-box">
-            <span class="hamburger-inner"></span>
-        </span>
-    </button>
-
-    <header>
-        
-            
-            <figure class="site-avatar">
-                <a href="/">
-                
-                    
-                    
-                    
-                        
-                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
-                            height="298" class="site-logo" loading="lazy" alt="Avatar">
-                    
-                
-                </a>
-                
-                    <span class="emoji">🍥</span>
-                
-            </figure>
-            
-        
-        
-        <div class="site-meta">
-            <h1 class="site-name"><a href="/">Xiaobin&#39;s Notes</a></h1>
-            <h2 class="site-description"></h2>
-        </div>
-    </header>
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+<meta name="generator" content="Hexo 6.3.0"></head>
 
 
-    <ol class="menu" id="main-menu">
-        
-        
-        
-        <li >
-            <a href='/' >
-                
-                
-                
-                <span>首页</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/archives/' >
-                
-                
-                
-                <span>归档</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/categories/' >
-                
-                
-                
-                <span>分类</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/tags/' >
-                
-                
-                
-                <span>标签</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/links/' >
-                
-                
-                
-                <span>友链</span>
-            </a>
-        </li>
-        
-
-        <div class="menu-bottom-section"><ol class="social-menu">
-                    
-                        <li>
-                            <a 
-                                href='mailto://me@lxb.wiki'
-                                target="_blank"
-                                title="Email"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://github.com/lxbwolf'
-                                target="_blank"
-                                title="GitHub"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://lxb.wiki/atom.xml'
-                                target="_blank"
-                                title="Rss"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="5" cy="19" r="1" />
-  <path d="M4 4a16 16 0 0 1 16 16" />
-  <path d="M4 11a9 9 0 0 1 9 9" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                </ol>
-                <li id="dark-mode-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="8" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="16" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <span>暗色模式</span>
-                </li>
-            
-        </div>
-    </ol>
-</aside>
-
-    <aside class="sidebar right-sidebar sticky">
-        
-            
-                
-<section class="widget archives">
-    
-    <h2 class="widget-title section-title">目录</h2>
-
-    <div class="widget--toc">
-        <nav id="TableOfContents">
-  <ul>
-    <li><a href="#一个复杂业务的处理过程">一个复杂业务的处理过程</a>
-      <ul>
-        <li><a href="#业务背景">业务背景</a></li>
-        <li><a href="#过程分解">过程分解</a></li>
-        <li><a href="#过程分解后的两个问题">过程分解后的两个问题</a></li>
-        <li><a href="#过程分解对象模型">过程分解+对象模型</a></li>
-      </ul>
-    </li>
-    <li><a href="#写复杂业务的方法论">写复杂业务的方法论</a>
-      <ul>
-        <li><a href="#上下结合">上下结合</a></li>
-        <li><a href="#能力下沉">能力下沉</a></li>
-      </ul>
-    </li>
-    <li><a href="#业务技术要怎么做">业务技术要怎么做</a></li>
-  </ul>
-</nav>
-    </div>
-</section>
-
-            
-        
-    </aside>
-
-
-            <main class="main full-width">
-    <article class="main-article">
-    <header class="article-header">
-
-    <div class="article-details">
-    
-    <header class="article-category">
-        
-        <a href="/categories/Design/" >
-            Design
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
         </a>
-        
-    </header>
-    
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin&#39;s Notes</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
 
-    <div class="article-title-wrapper">
-        <h2 class="article-title">
-            <a href="/4c5cb7f3/">如何写好业务代码</a>
-        </h2>
-
-        
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
     </div>
-
-    
-    
-    
-    
-    <footer class="article-time">
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
-  <circle cx="18" cy="18" r="4" />
-  <path d="M15 3v4" />
-  <path d="M7 3v4" />
-  <path d="M3 11h16" />
-  <path d="M18 16.496v1.504l1 1" />
-</svg>
-            <time class="article-time--published">Dec 08, 2021</time>
-        </div>
-        
-
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <polyline points="12 7 12 12 15 15" />
-</svg>
-
-
-
-            <time class="article-time--reading">
-                阅读时长: 9 分钟
-            </time>
-        </div>
-        
-        <small>
-    <section class="article-tags">
-        
-            <a href="/tags/%E6%9E%B6%E6%9E%84/">架构</a>
-        
-    </section>
-</small>
-    </footer>
-    
-
-    
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
 </div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
 </header>
 
-    <section class="article-content">
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
     
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/FE/">FE</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">77</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Life/">Life</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">39</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">20</span></li></ul>
+    </div>
+  </div>
+
+
     
-    <!-- raw HTML omitted -->
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/GitHub/" style="font-size: 13.08px;">GitHub</a> <a href="/tags/GoogleSheets/" style="font-size: 13px;">GoogleSheets</a> <a href="/tags/STL/" style="font-size: 13.38px;">STL</a> <a href="/tags/amap/" style="font-size: 13px;">amap</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.23px;">blog</a> <a href="/tags/c/" style="font-size: 13.69px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.08px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.62px;">devops</a> <a href="/tags/docker/" style="font-size: 13.08px;">docker</a> <a href="/tags/elastic/" style="font-size: 13.38px;">elastic</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.31px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.15px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.08px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.15px;">hexo</a> <a href="/tags/hooks/" style="font-size: 13px;">hooks</a> <a href="/tags/http/" style="font-size: 13.38px;">http</a> <a href="/tags/jdk/" style="font-size: 13px;">jdk</a> <a href="/tags/joplin/" style="font-size: 13.08px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/linux/" style="font-size: 13.15px;">linux</a> <a href="/tags/lucene/" style="font-size: 13.31px;">lucene</a> <a href="/tags/mac/" style="font-size: 13.46px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.08px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.15px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.31px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.15px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.15px;">pic</a> <a href="/tags/python/" style="font-size: 13px;">python</a> <a href="/tags/qt/" style="font-size: 13.31px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/raycast/" style="font-size: 13px;">raycast</a> <a href="/tags/react/" style="font-size: 13px;">react</a> <a href="/tags/redis/" style="font-size: 13.54px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.92px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.08px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/terminal/" style="font-size: 13px;">terminal</a> <a href="/tags/vue/" style="font-size: 13px;">vue</a> <a href="/tags/zk/" style="font-size: 13.08px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%8D%8F%E8%AE%AE/" style="font-size: 13px;">协议</a> <a href="/tags/%E5%9C%B0%E5%9B%BE/" style="font-size: 13px;">地图</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.46px;">工具</a> <a href="/tags/%E5%B9%BF%E5%91%8A/" style="font-size: 13px;">广告</a> <a href="/tags/%E6%8F%92%E5%BA%A7/" style="font-size: 13px;">插座</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.77px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.38px;">树莓派</a> <a href="/tags/%E7%94%A8%E7%94%B5/" style="font-size: 13px;">用电</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.54px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91/" style="font-size: 13.08px;">编译</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.85px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.08px;">邮件</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/">2024</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">25</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">24</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">39</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">33</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/42f8026c/" class="title">React useEffect() Hook</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-18T14:16:21.000Z" itemprop="datePublished">2024-05-18</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/b7826aa4/" class="title">Vue 2.x 使用高德地图JS API 2.0加载起点终点路径轨迹</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-01T13:51:18.000Z" itemprop="datePublished">2024-05-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Life/">Life</a>
+              </p>
+              <p class="item-title">
+                <a href="/0565b4f5/" class="title">家庭用电插座</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-04-11T05:48:31.000Z" itemprop="datePublished">2024-04-11</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/a520e262/" class="title">MacOS 14.4 引发Java 应用崩溃</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-15T06:05:49.000Z" itemprop="datePublished">2024-03-15</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/cb9b2c66/" class="title">重定向广告</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-04T05:27:13.000Z" itemprop="datePublished">2024-03-04</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<aside class="sidebar sidebar-toc collapse" id="collapseToc" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    <nav id="toc" class="article-toc">
+      <h3 class="toc-title">文章目录</h3>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.</span> <span class="toc-text">一个复杂业务的处理过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.1.</span> <span class="toc-text">业务背景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.2.</span> <span class="toc-text">过程分解</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.3.</span> <span class="toc-text">过程分解后的两个问题</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">1.3.1.</span> <span class="toc-text">1、领域知识被割裂肢解</span></a></li><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">1.3.2.</span> <span class="toc-text">2、代码的业务表达能力缺失</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.4.</span> <span class="toc-text">过程分解+对象模型</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">2.</span> <span class="toc-text">写复杂业务的方法论</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">2.1.</span> <span class="toc-text">上下结合</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">2.2.</span> <span class="toc-text">能力下沉</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">2.2.1.</span> <span class="toc-text">套概念阶段</span></a></li><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">2.2.2.</span> <span class="toc-text">融会贯通阶段</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">3.</span> <span class="toc-text">业务技术要怎么做</span></a></li></ol>
+    </nav>
+  </div>
+</aside>
+
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-如何写好业务代码" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      如何写好业务代码
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/4c5cb7f3/" class="article-date">
+	  <time datetime="2021-12-08T13:51:01.000Z" itemprop="datePublished">2021-12-08</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Design/">Design</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E6%9E%B6%E6%9E%84/" rel="tag">架构</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/4c5cb7f3/#comments" class="article-comment-link">评论</a></span> 
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 3.4k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 12(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#一个复杂业务的处理过程">一个复杂业务的处理过程</a><ul>
+<li><a href="#业务背景">业务背景</a></li>
+<li><a href="#过程分解">过程分解</a></li>
+<li><a href="#过程分解后的两个问题">过程分解后的两个问题</a><ul>
+<li><a href="#1-领域知识被割裂肢解">1、领域知识被割裂肢解</a></li>
+<li><a href="#2-代码的业务表达能力缺失">2、代码的业务表达能力缺失</a></li>
+</ul>
+</li>
+<li><a href="#过程分解对象模型">过程分解+对象模型</a></li>
+</ul>
+</li>
+<li><a href="#写复杂业务的方法论">写复杂业务的方法论</a><ul>
+<li><a href="#上下结合">上下结合</a></li>
+<li><a href="#能力下沉">能力下沉</a><ul>
+<li><a href="#套概念阶段">套概念阶段</a></li>
+<li><a href="#融会贯通阶段">融会贯通阶段</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#业务技术要怎么做">业务技术要怎么做</a></li>
+</ul>
+<!-- tocstop -->
+
 <p>基于阿里的零售通业务，总结出的方法论。</p>
-<h2 id="一个复杂业务的处理过程">一个复杂业务的处理过程</h2>
-<h3 id="业务背景">业务背景</h3>
-<p>零售通是给线下小店供货的B2B模式，我们希望通过数字化重构传统供应链渠道，提升供应链效率，为新零售助力。阿里在中间是一个平台角色，提供的是Bsbc中的service的功能。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328105411.png"
-	
-	
-	
-	loading="lazy"
-	
-	
-></p>
+<h2><span id="一个复杂业务的处理过程">一个复杂业务的处理过程</span></h2><h3><span id="业务背景">业务背景</span></h3><p>零售通是给线下小店供货的B2B模式，我们希望通过数字化重构传统供应链渠道，提升供应链效率，为新零售助力。阿里在中间是一个平台角色，提供的是Bsbc中的service的功能。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328105411.png" alt></p>
 <p>在商品域，运营会操作一个“上架”动作，上架之后，商品就能在零售通上面对小店进行销售了。<strong>是零售通业务非常关键的业务操作之一，因此涉及很多的数据校验和关联操作</strong>。</p>
 <p>针对上架，一个简化的业务流程如下所示：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328105454.png"
-	
-	
-	
-	loading="lazy"
-	
-	
-></p>
-<h3 id="过程分解">过程分解</h3>
-<p>像这么复杂的业务，我想应该没有人会写在一个service方法中吧。一个类解决不了，那就分治吧。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328105454.png" alt></p>
+<h3><span id="过程分解">过程分解</span></h3><p>像这么复杂的业务，我想应该没有人会写在一个service方法中吧。一个类解决不了，那就分治吧。</p>
 <p>说实话，能想到分而治之的工程师，已经做的不错了，至少比没有分治思维要好很多。我也见过复杂程度相当的业务，连分解都没有，就是一堆方法和类的堆砌。</p>
-<p>不过，这里存在一个问题：即很多同学过度的依赖工具或是辅助手段来实现分解。比如在我们的商品域中，类似的分解手段至少有3套以上，有自制的<a class="link" href="%e6%b5%81%e7%a8%8b%e5%bc%95%e6%93%8e" >流程引擎</a>，有依赖于数据库配置的流程处理：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328105631.png"
-	
-	
-	
-	loading="lazy"
-	
-	
-></p>
+<p>不过，这里存在一个问题：即很多同学过度的依赖工具或是辅助手段来实现分解。比如在我们的商品域中，类似的分解手段至少有3套以上，有自制的<a href="流程引擎">流程引擎</a>，有依赖于数据库配置的流程处理：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328105631.png" alt></p>
 <p>本质上来讲，这些辅助手段做的都是一个pipeline的处理流程，没有其它。因此，我建议此处最好保持KISS（Keep It Simple and Stupid），即<strong>最好是什么工具都不要用，次之是用一个极简的Pipeline模式，最差是使用像流程引擎这样的重方法</strong>。</p>
 <p>除非你的应用有极强的流程可视化和编排的诉求，否则我非常不推荐使用流程引擎等工具。第一，它会引入额外的复杂度，特别是那些需要持久化状态的流程引擎；第二，它会割裂代码，导致阅读代码的不顺畅。<strong>大胆断言一下，全天下估计80%对流程引擎的使用都是得不偿失的</strong>。</p>
-<p>回到商品上架的问题，这里问题核心是工具吗？是设计模式带来的代码灵活性吗？显然不是，<strong>问题的核心应该是如何分解问题和抽象问题</strong>，知道金<a class="link" href="%e9%87%91%e5%ad%97%e5%a1%94%e5%8e%9f%e7%90%86" >字塔原理</a>的应该知道，此处，我们可以使用结构化分解将问题解构成一个有层级的金字塔结构：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328105756.png"
-	
-	
-	
-	loading="lazy"
-	
-	
-></p>
+<p>回到商品上架的问题，这里问题核心是工具吗？是设计模式带来的代码灵活性吗？显然不是，<strong>问题的核心应该是如何分解问题和抽象问题</strong>，知道金<a href="金字塔原理">字塔原理</a>的应该知道，此处，我们可以使用结构化分解将问题解构成一个有层级的金字塔结构：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328105756.png" alt></p>
 <p>按照这种分解写的代码，就像一本书，目录和内容清晰明了。</p>
 <p>以商品上架为例，程序的入口是一个上架命令（OnSaleCommand）, 它由三个阶段（Phase）组成。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Command</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">OnSaleNormalItemCmdExe</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Resource</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> OnSaleContextInitPhase onSaleContextInitPhase<span style="color:#f92672">;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Resource</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> OnSaleDataCheckPhase onSaleDataCheckPhase<span style="color:#f92672">;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Resource</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> OnSaleProcessPhase onSaleProcessPhase<span style="color:#f92672">;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> Response <span style="color:#a6e22e">execute</span><span style="color:#f92672">(</span>OnSaleNormalItemCmd cmd<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>        
-</span></span><span style="display:flex;"><span>        OnSaleContext onSaleContext <span style="color:#f92672">=</span> init<span style="color:#f92672">(</span>cmd<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>        
-</span></span><span style="display:flex;"><span>        checkData<span style="color:#f92672">(</span>onSaleContext<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        process<span style="color:#f92672">(</span>onSaleContext<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> Response<span style="color:#f92672">.</span><span style="color:#a6e22e">buildSuccess</span><span style="color:#f92672">();</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> OnSaleContext <span style="color:#a6e22e">init</span><span style="color:#f92672">(</span>OnSaleNormalItemCmd cmd<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> onSaleContextInitPhase<span style="color:#f92672">.</span><span style="color:#a6e22e">init</span><span style="color:#f92672">(</span>cmd<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">checkData</span><span style="color:#f92672">(</span>OnSaleContext onSaleContext<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>        onSaleDataCheckPhase<span style="color:#f92672">.</span><span style="color:#a6e22e">check</span><span style="color:#f92672">(</span>onSaleContext<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">process</span><span style="color:#f92672">(</span>OnSaleContext onSaleContext<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>        onSaleProcessPhase<span style="color:#f92672">.</span><span style="color:#a6e22e">process</span><span style="color:#f92672">(</span>onSaleContext<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span></code></pre></div><p>每个Phase又可以拆解成多个步骤（Step），以<code>OnSaleProcessPhase</code>为例，它是由一系列Step组成的</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Phase</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">OnSaleProcessPhase</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Resource</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> PublishOfferStep publishOfferStep<span style="color:#f92672">;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Resource</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> BackOfferBindStep backOfferBindStep<span style="color:#f92672">;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//省略其它step
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">process</span><span style="color:#f92672">(</span>OnSaleContext onSaleContext<span style="color:#f92672">){</span>
-</span></span><span style="display:flex;"><span>        SupplierItem supplierItem <span style="color:#f92672">=</span> onSaleContext<span style="color:#f92672">.</span><span style="color:#a6e22e">getSupplierItem</span><span style="color:#f92672">();</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 生成OfferGroupNo
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        generateOfferGroupNo<span style="color:#f92672">(</span>supplierItem<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>       
-</span></span><span style="display:flex;"><span>       <span style="color:#75715e">// 发布商品
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        publishOffer<span style="color:#f92672">(</span>supplierItem<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 前后端库存绑定 backoffer域
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        bindBackOfferStock<span style="color:#f92672">(</span>supplierItem<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 同步库存路由 backoffer域
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        syncStockRoute<span style="color:#f92672">(</span>supplierItem<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 设置虚拟商品拓展字段
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        setVirtualProductExtension<span style="color:#f92672">(</span>supplierItem<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 发货保障打标 offer域
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        markSendProtection<span style="color:#f92672">(</span>supplierItem<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 记录变更内容ChangeDetail
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        recordChangeDetail<span style="color:#f92672">(</span>supplierItem<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 同步供货价到BackOffer
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        syncSupplyPriceToBackOffer<span style="color:#f92672">(</span>supplierItem<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 如果是组合商品打标，写扩展信息
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        setCombineProductExtension<span style="color:#f92672">(</span>supplierItem<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 去售罄标
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        removeSellOutTag<span style="color:#f92672">(</span>offerId<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 发送领域事件
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        fireDomainEvent<span style="color:#f92672">(</span>supplierItem<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>        
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 关闭关联的待办事项
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        closeIssues<span style="color:#f92672">(</span>supplierItem<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span></code></pre></div><p>看到了吗，这就是商品上架这个复杂业务的业务流程。需要流程引擎吗？不需要，需要设计模式支撑吗？也不需要。对于这种业务流程的表达，简单朴素的组合方法模式（Composed Method）是再合适不过的了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Command</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">OnSaleNormalItemCmdExe</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Resource</span></span><br><span class="line">    <span class="keyword">private</span> OnSaleContextInitPhase onSaleContextInitPhase;</span><br><span class="line">    <span class="meta">@Resource</span></span><br><span class="line">    <span class="keyword">private</span> OnSaleDataCheckPhase onSaleDataCheckPhase;</span><br><span class="line">    <span class="meta">@Resource</span></span><br><span class="line">    <span class="keyword">private</span> OnSaleProcessPhase onSaleProcessPhase;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> Response <span class="title function_">execute</span><span class="params">(OnSaleNormalItemCmd cmd)</span> &#123;</span><br><span class="line">        </span><br><span class="line">        <span class="type">OnSaleContext</span> <span class="variable">onSaleContext</span> <span class="operator">=</span> init(cmd);</span><br><span class="line">        </span><br><span class="line">        checkData(onSaleContext);</span><br><span class="line"></span><br><span class="line">        process(onSaleContext);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> Response.buildSuccess();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> OnSaleContext <span class="title function_">init</span><span class="params">(OnSaleNormalItemCmd cmd)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> onSaleContextInitPhase.init(cmd);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">checkData</span><span class="params">(OnSaleContext onSaleContext)</span> &#123;</span><br><span class="line">        onSaleDataCheckPhase.check(onSaleContext);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">process</span><span class="params">(OnSaleContext onSaleContext)</span> &#123;</span><br><span class="line">        onSaleProcessPhase.process(onSaleContext);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>每个Phase又可以拆解成多个步骤（Step），以<code>OnSaleProcessPhase</code>为例，它是由一系列Step组成的</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Phase</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">OnSaleProcessPhase</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Resource</span></span><br><span class="line">    <span class="keyword">private</span> PublishOfferStep publishOfferStep;</span><br><span class="line">    <span class="meta">@Resource</span></span><br><span class="line">    <span class="keyword">private</span> BackOfferBindStep backOfferBindStep;</span><br><span class="line">    <span class="comment">//省略其它step</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">process</span><span class="params">(OnSaleContext onSaleContext)</span>&#123;</span><br><span class="line">        <span class="type">SupplierItem</span> <span class="variable">supplierItem</span> <span class="operator">=</span> onSaleContext.getSupplierItem();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 生成OfferGroupNo</span></span><br><span class="line">        generateOfferGroupNo(supplierItem);</span><br><span class="line">       </span><br><span class="line">       <span class="comment">// 发布商品</span></span><br><span class="line">        publishOffer(supplierItem);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 前后端库存绑定 backoffer域</span></span><br><span class="line">        bindBackOfferStock(supplierItem);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 同步库存路由 backoffer域</span></span><br><span class="line">        syncStockRoute(supplierItem);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 设置虚拟商品拓展字段</span></span><br><span class="line">        setVirtualProductExtension(supplierItem);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 发货保障打标 offer域</span></span><br><span class="line">        markSendProtection(supplierItem);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 记录变更内容ChangeDetail</span></span><br><span class="line">        recordChangeDetail(supplierItem);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 同步供货价到BackOffer</span></span><br><span class="line">        syncSupplyPriceToBackOffer(supplierItem);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 如果是组合商品打标，写扩展信息</span></span><br><span class="line">        setCombineProductExtension(supplierItem);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 去售罄标</span></span><br><span class="line">        removeSellOutTag(offerId);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 发送领域事件</span></span><br><span class="line">        fireDomainEvent(supplierItem);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 关闭关联的待办事项</span></span><br><span class="line">        closeIssues(supplierItem);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>看到了吗，这就是商品上架这个复杂业务的业务流程。需要流程引擎吗？不需要，需要设计模式支撑吗？也不需要。对于这种业务流程的表达，简单朴素的组合方法模式（Composed Method）是再合适不过的了。</p>
 <p>因此，在做过程分解的时候，我建议工程师不要把太多精力放在工具上，放在设计模式带来的灵活性上。而是应该多花时间在对问题分析，结构化分解，最后通过合理的抽象，形成合适的阶段（Phase）和步骤（Step）上。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110024.png"
-	
-	
-	
-	loading="lazy"
-	
-	
-></p>
-<h3 id="过程分解后的两个问题">过程分解后的两个问题</h3>
-<h4 id="1领域知识被割裂肢解">1、领域知识被割裂肢解</h4>
-<p>什么叫被肢解？因为我们到目前为止做的都是过程化拆解，导致没有一个聚合领域知识的地方。每个Use Case的代码只关心自己的处理流程，知识没有沉淀。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110024.png" alt></p>
+<h3><span id="过程分解后的两个问题">过程分解后的两个问题</span></h3><h4><span id="1-领域知识被割裂肢解">1、领域知识被割裂肢解</span></h4><p>什么叫被肢解？因为我们到目前为止做的都是过程化拆解，导致没有一个聚合领域知识的地方。每个Use Case的代码只关心自己的处理流程，知识没有沉淀。</p>
 <p>相同的业务逻辑会在多个Use Case中被重复实现，导致代码重复度高，即使有复用，最多也就是抽取一个util，代码对业务语义的表达能力很弱，从而影响代码的可读性和可理解性。</p>
-<h4 id="2代码的业务表达能力缺失">2、代码的业务表达能力缺失</h4>
-<p>试想下，在过程式的代码中，所做的事情无外乎就是取数据&ndash;做计算&ndash;存数据，在这种情况下，要如何通过代码显性化的表达我们的业务呢？ 说实话，很难做到，因为我们缺失了模型，以及模型之间的关系。脱离模型的业务表达，是缺少韵律和灵魂的。</p>
+<h4><span id="2-代码的业务表达能力缺失">2、代码的业务表达能力缺失</span></h4><p>试想下，在过程式的代码中，所做的事情无外乎就是取数据–做计算–存数据，在这种情况下，要如何通过代码显性化的表达我们的业务呢？ 说实话，很难做到，因为我们缺失了模型，以及模型之间的关系。脱离模型的业务表达，是缺少韵律和灵魂的。</p>
 <p>举个例子，在上架过程中，有一个校验是检查库存的，其中对于组合品（CombineBackOffer）其库存的处理会和普通品不一样。原来的代码是这么写的：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">boolean</span> isCombineProduct <span style="color:#f92672">=</span> supplierItem<span style="color:#f92672">.</span><span style="color:#a6e22e">getSign</span><span style="color:#f92672">().</span><span style="color:#a6e22e">isCombProductQuote</span><span style="color:#f92672">();</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// supplier.usc warehouse needn&#39;t check
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>WarehouseTypeEnum<span style="color:#f92672">.</span><span style="color:#a6e22e">isAliWarehouse</span><span style="color:#f92672">(</span>supplierItem<span style="color:#f92672">.</span><span style="color:#a6e22e">getWarehouseType</span><span style="color:#f92672">()))</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// quote warehosue check
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>CollectionUtil<span style="color:#f92672">.</span><span style="color:#a6e22e">isEmpty</span><span style="color:#f92672">(</span>supplierItem<span style="color:#f92672">.</span><span style="color:#a6e22e">getWarehouseIdList</span><span style="color:#f92672">())</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>isCombineProduct<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">throw</span> ExceptionFactory<span style="color:#f92672">.</span><span style="color:#a6e22e">makeFault</span><span style="color:#f92672">(</span>ServiceExceptionCode<span style="color:#f92672">.</span><span style="color:#a6e22e">SYSTEM_ERROR</span><span style="color:#f92672">,</span> <span style="color:#e6db74">&#34;亲，不能发布Offer，请联系仓配运营人员，建立品仓关系！&#34;</span><span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// inventory amount check
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>Long sellableAmount <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>L<span style="color:#f92672">;</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>isCombineProduct<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    sellableAmount <span style="color:#f92672">=</span> normalBiz<span style="color:#f92672">.</span><span style="color:#a6e22e">acquireSellableAmount</span><span style="color:#f92672">(</span>supplierItem<span style="color:#f92672">.</span><span style="color:#a6e22e">getBackOfferId</span><span style="color:#f92672">(),</span> supplierItem<span style="color:#f92672">.</span><span style="color:#a6e22e">getWarehouseIdList</span><span style="color:#f92672">());</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//组套商品
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    OfferModel backOffer <span style="color:#f92672">=</span> backOfferQueryService<span style="color:#f92672">.</span><span style="color:#a6e22e">getBackOffer</span><span style="color:#f92672">(</span>supplierItem<span style="color:#f92672">.</span><span style="color:#a6e22e">getBackOfferId</span><span style="color:#f92672">());</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>backOffer <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>        sellableAmount <span style="color:#f92672">=</span> backOffer<span style="color:#f92672">.</span><span style="color:#a6e22e">getOffer</span><span style="color:#f92672">().</span><span style="color:#a6e22e">getTradeModel</span><span style="color:#f92672">().</span><span style="color:#a6e22e">getTradeCondition</span><span style="color:#f92672">().</span><span style="color:#a6e22e">getAmountOnSale</span><span style="color:#f92672">();</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>sellableAmount <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">throw</span> ExceptionFactory<span style="color:#f92672">.</span><span style="color:#a6e22e">makeFault</span><span style="color:#f92672">(</span>ServiceExceptionCode<span style="color:#f92672">.</span><span style="color:#a6e22e">SYSTEM_ERROR</span><span style="color:#f92672">,</span> <span style="color:#e6db74">&#34;亲，实仓库存必须大于0才能发布，请确认已补货.\r[id:&#34;</span> <span style="color:#f92672">+</span> supplierItem<span style="color:#f92672">.</span><span style="color:#a6e22e">getId</span><span style="color:#f92672">()</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;]&#34;</span><span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span></code></pre></div><p>然而，如果我们在系统中引入领域模型之后，其代码会简化为如下：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>backOffer<span style="color:#f92672">.</span><span style="color:#a6e22e">isCloudWarehouse</span><span style="color:#f92672">()){</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span><span style="color:#f92672">;</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>backOffer<span style="color:#f92672">.</span><span style="color:#a6e22e">isNonInWarehouse</span><span style="color:#f92672">()){</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> BizException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;亲，不能发布Offer，请联系仓配运营人员，建立品仓关系！&#34;</span><span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>backOffer<span style="color:#f92672">.</span><span style="color:#a6e22e">getStockAmount</span><span style="color:#f92672">()</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">){</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> BizException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;亲，实仓库存必须大于0才能发布，请确认已补货.\r[id:&#34;</span> <span style="color:#f92672">+</span> backOffer<span style="color:#f92672">.</span><span style="color:#a6e22e">getSupplierItem</span><span style="color:#f92672">().</span><span style="color:#a6e22e">getCspuCode</span><span style="color:#f92672">()</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;]&#34;</span><span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span></code></pre></div><p>有没有发现，使用模型的表达要清晰易懂很多，而且也不需要做关于组合品的判断了，因为我们在系统中引入了更加贴近现实的对象模型（CombineBackOffer继承BackOffer），通过对象的多态可以消除我们代码中的大部分的 if-else。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110230.png"
-	
-	
-	
-	loading="lazy"
-	
-	
-></p>
-<h3 id="过程分解对象模型">过程分解+对象模型</h3>
-<p>通过上面的案例，我们可以看到<strong>有过程分解要好于没有分解</strong>，<strong>过程分解+对象模型要好于仅仅是过程分解</strong>。对于商品上架这个case，如果采用过程分解+对象模型的方式，最终我们会得到一个如下的系统结构：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110335.png"
-	
-	
-	
-	loading="lazy"
-	
-	
-></p>
-<h2 id="写复杂业务的方法论">写复杂业务的方法论</h2>
-<p>通过上面案例的讲解，我想说，我已经交代了复杂业务代码要怎么写：<strong>即自上而下的结构化分解+自下而上的<a class="link" href="%e9%9d%a2%e5%90%91%e5%af%b9%e8%b1%a1%e5%88%86%e6%9e%90" >面向对象分析</a></strong>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">boolean</span> <span class="variable">isCombineProduct</span> <span class="operator">=</span> supplierItem.getSign().isCombProductQuote();</span><br><span class="line"></span><br><span class="line"><span class="comment">// supplier.usc warehouse needn&#x27;t check</span></span><br><span class="line"><span class="keyword">if</span> (WarehouseTypeEnum.isAliWarehouse(supplierItem.getWarehouseType())) &#123;</span><br><span class="line"><span class="comment">// quote warehosue check</span></span><br><span class="line"><span class="keyword">if</span> (CollectionUtil.isEmpty(supplierItem.getWarehouseIdList()) &amp;&amp; !isCombineProduct) &#123;</span><br><span class="line">    <span class="keyword">throw</span> ExceptionFactory.makeFault(ServiceExceptionCode.SYSTEM_ERROR, <span class="string">&quot;亲，不能发布Offer，请联系仓配运营人员，建立品仓关系！&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// inventory amount check</span></span><br><span class="line"><span class="type">Long</span> <span class="variable">sellableAmount</span> <span class="operator">=</span> <span class="number">0L</span>;</span><br><span class="line"><span class="keyword">if</span> (!isCombineProduct) &#123;</span><br><span class="line">    sellableAmount = normalBiz.acquireSellableAmount(supplierItem.getBackOfferId(), supplierItem.getWarehouseIdList());</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">//组套商品</span></span><br><span class="line">    <span class="type">OfferModel</span> <span class="variable">backOffer</span> <span class="operator">=</span> backOfferQueryService.getBackOffer(supplierItem.getBackOfferId());</span><br><span class="line">    <span class="keyword">if</span> (backOffer != <span class="literal">null</span>) &#123;</span><br><span class="line">        sellableAmount = backOffer.getOffer().getTradeModel().getTradeCondition().getAmountOnSale();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (sellableAmount &lt; <span class="number">1</span>) &#123;</span><br><span class="line">    <span class="keyword">throw</span> ExceptionFactory.makeFault(ServiceExceptionCode.SYSTEM_ERROR, <span class="string">&quot;亲，实仓库存必须大于0才能发布，请确认已补货.\r[id:&quot;</span> + supplierItem.getId() + <span class="string">&quot;]&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然而，如果我们在系统中引入领域模型之后，其代码会简化为如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(backOffer.isCloudWarehouse())&#123;</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (backOffer.isNonInWarehouse())&#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">BizException</span>(<span class="string">&quot;亲，不能发布Offer，请联系仓配运营人员，建立品仓关系！&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (backOffer.getStockAmount() &lt; <span class="number">1</span>)&#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">BizException</span>(<span class="string">&quot;亲，实仓库存必须大于0才能发布，请确认已补货.\r[id:&quot;</span> + backOffer.getSupplierItem().getCspuCode() + <span class="string">&quot;]&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有没有发现，使用模型的表达要清晰易懂很多，而且也不需要做关于组合品的判断了，因为我们在系统中引入了更加贴近现实的对象模型（CombineBackOffer继承BackOffer），通过对象的多态可以消除我们代码中的大部分的 if-else。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110230.png" alt></p>
+<h3><span id="过程分解对象模型">过程分解+对象模型</span></h3><p>通过上面的案例，我们可以看到<strong>有过程分解要好于没有分解</strong>，<strong>过程分解+对象模型要好于仅仅是过程分解</strong>。对于商品上架这个case，如果采用过程分解+对象模型的方式，最终我们会得到一个如下的系统结构：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110335.png" alt></p>
+<h2><span id="写复杂业务的方法论">写复杂业务的方法论</span></h2><p>通过上面案例的讲解，我想说，我已经交代了复杂业务代码要怎么写：<strong>即自上而下的结构化分解+自下而上的<a href="面向对象分析">面向对象分析</a></strong>。</p>
 <p>接下来，让我们把上面的案例进行进一步的提炼，形成一个可落地的方法论，从而可以泛化到更多的复杂业务场景。</p>
-<h3 id="上下结合">上下结合</h3>
-<p>所谓上下结合，是指我们要<strong>结合自上而下的过程分解和自下而上的对象建模</strong>，螺旋式的构建我们的应用系统。这是一个动态的过程，两个步骤可以交替进行、也可以同时进行。</p>
+<h3><span id="上下结合">上下结合</span></h3><p>所谓上下结合，是指我们要<strong>结合自上而下的过程分解和自下而上的对象建模</strong>，螺旋式的构建我们的应用系统。这是一个动态的过程，两个步骤可以交替进行、也可以同时进行。</p>
 <p>这两个步骤是相辅相成的，<strong>上面的分析可以帮助我们更好的理清模型之间的关系，而下面的模型表达可以提升我们代码的复用度和业务语义表达能力</strong>。</p>
 <p>其过程如下图所示：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110449.png"
-	
-	
-	
-	loading="lazy"
-	
-	
-></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110449.png" alt></p>
 <p>使用这种上下结合的方式，我们就有可能在面对任何复杂的业务场景，都能写出干净整洁、易维护的代码。</p>
-<h3 id="能力下沉">能力下沉</h3>
-<p>一般来说实践DDD有两个过程：</p>
+<h3><span id="能力下沉">能力下沉</span></h3><p>一般来说实践DDD有两个过程：</p>
 <ol>
-<li>
-<h4 id="套概念阶段">套概念阶段</h4>
-</li>
+<li><h4><span id="套概念阶段">套概念阶段</span></h4></li>
 </ol>
-<p>了解了一些DDD的概念，然后在代码中“使用”Aggregation Root，Bonded Context，Repository等等这些概念。更进一步，也会使用一定的分层策略。然而这种做法一般对<a class="link" href="https://www.zhihu.com/search?q=%e5%a4%8d%e6%9d%82%e5%ba%a6&amp;search_source=Entity&amp;hybrid_search_source=Entity&amp;hybrid_search_extra=%7b%22sourceType%22%3A%22answer%22%2C%22sourceId%22%3A874296743%7d"  target="_blank" rel="noopener"
-    >复杂度</a>的治理并没有多大作用。</p>
+<p>了解了一些DDD的概念，然后在代码中“使用”Aggregation Root，Bonded Context，Repository等等这些概念。更进一步，也会使用一定的分层策略。然而这种做法一般对<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=复杂度&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={" sourcetype"%3a"answer"%2c"sourceid"%3a874296743}">复杂度</a>的治理并没有多大作用。</p>
 <ol start="2">
-<li>
-<h4 id="融会贯通阶段">融会贯通阶段</h4>
-</li>
+<li><h4><span id="融会贯通阶段">融会贯通阶段</span></h4></li>
 </ol>
 <p>术语已经不再重要，理解DDD的本质是统一语言、边界划分和面向对象分析的方法。</p>
 <p>大体上而言，我大概是在1.7的阶段，因为有一个问题一直在困扰我，就是哪些能力应该放在Domain层，是不是按照传统的做法，将所有的业务都收拢到Domain上，这样做合理吗？说实话，这个问题我一直没有想清楚。</p>
@@ -595,318 +471,206 @@
 <p>注：Use Case是《架构整洁之道》里面的术语，简单理解就是响应一个Request的处理过程</p>
 <p>通过实践，<strong>我发现这种循序渐进的能力下沉策略，应该是一种更符合实际、更敏捷的方法。因为我们承认模型不是一次性设计出来的，而是迭代演化出来的。</strong></p>
 <p>下沉的过程如下图所示，假设两个use case中，我们发现uc1的step3和uc2的step1有类似的功能，我们就可以考虑让其下沉到Domain层，从而增加代码的复用性。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110552.png"
-	
-	
-	
-	loading="lazy"
-	
-	
-></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110552.png" alt></p>
 <p><strong>指导下沉有两个关键指标：代码的复用性和内聚性</strong>。</p>
 <p>复用性是告诉我们When（什么时候该下沉了），即有重复代码的时候。内聚性是告诉我们How（要下沉到哪里），功能有没有内聚到恰当的实体上，有没有放到合适的层次上（因为Domain层的能力也是有两个层次的，一个是Domain Service这是相对比较粗的粒度，另一个是Domain的Model这个是最细粒度的复用）。</p>
 <p>比如，在我们的商品域，经常需要判断一个商品是不是最小单位，是不是中包商品。像这种能力就非常有必要直接挂载在Model上。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">CSPU</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> String code<span style="color:#f92672">;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> String baseCode<span style="color:#f92672">;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//省略其它属性
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 单品是否为最小单位。
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">isMinimumUnit</span><span style="color:#f92672">(){</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> StringUtils<span style="color:#f92672">.</span><span style="color:#a6e22e">equals</span><span style="color:#f92672">(</span>code<span style="color:#f92672">,</span> baseCode<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 针对中包的特殊处理
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">isMidPackage</span><span style="color:#f92672">(){</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> StringUtils<span style="color:#f92672">.</span><span style="color:#a6e22e">equals</span><span style="color:#f92672">(</span>code<span style="color:#f92672">,</span> midPackageCode<span style="color:#f92672">);</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span></code></pre></div><p>之前，因为老系统中没有领域模型，没有CSPU这个实体。你会发现像判断单品是否为最小单位的逻辑是以<code>StringUtils.equals(code, baseCode)</code>的形式散落在代码的各个角落。这种代码的可理解性是可想而知的，至少我在第一眼看到这个代码的时候，是完全不知道什么意思。</p>
-<h2 id="业务技术要怎么做">业务技术要怎么做</h2>
-<p><strong>业务技术到底是在做业务，还是做技术？业务技术的技术性体现在哪里？</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CSPU</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> String code;</span><br><span class="line">    <span class="keyword">private</span> String baseCode;</span><br><span class="line">    <span class="comment">//省略其它属性</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 单品是否为最小单位。</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">isMinimumUnit</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="keyword">return</span> StringUtils.equals(code, baseCode);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 针对中包的特殊处理</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">isMidPackage</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="keyword">return</span> StringUtils.equals(code, midPackageCode);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>之前，因为老系统中没有领域模型，没有CSPU这个实体。你会发现像判断单品是否为最小单位的逻辑是以<code>StringUtils.equals(code, baseCode)</code>的形式散落在代码的各个角落。这种代码的可理解性是可想而知的，至少我在第一眼看到这个代码的时候，是完全不知道什么意思。</p>
+<h2><span id="业务技术要怎么做">业务技术要怎么做</span></h2><p><strong>业务技术到底是在做业务，还是做技术？业务技术的技术性体现在哪里？</strong></p>
 <p>通过上面的案例，我们可以看到业务所面临的复杂性并不亚于底层技术，要想写好业务代码也不是一件容易的事情。业务技术和底层技术人员唯一的区别是他们所面临的问题域不一样。</p>
 <p>业务技术面对的问题域变化更多、面对的人更加庞杂。而底层技术面对的问题域更加稳定、但对技术的要求更加深。比如，如果你需要去开发Pandora，你就要对Classloader有更加深入的了解才行。</p>
 <p>但是，不管是业务技术还是底层技术人员，有一些思维和能力都是共通的。比如，<strong>分解问题的能力，抽象思维，结构化思维</strong>等等。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110806.png"
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220328110806.png" alt></p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/4c5cb7f3/" title="如何写好业务代码" target="_blank" rel="external">https://lxb.wiki/4c5cb7f3/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="external">CC BY-NC 4.0</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      
+        <section id="comments" class="comments">
+          <style>
+            .utterances{max-width: 100%;}
+          </style>
+          <script src="https://utteranc.es/client.js"
+                repo="lxbwolf/lxbwolf.github.io"
+                issue-term="title"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+          </script>
+        </section>
+      
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/ee700d45/" title="SLO 和 SLA 的区别"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/57be14fe/" title="Go 语言内存分配"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+    <li class="toggle-toc">
+      <a class="toggle-btn collapsed" data-toggle="collapse" href="#collapseToc" aria-expanded="false" title="文章目录" role="button">
+        <span>[&nbsp;</span><span>文章目录</span>
+        <i class="text-collapsed icon icon-anchor"></i>
+        <i class="text-in icon icon-close"></i>
+        <span>]</span>
+      </a>
+    </li>
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,wechat"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
 	
 	
-	
-	loading="lazy"
-	
-	
-></p>
-
-</section>
-
-
-    <footer class="article-footer">
-    
-
-    
-    <section class="article-copyright">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
-</svg>
-
-
-
-        <span>Licensed under CC BY-NC-SA 4.0</span>
-    </section>
-    </footer>
-
-
-    
-</article>
-
-    
-
-    
-
-<aside class="related-content--wrapper">
-    <h2 class="section-title">相关文章</h2>
-    <div class="related-content">
-        <div class="flex article-list--tile">
-            
-                
-<article class="">
-    <a href="/3bdd21ca/">
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
         
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
         
-
-        <div class="article-details">
-            <h2 class="article-title">分布式系统的CAP理论</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/3af5472b/">
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
         
-        
+    </ul>
 
-        <div class="article-details">
-            <h2 class="article-title">网络 IO 模型</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/d0f092bd/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">如何保证服务稳定性</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/18166f99/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">可靠性、可用性、稳定性</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/c9399f4/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】微服务中的熔断器和重试</h2>
-        </div>
-    </a>
-</article>
-
-            
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> xbl </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
         </div>
     </div>
-</aside>
 
-     
-    
-        
-    <script src="https://utteranc.es/client.js" 
-        repo="lxbwolf/lxbwolf.github.io"
-        issue-term="pathname"
-        
-        crossorigin="anonymous"
-        async
-        >
-</script>
 
-<style>
-    .utterances {
-        max-width: unset;
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
     }
-</style>
-
-<script>
-    let utterancesLoaded = false;
-
-    function setUtterancesTheme(theme) {
-        let utterances = document.querySelector('.utterances iframe');
-        if (utterances) {
-            utterances.contentWindow.postMessage(
-                {
-                    type: 'set-theme',
-                    theme: `github-${theme}`
-                },
-                'https://utteranc.es'
-            );
-        }
-    }
-
-    addEventListener('message', event => {
-        if (event.origin !== 'https://utteranc.es') return;
-
-        
-        utterancesLoaded = true;
-        setUtterancesTheme(document.documentElement.dataset.scheme)
-    });
-
-    window.addEventListener('onColorSchemeChange', (e) => {
-        if (!utterancesLoaded) return;
-        setUtterancesTheme(e.detail)
-    })
-</script>
+  </script>
 
 
-    
 
-    <footer class="site-footer">
-    <section class="copyright">
-        &copy; 
-        
-            2020 - 
-        
-        2025 Xiaobin&#39;s Notes
-    </section>
-    
-    <section class="powerby">
-        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
-        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
-    </section>
 </footer>
 
-
-    
-<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
-
-    
-    <div class="pswp__bg"></div>
-
-    
-    <div class="pswp__scroll-wrap">
-
-        
-        <div class="pswp__container">
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-        </div>
-
-        
-        <div class="pswp__ui pswp__ui--hidden">
-
-            <div class="pswp__top-bar">
-
-                
-
-                <div class="pswp__counter"></div>
-
-                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
-
-                <button class="pswp__button pswp__button--share" title="Share"></button>
-
-                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
-
-                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
-
-                
-                
-                <div class="pswp__preloader">
-                    <div class="pswp__preloader__icn">
-                        <div class="pswp__preloader__cut">
-                            <div class="pswp__preloader__donut"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-                <div class="pswp__share-tooltip"></div>
-            </div>
-
-            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
-            </button>
-
-            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
-            </button>
-
-            <div class="pswp__caption">
-                <div class="pswp__caption__center"></div>
-            </div>
-
-        </div>
-
-    </div>
-
-</div><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
-                defer
-                >
-            </script><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
-                defer
-                >
-            </script><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
-            ><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
-            >
-
-            </main>
-        </div>
-        <script 
-                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
-                
-                >
-            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
 <script>
-    (function () {
-        const customFont = document.createElement('link');
-        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
-
-        customFont.type = "text/css";
-        customFont.rel = "stylesheet";
-
-        document.head.appendChild(customFont);
-    }());
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 </script>
 
-    </body>
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
 </html>

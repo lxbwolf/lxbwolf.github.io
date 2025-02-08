@@ -1,809 +1,622 @@
 <!DOCTYPE html>
-<html lang="zh-cn" dir="ltr">
-    <head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='用 Tekton 在 Kubernetes 中编写 CI/CD 流水线'>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
 
-<meta name="keywords" content="tikton , Kubernetes , CI/CD , 流水线"><title>【译】用 Tekton 在 Kubernetes 中编写你的第一条 CI/CD 流水线</title>
+  
+  <title>【译】用 Tekton 在 Kubernetes 中编写你的第一条 CI/CD 流水线 | Xiaobin&#39;s Notes</title>
+  <meta name="description" content="用 Tekton 在 Kubernetes 中编写 CI&#x2F;CD 流水线">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【译】用 Tekton 在 Kubernetes 中编写你的第一条 CI&#x2F;CD 流水线">
+<meta property="og:url" content="https://lxb.wiki/2966fc1/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Notes">
+<meta property="og:description" content="用 Tekton 在 Kubernetes 中编写 CI&#x2F;CD 流水线">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img.linux.net.cn/data/attachment/album/202304/01/180822blxgx0c1k43n4kl4.jpg">
+<meta property="og:image" content="https://opensource.com/sites/default/files/uploads/tekto-terminology.png">
+<meta property="og:image" content="https://opensource.com/sites/default/files/uploads/tekton-pipelines.png">
+<meta property="article:published_time" content="2023-04-01T15:09:26.000Z">
+<meta property="article:modified_time" content="2025-02-02T11:48:02.431Z">
+<meta property="article:author" content="lxb">
+<meta property="article:tag" content="翻译">
+<meta property="article:tag" content="devops">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img.linux.net.cn/data/attachment/album/202304/01/180822blxgx0c1k43n4kl4.jpg">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/2966fc1/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Notes" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
 
-<link rel='canonical' href='https://lxb.wiki/2966fc1/'>
+  
+  
+  
+  
 
-<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='【译】用 Tekton 在 Kubernetes 中编写你的第一条 CI/CD 流水线'>
-<meta property='og:description' content='用 Tekton 在 Kubernetes 中编写 CI/CD 流水线'>
-<meta property='og:url' content='https://lxb.wiki/2966fc1/'>
-<meta property='og:site_name' content='Xiaobin&#39;s Notes'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='翻译' /><meta property='article:tag' content='devops' /><meta property='article:published_time' content='2023-04-01T23:09:26&#43;00:00'/><meta property='article:modified_time' content='2023-04-01T23:09:26&#43;00:00'/>
-<meta name="twitter:title" content="【译】用 Tekton 在 Kubernetes 中编写你的第一条 CI/CD 流水线">
-<meta name="twitter:description" content="用 Tekton 在 Kubernetes 中编写 CI/CD 流水线">
-<link rel="shortcut icon" href="/favicon.png" />
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
 
-
-
-
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-
-    gtag('config', 'G-JZ2PWLT6JY');
-</script>
-<script>
-    var _hmt = _hmt || [];
-    (function () {
-        var hm = document.createElement("script");
-        hm.src = "https://hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-<script>
-    (function () {
-        var el = document.createElement("script");
-        el.src = "https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?f146251743600ee0672cdcc8455ce18def91cdb255ad969a2ef5c715d5ed5baecaf7cd753709c168f20e6a2e9019123fd11e31a222d3a2fe01ad05c6b8f519b2";
-        el.id = "ttzz";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(el, s);
-    })(window)
-</script>
-    </head>
-    <body class="
-    article-page
-    ">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
     <script>
-        (function() {
-            const colorSchemeKey = 'StackColorScheme';
-            if(!localStorage.getItem(colorSchemeKey)){
-                localStorage.setItem(colorSchemeKey, "auto");
-            }
-        })();
-    </script><script>
-    (function() {
-        const colorSchemeKey = 'StackColorScheme';
-        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
-        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
-            
-
-            document.documentElement.dataset.scheme = 'dark';
-        } else {
-            document.documentElement.dataset.scheme = 'light';
-        }
-    })();
-</script>
-<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
-    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
-        <span class="hamburger-box">
-            <span class="hamburger-inner"></span>
-        </span>
-    </button>
-
-    <header>
-        
-            
-            <figure class="site-avatar">
-                <a href="/">
-                
-                    
-                    
-                    
-                        
-                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
-                            height="298" class="site-logo" loading="lazy" alt="Avatar">
-                    
-                
-                </a>
-                
-                    <span class="emoji">🍥</span>
-                
-            </figure>
-            
-        
-        
-        <div class="site-meta">
-            <h1 class="site-name"><a href="/">Xiaobin&#39;s Notes</a></h1>
-            <h2 class="site-description"></h2>
-        </div>
-    </header>
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+<meta name="generator" content="Hexo 6.3.0"></head>
 
 
-    <ol class="menu" id="main-menu">
-        
-        
-        
-        <li >
-            <a href='/' >
-                
-                
-                
-                <span>首页</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/archives/' >
-                
-                
-                
-                <span>归档</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/categories/' >
-                
-                
-                
-                <span>分类</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/tags/' >
-                
-                
-                
-                <span>标签</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/links/' >
-                
-                
-                
-                <span>友链</span>
-            </a>
-        </li>
-        
-
-        <div class="menu-bottom-section"><ol class="social-menu">
-                    
-                        <li>
-                            <a 
-                                href='mailto://me@lxb.wiki'
-                                target="_blank"
-                                title="Email"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://github.com/lxbwolf'
-                                target="_blank"
-                                title="GitHub"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://lxb.wiki/atom.xml'
-                                target="_blank"
-                                title="Rss"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="5" cy="19" r="1" />
-  <path d="M4 4a16 16 0 0 1 16 16" />
-  <path d="M4 11a9 9 0 0 1 9 9" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                </ol>
-                <li id="dark-mode-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="8" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="16" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <span>暗色模式</span>
-                </li>
-            
-        </div>
-    </ol>
-</aside>
-
-    <aside class="sidebar right-sidebar sticky">
-        
-            
-                
-<section class="widget archives">
-    
-    <h2 class="widget-title section-title">目录</h2>
-
-    <div class="widget--toc">
-        <nav id="TableOfContents">
-  <ul>
-    <li>
-      <ul>
-        <li><a href="#tekton-介绍">Tekton 介绍</a></li>
-        <li><a href="#tekton组件">Tekton 组件</a></li>
-        <li><a href="#tekton-术语">Tekton 术语</a></li>
-        <li><a href="#创建你的-cicd-流水线">创建你的 CI/CD 流水线</a></li>
-        <li><a href="#总结">总结</a></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
-    </div>
-</section>
-
-            
-        
-    </aside>
-
-
-            <main class="main full-width">
-    <article class="main-article">
-    <header class="article-header">
-
-    <div class="article-details">
-    
-    <header class="article-category">
-        
-        <a href="/categories/Tools/" >
-            Tools
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
         </a>
-        
-    </header>
-    
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin&#39;s Notes</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
 
-    <div class="article-title-wrapper">
-        <h2 class="article-title">
-            <a href="/2966fc1/">【译】用 Tekton 在 Kubernetes 中编写你的第一条 CI/CD 流水线</a>
-        </h2>
-
-        
-        <h3 class="article-subtitle">
-            用 Tekton 在 Kubernetes 中编写 CI/CD 流水线
-        </h3>
-        
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
     </div>
-
-    
-    
-    
-    
-    <footer class="article-time">
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
-  <circle cx="18" cy="18" r="4" />
-  <path d="M15 3v4" />
-  <path d="M7 3v4" />
-  <path d="M3 11h16" />
-  <path d="M18 16.496v1.504l1 1" />
-</svg>
-            <time class="article-time--published">Apr 01, 2023</time>
-        </div>
-        
-
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <polyline points="12 7 12 12 15 15" />
-</svg>
-
-
-
-            <time class="article-time--reading">
-                阅读时长: 5 分钟
-            </time>
-        </div>
-        
-        <small>
-    <section class="article-tags">
-        
-            <a href="/tags/%E7%BF%BB%E8%AF%91/">翻译</a>
-        
-            <a href="/tags/devops/">devops</a>
-        
-    </section>
-</small>
-    </footer>
-    
-
-    
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
 </div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
 </header>
 
-    <section class="article-content">
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
     
-    
-    <blockquote>
-<p>Tekton 是一个用于创建持续集成和持续交付（CI/CD）系统的 Kubernetes 原生开源框架。</p>
-</blockquote>
-<p><img src="https://img.linux.net.cn/data/attachment/album/202304/01/180822blxgx0c1k43n4kl4.jpg"
-	
-	
-	
-	loading="lazy"
-	
-	
-></p>
-<p>Tekton 是一个用于创建持续集成和持续交付（CI/CD）系统的 Kubernetes 原生开源框架。通过对底层实施细节的抽象，它还可以帮助你在多个云供应商或企业内部系统中进行端到端（构建、测试、部署）应用开发。</p>
-<h3 id="tekton-介绍">Tekton 介绍</h3>
-<p><a class="link" href="https://github.com/tektoncd/pipeline"  target="_blank" rel="noopener"
-    >Tekton</a> 最初被称为 <a class="link" href="https://github.com/knative/build"  target="_blank" rel="noopener"
-    >Knative Build</a>，后来被重组为独立的开源项目，有自己的 <a class="link" href="https://cd.foundation/"  target="_blank" rel="noopener"
-    >治理组织</a>，现在是属于 <a class="link" href="https://www.linuxfoundation.org/projects/"  target="_blank" rel="noopener"
-    >Linux 基金会</a> 的项目。Tekton 提供了一个集群内的容器镜像构建和部署工作流程，换句话说，它是一个 <!-- raw HTML omitted -->持续集成<!-- raw HTML omitted -->continuous integration<!-- raw HTML omitted --><!-- raw HTML omitted -->（CI）和 <!-- raw HTML omitted -->持续交付<!-- raw HTML omitted -->continuous delivery<!-- raw HTML omitted --><!-- raw HTML omitted -->（CD）服务。它由 Tekton 流水线和几个支持组件如 Tekton CLI、Triggers 和 Catalog 等组成。</p>
-<p>Tekton 是一个 Kubernetes 原生应用。它在 Kubernetes 集群中作为扩展被安装和运行，由一套Kubernetes 定制化资源组成，定义了你为流水线创建和复用的构建块。由于 Tekton 是一种 Kubernetes 原生技术，所以它非常容易扩展。当你需要增加你的工作负载时，你只需向你的集群添加节点就可以了。由于其可扩展的设计和社区贡献的组件库，它也很容易定制。</p>
-<p>对于需要 CI/CD 系统来开展工作的开发人员，和为其组织内的开发人员建立 CI/CD 系统的平台工程师，Tekton 是理想选择。</p>
-<h3 id="tekton组件">Tekton 组件</h3>
-<p>构建 CI/CD 流水线的过程非常复杂，因此 Tekton 为每一步都提供工具。以下是 Tekton 提供的主要组件：</p>
-<ul>
-<li><!-- raw HTML omitted -->流水线<!-- raw HTML omitted --><!-- raw HTML omitted -->Pipeline<!-- raw HTML omitted --><!-- raw HTML omitted -->： 定义了一组 Kubernetes <a class="link" href="https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/"  target="_blank" rel="noopener"
-    >自定义资源</a>，作为你用来组装 CI/CD 流水线的构建块。</li>
-<li><!-- raw HTML omitted -->触发器<!-- raw HTML omitted -->Triggers<!-- raw HTML omitted --><!-- raw HTML omitted -->：一种 Kubernetes 自定义资源，允许你根据从事件有效载荷中提取的信息来创建流水线。例如，你可以在每次创建 Git 仓库的合并请求时，触发流水线的实例化和执行。</li>
-<li><!-- raw HTML omitted -->命令行<!-- raw HTML omitted -->CLI<!-- raw HTML omitted --><!-- raw HTML omitted -->：提供一个名为 <code>tkn</code> 的命令行界面，你可以使用它从终端与 Tekton 进行交互。</li>
-<li><!-- raw HTML omitted -->仪表盘<!-- raw HTML omitted -->Dashboard<!-- raw HTML omitted --><!-- raw HTML omitted -->：是 Tekton 流水线的一个基于网页的图形界面，显示流水线的执行信息。</li>
-<li><!-- raw HTML omitted -->目录<!-- raw HTML omitted -->Catalog<!-- raw HTML omitted --><!-- raw HTML omitted -->：是一个高质量的、由社区贡献的 Tekton 构建块（任务、流水线等），可在你自己的流水线中使用。</li>
-<li><!-- raw HTML omitted -->中心<!-- raw HTML omitted -->Hub<!-- raw HTML omitted --><!-- raw HTML omitted -->：是一个基于网页的图形界面，用于访问 Tekton 目录。</li>
-<li><!-- raw HTML omitted -->操作员<!-- raw HTML omitted -->Operator<!-- raw HTML omitted --><!-- raw HTML omitted -->：是一种 Kubernetes <a class="link" href="https://operatorhub.io/what-is-an-operator"  target="_blank" rel="noopener"
-    >操作员模式</a>，你可以在 Kubernetes 集群中安装、更新、升级和删除 Tekton 项目。</li>
-<li><!-- raw HTML omitted -->链<!-- raw HTML omitted -->Chains<!-- raw HTML omitted --><!-- raw HTML omitted -->：是一个 Kubernetes <!-- raw HTML omitted -->自定义资源定义<!-- raw HTML omitted -->Custom Resource Definition<!-- raw HTML omitted --><!-- raw HTML omitted -->（CRD）控制器，使你可以在 Tekton 中处理供应链安全的问题。正在开发中。</li>
-<li><!-- raw HTML omitted -->结果<!-- raw HTML omitted -->Results<!-- raw HTML omitted --><!-- raw HTML omitted -->：旨在帮助用户对 CI/CD 工作负载历史进行逻辑分组，并将长期结果的存储从流水线控制器中分离出来。</li>
-</ul>
-<h3 id="tekton-术语">Tekton 术语</h3>
-<p><img src="https://opensource.com/sites/default/files/uploads/tekto-terminology.png"
-	
-	
-	
-	loading="lazy"
-	
-		alt="Tekton terminology"
-	
-	
-></p>
-<ul>
-<li><!-- raw HTML omitted -->步骤<!-- raw HTML omitted -->Step<!-- raw HTML omitted --><!-- raw HTML omitted -->：是 CI/CD 工作流程中最基本的实体，例如为 Python 网络应用程序运行一些单元测试或编译一个 Java 程序。Tekton 使用容器镜像执行每个步骤。</li>
-<li><!-- raw HTML omitted -->任务<!-- raw HTML omitted -->Task<!-- raw HTML omitted --><!-- raw HTML omitted -->：:** 是按特定顺序排列的步骤的集合。Tekton 以 <a class="link" href="https://kubebyexample.com/en/concept/pods"  target="_blank" rel="noopener"
-    >Kubernetes 容器荚</a> 的形式运行任务，其中每个步骤都成为 <!-- raw HTML omitted -->容器荚<!-- raw HTML omitted -->pod<!-- raw HTML omitted --><!-- raw HTML omitted --> 中的一个运行容器。</li>
-<li><!-- raw HTML omitted -->流水线<!-- raw HTML omitted -->Pipelines<!-- raw HTML omitted --><!-- raw HTML omitted -->：是按特定顺序排列的任务的集合。Tekton 把所有任务连接成一个 <!-- raw HTML omitted -->有向无环图<!-- raw HTML omitted -->directed acyclic graph<!-- raw HTML omitted --><!-- raw HTML omitted -->（DAG），并按顺序执行图。换句话说，它创建了一些 Kubernetes 容器荚，并确保每个容器荚按预期成功运行。</li>
-</ul>
-<p><img src="https://opensource.com/sites/default/files/uploads/tekton-pipelines.png"
-	
-	
-	
-	loading="lazy"
-	
-		alt="Tekton pipelines"
-	
-	
-></p>
-<ul>
-<li><!-- raw HTML omitted -->流水线运行<!-- raw HTML omitted -->PipelineRun<!-- raw HTML omitted --><!-- raw HTML omitted -->：顾名思义，是一条流水线的具体执行。</li>
-<li><!-- raw HTML omitted -->任务运行<!-- raw HTML omitted -->TaskRun<!-- raw HTML omitted --><!-- raw HTML omitted -->：是一个任务的具体执行。你可以选择在流水线外运行一次任务运行，可以通过它查看任务中每个步骤执行的具体情况。</li>
-</ul>
-<h3 id="创建你的-cicd-流水线">创建你的 CI/CD 流水线</h3>
-<p>开始使用 Tekton 的最简单方法是自己编写一个简单的流水线。如果你每天都在使用 Kubernetes，那你可能对 YAML 很熟悉，这正是 Tekton 流水线的定义方式。下面是一个克隆代码库的简单流水线的例子。</p>
-<p>首先，创建一个 <code>task.yaml</code> 文件，用你喜欢的文本编辑器打开它。这个文件定义了你要执行的 <!-- raw HTML omitted -->步骤<!-- raw HTML omitted -->Step<!-- raw HTML omitted --><!-- raw HTML omitted -->。在这个例子中，就是克隆一个仓库，所以我把这个步骤命名为 “clone”。该文件设置了一些环境变量，然后使用一个简单的 shell 脚本来执行克隆。</p>
-<p>接下来是 <!-- raw HTML omitted -->任务<!-- raw HTML omitted -->Task<!-- raw HTML omitted --><!-- raw HTML omitted -->。你可以把步骤看作是一个被任务调用的函数，而任务则设置步骤所需的参数和工作空间。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">tekton.dev/v1beta1</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Task</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672"> name</span>: <span style="color:#ae81ff">git-clone</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672"> workspaces</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">output</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     description</span>: <span style="color:#ae81ff">The git repo will be cloned onto the volume backing this Workspace.</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672"> params</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">url</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     description</span>: <span style="color:#ae81ff">Repository URL to clone from.</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     type</span>: <span style="color:#ae81ff">string</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">revision</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     description</span>: <span style="color:#ae81ff">Revision to checkout. (branch, tag, sha, ref, etc...)</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     type</span>: <span style="color:#ae81ff">string</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     default</span>: <span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672"> steps</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">clone</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     image</span>: <span style="color:#e6db74">&#34;gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.21.0&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     env</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672">       - name</span>: <span style="color:#ae81ff">PARAM_URL</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">         value</span>: <span style="color:#ae81ff">$(params.url)</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">       - name</span>: <span style="color:#ae81ff">PARAM_REVISION</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">         value</span>: <span style="color:#ae81ff">$(params.revision)</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">       - name</span>: <span style="color:#ae81ff">WORKSPACE_OUTPUT_PATH</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">         value</span>: <span style="color:#ae81ff">$(workspaces.output.path)</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     script</span>: <span style="color:#ae81ff">|</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">     </span> <span style="color:#75715e">#!/usr/bin/env sh</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       set -eu</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       CHECKOUT_DIR=&#34;${WORKSPACE_OUTPUT_PATH}&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       /ko-app/git-init \</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">         -url=&#34;${PARAM_URL}&#34; \</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">         -revision=&#34;${PARAM_REVISION}&#34; \</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">         -path=&#34;${CHECKOUT_DIR}&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       cd &#34;${CHECKOUT_DIR}&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       EXIT_CODE=&#34;$?&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       if [ &#34;${EXIT_CODE}&#34; != 0 ] ; then</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">         exit &#34;${EXIT_CODE}&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       fi</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       # Verify clone is success by reading readme file.</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       cat ${CHECKOUT_DIR}/README.md</span>
-</span></span></code></pre></div><p>创建第二个文件 <code>pipeline.yaml</code>，并用你喜欢的文本编辑器打开它。这个文件通过设置诸如可以运行和处理任务的工作区等重要参数来定义流水线。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">tekton.dev/v1beta1</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pipeline</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672"> name</span>: <span style="color:#ae81ff">cat-branch-readme</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672"> params</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">repo-url</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     type</span>: <span style="color:#ae81ff">string</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     description</span>: <span style="color:#ae81ff">The git repository URL to clone from.</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">branch-name</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     type</span>: <span style="color:#ae81ff">string</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     description</span>: <span style="color:#ae81ff">The git branch to clone.</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672"> workspaces</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">shared-data</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     description</span>: <span style="color:#ae81ff">|</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">      This workspace will receive the cloned git repo and be passed</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">       to the next Task for the repo&#39;s README.md file to be read.</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672"> tasks</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">fetch-repo</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     taskRef</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672">       name</span>: <span style="color:#ae81ff">git-clone</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     workspaces</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672">       - name</span>: <span style="color:#ae81ff">output</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">         workspace</span>: <span style="color:#ae81ff">shared-data</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     params</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672">       - name</span>: <span style="color:#ae81ff">url</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">         value</span>: <span style="color:#ae81ff">$(params.repo-url)</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">       - name</span>: <span style="color:#ae81ff">revision</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">         value</span>: <span style="color:#ae81ff">$(params.branch-name)</span>
-</span></span></code></pre></div><p>最后，创建一个 <code>pipelinerun.yaml</code> 文件，用喜欢的文本编辑器打开它。这个文件真正的运行流水线。它调用流水线中定义的参数（继而调用任务文件中定义的任务）。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">tekton.dev/v1beta1</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">PipelineRun</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672"> name</span>: <span style="color:#ae81ff">git-clone-checking-out-a-branch</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672"> pipelineRef</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672">   name</span>: <span style="color:#ae81ff">cat-branch-readme</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672"> workspaces</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">shared-data</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     volumeClaimTemplate</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672">       spec</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672">         accessModes</span>:
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">          - ReadWriteOnce</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">         resources</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672">           requests</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672">             storage</span>: <span style="color:#ae81ff">1Gi</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672"> params</span>:
-</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">repo-url</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     value</span>: <span style="color:#ae81ff">&lt;https://github.com/tektoncd/pipeline.git&gt;</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">   - name</span>: <span style="color:#ae81ff">branch-name</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">     value</span>: <span style="color:#ae81ff">release-v0.12.x</span>
-</span></span></code></pre></div><p>把不同工作分在不同的文件中的好处是，<code>git-clone</code> 任务可以在多条流水线中复用。</p>
-<p>例如，假设你想为一个流水线项目做端到端的测试。你可以使用 <code>git-clone</code> 任务 <strong>来让每一次测试都基于最新的代码</strong>。</p>
-<h3 id="总结">总结</h3>
-<p>只要你熟悉 Kubernetes，那 Tekton 对你来说就像其他 Kubernetes 原生应用一样简单。它有很多工具可以帮助你创建流水线并与之交互。如果你喜欢自动化，不妨试试 Tekton!</p>
-<hr>
-<p>via: <a class="link" href="https://opensource.com/article/21/11/cicd-pipeline-kubernetes-tekton"  target="_blank" rel="noopener"
-    >https://opensource.com/article/21/11/cicd-pipeline-kubernetes-tekton</a></p>
-<p>作者：<a class="link" href="https://opensource.com/users/savita-ashture"  target="_blank" rel="noopener"
-    >Savita Ashture</a>
-选题：<a class="link" href="https://github.com/lujun9972"  target="_blank" rel="noopener"
-    >lujun9972</a>
-译者：<a class="link" href="https://github.com/lxbwolf"  target="_blank" rel="noopener"
-    >Xiaobin.Liu</a>
-校对：<a class="link" href="https://github.com/wxy"  target="_blank" rel="noopener"
-    >wxy</a></p>
-<p>本文由 <a class="link" href="https://github.com/LCTT/TranslateProject"  target="_blank" rel="noopener"
-    >LCTT</a> 原创编译，<a class="link" href="https://linux.cn/"  target="_blank" rel="noopener"
-    >Linux中国</a> 荣誉推出</p>
-
-</section>
-
-
-    <footer class="article-footer">
-    
-
-    
-    <section class="article-copyright">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
-</svg>
-
-
-
-        <span>Licensed under CC BY-NC-SA 4.0</span>
-    </section>
-    </footer>
-
-
-    
-</article>
-
-    
-
-    
-
-<aside class="related-content--wrapper">
-    <h2 class="section-title">相关文章</h2>
-    <div class="related-content">
-        <div class="flex article-list--tile">
-            
-                
-<article class="">
-    <a href="/6316d574/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">Jenkins的Api</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/12428ad2/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】构建高效的 DevOps 文化的 6 个技巧</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/f5fbcabb/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】解决 CI/CD 中的仓库阻抗失配</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/a5c52f2c/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">Jenkins中的环境变量</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/8b49ed57/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">几种发布策略</h2>
-        </div>
-    </a>
-</article>
-
-            
-        </div>
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/FE/">FE</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">77</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Life/">Life</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">39</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">20</span></li></ul>
     </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/GitHub/" style="font-size: 13.08px;">GitHub</a> <a href="/tags/GoogleSheets/" style="font-size: 13px;">GoogleSheets</a> <a href="/tags/STL/" style="font-size: 13.38px;">STL</a> <a href="/tags/amap/" style="font-size: 13px;">amap</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.23px;">blog</a> <a href="/tags/c/" style="font-size: 13.69px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.08px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.62px;">devops</a> <a href="/tags/docker/" style="font-size: 13.08px;">docker</a> <a href="/tags/elastic/" style="font-size: 13.38px;">elastic</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.31px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.15px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.08px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.15px;">hexo</a> <a href="/tags/hooks/" style="font-size: 13px;">hooks</a> <a href="/tags/http/" style="font-size: 13.38px;">http</a> <a href="/tags/jdk/" style="font-size: 13px;">jdk</a> <a href="/tags/joplin/" style="font-size: 13.08px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/linux/" style="font-size: 13.15px;">linux</a> <a href="/tags/lucene/" style="font-size: 13.31px;">lucene</a> <a href="/tags/mac/" style="font-size: 13.46px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.08px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.15px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.31px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.15px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.15px;">pic</a> <a href="/tags/python/" style="font-size: 13px;">python</a> <a href="/tags/qt/" style="font-size: 13.31px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/raycast/" style="font-size: 13px;">raycast</a> <a href="/tags/react/" style="font-size: 13px;">react</a> <a href="/tags/redis/" style="font-size: 13.54px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.92px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.08px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/terminal/" style="font-size: 13px;">terminal</a> <a href="/tags/vue/" style="font-size: 13px;">vue</a> <a href="/tags/zk/" style="font-size: 13.08px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%8D%8F%E8%AE%AE/" style="font-size: 13px;">协议</a> <a href="/tags/%E5%9C%B0%E5%9B%BE/" style="font-size: 13px;">地图</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.46px;">工具</a> <a href="/tags/%E5%B9%BF%E5%91%8A/" style="font-size: 13px;">广告</a> <a href="/tags/%E6%8F%92%E5%BA%A7/" style="font-size: 13px;">插座</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.77px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.38px;">树莓派</a> <a href="/tags/%E7%94%A8%E7%94%B5/" style="font-size: 13px;">用电</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.54px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91/" style="font-size: 13.08px;">编译</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.85px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.08px;">邮件</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/">2024</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">25</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">24</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">39</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">33</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/42f8026c/" class="title">React useEffect() Hook</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-18T14:16:21.000Z" itemprop="datePublished">2024-05-18</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/b7826aa4/" class="title">Vue 2.x 使用高德地图JS API 2.0加载起点终点路径轨迹</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-01T13:51:18.000Z" itemprop="datePublished">2024-05-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Life/">Life</a>
+              </p>
+              <p class="item-title">
+                <a href="/0565b4f5/" class="title">家庭用电插座</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-04-11T05:48:31.000Z" itemprop="datePublished">2024-04-11</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/a520e262/" class="title">MacOS 14.4 引发Java 应用崩溃</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-15T06:05:49.000Z" itemprop="datePublished">2024-03-15</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/cb9b2c66/" class="title">重定向广告</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-04T05:27:13.000Z" itemprop="datePublished">2024-03-04</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
 </aside>
 
-     
+  
+  
+<aside class="sidebar sidebar-toc collapse" id="collapseToc" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    <nav id="toc" class="article-toc">
+      <h3 class="toc-title">文章目录</h3>
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.</span> <span class="toc-text">Tekton 介绍</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">2.</span> <span class="toc-text">Tekton 组件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">3.</span> <span class="toc-text">Tekton 术语</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.</span> <span class="toc-text">创建你的 CI&#x2F;CD 流水线</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">5.</span> <span class="toc-text">总结</span></a></li></ol>
+    </nav>
+  </div>
+</aside>
+
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-用-Tekton-在-Kubernetes-中编写你的第一条-CI-CD-流水线" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
     
+    <div class="article-header">
+      
         
-    <script src="https://utteranc.es/client.js" 
-        repo="lxbwolf/lxbwolf.github.io"
-        issue-term="pathname"
+  
+    <h1 class="article-title" itemprop="name">
+      【译】用 Tekton 在 Kubernetes 中编写你的第一条 CI/CD 流水线
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2966fc1/" class="article-date">
+	  <time datetime="2023-04-01T15:09:26.000Z" itemprop="datePublished">2023-04-01</time>
+	</a>
+</span>
         
-        crossorigin="anonymous"
-        async
-        >
-</script>
-
-<style>
-    .utterances {
-        max-width: unset;
-    }
-</style>
-
-<script>
-    let utterancesLoaded = false;
-
-    function setUtterancesTheme(theme) {
-        let utterances = document.querySelector('.utterances iframe');
-        if (utterances) {
-            utterances.contentWindow.postMessage(
-                {
-                    type: 'set-theme',
-                    theme: `github-${theme}`
-                },
-                'https://utteranc.es'
-            );
-        }
-    }
-
-    addEventListener('message', event => {
-        if (event.origin !== 'https://utteranc.es') return;
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Tools/">Tools</a>
+  </span>
 
         
-        utterancesLoaded = true;
-        setUtterancesTheme(document.documentElement.dataset.scheme)
-    });
-
-    window.addEventListener('onColorSchemeChange', (e) => {
-        if (!utterancesLoaded) return;
-        setUtterancesTheme(e.detail)
-    })
-</script>
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/devops/" rel="tag">devops</a>, <a class="article-tag-link-link" href="/tags/%E7%BF%BB%E8%AF%91/" rel="tag">翻译</a>
+  </span>
 
 
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2966fc1/#comments" class="article-comment-link">评论</a></span> 
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 1.9k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 7(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <blockquote>
+<p>Tekton 是一个用于创建持续集成和持续交付（CI/CD）系统的 Kubernetes 原生开源框架。</p>
+</blockquote>
+<p><img src="https://img.linux.net.cn/data/attachment/album/202304/01/180822blxgx0c1k43n4kl4.jpg" alt></p>
+<p>Tekton 是一个用于创建持续集成和持续交付（CI/CD）系统的 Kubernetes 原生开源框架。通过对底层实施细节的抽象，它还可以帮助你在多个云供应商或企业内部系统中进行端到端（构建、测试、部署）应用开发。</p>
+<h3><span id="tekton-介绍">Tekton 介绍</span></h3><p><a target="_blank" rel="noopener" href="https://github.com/tektoncd/pipeline">Tekton</a> 最初被称为 <a target="_blank" rel="noopener" href="https://github.com/knative/build">Knative Build</a>，后来被重组为独立的开源项目，有自己的 <a target="_blank" rel="noopener" href="https://cd.foundation/">治理组织</a>，现在是属于 <a target="_blank" rel="noopener" href="https://www.linuxfoundation.org/projects/">Linux 基金会</a> 的项目。Tekton 提供了一个集群内的容器镜像构建和部署工作流程，换句话说，它是一个 <ruby>持续集成<rt>continuous integration</rt></ruby>（CI）和 <ruby>持续交付<rt>continuous delivery</rt></ruby>（CD）服务。它由 Tekton 流水线和几个支持组件如 Tekton CLI、Triggers 和 Catalog 等组成。</p>
+<p>Tekton 是一个 Kubernetes 原生应用。它在 Kubernetes 集群中作为扩展被安装和运行，由一套Kubernetes 定制化资源组成，定义了你为流水线创建和复用的构建块。由于 Tekton 是一种 Kubernetes 原生技术，所以它非常容易扩展。当你需要增加你的工作负载时，你只需向你的集群添加节点就可以了。由于其可扩展的设计和社区贡献的组件库，它也很容易定制。</p>
+<p>对于需要 CI/CD 系统来开展工作的开发人员，和为其组织内的开发人员建立 CI/CD 系统的平台工程师，Tekton 是理想选择。</p>
+<h3><span id="tekton-组件">Tekton 组件</span></h3><p>构建 CI/CD 流水线的过程非常复杂，因此 Tekton 为每一步都提供工具。以下是 Tekton 提供的主要组件：</p>
+<ul>
+<li><ruby>流水线<rt></rt>Pipeline</ruby>： 定义了一组 Kubernetes <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/">自定义资源</a>，作为你用来组装 CI/CD 流水线的构建块。</li>
+<li><ruby>触发器<rt>Triggers</rt></ruby>：一种 Kubernetes 自定义资源，允许你根据从事件有效载荷中提取的信息来创建流水线。例如，你可以在每次创建 Git 仓库的合并请求时，触发流水线的实例化和执行。</li>
+<li><ruby>命令行<rt>CLI</rt></ruby>：提供一个名为 <code>tkn</code> 的命令行界面，你可以使用它从终端与 Tekton 进行交互。</li>
+<li><ruby>仪表盘<rt>Dashboard</rt></ruby>：是 Tekton 流水线的一个基于网页的图形界面，显示流水线的执行信息。</li>
+<li><ruby>目录<rt>Catalog</rt></ruby>：是一个高质量的、由社区贡献的 Tekton 构建块（任务、流水线等），可在你自己的流水线中使用。</li>
+<li><ruby>中心<rt>Hub</rt></ruby>：是一个基于网页的图形界面，用于访问 Tekton 目录。</li>
+<li><ruby>操作员<rt>Operator</rt></ruby>：是一种 Kubernetes <a target="_blank" rel="noopener" href="https://operatorhub.io/what-is-an-operator">操作员模式</a>，你可以在 Kubernetes 集群中安装、更新、升级和删除 Tekton 项目。</li>
+<li><ruby>链<rt>Chains</rt></ruby>：是一个 Kubernetes <ruby>自定义资源定义<rt>Custom Resource Definition</rt></ruby>（CRD）控制器，使你可以在 Tekton 中处理供应链安全的问题。正在开发中。</li>
+<li><ruby>结果<rt>Results</rt></ruby>：旨在帮助用户对 CI/CD 工作负载历史进行逻辑分组，并将长期结果的存储从流水线控制器中分离出来。</li>
+</ul>
+<h3><span id="tekton-术语">Tekton 术语</span></h3><p><img src="https://opensource.com/sites/default/files/uploads/tekto-terminology.png" alt="Tekton terminology" title="Tekton terminology"></p>
+<ul>
+<li><ruby>步骤<rt>Step</rt></ruby>：是 CI/CD 工作流程中最基本的实体，例如为 Python 网络应用程序运行一些单元测试或编译一个 Java 程序。Tekton 使用容器镜像执行每个步骤。</li>
+<li><ruby>任务<rt>Task</rt></ruby>：:** 是按特定顺序排列的步骤的集合。Tekton 以 <a target="_blank" rel="noopener" href="https://kubebyexample.com/en/concept/pods">Kubernetes 容器荚</a> 的形式运行任务，其中每个步骤都成为 <ruby>容器荚<rt>pod</rt></ruby> 中的一个运行容器。<ul>
+<li><ruby>流水线<rt>Pipelines</rt></ruby>：是按特定顺序排列的任务的集合。Tekton 把所有任务连接成一个 <ruby>有向无环图<rt>directed acyclic graph</rt></ruby>（DAG），并按顺序执行图。换句话说，它创建了一些 Kubernetes 容器荚，并确保每个容器荚按预期成功运行。</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://opensource.com/sites/default/files/uploads/tekton-pipelines.png" alt="Tekton pipelines" title="Tekton pipelines"></p>
+<ul>
+<li><ruby>流水线运行<rt>PipelineRun</rt></ruby>：顾名思义，是一条流水线的具体执行。</li>
+<li><ruby>任务运行<rt>TaskRun</rt></ruby>：是一个任务的具体执行。你可以选择在流水线外运行一次任务运行，可以通过它查看任务中每个步骤执行的具体情况。</li>
+</ul>
+<h3><span id="创建你的-cicd-流水线">创建你的 CI/CD 流水线</span></h3><p>开始使用 Tekton 的最简单方法是自己编写一个简单的流水线。如果你每天都在使用 Kubernetes，那你可能对 YAML 很熟悉，这正是 Tekton 流水线的定义方式。下面是一个克隆代码库的简单流水线的例子。</p>
+<p>首先，创建一个 <code>task.yaml</code> 文件，用你喜欢的文本编辑器打开它。这个文件定义了你要执行的 <ruby>步骤<rt>Step</rt></ruby>。在这个例子中，就是克隆一个仓库，所以我把这个步骤命名为 “clone”。该文件设置了一些环境变量，然后使用一个简单的 shell 脚本来执行克隆。</p>
+<p>接下来是 <ruby>任务<rt>Task</rt></ruby>。你可以把步骤看作是一个被任务调用的函数，而任务则设置步骤所需的参数和工作空间。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">tekton.dev/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Task</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"> <span class="attr">name:</span> <span class="string">git-clone</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"> <span class="attr">workspaces:</span></span><br><span class="line">   <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">output</span></span><br><span class="line">     <span class="attr">description:</span> <span class="string">The</span> <span class="string">git</span> <span class="string">repo</span> <span class="string">will</span> <span class="string">be</span> <span class="string">cloned</span> <span class="string">onto</span> <span class="string">the</span> <span class="string">volume</span> <span class="string">backing</span> <span class="string">this</span> <span class="string">Workspace.</span></span><br><span class="line"> <span class="attr">params:</span></span><br><span class="line">   <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">url</span></span><br><span class="line">     <span class="attr">description:</span> <span class="string">Repository</span> <span class="string">URL</span> <span class="string">to</span> <span class="string">clone</span> <span class="string">from.</span></span><br><span class="line">     <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">   <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">revision</span></span><br><span class="line">     <span class="attr">description:</span> <span class="string">Revision</span> <span class="string">to</span> <span class="string">checkout.</span> <span class="string">(branch,</span> <span class="string">tag,</span> <span class="string">sha,</span> <span class="string">ref,</span> <span class="string">etc...)</span></span><br><span class="line">     <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">     <span class="attr">default:</span> <span class="string">&quot;&quot;</span></span><br><span class="line"> <span class="attr">steps:</span></span><br><span class="line">   <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">clone</span></span><br><span class="line">     <span class="attr">image:</span> <span class="string">&quot;gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.21.0&quot;</span></span><br><span class="line">     <span class="attr">env:</span></span><br><span class="line">       <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">PARAM_URL</span></span><br><span class="line">         <span class="attr">value:</span> <span class="string">$(params.url)</span></span><br><span class="line">       <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">PARAM_REVISION</span></span><br><span class="line">         <span class="attr">value:</span> <span class="string">$(params.revision)</span></span><br><span class="line">       <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">WORKSPACE_OUTPUT_PATH</span></span><br><span class="line">         <span class="attr">value:</span> <span class="string">$(workspaces.output.path)</span></span><br><span class="line">     <span class="attr">script:</span> <span class="string">|</span></span><br><span class="line">      <span class="comment">#!/usr/bin/env sh</span></span><br><span class="line">       <span class="string">set</span> <span class="string">-eu</span></span><br><span class="line"></span><br><span class="line">       <span class="string">CHECKOUT_DIR=&quot;$&#123;WORKSPACE_OUTPUT_PATH&#125;&quot;</span></span><br><span class="line"></span><br><span class="line">       <span class="string">/ko-app/git-init</span> <span class="string">\</span></span><br><span class="line">         <span class="string">-url=&quot;$&#123;PARAM_URL&#125;&quot;</span> <span class="string">\</span></span><br><span class="line">         <span class="string">-revision=&quot;$&#123;PARAM_REVISION&#125;&quot;</span> <span class="string">\</span></span><br><span class="line">         <span class="string">-path=&quot;$&#123;CHECKOUT_DIR&#125;&quot;</span></span><br><span class="line">       <span class="string">cd</span> <span class="string">&quot;$&#123;CHECKOUT_DIR&#125;&quot;</span></span><br><span class="line">       <span class="string">EXIT_CODE=&quot;$?&quot;</span></span><br><span class="line">       <span class="string">if</span> [ <span class="string">&quot;$&#123;EXIT_CODE&#125;&quot;</span> <span class="type">!=</span> <span class="number">0</span> ] <span class="string">;</span> <span class="string">then</span></span><br><span class="line">         <span class="string">exit</span> <span class="string">&quot;$&#123;EXIT_CODE&#125;&quot;</span></span><br><span class="line">       <span class="string">fi</span></span><br><span class="line">       <span class="comment"># Verify clone is success by reading readme file.</span></span><br><span class="line">       <span class="string">cat</span> <span class="string">$&#123;CHECKOUT_DIR&#125;/README.md</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>创建第二个文件 <code>pipeline.yaml</code>，并用你喜欢的文本编辑器打开它。这个文件通过设置诸如可以运行和处理任务的工作区等重要参数来定义流水线。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">tekton.dev/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pipeline</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"> <span class="attr">name:</span> <span class="string">cat-branch-readme</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"> <span class="attr">params:</span></span><br><span class="line">   <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">repo-url</span></span><br><span class="line">     <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">     <span class="attr">description:</span> <span class="string">The</span> <span class="string">git</span> <span class="string">repository</span> <span class="string">URL</span> <span class="string">to</span> <span class="string">clone</span> <span class="string">from.</span></span><br><span class="line">   <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">branch-name</span></span><br><span class="line">     <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">     <span class="attr">description:</span> <span class="string">The</span> <span class="string">git</span> <span class="string">branch</span> <span class="string">to</span> <span class="string">clone.</span></span><br><span class="line"> <span class="attr">workspaces:</span></span><br><span class="line">   <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">shared-data</span></span><br><span class="line">     <span class="attr">description:</span> <span class="string">|</span></span><br><span class="line">      <span class="string">This</span> <span class="string">workspace</span> <span class="string">will</span> <span class="string">receive</span> <span class="string">the</span> <span class="string">cloned</span> <span class="string">git</span> <span class="string">repo</span> <span class="string">and</span> <span class="string">be</span> <span class="string">passed</span></span><br><span class="line">       <span class="string">to</span> <span class="string">the</span> <span class="string">next</span> <span class="string">Task</span> <span class="string">for</span> <span class="string">the</span> <span class="string">repo&#x27;s</span> <span class="string">README.md</span> <span class="string">file</span> <span class="string">to</span> <span class="string">be</span> <span class="string">read.</span></span><br><span class="line"> <span class="attr">tasks:</span></span><br><span class="line">   <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">fetch-repo</span></span><br><span class="line">     <span class="attr">taskRef:</span></span><br><span class="line">       <span class="attr">name:</span> <span class="string">git-clone</span></span><br><span class="line">     <span class="attr">workspaces:</span></span><br><span class="line">       <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">output</span></span><br><span class="line">         <span class="attr">workspace:</span> <span class="string">shared-data</span></span><br><span class="line">     <span class="attr">params:</span></span><br><span class="line">       <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">url</span></span><br><span class="line">         <span class="attr">value:</span> <span class="string">$(params.repo-url)</span></span><br><span class="line">       <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">revision</span></span><br><span class="line">         <span class="attr">value:</span> <span class="string">$(params.branch-name)</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>最后，创建一个 <code>pipelinerun.yaml</code> 文件，用喜欢的文本编辑器打开它。这个文件真正的运行流水线。它调用流水线中定义的参数（继而调用任务文件中定义的任务）。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">tekton.dev/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PipelineRun</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"> <span class="attr">name:</span> <span class="string">git-clone-checking-out-a-branch</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"> <span class="attr">pipelineRef:</span></span><br><span class="line">   <span class="attr">name:</span> <span class="string">cat-branch-readme</span></span><br><span class="line"> <span class="attr">workspaces:</span></span><br><span class="line">   <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">shared-data</span></span><br><span class="line">     <span class="attr">volumeClaimTemplate:</span></span><br><span class="line">       <span class="attr">spec:</span></span><br><span class="line">         <span class="attr">accessModes:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">         <span class="attr">resources:</span></span><br><span class="line">           <span class="attr">requests:</span></span><br><span class="line">             <span class="attr">storage:</span> <span class="string">1Gi</span></span><br><span class="line"> <span class="attr">params:</span></span><br><span class="line">   <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">repo-url</span></span><br><span class="line">     <span class="attr">value:</span> <span class="string">&lt;https://github.com/tektoncd/pipeline.git&gt;</span></span><br><span class="line">   <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">branch-name</span></span><br><span class="line">     <span class="attr">value:</span> <span class="string">release-v0.12.x</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>把不同工作分在不同的文件中的好处是，<code>git-clone</code> 任务可以在多条流水线中复用。</p>
+<p>例如，假设你想为一个流水线项目做端到端的测试。你可以使用 <code>git-clone</code> 任务 <strong>来让每一次测试都基于最新的代码</strong>。</p>
+<h3><span id="总结">总结</span></h3><p>只要你熟悉 Kubernetes，那 Tekton 对你来说就像其他 Kubernetes 原生应用一样简单。它有很多工具可以帮助你创建流水线并与之交互。如果你喜欢自动化，不妨试试 Tekton!</p>
+<hr>
+<p>via: <a target="_blank" rel="noopener" href="https://opensource.com/article/21/11/cicd-pipeline-kubernetes-tekton">https://opensource.com/article/21/11/cicd-pipeline-kubernetes-tekton</a></p>
+<p>作者：<a target="_blank" rel="noopener" href="https://opensource.com/users/savita-ashture">Savita Ashture</a><br>选题：<a target="_blank" rel="noopener" href="https://github.com/lujun9972">lujun9972</a><br>译者：<a target="_blank" rel="noopener" href="https://github.com/lxbwolf">Xiaobin.Liu</a><br>校对：<a target="_blank" rel="noopener" href="https://github.com/wxy">wxy</a></p>
+<p>本文由 <a target="_blank" rel="noopener" href="https://github.com/LCTT/TranslateProject">LCTT</a> 原创编译，<a target="_blank" rel="noopener" href="https://linux.cn/">Linux中国</a> 荣誉推出</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
     
-
-    <footer class="site-footer">
-    <section class="copyright">
-        &copy; 
-        
-            2020 - 
-        
-        2025 Xiaobin&#39;s Notes
-    </section>
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/2966fc1/" title="【译】用 Tekton 在 Kubernetes 中编写你的第一条 CI/CD 流水线" target="_blank" rel="external">https://lxb.wiki/2966fc1/</a>
+    </li>
     
-    <section class="powerby">
-        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
-        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
-    </section>
-</footer>
-
-
-    
-<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
-
-    
-    <div class="pswp__bg"></div>
-
-    
-    <div class="pswp__scroll-wrap">
-
-        
-        <div class="pswp__container">
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-        </div>
-
-        
-        <div class="pswp__ui pswp__ui--hidden">
-
-            <div class="pswp__top-bar">
-
-                
-
-                <div class="pswp__counter"></div>
-
-                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
-
-                <button class="pswp__button pswp__button--share" title="Share"></button>
-
-                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
-
-                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
-
-                
-                
-                <div class="pswp__preloader">
-                    <div class="pswp__preloader__icn">
-                        <div class="pswp__preloader__cut">
-                            <div class="pswp__preloader__donut"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-                <div class="pswp__share-tooltip"></div>
-            </div>
-
-            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
-            </button>
-
-            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
-            </button>
-
-            <div class="pswp__caption">
-                <div class="pswp__caption__center"></div>
-            </div>
-
-        </div>
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="external">CC BY-NC 4.0</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
 
     </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      
+        <section id="comments" class="comments">
+          <style>
+            .utterances{max-width: 100%;}
+          </style>
+          <script src="https://utteranc.es/client.js"
+                repo="lxbwolf/lxbwolf.github.io"
+                issue-term="title"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+          </script>
+        </section>
+      
+    
+  </section>
 
-</div><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
-                defer
-                >
-            </script><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
-                defer
-                >
-            </script><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
-            ><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
-            >
 
-            </main>
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/6ddc4d41/" title="Lucene 概述"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/998d20b7/" title="理解BNF"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+    <li class="toggle-toc">
+      <a class="toggle-btn collapsed" data-toggle="collapse" href="#collapseToc" aria-expanded="false" title="文章目录" role="button">
+        <span>[&nbsp;</span><span>文章目录</span>
+        <i class="text-collapsed icon icon-anchor"></i>
+        <i class="text-in icon icon-close"></i>
+        <span>]</span>
+      </a>
+    </li>
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,wechat"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> xbl </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
         </div>
-        <script 
-                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
-                
-                >
-            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+    </div>
+
+
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
 <script>
-    (function () {
-        const customFont = document.createElement('link');
-        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
-
-        customFont.type = "text/css";
-        customFont.rel = "stylesheet";
-
-        document.head.appendChild(customFont);
-    }());
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 </script>
 
-    </body>
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
 </html>

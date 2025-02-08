@@ -1,837 +1,686 @@
 <!DOCTYPE html>
-<html lang="zh-cn" dir="ltr">
-    <head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='阅读本文并下载我们的免费备忘单，去使用开源的数据库吧。 当你写一个程序或配置一个服务时，你最终都要持久化存储信息。有时候，你只需要一个 INI 或者 YAML'>
-<title>【译】备忘单：提升你的 MariaDB 和 MySQL 数据库技能</title>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
 
-<link rel='canonical' href='https://lxb.wiki/3641869e/'>
+  
+  <title>【译】备忘单：提升你的 MariaDB 和 MySQL 数据库技能 | Xiaobin&#39;s Notes</title>
+  <meta name="description" content="与 MariaDB 交互 学习 SQL 基本知识 显示数据库的表 检查一个表 创建一个新的用户 查看表的字段 为一个用户赋予权限   创建自定义的数据库 创建一个 MariaDB 数据库 创建一个表 同时增加多行数据   关联多个表 连接表   下载 MariaDB 和 MySQL 备忘单     阅读本文并下载我们的免费备忘单，去使用开源的数据库吧。   当你写一个程序或配置一个服务时，你">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【译】备忘单：提升你的 MariaDB 和 MySQL 数据库技能">
+<meta property="og:url" content="https://lxb.wiki/3641869e/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Notes">
+<meta property="og:description" content="与 MariaDB 交互 学习 SQL 基本知识 显示数据库的表 检查一个表 创建一个新的用户 查看表的字段 为一个用户赋予权限   创建自定义的数据库 创建一个 MariaDB 数据库 创建一个表 同时增加多行数据   关联多个表 连接表   下载 MariaDB 和 MySQL 备忘单     阅读本文并下载我们的免费备忘单，去使用开源的数据库吧。   当你写一个程序或配置一个服务时，你">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210103221458.png">
+<meta property="article:published_time" content="2020-12-13T14:07:00.000Z">
+<meta property="article:modified_time" content="2025-02-02T11:48:02.406Z">
+<meta property="article:author" content="lxb">
+<meta property="article:tag" content="mysql">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210103221458.png">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/3641869e/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Notes" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
 
-<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='【译】备忘单：提升你的 MariaDB 和 MySQL 数据库技能'>
-<meta property='og:description' content='阅读本文并下载我们的免费备忘单，去使用开源的数据库吧。 当你写一个程序或配置一个服务时，你最终都要持久化存储信息。有时候，你只需要一个 INI 或者 YAML'>
-<meta property='og:url' content='https://lxb.wiki/3641869e/'>
-<meta property='og:site_name' content='Xiaobin&#39;s Notes'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='mysql' /><meta property='article:published_time' content='2020-12-13T22:07:00&#43;00:00'/><meta property='article:modified_time' content='2020-12-13T22:07:00&#43;00:00'/>
-<meta name="twitter:title" content="【译】备忘单：提升你的 MariaDB 和 MySQL 数据库技能">
-<meta name="twitter:description" content="阅读本文并下载我们的免费备忘单，去使用开源的数据库吧。 当你写一个程序或配置一个服务时，你最终都要持久化存储信息。有时候，你只需要一个 INI 或者 YAML">
-<link rel="shortcut icon" href="/favicon.png" />
+  
+  
+  
+  
 
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
 
-
-
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-
-    gtag('config', 'G-JZ2PWLT6JY');
-</script>
-<script>
-    var _hmt = _hmt || [];
-    (function () {
-        var hm = document.createElement("script");
-        hm.src = "https://hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-<script>
-    (function () {
-        var el = document.createElement("script");
-        el.src = "https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?f146251743600ee0672cdcc8455ce18def91cdb255ad969a2ef5c715d5ed5baecaf7cd753709c168f20e6a2e9019123fd11e31a222d3a2fe01ad05c6b8f519b2";
-        el.id = "ttzz";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(el, s);
-    })(window)
-</script>
-    </head>
-    <body class="
-    article-page
-    ">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
     <script>
-        (function() {
-            const colorSchemeKey = 'StackColorScheme';
-            if(!localStorage.getItem(colorSchemeKey)){
-                localStorage.setItem(colorSchemeKey, "auto");
-            }
-        })();
-    </script><script>
-    (function() {
-        const colorSchemeKey = 'StackColorScheme';
-        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
-        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
-            
-
-            document.documentElement.dataset.scheme = 'dark';
-        } else {
-            document.documentElement.dataset.scheme = 'light';
-        }
-    })();
-</script>
-<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
-    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
-        <span class="hamburger-box">
-            <span class="hamburger-inner"></span>
-        </span>
-    </button>
-
-    <header>
-        
-            
-            <figure class="site-avatar">
-                <a href="/">
-                
-                    
-                    
-                    
-                        
-                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
-                            height="298" class="site-logo" loading="lazy" alt="Avatar">
-                    
-                
-                </a>
-                
-                    <span class="emoji">🍥</span>
-                
-            </figure>
-            
-        
-        
-        <div class="site-meta">
-            <h1 class="site-name"><a href="/">Xiaobin&#39;s Notes</a></h1>
-            <h2 class="site-description"></h2>
-        </div>
-    </header>
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+<meta name="generator" content="Hexo 6.3.0"></head>
 
 
-    <ol class="menu" id="main-menu">
-        
-        
-        
-        <li >
-            <a href='/' >
-                
-                
-                
-                <span>首页</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/archives/' >
-                
-                
-                
-                <span>归档</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/categories/' >
-                
-                
-                
-                <span>分类</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/tags/' >
-                
-                
-                
-                <span>标签</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/links/' >
-                
-                
-                
-                <span>友链</span>
-            </a>
-        </li>
-        
-
-        <div class="menu-bottom-section"><ol class="social-menu">
-                    
-                        <li>
-                            <a 
-                                href='mailto://me@lxb.wiki'
-                                target="_blank"
-                                title="Email"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://github.com/lxbwolf'
-                                target="_blank"
-                                title="GitHub"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://lxb.wiki/atom.xml'
-                                target="_blank"
-                                title="Rss"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="5" cy="19" r="1" />
-  <path d="M4 4a16 16 0 0 1 16 16" />
-  <path d="M4 11a9 9 0 0 1 9 9" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                </ol>
-                <li id="dark-mode-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="8" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="16" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <span>暗色模式</span>
-                </li>
-            
-        </div>
-    </ol>
-</aside>
-
-    <aside class="sidebar right-sidebar sticky">
-        
-            
-                
-<section class="widget archives">
-    
-    <h2 class="widget-title section-title">目录</h2>
-
-    <div class="widget--toc">
-        <nav id="TableOfContents">
-  <ul>
-    <li>
-      <ul>
-        <li><a href="#与-mariadb-交互">与 MariaDB 交互</a></li>
-        <li><a href="#学习-sql-基本知识">学习 SQL 基本知识</a></li>
-        <li><a href="#创建自定义的数据库">创建自定义的数据库</a></li>
-        <li><a href="#关联多个表">关联多个表</a></li>
-        <li><a href="#下载-mariadb-和-mysql-备忘单">下载 MariaDB 和 MySQL 备忘单</a></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
-    </div>
-</section>
-
-            
-        
-    </aside>
-
-
-            <main class="main full-width">
-    <article class="main-article">
-    <header class="article-header">
-
-    <div class="article-details">
-    
-    <header class="article-category">
-        
-        <a href="/categories/DB/" >
-            DB
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
         </a>
-        
-    </header>
-    
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin&#39;s Notes</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
 
-    <div class="article-title-wrapper">
-        <h2 class="article-title">
-            <a href="/3641869e/">【译】备忘单：提升你的 MariaDB 和 MySQL 数据库技能</a>
-        </h2>
-
-        
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
     </div>
-
-    
-    
-    
-    
-    <footer class="article-time">
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
-  <circle cx="18" cy="18" r="4" />
-  <path d="M15 3v4" />
-  <path d="M7 3v4" />
-  <path d="M3 11h16" />
-  <path d="M18 16.496v1.504l1 1" />
-</svg>
-            <time class="article-time--published">Dec 13, 2020</time>
-        </div>
-        
-
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <polyline points="12 7 12 12 15 15" />
-</svg>
-
-
-
-            <time class="article-time--reading">
-                阅读时长: 7 分钟
-            </time>
-        </div>
-        
-        <small>
-    <section class="article-tags">
-        
-            <a href="/tags/mysql/">mysql</a>
-        
-    </section>
-</small>
-    </footer>
-    
-
-    
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
 </div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
 </header>
 
-    <section class="article-content">
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
     
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/FE/">FE</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">77</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Life/">Life</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">39</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">20</span></li></ul>
+    </div>
+  </div>
+
+
     
-    <!-- raw HTML omitted -->
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/GitHub/" style="font-size: 13.08px;">GitHub</a> <a href="/tags/GoogleSheets/" style="font-size: 13px;">GoogleSheets</a> <a href="/tags/STL/" style="font-size: 13.38px;">STL</a> <a href="/tags/amap/" style="font-size: 13px;">amap</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.23px;">blog</a> <a href="/tags/c/" style="font-size: 13.69px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.08px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.62px;">devops</a> <a href="/tags/docker/" style="font-size: 13.08px;">docker</a> <a href="/tags/elastic/" style="font-size: 13.38px;">elastic</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.31px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.15px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.08px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.15px;">hexo</a> <a href="/tags/hooks/" style="font-size: 13px;">hooks</a> <a href="/tags/http/" style="font-size: 13.38px;">http</a> <a href="/tags/jdk/" style="font-size: 13px;">jdk</a> <a href="/tags/joplin/" style="font-size: 13.08px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/linux/" style="font-size: 13.15px;">linux</a> <a href="/tags/lucene/" style="font-size: 13.31px;">lucene</a> <a href="/tags/mac/" style="font-size: 13.46px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.08px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.15px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.31px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.15px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.15px;">pic</a> <a href="/tags/python/" style="font-size: 13px;">python</a> <a href="/tags/qt/" style="font-size: 13.31px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/raycast/" style="font-size: 13px;">raycast</a> <a href="/tags/react/" style="font-size: 13px;">react</a> <a href="/tags/redis/" style="font-size: 13.54px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.92px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.08px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/terminal/" style="font-size: 13px;">terminal</a> <a href="/tags/vue/" style="font-size: 13px;">vue</a> <a href="/tags/zk/" style="font-size: 13.08px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%8D%8F%E8%AE%AE/" style="font-size: 13px;">协议</a> <a href="/tags/%E5%9C%B0%E5%9B%BE/" style="font-size: 13px;">地图</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.46px;">工具</a> <a href="/tags/%E5%B9%BF%E5%91%8A/" style="font-size: 13px;">广告</a> <a href="/tags/%E6%8F%92%E5%BA%A7/" style="font-size: 13px;">插座</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.77px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.38px;">树莓派</a> <a href="/tags/%E7%94%A8%E7%94%B5/" style="font-size: 13px;">用电</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.54px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91/" style="font-size: 13.08px;">编译</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.85px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.08px;">邮件</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/">2024</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">25</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">24</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">39</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">33</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/42f8026c/" class="title">React useEffect() Hook</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-18T14:16:21.000Z" itemprop="datePublished">2024-05-18</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/b7826aa4/" class="title">Vue 2.x 使用高德地图JS API 2.0加载起点终点路径轨迹</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-01T13:51:18.000Z" itemprop="datePublished">2024-05-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Life/">Life</a>
+              </p>
+              <p class="item-title">
+                <a href="/0565b4f5/" class="title">家庭用电插座</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-04-11T05:48:31.000Z" itemprop="datePublished">2024-04-11</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/a520e262/" class="title">MacOS 14.4 引发Java 应用崩溃</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-15T06:05:49.000Z" itemprop="datePublished">2024-03-15</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/cb9b2c66/" class="title">重定向广告</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-04T05:27:13.000Z" itemprop="datePublished">2024-03-04</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<aside class="sidebar sidebar-toc collapse" id="collapseToc" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    <nav id="toc" class="article-toc">
+      <h3 class="toc-title">文章目录</h3>
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.</span> <span class="toc-text">与 MariaDB 交互</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">2.</span> <span class="toc-text">学习 SQL 基本知识</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">2.1.</span> <span class="toc-text">显示数据库的表</span></a></li><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">2.2.</span> <span class="toc-text">检查一个表</span></a></li><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">2.3.</span> <span class="toc-text">创建一个新的用户</span></a></li><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">2.4.</span> <span class="toc-text">查看表的字段</span></a></li><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">2.5.</span> <span class="toc-text">为一个用户赋予权限</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">3.</span> <span class="toc-text">创建自定义的数据库</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">3.1.</span> <span class="toc-text">创建一个 MariaDB 数据库</span></a></li><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">3.2.</span> <span class="toc-text">创建一个表</span></a></li><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">3.3.</span> <span class="toc-text">同时增加多行数据</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.</span> <span class="toc-text">关联多个表</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">4.1.</span> <span class="toc-text">连接表</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">5.</span> <span class="toc-text">下载 MariaDB 和 MySQL 备忘单</span></a></li></ol>
+    </nav>
+  </div>
+</aside>
+
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-备忘单：提升你的-MariaDB-和-MySQL-数据库技能" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      【译】备忘单：提升你的 MariaDB 和 MySQL 数据库技能
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/3641869e/" class="article-date">
+	  <time datetime="2020-12-13T14:07:00.000Z" itemprop="datePublished">2020-12-13</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/DB/">DB</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/mysql/" rel="tag">mysql</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/3641869e/#comments" class="article-comment-link">评论</a></span> 
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 3.1k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 12(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#与-mariadb-交互">与 MariaDB 交互</a></li>
+<li><a href="#学习-sql-基本知识">学习 SQL 基本知识</a><ul>
+<li><a href="#显示数据库的表">显示数据库的表</a></li>
+<li><a href="#检查一个表">检查一个表</a></li>
+<li><a href="#创建一个新的用户">创建一个新的用户</a></li>
+<li><a href="#查看表的字段">查看表的字段</a></li>
+<li><a href="#为一个用户赋予权限">为一个用户赋予权限</a></li>
+</ul>
+</li>
+<li><a href="#创建自定义的数据库">创建自定义的数据库</a><ul>
+<li><a href="#创建一个-mariadb-数据库">创建一个 MariaDB 数据库</a></li>
+<li><a href="#创建一个表">创建一个表</a></li>
+<li><a href="#同时增加多行数据">同时增加多行数据</a></li>
+</ul>
+</li>
+<li><a href="#关联多个表">关联多个表</a><ul>
+<li><a href="#连接表">连接表</a></li>
+</ul>
+</li>
+<li><a href="#下载-mariadb-和-mysql-备忘单">下载 MariaDB 和 MySQL 备忘单</a></li>
+</ul>
+<!-- tocstop -->
+
 <blockquote>
 <p>阅读本文并下载我们的免费备忘单，去使用开源的数据库吧。</p>
 </blockquote>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210103221458.png"
-	
-	
-	
-	loading="lazy"
-	
-	
-></p>
-<p>当你写一个程序或配置一个服务时，你最终都要持久化存储信息。有时候，你只需要一个 INI 或者 <a class="link" href="https://www.redhat.com/sysadmin/yaml-tips"  target="_blank" rel="noopener"
-    >YAML</a> 配置文件就够了。而有时候，一个自定义格式的 XML 或者 JSON 或其他类似的文件会更好。</p>
-<p>但也有时候你需要校验输入、快速查询信息、关联数据、通常还要熟练地处理你的用户的请求。这就是设计数据库的目的，而 <a class="link" href="https://mariadb.org/"  target="_blank" rel="noopener"
-    >MariaDB</a>（由 <a class="link" href="https://www.mysql.com/"  target="_blank" rel="noopener"
-    >MySQL</a> 的原始开发人员开发的一个分支） 是一个极佳的选项。在本文中我使用的是 MariaDB，但这些信息同样适用于 MySQL。</p>
-<p>通过编程语言与数据库进行交互是很普遍的。正因如此，出现了大量 Java、Python、Lua、PHP、Ruby、C++ 和其他语言的 <a class="link" href="https://en.wikipedia.org/wiki/SQL"  target="_blank" rel="noopener"
-    >SQL</a> 库。然而，在使用这些库之前，理解数据库引擎做了什么以及为什么选择数据库是重要的对我们会很有帮助。本文介绍 MariaDB 和 <code>mysql</code> 命令来帮助你熟悉数据库处理数据的基本原理。</p>
-<p>如果你还没有安装 MariaDB，请查阅我的文章 <a class="link" href="https://opensource.com/article/20/10/install-mariadb-and-mysql-linux"  target="_blank" rel="noopener"
-    >在 Linux 上安装 MariaDB</a>。如果你没有使用 Linux，请参照 MariaDB <a class="link" href="https://mariadb.org/download"  target="_blank" rel="noopener"
-    >下载页面</a>提供的指导方法。</p>
-<h3 id="与-mariadb-交互">与 MariaDB 交互</h3>
-<p>你可以使用 <code>mysql</code> 命令与 MariaDB 进行交互。首先使用子命令 <code>ping</code> 确认你的服务是运行着的，在提示后输入密码：</p>
-<pre tabindex="0"><code>$ mysqladmin -u root -p ping
-Enter password:
-mysqld is alive
-</code></pre><p>为了易于读者理解，打开一个交互式的 MariaDB 会话：</p>
-<pre tabindex="0"><code>$ mysql -u root -p
-Enter password:
-Welcome to the MariaDB monitor.
-Commands end with ; or \g.
-[...]
-Type &#39;help;&#39; or &#39;\h&#39; for help.
-Type &#39;\c&#39; to clear the current input statement.
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20210103221458.png" alt></p>
+<p>当你写一个程序或配置一个服务时，你最终都要持久化存储信息。有时候，你只需要一个 INI 或者 <a target="_blank" rel="noopener" href="https://www.redhat.com/sysadmin/yaml-tips">YAML</a> 配置文件就够了。而有时候，一个自定义格式的 XML 或者 JSON 或其他类似的文件会更好。</p>
+<p>但也有时候你需要校验输入、快速查询信息、关联数据、通常还要熟练地处理你的用户的请求。这就是设计数据库的目的，而 <a target="_blank" rel="noopener" href="https://mariadb.org/">MariaDB</a>（由 <a target="_blank" rel="noopener" href="https://www.mysql.com/">MySQL</a> 的原始开发人员开发的一个分支） 是一个极佳的选项。在本文中我使用的是 MariaDB，但这些信息同样适用于 MySQL。</p>
+<p>通过编程语言与数据库进行交互是很普遍的。正因如此，出现了大量 Java、Python、Lua、PHP、Ruby、C++ 和其他语言的 <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/SQL">SQL</a> 库。然而，在使用这些库之前，理解数据库引擎做了什么以及为什么选择数据库是重要的对我们会很有帮助。本文介绍 MariaDB 和 <code>mysql</code> 命令来帮助你熟悉数据库处理数据的基本原理。</p>
+<p>如果你还没有安装 MariaDB，请查阅我的文章 <a target="_blank" rel="noopener" href="https://opensource.com/article/20/10/install-mariadb-and-mysql-linux">在 Linux 上安装 MariaDB</a>。如果你没有使用 Linux，请参照 MariaDB <a target="_blank" rel="noopener" href="https://mariadb.org/download">下载页面</a>提供的指导方法。</p>
+<h3><span id="与-mariadb-交互">与 MariaDB 交互</span></h3><p>你可以使用 <code>mysql</code> 命令与 MariaDB 进行交互。首先使用子命令 <code>ping</code> 确认你的服务是运行着的，在提示后输入密码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ mysqladmin -u root -p ping</span><br><span class="line">Enter password:</span><br><span class="line">mysqld is alive</span><br></pre></td></tr></table></figure>
 
-MariaDB [(none)]&gt;
-</code></pre><p>你现在是在一个 MariaDB 子 shell 中，提示符是 MariaDB 提示符。普通的 Bash 命令在这里不能使用，只能用 MariaDB 命令。输入 <code>help</code> （或 <code>?</code>）查看命令列表。这些是你的 MariaDB shell 的管理命令，使用它们可以定制你的 shell，但它们不属于 SQL 语言。</p>
-<h3 id="学习-sql-基本知识">学习 SQL 基本知识</h3>
-<p><a class="link" href="https://publications.opengroup.org/c449"  target="_blank" rel="noopener"
-    >结构化查询语言</a>是基于它们的能力定义的：一种通过有规则且一致的语法来查询数据库中的内容以得到有用的结果的方法。SQL 看起来像是普通的英文语句，有一点点生硬。例如，如果你登入数据库服务器，想查看有哪些库，输入 <code>SHOW DATABASES;</code> 并回车就能看到结果。</p>
+<p>为了易于读者理解，打开一个交互式的 MariaDB 会话：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ mysql -u root -p</span><br><span class="line">Enter password:</span><br><span class="line">Welcome to the MariaDB monitor.</span><br><span class="line">Commands end with ; or \g.</span><br><span class="line">[...]</span><br><span class="line">Type &#x27;help;&#x27; or &#x27;\h&#x27; for help.</span><br><span class="line">Type &#x27;\c&#x27; to clear the current input statement.</span><br><span class="line"></span><br><span class="line">MariaDB [(none)]&gt;</span><br></pre></td></tr></table></figure>
+
+<p>你现在是在一个 MariaDB 子 shell 中，提示符是 MariaDB 提示符。普通的 Bash 命令在这里不能使用，只能用 MariaDB 命令。输入 <code>help</code> （或 <code>?</code>）查看命令列表。这些是你的 MariaDB shell 的管理命令，使用它们可以定制你的 shell，但它们不属于 SQL 语言。</p>
+<h3><span id="学习-sql-基本知识">学习 SQL 基本知识</span></h3><p><a target="_blank" rel="noopener" href="https://publications.opengroup.org/c449">结构化查询语言</a>是基于它们的能力定义的：一种通过有规则且一致的语法来查询数据库中的内容以得到有用的结果的方法。SQL 看起来像是普通的英文语句，有一点点生硬。例如，如果你登入数据库服务器，想查看有哪些库，输入 <code>SHOW DATABASES;</code> 并回车就能看到结果。</p>
 <p>SQL 命令以分号作为结尾。如果你忘记输入分号，MariaDB 会认为你是想在下一行继续输入你的查询命令，在下一行你可以继续输入命令也可以输入分号结束命令。</p>
-<pre tabindex="0"><code>MariaDB [(NONE)]&gt; SHOW DATABASES;
-+--------------------+
-| DATABASE           |
-+--------------------+
-| information_schema |
-| mysql              |
-| performance_schema |
-| test               |
-+--------------------+
-4 ROWS IN SET (0.000 sec)
-</code></pre><p>上面的例子显示当前有四个数据库：<code>information_schema</code>、<code>mysql</code>、<code>performance_schema</code> 和 <code>test</code>。你必须指定 MariaDB 使用哪个库，才能对该库使用查询语句。指定数据库的命令是 <code>use</code>。当你选择了一个库后，MariaDB 提示框会切换为选择的库。</p>
-<pre tabindex="0"><code>MariaDB [(NONE)]&gt; USE test;
-MariaDB [(test)]&gt;
-</code></pre><h4 id="显示数据库的表">显示数据库的表</h4>
-<p>数据库里有<em>表</em>，与电子表格类似：有一系列的行（在数据库中称为<em>记录</em>）和列。一个行和一个列唯一确定一个<em>字段</em>。</p>
-<p>查看一个数据库中可用的表（可以理解为多表单电子表格中的一页），使用 SQL 关键字 <code>SHOW</code>：</p>
-<pre tabindex="0"><code>MariaDB [(test)]&gt; SHOW TABLES;
-empty SET
-</code></pre><p><code>test</code> 数据库是空的，所以使用 <code>use</code> 命令切换到 <code>mysql</code> 数据库：</p>
-<pre tabindex="0"><code>MariaDB [(test)]&gt; USE mysql;
-MariaDB [(mysql)]&gt; SHOW TABLES;
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [(NONE)]&gt; SHOW DATABASES;</span><br><span class="line">+--------------------+</span><br><span class="line">| DATABASE           |</span><br><span class="line">+--------------------+</span><br><span class="line">| information_schema |</span><br><span class="line">| mysql              |</span><br><span class="line">| performance_schema |</span><br><span class="line">| test               |</span><br><span class="line">+--------------------+</span><br><span class="line">4 ROWS IN SET (0.000 sec)</span><br></pre></td></tr></table></figure>
 
-+---------------------------+
-| Tables_in_mysql           |
-+---------------------------+
-| column_stats              |
-| columns_priv              |
-| db                        |
-[...]
-| time_zone_transition_type |
-| transaction_registry      |
-| USER                      |
-+---------------------------+
-31 ROWS IN SET (0.000 sec)
-</code></pre><p>这个数据库中有很多表！<code>mysql</code> 数据库是这个 MariaDB 实例的系统管理数据库。它里面包含重要数据，比如用来管理数据库权限的用户结构。这个数据库很重要，你不需要经常直接与它交互，但是使用 SQL 脚本来操作它却很常见。当你学习 MariaDB 时理解 <code>mysql</code> 数据库很有用，因为它有助于说明一些基本的 SQL 命令。</p>
-<h4 id="检查一个表">检查一个表</h4>
-<p>这个实例的 <code>mysql</code> 数据库的最后一个表名为 <code>USER</code>。这个表包含了可以访问这个数据库的用户。当前里面只有一个 root 用户，但是你可以添加不同权限的用户，赋予它们查看、更新或创建数据的权限。你可以查看一个表的列首来了解一个  MariaDB 用户的所有属性：</p>
-<pre tabindex="0"><code>&gt; SHOW COLUMNS IN USER;
-MariaDB [mysql]&gt; SHOW COLUMNS IN USER;
-+-------------+---------------+------+-----+----------+
-| FIELD       | TYPE          | NULL | KEY | DEFAULT  |
-+-------------+---------------+------+-----+----------+
-| Host        | CHAR(60)      | NO   | PRI |          |
-| USER        | CHAR(80)      | NO   | PRI |          |
-| Password    | CHAR(41)      | NO   |     |          |
-| Select_priv | enum(&#39;N&#39;,&#39;Y&#39;) | NO   |     | N        |
-| Insert_priv | enum(&#39;N&#39;,&#39;Y&#39;) | NO   |     | N        |
-| Update_priv | enum(&#39;N&#39;,&#39;Y&#39;) | NO   |     | N        |
-| Delete_priv | enum(&#39;N&#39;,&#39;Y&#39;) | NO   |     | N        |
-| Create_priv | enum(&#39;N&#39;,&#39;Y&#39;) | NO   |     | N        |
-| Drop_priv   | enum(&#39;N&#39;,&#39;Y&#39;) | NO   |     | N        |
-[...]
-47 ROWS IN SET (0.001 sec)
-</code></pre><h4 id="创建一个新的用户">创建一个新的用户</h4>
-<p>不论你是否需要一个普通的账号来管理数据库或者为计算机配置数据库（例如安装 WordPress、Drupal 或 Joomla时），在 MariaDB 中多建一个用户账号是很普遍的。你可以通过向 <code>mysql</code> 数据库的 <code>USER</code> 表中添加一个用户或使用 SQL 关键字 <code>CREATE</code> 来提示 MariaDB 创建一个 MariaDB 用户。使用 <code>CREATE</code> 来创建新用户会默认执行一些有用的方法，因此你不需要手动生成所有的信息：</p>
-<pre tabindex="0"><code>&gt; CREATE USER &#39;tux&#39;@&#39;localhost&#39; IDENTIFIED BY &#39;really_secure_password&#39;;
-</code></pre><h4 id="查看表的字段">查看表的字段</h4>
-<p>你可以使用 <code>SELECT</code> 关键字来查看数据库表的字段和值。这本例中，你创建了一个名为 <code>tux</code> 的用户，因此查询 <code>USER</code> 表中的列：</p>
-<pre tabindex="0"><code>&gt; SELECT USER,host FROM USER;
-+------+------------+
-| USER | host       |
-+------+------------+
-| root | localhost  |
-[...]
-| tux  | localhost  |
-+------+------------+
-7 ROWS IN SET (0.000 sec)
-</code></pre><h4 id="为一个用户赋予权限">为一个用户赋予权限</h4>
-<p>通过查看 <code>USER</code> 表列出的信息，你可以看到用户的状态。例如，新用户 <code>tux</code> 对这个数据库没有任何权限。使用 <code>WHERE</code> 语句你可以只查 <code>tux</code> 那一条记录。</p>
-<pre tabindex="0"><code>&gt; SELECT USER,select_priv,insert_priv,update_priv FROM USER WHERE USER=&#39;tux&#39;;
-+------+-------------+-------------+-------------+
-| USER | select_priv | insert_priv | update_priv |
-+------+-------------+-------------+-------------+
-| tux  | N           | N           | N           |
-+------+-------------+-------------+-------------+
-</code></pre><p>使用 <code>GRANT</code> 命令修改用户的权限：</p>
-<pre tabindex="0"><code>&gt; GRANT SELECT ON *.* TO &#39;tux&#39;@&#39;localhost&#39;;
-&gt; FLUSH PRIVILEGES;
-</code></pre><p>验证你的修改：</p>
-<pre tabindex="0"><code>&gt; SELECT USER,select_priv,insert_priv,update_priv FROM USER WHERE USER=&#39;tux&#39;;
-+------+-------------+-------------+-------------+
-| USER | select_priv | insert_priv | update_priv |
-+------+-------------+-------------+-------------+
-| tux  | Y           | N           | N           |
-+------+-------------+-------------+-------------+
-</code></pre><p><code>tux</code> 用户现在有了从所有表中查询记录的权限。</p>
-<h3 id="创建自定义的数据库">创建自定义的数据库</h3>
-<p>到目前为止，你一直在与默认的数据库进行交互。除了用户管理，大部分人很少会与默认的数据库进行交互。通常，你会用自定义的数据来填充创建的数据库。</p>
-<h4 id="创建一个-mariadb-数据库">创建一个 MariaDB 数据库</h4>
-<p>你可能已经可以自己在 MariaDB 中创建新数据库了。创建数据库跟新建用户差不多。</p>
-<pre tabindex="0"><code>&gt; CREATE DATABASE example;
-Query OK, 1 ROW affected (0.000 sec)
-&gt; SHOW DATABASES;
-+--------------------+
-| DATABASE           |
-+--------------------+
-| example            |
-[...]
-</code></pre><p>使用 <code>use</code> 命令来把这个新建的数据库作为当前使用的库：</p>
-<pre tabindex="0"><code>&gt; USE example;
-</code></pre><h4 id="创建一个表">创建一个表</h4>
-<p>创建表比创建数据库要复杂，因为你必须定义列首。MariaDB 提供了很多方便的函数，可以用于创建列，引入数据类型定义，自增选项，对空值的约束，自动时间戳等等。</p>
+<p>上面的例子显示当前有四个数据库：<code>information_schema</code>、<code>mysql</code>、<code>performance_schema</code> 和 <code>test</code>。你必须指定 MariaDB 使用哪个库，才能对该库使用查询语句。指定数据库的命令是 <code>use</code>。当你选择了一个库后，MariaDB 提示框会切换为选择的库。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [(NONE)]&gt; USE test;</span><br><span class="line">MariaDB [(test)]&gt;</span><br></pre></td></tr></table></figure>
+
+<h4><span id="显示数据库的表">显示数据库的表</span></h4><p>数据库里有<em>表</em>，与电子表格类似：有一系列的行（在数据库中称为<em>记录</em>）和列。一个行和一个列唯一确定一个<em>字段</em>。</p>
+<p>查看一个数据库中可用的表（可以理解为多表单电子表格中的一页），使用 SQL 关键字 <code>SHOW</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [(test)]&gt; SHOW TABLES;</span><br><span class="line">empty SET</span><br></pre></td></tr></table></figure>
+
+<p><code>test</code> 数据库是空的，所以使用 <code>use</code> 命令切换到 <code>mysql</code> 数据库：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">MariaDB [(test)]&gt; USE mysql;</span><br><span class="line">MariaDB [(mysql)]&gt; SHOW TABLES;</span><br><span class="line"></span><br><span class="line">+---------------------------+</span><br><span class="line">| Tables_in_mysql           |</span><br><span class="line">+---------------------------+</span><br><span class="line">| column_stats              |</span><br><span class="line">| columns_priv              |</span><br><span class="line">| db                        |</span><br><span class="line">[...]</span><br><span class="line">| time_zone_transition_type |</span><br><span class="line">| transaction_registry      |</span><br><span class="line">| USER                      |</span><br><span class="line">+---------------------------+</span><br><span class="line">31 ROWS IN SET (0.000 sec)</span><br></pre></td></tr></table></figure>
+
+<p>这个数据库中有很多表！<code>mysql</code> 数据库是这个 MariaDB 实例的系统管理数据库。它里面包含重要数据，比如用来管理数据库权限的用户结构。这个数据库很重要，你不需要经常直接与它交互，但是使用 SQL 脚本来操作它却很常见。当你学习 MariaDB 时理解 <code>mysql</code> 数据库很有用，因为它有助于说明一些基本的 SQL 命令。</p>
+<h4><span id="检查一个表">检查一个表</span></h4><p>这个实例的 <code>mysql</code> 数据库的最后一个表名为 <code>USER</code>。这个表包含了可以访问这个数据库的用户。当前里面只有一个 root 用户，但是你可以添加不同权限的用户，赋予它们查看、更新或创建数据的权限。你可以查看一个表的列首来了解一个  MariaDB 用户的所有属性：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&gt; SHOW COLUMNS IN USER;</span><br><span class="line">MariaDB [mysql]&gt; SHOW COLUMNS IN USER;</span><br><span class="line">+-------------+---------------+------+-----+----------+</span><br><span class="line">| FIELD       | TYPE          | NULL | KEY | DEFAULT  |</span><br><span class="line">+-------------+---------------+------+-----+----------+</span><br><span class="line">| Host        | CHAR(60)      | NO   | PRI |          |</span><br><span class="line">| USER        | CHAR(80)      | NO   | PRI |          |</span><br><span class="line">| Password    | CHAR(41)      | NO   |     |          |</span><br><span class="line">| Select_priv | enum(&#x27;N&#x27;,&#x27;Y&#x27;) | NO   |     | N        |</span><br><span class="line">| Insert_priv | enum(&#x27;N&#x27;,&#x27;Y&#x27;) | NO   |     | N        |</span><br><span class="line">| Update_priv | enum(&#x27;N&#x27;,&#x27;Y&#x27;) | NO   |     | N        |</span><br><span class="line">| Delete_priv | enum(&#x27;N&#x27;,&#x27;Y&#x27;) | NO   |     | N        |</span><br><span class="line">| Create_priv | enum(&#x27;N&#x27;,&#x27;Y&#x27;) | NO   |     | N        |</span><br><span class="line">| Drop_priv   | enum(&#x27;N&#x27;,&#x27;Y&#x27;) | NO   |     | N        |</span><br><span class="line">[...]</span><br><span class="line">47 ROWS IN SET (0.001 sec)</span><br></pre></td></tr></table></figure>
+
+<h4><span id="创建一个新的用户">创建一个新的用户</span></h4><p>不论你是否需要一个普通的账号来管理数据库或者为计算机配置数据库（例如安装 WordPress、Drupal 或 Joomla时），在 MariaDB 中多建一个用户账号是很普遍的。你可以通过向 <code>mysql</code> 数据库的 <code>USER</code> 表中添加一个用户或使用 SQL 关键字 <code>CREATE</code> 来提示 MariaDB 创建一个 MariaDB 用户。使用 <code>CREATE</code> 来创建新用户会默认执行一些有用的方法，因此你不需要手动生成所有的信息：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; CREATE USER &#x27;tux&#x27;@&#x27;localhost&#x27; IDENTIFIED BY &#x27;really_secure_password&#x27;;</span><br></pre></td></tr></table></figure>
+
+<h4><span id="查看表的字段">查看表的字段</span></h4><p>你可以使用 <code>SELECT</code> 关键字来查看数据库表的字段和值。这本例中，你创建了一个名为 <code>tux</code> 的用户，因此查询 <code>USER</code> 表中的列：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&gt; SELECT USER,host FROM USER;</span><br><span class="line">+------+------------+</span><br><span class="line">| USER | host       |</span><br><span class="line">+------+------------+</span><br><span class="line">| root | localhost  |</span><br><span class="line">[...]</span><br><span class="line">| tux  | localhost  |</span><br><span class="line">+------+------------+</span><br><span class="line">7 ROWS IN SET (0.000 sec)</span><br></pre></td></tr></table></figure>
+
+<h4><span id="为一个用户赋予权限">为一个用户赋予权限</span></h4><p>通过查看 <code>USER</code> 表列出的信息，你可以看到用户的状态。例如，新用户 <code>tux</code> 对这个数据库没有任何权限。使用 <code>WHERE</code> 语句你可以只查 <code>tux</code> 那一条记录。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&gt; SELECT USER,select_priv,insert_priv,update_priv FROM USER WHERE USER=&#x27;tux&#x27;;</span><br><span class="line">+------+-------------+-------------+-------------+</span><br><span class="line">| USER | select_priv | insert_priv | update_priv |</span><br><span class="line">+------+-------------+-------------+-------------+</span><br><span class="line">| tux  | N           | N           | N           |</span><br><span class="line">+------+-------------+-------------+-------------+</span><br></pre></td></tr></table></figure>
+
+<p>使用 <code>GRANT</code> 命令修改用户的权限：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; GRANT SELECT ON *.* TO &#x27;tux&#x27;@&#x27;localhost&#x27;;</span><br><span class="line">&gt; FLUSH PRIVILEGES;</span><br></pre></td></tr></table></figure>
+
+<p>验证你的修改：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&gt; SELECT USER,select_priv,insert_priv,update_priv FROM USER WHERE USER=&#x27;tux&#x27;;</span><br><span class="line">+------+-------------+-------------+-------------+</span><br><span class="line">| USER | select_priv | insert_priv | update_priv |</span><br><span class="line">+------+-------------+-------------+-------------+</span><br><span class="line">| tux  | Y           | N           | N           |</span><br><span class="line">+------+-------------+-------------+-------------+</span><br></pre></td></tr></table></figure>
+
+<p><code>tux</code> 用户现在有了从所有表中查询记录的权限。</p>
+<h3><span id="创建自定义的数据库">创建自定义的数据库</span></h3><p>到目前为止，你一直在与默认的数据库进行交互。除了用户管理，大部分人很少会与默认的数据库进行交互。通常，你会用自定义的数据来填充创建的数据库。</p>
+<h4><span id="创建一个-mariadb-数据库">创建一个 MariaDB 数据库</span></h4><p>你可能已经可以自己在 MariaDB 中创建新数据库了。创建数据库跟新建用户差不多。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&gt; CREATE DATABASE example;</span><br><span class="line">Query OK, 1 ROW affected (0.000 sec)</span><br><span class="line">&gt; SHOW DATABASES;</span><br><span class="line">+--------------------+</span><br><span class="line">| DATABASE           |</span><br><span class="line">+--------------------+</span><br><span class="line">| example            |</span><br><span class="line">[...]</span><br></pre></td></tr></table></figure>
+
+<p>使用 <code>use</code> 命令来把这个新建的数据库作为当前使用的库：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; USE example;</span><br></pre></td></tr></table></figure>
+
+<h4><span id="创建一个表">创建一个表</span></h4><p>创建表比创建数据库要复杂，因为你必须定义列首。MariaDB 提供了很多方便的函数，可以用于创建列，引入数据类型定义，自增选项，对空值的约束，自动时间戳等等。</p>
 <p>下面是用来描述一系列用户的一个简单的表：</p>
-<pre tabindex="0"><code>&gt; CREATE TABLE IF NOT EXISTS member (
-    -&gt; id INT AUTO_INCREMENT PRIMARY KEY,
-    -&gt; name VARCHAR(128) NOT NULL,
-    -&gt; startdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
-Query OK, 0 ROWS affected (0.030 sec)
-</code></pre><p>这个表通过使用一个自动递增的方法来唯一标识每一行。表示用户名字的字段不能为空（或 <code>null</code>），每一行被创建时会自动生成时间戳。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&gt; CREATE TABLE IF NOT EXISTS member (</span><br><span class="line">    -&gt; id INT AUTO_INCREMENT PRIMARY KEY,</span><br><span class="line">    -&gt; name VARCHAR(128) NOT NULL,</span><br><span class="line">    -&gt; startdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP);</span><br><span class="line">Query OK, 0 ROWS affected (0.030 sec)</span><br></pre></td></tr></table></figure>
+
+<p>这个表通过使用一个自动递增的方法来唯一标识每一行。表示用户名字的字段不能为空（或 <code>null</code>），每一行被创建时会自动生成时间戳。</p>
 <p>使用 SQL 关键字 <code>INSERT</code> 向这个表填充一些示例数据：</p>
-<pre tabindex="0"><code>&gt; INSERT INTO member (name) VALUES (&#39;Alice&#39;);
-Query OK, 1 ROW affected (0.011 sec)
-&gt; INSERT INTO member (name) VALUES (&#39;Bob&#39;);
-Query OK, 1 ROW affected (0.011 sec)
-&gt; INSERT INTO member (name) VALUES (&#39;Carol&#39;);
-Query OK, 1 ROW affected (0.011 sec)
-&gt; INSERT INTO member (name) VALUES (&#39;David&#39;);
-Query OK, 1 ROW affected (0.011 sec)
-</code></pre><p>验证一下表里的数据：</p>
-<pre tabindex="0"><code>&gt; SELECT * FROM member;
-+----+-------+---------------------+
-| id | name  | startdate           |
-+----+-------+---------------------+
-|  1 | Alice | 2020-10-03 15:25:06 |
-|  2 | Bob   | 2020-10-03 15:26:43 |
-|  3 | Carol | 2020-10-03 15:26:46 |
-|  4 | David | 2020-10-03 15:26:51 |
-+----+-------+---------------------+
-4 ROWS IN SET (0.000 sec)
-</code></pre><h4 id="同时增加多行数据">同时增加多行数据</h4>
-<p>再创建一个表：</p>
-<pre tabindex="0"><code>&gt; CREATE TABLE IF NOT EXISTS linux (
-    -&gt; id INT AUTO_INCREMENT PRIMARY KEY,
-    -&gt; distro VARCHAR(128) NOT NULL);
-Query OK, 0 ROWS affected (0.030 sec)
-</code></pre><p>填充一些示例数据，这次使用 <code>VALUES</code> 快捷方式，这样你可以一次添加多行数据。<code>VALUES</code> 关键字需要一个用括号包围的列表作为参数，也可以用逗号分隔的多个列表作为参数。</p>
-<pre tabindex="0"><code>&gt; INSERT INTO linux (distro)
- -&gt; VALUES (&#39;Slackware&#39;), (&#39;RHEL&#39;),(&#39;Fedora&#39;),(&#39;Debian&#39;);
-Query OK, 4 ROWS affected (0.011 sec)
-Records: 4  Duplicates: 0  Warnings: 0
-&gt; SELECT * FROM linux;
-+----+-----------+
-| id | distro    |
-+----+-----------+
-|  1 | Slackware |
-|  2 | RHEL      |
-|  3 | Fedora    |
-|  4 | Debian    |
-+----+-----------+
-</code></pre><h3 id="关联多个表">关联多个表</h3>
-<p>现在你有两个表，之间没有关联。两个表的数据是独立的，但是你可能需要表一中的一个值来识别表二的记录。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&gt; INSERT INTO member (name) VALUES (&#x27;Alice&#x27;);</span><br><span class="line">Query OK, 1 ROW affected (0.011 sec)</span><br><span class="line">&gt; INSERT INTO member (name) VALUES (&#x27;Bob&#x27;);</span><br><span class="line">Query OK, 1 ROW affected (0.011 sec)</span><br><span class="line">&gt; INSERT INTO member (name) VALUES (&#x27;Carol&#x27;);</span><br><span class="line">Query OK, 1 ROW affected (0.011 sec)</span><br><span class="line">&gt; INSERT INTO member (name) VALUES (&#x27;David&#x27;);</span><br><span class="line">Query OK, 1 ROW affected (0.011 sec)</span><br></pre></td></tr></table></figure>
+
+<p>验证一下表里的数据：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&gt; SELECT * FROM member;</span><br><span class="line">+----+-------+---------------------+</span><br><span class="line">| id | name  | startdate           |</span><br><span class="line">+----+-------+---------------------+</span><br><span class="line">|  1 | Alice | 2020-10-03 15:25:06 |</span><br><span class="line">|  2 | Bob   | 2020-10-03 15:26:43 |</span><br><span class="line">|  3 | Carol | 2020-10-03 15:26:46 |</span><br><span class="line">|  4 | David | 2020-10-03 15:26:51 |</span><br><span class="line">+----+-------+---------------------+</span><br><span class="line">4 ROWS IN SET (0.000 sec)</span><br></pre></td></tr></table></figure>
+
+<h4><span id="同时增加多行数据">同时增加多行数据</span></h4><p>再创建一个表：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&gt; CREATE TABLE IF NOT EXISTS linux (</span><br><span class="line">    -&gt; id INT AUTO_INCREMENT PRIMARY KEY,</span><br><span class="line">    -&gt; distro VARCHAR(128) NOT NULL);</span><br><span class="line">Query OK, 0 ROWS affected (0.030 sec)</span><br></pre></td></tr></table></figure>
+
+<p>填充一些示例数据，这次使用 <code>VALUES</code> 快捷方式，这样你可以一次添加多行数据。<code>VALUES</code> 关键字需要一个用括号包围的列表作为参数，也可以用逗号分隔的多个列表作为参数。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&gt; INSERT INTO linux (distro)</span><br><span class="line"> -&gt; VALUES (&#x27;Slackware&#x27;), (&#x27;RHEL&#x27;),(&#x27;Fedora&#x27;),(&#x27;Debian&#x27;);</span><br><span class="line">Query OK, 4 ROWS affected (0.011 sec)</span><br><span class="line">Records: 4  Duplicates: 0  Warnings: 0</span><br><span class="line">&gt; SELECT * FROM linux;</span><br><span class="line">+----+-----------+</span><br><span class="line">| id | distro    |</span><br><span class="line">+----+-----------+</span><br><span class="line">|  1 | Slackware |</span><br><span class="line">|  2 | RHEL      |</span><br><span class="line">|  3 | Fedora    |</span><br><span class="line">|  4 | Debian    |</span><br><span class="line">+----+-----------+</span><br></pre></td></tr></table></figure>
+
+<h3><span id="关联多个表">关联多个表</span></h3><p>现在你有两个表，之间没有关联。两个表的数据是独立的，但是你可能需要表一中的一个值来识别表二的记录。</p>
 <p>你可以在表一中新增一列对应表二中的值。因为两个表都有唯一的标识符（自动递增的 <code>id</code> 字段），关联的它们的最简单的方式是，使用表一中的 <code>id</code> 字段作为表二的查询条件。</p>
 <p>在表一中创建一列用来表示表二中的一个值：</p>
-<pre tabindex="0"><code>&gt; ALTER TABLE member ADD COLUMN (os INT);
-Query OK, 0 ROWS affected (0.012 sec)
-Records: 0  Duplicates: 0  Warnings: 0
-&gt; DESCRIBE member;
-DESCRIBE member;
-+-----------+--------------+------+-----+---------+------+
-| FIELD     | TYPE         | NULL | KEY | DEFAULT | Extra|
-+-----------+--------------+------+-----+---------+------+
-| id        | INT(11)      | NO   | PRI | NULL    | auto_|
-| name      | VARCHAR(128) | NO   |     | NULL    |      |
-| startdate | TIMESTAMP    | NO   |     | cur[...]|      |
-| os        | INT(11)      | YES  |     | NULL    |      |
-+-----------+--------------+------+-----+---------+------+
-</code></pre><p>把 <code>linux</code> 表中的唯一 ID 分配给每个成员。因为记录已经存在，使用 <code>UPDATE</code> 关键字而不是 <code>INSERT</code>。尤其是当你想查询某行然后再更新某列值时。语法上，表达方式有点倒装，先更新后查询：</p>
-<pre tabindex="0"><code>&gt; UPDATE member SET os=1 WHERE name=&#39;Alice&#39;;
-Query OK, 1 ROW affected (0.007 sec)
-ROWS matched: 1  Changed: 1  Warnings: 0
-</code></pre><p>要填充数据，请对其他名字重复执行这个过程。为了数据的多样性，在四行记录中分配三个不同的值。</p>
-<h4 id="连接表">连接表</h4>
-<p>现在这两个表彼此有了关联，你可以使用 SQL 来展示关联的数据。数据库中有很多种连接方式，你可以尽请尝试。下面的例子是关联 <code>member</code> 表中 <code>os</code> 字段和 <code>linux</code> 表中 <code>id</code> 字段：</p>
-<pre tabindex="0"><code>SELECT * FROM member JOIN linux ON member.os=linux.id;
-+----+-------+---------------------+------+----+-----------+
-| id | name  | startdate           | os   | id | distro    |
-+----+-------+---------------------+------+----+-----------+
-|  1 | Alice | 2020-10-03 15:25:06 |    1 |  1 | Slackware |
-|  2 | Bob   | 2020-10-03 15:26:43 |    3 |  3 | Fedora    |
-|  4 | David | 2020-10-03 15:26:51 |    3 |  3 | Fedora    |
-|  3 | Carol | 2020-10-03 15:26:46 |    4 |  4 | Debian    |
-+----+-------+---------------------+------+----+-----------+
-4 ROWS IN SET (0.000 sec)
-</code></pre><p>连接 <code>os</code> 和 <code>id</code> 字段。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&gt; ALTER TABLE member ADD COLUMN (os INT);</span><br><span class="line">Query OK, 0 ROWS affected (0.012 sec)</span><br><span class="line">Records: 0  Duplicates: 0  Warnings: 0</span><br><span class="line">&gt; DESCRIBE member;</span><br><span class="line">DESCRIBE member;</span><br><span class="line">+-----------+--------------+------+-----+---------+------+</span><br><span class="line">| FIELD     | TYPE         | NULL | KEY | DEFAULT | Extra|</span><br><span class="line">+-----------+--------------+------+-----+---------+------+</span><br><span class="line">| id        | INT(11)      | NO   | PRI | NULL    | auto_|</span><br><span class="line">| name      | VARCHAR(128) | NO   |     | NULL    |      |</span><br><span class="line">| startdate | TIMESTAMP    | NO   |     | cur[...]|      |</span><br><span class="line">| os        | INT(11)      | YES  |     | NULL    |      |</span><br><span class="line">+-----------+--------------+------+-----+---------+------+</span><br></pre></td></tr></table></figure>
+
+<p>把 <code>linux</code> 表中的唯一 ID 分配给每个成员。因为记录已经存在，使用 <code>UPDATE</code> 关键字而不是 <code>INSERT</code>。尤其是当你想查询某行然后再更新某列值时。语法上，表达方式有点倒装，先更新后查询：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; UPDATE member SET os=1 WHERE name=&#x27;Alice&#x27;;</span><br><span class="line">Query OK, 1 ROW affected (0.007 sec)</span><br><span class="line">ROWS matched: 1  Changed: 1  Warnings: 0</span><br></pre></td></tr></table></figure>
+
+<p>要填充数据，请对其他名字重复执行这个过程。为了数据的多样性，在四行记录中分配三个不同的值。</p>
+<h4><span id="连接表">连接表</span></h4><p>现在这两个表彼此有了关联，你可以使用 SQL 来展示关联的数据。数据库中有很多种连接方式，你可以尽请尝试。下面的例子是关联 <code>member</code> 表中 <code>os</code> 字段和 <code>linux</code> 表中 <code>id</code> 字段：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM member JOIN linux ON member.os=linux.id;</span><br><span class="line">+----+-------+---------------------+------+----+-----------+</span><br><span class="line">| id | name  | startdate           | os   | id | distro    |</span><br><span class="line">+----+-------+---------------------+------+----+-----------+</span><br><span class="line">|  1 | Alice | 2020-10-03 15:25:06 |    1 |  1 | Slackware |</span><br><span class="line">|  2 | Bob   | 2020-10-03 15:26:43 |    3 |  3 | Fedora    |</span><br><span class="line">|  4 | David | 2020-10-03 15:26:51 |    3 |  3 | Fedora    |</span><br><span class="line">|  3 | Carol | 2020-10-03 15:26:46 |    4 |  4 | Debian    |</span><br><span class="line">+----+-------+---------------------+------+----+-----------+</span><br><span class="line">4 ROWS IN SET (0.000 sec)</span><br></pre></td></tr></table></figure>
+
+<p>连接 <code>os</code> 和 <code>id</code> 字段。</p>
 <p>在图形化的应用中，你可以想象 <code>os</code> 字段可以在下拉菜单中设置，值的来源是 <code>linux</code> 表中的 <code>distro</code> 字段。通过使用多个表中独立却有关联的数据，你可以保证数据的一致性和有效性，使用 SQL 你可以动态地关联它们。</p>
-<h3 id="下载-mariadb-和-mysql-备忘单">下载 MariaDB 和 MySQL 备忘单</h3>
-<p>MariaDB 是企业级的数据库。它是健壮、强大、高效的数据库引擎。学习它是你向管理 web 应用和编写语言库迈出的伟大的一步。你可以<a class="link" href="https://opensource.com/downloads/mariadb-mysql-cheat-sheet"  target="_blank" rel="noopener"
-    >下载 MariaDB 和 MySQL 备忘单</a>，在你使用 MariaDB 时可以快速参考。</p>
+<h3><span id="下载-mariadb-和-mysql-备忘单">下载 MariaDB 和 MySQL 备忘单</span></h3><p>MariaDB 是企业级的数据库。它是健壮、强大、高效的数据库引擎。学习它是你向管理 web 应用和编写语言库迈出的伟大的一步。你可以<a target="_blank" rel="noopener" href="https://opensource.com/downloads/mariadb-mysql-cheat-sheet">下载 MariaDB 和 MySQL 备忘单</a>，在你使用 MariaDB 时可以快速参考。</p>
 <hr>
-<p>via: <a class="link" href="https://opensource.com/article/20/10/mariadb-mysql-cheat-sheet"  target="_blank" rel="noopener"
-    >https://opensource.com/article/20/10/mariadb-mysql-cheat-sheet</a></p>
-<p>作者：<a class="link" href="https://opensource.com/users/seth"  target="_blank" rel="noopener"
-    >Seth Kenlon</a>
-选题：<a class="link" href="https://github.com/lujun9972"  target="_blank" rel="noopener"
-    >lujun9972</a>
-译者：<a class="link" href="https://github.com/lxbwolf"  target="_blank" rel="noopener"
-    >lxbwolf</a>
-校对：<a class="link" href="https://github.com/wxy"  target="_blank" rel="noopener"
-    >wxy</a></p>
-<p>本文由 <a class="link" href="https://github.com/LCTT/TranslateProject"  target="_blank" rel="noopener"
-    >LCTT</a> 原创编译，<a class="link" href="https://linux.cn/"  target="_blank" rel="noopener"
-    >Linux中国</a> 荣誉推出</p>
+<p>via: <a target="_blank" rel="noopener" href="https://opensource.com/article/20/10/mariadb-mysql-cheat-sheet">https://opensource.com/article/20/10/mariadb-mysql-cheat-sheet</a></p>
+<p>作者：<a target="_blank" rel="noopener" href="https://opensource.com/users/seth">Seth Kenlon</a><br>选题：<a target="_blank" rel="noopener" href="https://github.com/lujun9972">lujun9972</a><br>译者：<a target="_blank" rel="noopener" href="https://github.com/lxbwolf">lxbwolf</a><br>校对：<a target="_blank" rel="noopener" href="https://github.com/wxy">wxy</a></p>
+<p>本文由 <a target="_blank" rel="noopener" href="https://github.com/LCTT/TranslateProject">LCTT</a> 原创编译，<a target="_blank" rel="noopener" href="https://linux.cn/">Linux中国</a> 荣誉推出</p>
 
-</section>
-
-
-    <footer class="article-footer">
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
     
-
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/3641869e/" title="【译】备忘单：提升你的 MariaDB 和 MySQL 数据库技能" target="_blank" rel="external">https://lxb.wiki/3641869e/</a>
+    </li>
     
-    <section class="article-copyright">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
-</svg>
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="external">CC BY-NC 4.0</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
 
-
-
-        <span>Licensed under CC BY-NC-SA 4.0</span>
-    </section>
-    </footer>
-
-
+    </div>
+  </article>
+  
     
-</article>
-
+  <section id="comments">
+  	
+      
+        <section id="comments" class="comments">
+          <style>
+            .utterances{max-width: 100%;}
+          </style>
+          <script src="https://utteranc.es/client.js"
+                repo="lxbwolf/lxbwolf.github.io"
+                issue-term="title"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+          </script>
+        </section>
+      
     
+  </section>
 
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
     
+    <li class="prev">
+      <a href="/331c3227/" title="【译】使用子模块和子树来管理 Git 项目"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/ff3c9770/" title="【译】了解一下 Fossil，一个 Git 的替代品"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+    <li class="toggle-toc">
+      <a class="toggle-btn collapsed" data-toggle="collapse" href="#collapseToc" aria-expanded="false" title="文章目录" role="button">
+        <span>[&nbsp;</span><span>文章目录</span>
+        <i class="text-collapsed icon icon-anchor"></i>
+        <i class="text-in icon icon-close"></i>
+        <span>]</span>
+      </a>
+    </li>
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,wechat"></div>
+    
+  </div>
+  </div>
+</nav>
+  
 
-<aside class="related-content--wrapper">
-    <h2 class="section-title">相关文章</h2>
-    <div class="related-content">
-        <div class="flex article-list--tile">
-            
-                
-<article class="">
-    <a href="/a333bc04/">
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
         
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
         
-
-        <div class="article-details">
-            <h2 class="article-title">mysqldump: Got error: 1044: Access denied for user</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/728c18a3/">
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
         
-        
+    </ul>
 
-        <div class="article-details">
-            <h2 class="article-title">分布式数据库系统(DDBS)</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/77f38978/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">mysql启动时 &amp;quot;No space left on device&amp;quot;</h2>
-        </div>
-    </a>
-</article>
-
-            
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> xbl </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
         </div>
     </div>
-</aside>
 
-     
-    
-        
-    <script src="https://utteranc.es/client.js" 
-        repo="lxbwolf/lxbwolf.github.io"
-        issue-term="pathname"
-        
-        crossorigin="anonymous"
-        async
-        >
-</script>
 
-<style>
-    .utterances {
-        max-width: unset;
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
     }
-</style>
-
-<script>
-    let utterancesLoaded = false;
-
-    function setUtterancesTheme(theme) {
-        let utterances = document.querySelector('.utterances iframe');
-        if (utterances) {
-            utterances.contentWindow.postMessage(
-                {
-                    type: 'set-theme',
-                    theme: `github-${theme}`
-                },
-                'https://utteranc.es'
-            );
-        }
-    }
-
-    addEventListener('message', event => {
-        if (event.origin !== 'https://utteranc.es') return;
-
-        
-        utterancesLoaded = true;
-        setUtterancesTheme(document.documentElement.dataset.scheme)
-    });
-
-    window.addEventListener('onColorSchemeChange', (e) => {
-        if (!utterancesLoaded) return;
-        setUtterancesTheme(e.detail)
-    })
-</script>
+  </script>
 
 
-    
 
-    <footer class="site-footer">
-    <section class="copyright">
-        &copy; 
-        
-            2020 - 
-        
-        2025 Xiaobin&#39;s Notes
-    </section>
-    
-    <section class="powerby">
-        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
-        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
-    </section>
 </footer>
 
-
-    
-<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
-
-    
-    <div class="pswp__bg"></div>
-
-    
-    <div class="pswp__scroll-wrap">
-
-        
-        <div class="pswp__container">
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-        </div>
-
-        
-        <div class="pswp__ui pswp__ui--hidden">
-
-            <div class="pswp__top-bar">
-
-                
-
-                <div class="pswp__counter"></div>
-
-                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
-
-                <button class="pswp__button pswp__button--share" title="Share"></button>
-
-                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
-
-                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
-
-                
-                
-                <div class="pswp__preloader">
-                    <div class="pswp__preloader__icn">
-                        <div class="pswp__preloader__cut">
-                            <div class="pswp__preloader__donut"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-                <div class="pswp__share-tooltip"></div>
-            </div>
-
-            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
-            </button>
-
-            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
-            </button>
-
-            <div class="pswp__caption">
-                <div class="pswp__caption__center"></div>
-            </div>
-
-        </div>
-
-    </div>
-
-</div><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
-                defer
-                >
-            </script><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
-                defer
-                >
-            </script><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
-            ><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
-            >
-
-            </main>
-        </div>
-        <script 
-                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
-                
-                >
-            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
 <script>
-    (function () {
-        const customFont = document.createElement('link');
-        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
-
-        customFont.type = "text/css";
-        customFont.rel = "stylesheet";
-
-        document.head.appendChild(customFont);
-    }());
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 </script>
 
-    </body>
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
 </html>

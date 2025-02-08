@@ -1,384 +1,386 @@
 <!DOCTYPE html>
-<html lang="zh-cn" dir="ltr">
-    <head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Go命令行库cobra'>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
 
-<meta name="keywords" content="命令行库 , cobra , Go命令行库cobra"><title>Go命令行库cobra</title>
+  
+  <title>Go命令行库cobra | Xiaobin&#39;s Notes</title>
+  <meta name="description" content="Go命令行库cobra">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go命令行库cobra">
+<meta property="og:url" content="https://lxb.wiki/e80bf483/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Notes">
+<meta property="og:description" content="Go命令行库cobra">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/202305062144121.png">
+<meta property="article:published_time" content="2022-07-16T06:23:51.000Z">
+<meta property="article:modified_time" content="2025-02-02T11:48:02.425Z">
+<meta property="article:author" content="lxb">
+<meta property="article:tag" content="工具">
+<meta property="article:tag" content="go">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/202305062144121.png">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/e80bf483/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Notes" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
 
-<link rel='canonical' href='https://lxb.wiki/e80bf483/'>
+  
+  
+  
+  
 
-<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='Go命令行库cobra'>
-<meta property='og:description' content='Go命令行库cobra'>
-<meta property='og:url' content='https://lxb.wiki/e80bf483/'>
-<meta property='og:site_name' content='Xiaobin&#39;s Notes'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='go' /><meta property='article:tag' content='工具' /><meta property='article:published_time' content='2022-07-16T22:23:51&#43;08:00'/><meta property='article:modified_time' content='2022-07-16T22:23:51&#43;08:00'/>
-<meta name="twitter:title" content="Go命令行库cobra">
-<meta name="twitter:description" content="Go命令行库cobra">
-<link rel="shortcut icon" href="/favicon.png" />
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
 
-
-
-
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-
-    gtag('config', 'G-JZ2PWLT6JY');
-</script>
-<script>
-    var _hmt = _hmt || [];
-    (function () {
-        var hm = document.createElement("script");
-        hm.src = "https://hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-<script>
-    (function () {
-        var el = document.createElement("script");
-        el.src = "https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?f146251743600ee0672cdcc8455ce18def91cdb255ad969a2ef5c715d5ed5baecaf7cd753709c168f20e6a2e9019123fd11e31a222d3a2fe01ad05c6b8f519b2";
-        el.id = "ttzz";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(el, s);
-    })(window)
-</script>
-    </head>
-    <body class="
-    article-page
-    ">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
     <script>
-        (function() {
-            const colorSchemeKey = 'StackColorScheme';
-            if(!localStorage.getItem(colorSchemeKey)){
-                localStorage.setItem(colorSchemeKey, "auto");
-            }
-        })();
-    </script><script>
-    (function() {
-        const colorSchemeKey = 'StackColorScheme';
-        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
-        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
-            
-
-            document.documentElement.dataset.scheme = 'dark';
-        } else {
-            document.documentElement.dataset.scheme = 'light';
-        }
-    })();
-</script>
-<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
-    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
-        <span class="hamburger-box">
-            <span class="hamburger-inner"></span>
-        </span>
-    </button>
-
-    <header>
-        
-            
-            <figure class="site-avatar">
-                <a href="/">
-                
-                    
-                    
-                    
-                        
-                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
-                            height="298" class="site-logo" loading="lazy" alt="Avatar">
-                    
-                
-                </a>
-                
-                    <span class="emoji">🍥</span>
-                
-            </figure>
-            
-        
-        
-        <div class="site-meta">
-            <h1 class="site-name"><a href="/">Xiaobin&#39;s Notes</a></h1>
-            <h2 class="site-description"></h2>
-        </div>
-    </header>
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+<meta name="generator" content="Hexo 6.3.0"></head>
 
 
-    <ol class="menu" id="main-menu">
-        
-        
-        
-        <li >
-            <a href='/' >
-                
-                
-                
-                <span>首页</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/archives/' >
-                
-                
-                
-                <span>归档</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/categories/' >
-                
-                
-                
-                <span>分类</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/tags/' >
-                
-                
-                
-                <span>标签</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/links/' >
-                
-                
-                
-                <span>友链</span>
-            </a>
-        </li>
-        
-
-        <div class="menu-bottom-section"><ol class="social-menu">
-                    
-                        <li>
-                            <a 
-                                href='mailto://me@lxb.wiki'
-                                target="_blank"
-                                title="Email"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://github.com/lxbwolf'
-                                target="_blank"
-                                title="GitHub"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://lxb.wiki/atom.xml'
-                                target="_blank"
-                                title="Rss"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="5" cy="19" r="1" />
-  <path d="M4 4a16 16 0 0 1 16 16" />
-  <path d="M4 11a9 9 0 0 1 9 9" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                </ol>
-                <li id="dark-mode-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="8" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="16" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <span>暗色模式</span>
-                </li>
-            
-        </div>
-    </ol>
-</aside>
-
-    <aside class="sidebar right-sidebar sticky">
-        
-            
-                
-<section class="widget archives">
-    
-    <h2 class="widget-title section-title">目录</h2>
-
-    <div class="widget--toc">
-        <nav id="TableOfContents">
-  <ul>
-    <li><a href="#主要功能">主要功能</a></li>
-    <li><a href="#cobra-中的主要概念">cobra 中的主要概念</a></li>
-    <li><a href="#创建-cobra-应用">创建 cobra 应用</a></li>
-    <li><a href="#使用-cobra-程序生成命令代码">使用 cobra 程序生成命令代码</a></li>
-    <li><a href="#为命令添加具体的功能">为命令添加具体的功能</a></li>
-    <li><a href="#为-command-添加选项flags">为 Command 添加选项(flags)</a></li>
-    <li><a href="#命令行参数arguments">命令行参数(arguments)</a></li>
-    <li><a href="#帮助信息help-command">帮助信息(help command)</a></li>
-    <li><a href="#提示信息usage-message">提示信息(usage message)</a></li>
-    <li><a href="#在-commnad-执行前后执行额外的操作">在 Commnad 执行前后执行额外的操作</a></li>
-    <li><a href="#代码解析">代码解析</a>
-      <ul>
-        <li><a href="#command-结构体">Command 结构体</a></li>
-        <li><a href="#执行命令的逻辑">执行命令的逻辑</a></li>
-        <li><a href="#解析命令行子命令">解析命令行子命令</a></li>
-        <li><a href="#为根命令添加-help-子命令">为根命令添加 help 子命令</a></li>
-        <li><a href="#为命令添加-help-flag">为命令添加 help flag</a></li>
-        <li><a href="#输出-help-信息">输出 help 信息</a></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
-    </div>
-</section>
-
-            
-        
-    </aside>
-
-
-            <main class="main full-width">
-    <article class="main-article">
-    <header class="article-header">
-
-    <div class="article-details">
-    
-    <header class="article-category">
-        
-        <a href="/categories/Lang/" >
-            Lang
+<body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
         </a>
-        
-    </header>
-    
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin&#39;s Notes</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
 
-    <div class="article-title-wrapper">
-        <h2 class="article-title">
-            <a href="/e80bf483/">Go命令行库cobra</a>
-        </h2>
-
-        
-        <h3 class="article-subtitle">
-            Go命令行库cobra
-        </h3>
-        
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
     </div>
-
-    
-    
-    
-    
-    <footer class="article-time">
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
-  <circle cx="18" cy="18" r="4" />
-  <path d="M15 3v4" />
-  <path d="M7 3v4" />
-  <path d="M3 11h16" />
-  <path d="M18 16.496v1.504l1 1" />
-</svg>
-            <time class="article-time--published">Jul 16, 2022</time>
-        </div>
-        
-
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <polyline points="12 7 12 12 15 15" />
-</svg>
-
-
-
-            <time class="article-time--reading">
-                阅读时长: 7 分钟
-            </time>
-        </div>
-        
-        <small>
-    <section class="article-tags">
-        
-            <a href="/tags/go/">go</a>
-        
-            <a href="/tags/%E5%B7%A5%E5%85%B7/">工具</a>
-        
-    </section>
-</small>
-    </footer>
-    
-
-    
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
 </div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
 </header>
 
-    <section class="article-content">
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
     
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/FE/">FE</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">77</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Life/">Life</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">39</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">20</span></li></ul>
+    </div>
+  </div>
+
+
     
-    <blockquote>
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/GitHub/" style="font-size: 13.08px;">GitHub</a> <a href="/tags/GoogleSheets/" style="font-size: 13px;">GoogleSheets</a> <a href="/tags/STL/" style="font-size: 13.38px;">STL</a> <a href="/tags/amap/" style="font-size: 13px;">amap</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.23px;">blog</a> <a href="/tags/c/" style="font-size: 13.69px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.08px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.62px;">devops</a> <a href="/tags/docker/" style="font-size: 13.08px;">docker</a> <a href="/tags/elastic/" style="font-size: 13.38px;">elastic</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.31px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.15px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.08px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.15px;">hexo</a> <a href="/tags/hooks/" style="font-size: 13px;">hooks</a> <a href="/tags/http/" style="font-size: 13.38px;">http</a> <a href="/tags/jdk/" style="font-size: 13px;">jdk</a> <a href="/tags/joplin/" style="font-size: 13.08px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/linux/" style="font-size: 13.15px;">linux</a> <a href="/tags/lucene/" style="font-size: 13.31px;">lucene</a> <a href="/tags/mac/" style="font-size: 13.46px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.08px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.15px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.31px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.15px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.15px;">pic</a> <a href="/tags/python/" style="font-size: 13px;">python</a> <a href="/tags/qt/" style="font-size: 13.31px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/raycast/" style="font-size: 13px;">raycast</a> <a href="/tags/react/" style="font-size: 13px;">react</a> <a href="/tags/redis/" style="font-size: 13.54px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.92px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.08px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/terminal/" style="font-size: 13px;">terminal</a> <a href="/tags/vue/" style="font-size: 13px;">vue</a> <a href="/tags/zk/" style="font-size: 13.08px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%8D%8F%E8%AE%AE/" style="font-size: 13px;">协议</a> <a href="/tags/%E5%9C%B0%E5%9B%BE/" style="font-size: 13px;">地图</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.46px;">工具</a> <a href="/tags/%E5%B9%BF%E5%91%8A/" style="font-size: 13px;">广告</a> <a href="/tags/%E6%8F%92%E5%BA%A7/" style="font-size: 13px;">插座</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.77px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.38px;">树莓派</a> <a href="/tags/%E7%94%A8%E7%94%B5/" style="font-size: 13px;">用电</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.54px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91/" style="font-size: 13.08px;">编译</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.85px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.08px;">邮件</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/">2024</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">25</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">24</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">39</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">33</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/42f8026c/" class="title">React useEffect() Hook</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-18T14:16:21.000Z" itemprop="datePublished">2024-05-18</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/b7826aa4/" class="title">Vue 2.x 使用高德地图JS API 2.0加载起点终点路径轨迹</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-01T13:51:18.000Z" itemprop="datePublished">2024-05-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Life/">Life</a>
+              </p>
+              <p class="item-title">
+                <a href="/0565b4f5/" class="title">家庭用电插座</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-04-11T05:48:31.000Z" itemprop="datePublished">2024-04-11</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/a520e262/" class="title">MacOS 14.4 引发Java 应用崩溃</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-15T06:05:49.000Z" itemprop="datePublished">2024-03-15</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/cb9b2c66/" class="title">重定向广告</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-04T05:27:13.000Z" itemprop="datePublished">2024-03-04</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<aside class="sidebar sidebar-toc collapse" id="collapseToc" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    <nav id="toc" class="article-toc">
+      <h3 class="toc-title">文章目录</h3>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.</span> <span class="toc-text">主要功能</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">2.</span> <span class="toc-text">cobra 中的主要概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">3.</span> <span class="toc-text">创建 cobra 应用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">4.</span> <span class="toc-text">使用 cobra 程序生成命令代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">5.</span> <span class="toc-text">为命令添加具体的功能</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">6.</span> <span class="toc-text">为 Command 添加选项(flags)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">7.</span> <span class="toc-text">命令行参数(arguments)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">8.</span> <span class="toc-text">帮助信息(help command)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">9.</span> <span class="toc-text">提示信息(usage message)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">10.</span> <span class="toc-text">在 Commnad 执行前后执行额外的操作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">11.</span> <span class="toc-text">代码解析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">11.1.</span> <span class="toc-text">Command 结构体</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">11.2.</span> <span class="toc-text">执行命令的逻辑</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">11.3.</span> <span class="toc-text">解析命令行子命令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">11.4.</span> <span class="toc-text">为根命令添加 help 子命令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">11.5.</span> <span class="toc-text">为命令添加 help flag</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">11.6.</span> <span class="toc-text">输出 help 信息</span></a></li></ol></li></ol>
+    </nav>
+  </div>
+</aside>
+
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Go命令行库cobra" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Go命令行库cobra
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/e80bf483/" class="article-date">
+	  <time datetime="2022-07-16T06:23:51.000Z" itemprop="datePublished">2022-07-16</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Lang/">Lang</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/go/" rel="tag">go</a>, <a class="article-tag-link-link" href="/tags/%E5%B7%A5%E5%85%B7/" rel="tag">工具</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/e80bf483/#comments" class="article-comment-link">评论</a></span> 
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 3.1k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 14(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <blockquote>
 <p>Cobra 是一个 Golang 包，它提供了简单的接口来创建命令行程序。同时，Cobra 也是一个应用程序，用来生成应用框架，从而开发以 Cobra 为基础的应用。</p>
 </blockquote>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/202305062144121.png"
-	
-	
-	
-	loading="lazy"
-	
-	
-></p>
-<h2 id="主要功能">主要功能</h2>
-<ul>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/202305062144121.png" alt></p>
+<h2><span id="主要功能">主要功能</span></h2><ul>
 <li>简易的子命令行模式，如 app server， app fetch 等等</li>
 <li>完全兼容 posix 命令行模式</li>
 <li>嵌套子命令 subcommand</li>
@@ -387,85 +389,59 @@
 <li>如果命令输入错误，将提供智能建议，如 app srver，将提示 srver 没有，是不是 app server</li>
 <li>自动生成 commands 和 flags 的帮助信息</li>
 <li>自动生成详细的 help 信息，如 app help</li>
-<li>自动识别帮助 flag -h，&ndash;help</li>
+<li>自动识别帮助 flag -h，–help</li>
 <li>自动生成应用程序在 bash 下命令自动完成功能</li>
 <li>自动生成应用程序的 man 手册</li>
 <li>命令行别名</li>
 <li>自定义 help 和 usage 信息</li>
 <li>可选的与 viper apps 的紧密集成</li>
 </ul>
-<h2 id="cobra-中的主要概念">cobra 中的主要概念</h2>
-<ul>
+<h2><span id="cobra-中的主要概念">cobra 中的主要概念</span></h2><ul>
 <li>commands 行为</li>
 <li>args 命令行参数(或称为位置参数)</li>
 <li>flags 对行为的改变(即命令行选项)</li>
 </ul>
 <p>执行命令行程序时的一般格式为： <code>APPNAME COMMAND ARG --FLAG</code></p>
-<h2 id="创建-cobra-应用">创建 cobra 应用</h2>
-<p>获取最新版本</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ go get -u github.com/spf13/cobra@latest
-</span></span></code></pre></div><p>安装 cobra-cli</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">$</span> <span style="color:#66d9ef">go</span> <span style="color:#a6e22e">install</span> <span style="color:#a6e22e">github</span>.<span style="color:#a6e22e">com</span><span style="color:#f92672">/</span><span style="color:#a6e22e">spf13</span><span style="color:#f92672">/</span><span style="color:#a6e22e">cobra</span><span style="color:#f92672">-</span><span style="color:#a6e22e">cli</span><span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">latest</span>
-</span></span></code></pre></div><p>创建</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ cd /pathto/mysrc
-</span></span><span style="display:flex;"><span>$ go mod init
-</span></span><span style="display:flex;"><span>$ cobra-cli init
-</span></span></code></pre></div><p>执行后，该目录下生成的结构如下：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>▾ demo
-</span></span><span style="display:flex;"><span>    ▾ cmd/
-</span></span><span style="display:flex;"><span>        root.go
-</span></span><span style="display:flex;"><span>    main.go
-</span></span></code></pre></div><h2 id="使用-cobra-程序生成命令代码">使用 cobra 程序生成命令代码</h2>
-<p>除了生成应用程序框架，还可以生成子命令的代码文件。添加自命令 mysub1</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ cd /pathto/mysrc
-</span></span><span style="display:flex;"><span>$ cobra-cli add mysub1
-</span></span></code></pre></div><h2 id="为命令添加具体的功能">为命令添加具体的功能</h2>
-<p>打开文件 <code>cmd/root.go</code> ，找到变量 rootCmd 的初始化过程并为之设置 Run 方法：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">Run</span>: <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">cobra</span>.<span style="color:#a6e22e">Command</span>, <span style="color:#a6e22e">args</span> []<span style="color:#66d9ef">string</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;cobra demo program&#34;</span>)
-</span></span><span style="display:flex;"><span>},
-</span></span></code></pre></div><p>创建一个 version Command 用来输出当前的软件版本。先在 cmd 目录下添加 version.go 文件，编辑文件的内容如下：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">cmd</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
-</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;fmt&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;github.com/spf13/cobra&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">init</span>() {
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rootCmd</span>.<span style="color:#a6e22e">AddCommand</span>(<span style="color:#a6e22e">versionCmd</span>)
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">versionCmd</span> = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">cobra</span>.<span style="color:#a6e22e">Command</span>{
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Use</span>:   <span style="color:#e6db74">&#34;version&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Short</span>: <span style="color:#e6db74">&#34;Print the version number of cobrademo&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Long</span>:  <span style="color:#e6db74">`All software has versions. This is cobrademo&#39;s`</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Run</span>: <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">cobra</span>.<span style="color:#a6e22e">Command</span>, <span style="color:#a6e22e">args</span> []<span style="color:#66d9ef">string</span>) {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;cobrademo version is v1.0&#34;</span>)
-</span></span><span style="display:flex;"><span>    },
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><h2 id="为-command-添加选项flags">为 Command 添加选项(flags)</h2>
-<p>选项(flags)用来控制 Command 的具体行为。根据选项的作用范围，可以把选项分为两类：</p>
+<h2><span id="创建-cobra-应用">创建 cobra 应用</span></h2><p>获取最新版本</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ go get -u github.com/spf13/cobra@latest</span><br></pre></td></tr></table></figure>
+
+<p>安装 cobra-cli</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="keyword">go</span> install github.com/spf13/cobra-cli@latest</span><br></pre></td></tr></table></figure>
+
+<p>创建</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> /pathto/mysrc</span><br><span class="line">$ go mod init</span><br><span class="line">$ cobra-cli init</span><br></pre></td></tr></table></figure>
+
+<p>执行后，该目录下生成的结构如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">▾ demo</span><br><span class="line">    ▾ cmd/</span><br><span class="line">        root.go</span><br><span class="line">    main.go</span><br></pre></td></tr></table></figure>
+
+
+
+<h2><span id="使用-cobra-程序生成命令代码">使用 cobra 程序生成命令代码</span></h2><p>除了生成应用程序框架，还可以生成子命令的代码文件。添加自命令 mysub1</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> /pathto/mysrc</span><br><span class="line">$ cobra-cli add mysub1</span><br></pre></td></tr></table></figure>
+
+
+
+<h2><span id="为命令添加具体的功能">为命令添加具体的功能</span></h2><p>打开文件 <code>cmd/root.go</code> ，找到变量 rootCmd 的初始化过程并为之设置 Run 方法：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Run: <span class="function"><span class="keyword">func</span><span class="params">(cmd *cobra.Command, args []<span class="type">string</span>)</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;cobra demo program&quot;</span>)</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+
+<p>创建一个 version Command 用来输出当前的软件版本。先在 cmd 目录下添加 version.go 文件，编辑文件的内容如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> cmd</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="string">&quot;github.com/spf13/cobra&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">    rootCmd.AddCommand(versionCmd)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> versionCmd = &amp;cobra.Command&#123;</span><br><span class="line">    Use:   <span class="string">&quot;version&quot;</span>,</span><br><span class="line">    Short: <span class="string">&quot;Print the version number of cobrademo&quot;</span>,</span><br><span class="line">    Long:  <span class="string">`All software has versions. This is cobrademo&#x27;s`</span>,</span><br><span class="line">    Run: <span class="function"><span class="keyword">func</span><span class="params">(cmd *cobra.Command, args []<span class="type">string</span>)</span></span> &#123;</span><br><span class="line">        fmt.Println(<span class="string">&quot;cobrademo version is v1.0&quot;</span>)</span><br><span class="line">    &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2><span id="为-command-添加选项flags">为 Command 添加选项(flags)</span></h2><p>选项(flags)用来控制 Command 的具体行为。根据选项的作用范围，可以把选项分为两类：</p>
 <ul>
 <li>persistent</li>
 <li>local</li>
 </ul>
 <p>对于 persistent 类型的选项，既可以设置给该 Command，又可以设置给该 Command 的子 Command。对于一些全局性的选项，比较适合设置为 persistent 类型，比如控制输出的 verbose 选项：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">Verbose</span> <span style="color:#66d9ef">bool</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rootCmd</span>.<span style="color:#a6e22e">PersistentFlags</span>().<span style="color:#a6e22e">BoolVarP</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Verbose</span>, <span style="color:#e6db74">&#34;verbose&#34;</span>, <span style="color:#e6db74">&#34;v&#34;</span>, <span style="color:#66d9ef">false</span>, <span style="color:#e6db74">&#34;verbose output&#34;</span>)
-</span></span></code></pre></div><p>local 类型的选项只能设置给指定的 Command，比如下面定义的 source 选项：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">Source</span> <span style="color:#66d9ef">string</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rootCmd</span>.<span style="color:#a6e22e">Flags</span>().<span style="color:#a6e22e">StringVarP</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Source</span>, <span style="color:#e6db74">&#34;source&#34;</span>, <span style="color:#e6db74">&#34;s&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>, <span style="color:#e6db74">&#34;Source directory to read from&#34;</span>)
-</span></span></code></pre></div><p>该选项不能指定给 rootCmd 之外的其它 Command。
-默认情况下的选项都是可选的，但一些用例要求用户必须设置某些选项，这种情况 cobra 也是支持的，通过 Command 的 MarkFlagRequired 方法标记该选项即可：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">Name</span> <span style="color:#66d9ef">string</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rootCmd</span>.<span style="color:#a6e22e">Flags</span>().<span style="color:#a6e22e">StringVarP</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Name</span>, <span style="color:#e6db74">&#34;name&#34;</span>, <span style="color:#e6db74">&#34;n&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>, <span style="color:#e6db74">&#34;user name (required)&#34;</span>)
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rootCmd</span>.<span style="color:#a6e22e">MarkFlagRequired</span>(<span style="color:#e6db74">&#34;name&#34;</span>)
-</span></span></code></pre></div><h2 id="命令行参数arguments">命令行参数(arguments)</h2>
-<p>命令行参数(arguments)与命令行选项的区别(flags/options)。以常见的 ls 命令来说，其命令行的格式为：
-<code>ls [OPTION]... [FILE]…</code>
-其中的 OPTION 对应本文中介绍的 flags，以 <code>-</code> 或 <code>--</code> 开头；而 FILE 则被称为参数(arguments)或位置参数。一般的规则是参数在所有选项的后面，上面的 … 表示可以指定多个选项和多个参数。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Verbose <span class="type">bool</span></span><br><span class="line">rootCmd.PersistentFlags().BoolVarP(&amp;Verbose, <span class="string">&quot;verbose&quot;</span>, <span class="string">&quot;v&quot;</span>, <span class="literal">false</span>, <span class="string">&quot;verbose output&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>local 类型的选项只能设置给指定的 Command，比如下面定义的 source 选项：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Source <span class="type">string</span></span><br><span class="line">rootCmd.Flags().StringVarP(&amp;Source, <span class="string">&quot;source&quot;</span>, <span class="string">&quot;s&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="string">&quot;Source directory to read from&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>该选项不能指定给 rootCmd 之外的其它 Command。<br>默认情况下的选项都是可选的，但一些用例要求用户必须设置某些选项，这种情况 cobra 也是支持的，通过 Command 的 MarkFlagRequired 方法标记该选项即可：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Name <span class="type">string</span></span><br><span class="line">rootCmd.Flags().StringVarP(&amp;Name, <span class="string">&quot;name&quot;</span>, <span class="string">&quot;n&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="string">&quot;user name (required)&quot;</span>)</span><br><span class="line">rootCmd.MarkFlagRequired(<span class="string">&quot;name&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<h2><span id="命令行参数arguments">命令行参数(arguments)</span></h2><p>命令行参数(arguments)与命令行选项的区别(flags/options)。以常见的 ls 命令来说，其命令行的格式为：<br><code>ls [OPTION]... [FILE]…</code><br>其中的 OPTION 对应本文中介绍的 flags，以 <code>-</code> 或 <code>--</code> 开头；而 FILE 则被称为参数(arguments)或位置参数。一般的规则是参数在所有选项的后面，上面的 … 表示可以指定多个选项和多个参数。</p>
 <p>cobra 默认提供了一些验证方法：</p>
 <ul>
 <li>NoArgs - 如果存在任何位置参数，该命令将报错</li>
@@ -477,17 +453,15 @@
 <li>ExactValidArgs(int) 必须有 N 个位置参数，且都在命令的 ValidArgs 字段中，否则报错</li>
 <li>RangeArgs(min, max) - 如果位置参数的个数不在区间 min 和 max 之中，报错</li>
 </ul>
-<h2 id="帮助信息help-command">帮助信息(help command)</h2>
-<p>cobra 会自动添加 <code>--help(-h)</code> 选项，同时还自动添加了 help 子命，默认效果和使用 &ndash;help 选项相同。如果为 help 命令传递其它命令作为参数，则会显示对应命令的帮助信息。也可以自定义 help 的处理</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">SetHelpCommand</span>(<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Command</span>)
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">SetHelpFunc</span>(<span style="color:#a6e22e">f</span> <span style="color:#66d9ef">func</span>(<span style="color:#f92672">*</span><span style="color:#a6e22e">Command</span>, []<span style="color:#66d9ef">string</span>))
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">SetHelpTemplate</span>(<span style="color:#a6e22e">s</span> <span style="color:#66d9ef">string</span>)
-</span></span></code></pre></div><h2 id="提示信息usage-message">提示信息(usage message)</h2>
-<p>提示信息和帮助信息很相似，只不过它是在你输入了非法的参数、选项或命令时才出现的。也可以自定义提示信息：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">SetUsageFunc</span>(<span style="color:#a6e22e">f</span> <span style="color:#66d9ef">func</span>(<span style="color:#f92672">*</span><span style="color:#a6e22e">Command</span>) <span style="color:#66d9ef">error</span>)
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">SetUsageTemplate</span>(<span style="color:#a6e22e">s</span> <span style="color:#66d9ef">string</span>)
-</span></span></code></pre></div><h2 id="在-commnad-执行前后执行额外的操作">在 Commnad 执行前后执行额外的操作</h2>
-<p>Command 执行的操作是通过 Command.Run 方法实现的，为了支持我们在 Run 方法执行的前后执行一些其它的操作，Command 还提供了额外的几个方法，它们的执行顺序如下：</p>
+<h2><span id="帮助信息help-command">帮助信息(help command)</span></h2><p>cobra 会自动添加 <code>--help(-h)</code> 选项，同时还自动添加了 help 子命，默认效果和使用 –help 选项相同。如果为 help 命令传递其它命令作为参数，则会显示对应命令的帮助信息。也可以自定义 help 的处理</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cmd.SetHelpCommand(cmd *Command)</span><br><span class="line">cmd.SetHelpFunc(f <span class="function"><span class="keyword">func</span><span class="params">(*Command, []<span class="type">string</span>)</span></span>)</span><br><span class="line">cmd.SetHelpTemplate(s <span class="type">string</span>)</span><br></pre></td></tr></table></figure>
+
+<h2><span id="提示信息usage-message">提示信息(usage message)</span></h2><p>提示信息和帮助信息很相似，只不过它是在你输入了非法的参数、选项或命令时才出现的。也可以自定义提示信息：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cmd.SetUsageFunc(f <span class="function"><span class="keyword">func</span><span class="params">(*Command)</span></span> <span class="type">error</span>)</span><br><span class="line">cmd.SetUsageTemplate(s <span class="type">string</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+<h2><span id="在-commnad-执行前后执行额外的操作">在 Commnad 执行前后执行额外的操作</span></h2><p>Command 执行的操作是通过 Command.Run 方法实现的，为了支持我们在 Run 方法执行的前后执行一些其它的操作，Command 还提供了额外的几个方法，它们的执行顺序如下：</p>
 <ol>
 <li>PersistentPreRun</li>
 <li>PreRun</li>
@@ -495,453 +469,263 @@
 <li>PostRun</li>
 <li>PersistentPostRun</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">rootCmd</span> = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">cobra</span>.<span style="color:#a6e22e">Command</span>{
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Use</span>:   <span style="color:#e6db74">&#34;cobrademo&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Short</span>: <span style="color:#e6db74">&#34;sparkdev&#39;s cobra demo&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Long</span>: <span style="color:#e6db74">&#34;the demo show how to use cobra package&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">PersistentPreRun</span>: <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">cobra</span>.<span style="color:#a6e22e">Command</span>, <span style="color:#a6e22e">args</span> []<span style="color:#66d9ef">string</span>) {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Inside rootCmd PersistentPreRun with args: %v\n&#34;</span>, <span style="color:#a6e22e">args</span>)
-</span></span><span style="display:flex;"><span>    },
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">PreRun</span>: <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">cobra</span>.<span style="color:#a6e22e">Command</span>, <span style="color:#a6e22e">args</span> []<span style="color:#66d9ef">string</span>) {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Inside rootCmd PreRun with args: %v\n&#34;</span>, <span style="color:#a6e22e">args</span>)
-</span></span><span style="display:flex;"><span>    },
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Run</span>: <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">cobra</span>.<span style="color:#a6e22e">Command</span>, <span style="color:#a6e22e">args</span> []<span style="color:#66d9ef">string</span>) {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;cobra demo program, with args: %v\n&#34;</span>, <span style="color:#a6e22e">args</span>)
-</span></span><span style="display:flex;"><span>    },
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">PostRun</span>: <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">cobra</span>.<span style="color:#a6e22e">Command</span>, <span style="color:#a6e22e">args</span> []<span style="color:#66d9ef">string</span>) {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Inside rootCmd PostRun with args: %v\n&#34;</span>, <span style="color:#a6e22e">args</span>)
-</span></span><span style="display:flex;"><span>    },
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">PersistentPostRun</span>: <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">cobra</span>.<span style="color:#a6e22e">Command</span>, <span style="color:#a6e22e">args</span> []<span style="color:#66d9ef">string</span>) {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Inside rootCmd PersistentPostRun with args: %v\n&#34;</span>, <span style="color:#a6e22e">args</span>)
-</span></span><span style="display:flex;"><span>    },
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><h2 id="代码解析">代码解析</h2>
-<h3 id="command-结构体">Command 结构体</h3>
-<p>Command 结构体是 cobra 抽象出来的核心概念，它的实例表示一个命令或者是一个命令的子命令。下面的代码仅展示 Command 结构体中一些比较重要的字段：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Command</span> <span style="color:#66d9ef">struct</span> {    
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 用户通过指定 Run 函数来完成命令
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// PreRun 和 PostRun 则允许用户在 Run 运行的前后时机执行自定义代码
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">PersistentPreRun</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Command</span>, <span style="color:#a6e22e">args</span> []<span style="color:#66d9ef">string</span>)
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">PreRun</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Command</span>, <span style="color:#a6e22e">args</span> []<span style="color:#66d9ef">string</span>)
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Run</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Command</span>, <span style="color:#a6e22e">args</span> []<span style="color:#66d9ef">string</span>)
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">PostRun</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Command</span>, <span style="color:#a6e22e">args</span> []<span style="color:#66d9ef">string</span>)
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">PersistentPostRun</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Command</span>, <span style="color:#a6e22e">args</span> []<span style="color:#66d9ef">string</span>)
-</span></span><span style="display:flex;"><span>    
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// commands 字段包含了该命令的所有子命令
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">commands</span> []<span style="color:#f92672">*</span><span style="color:#a6e22e">Command</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// parent 字段记录了该命令的父命令
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">parent</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Command</span>
-</span></span><span style="display:flex;"><span>    
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 该命令的 help 子命令
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">helpCommand</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Command</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><h3 id="执行命令的逻辑">执行命令的逻辑</h3>
-<p>cobra 包启动程序执行的代码一般为：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Execute</span>()
-</span></span></code></pre></div><p>Execute() 函数会调用我们定义的 rootCmd(Command 的一个实例)的 Execute() 方法。
-在 Command 的 Execute() 方法中又调用了 Command 的 ExecuteC() 方法，我们可以通过下面的调用堆栈看到执行命令逻辑的调用过程：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Execute</span>() <span style="color:#f92672">-</span>&gt;                  <span style="color:#75715e">// main.go
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">rootCmd</span>.<span style="color:#a6e22e">Execute</span>() <span style="color:#f92672">-</span>&gt;              <span style="color:#75715e">// root.go
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">ExecuteC</span>() <span style="color:#f92672">-</span>&gt;                   <span style="color:#75715e">// command.go
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">execute</span>(<span style="color:#a6e22e">flags</span>) <span style="color:#f92672">-</span>&gt;             <span style="color:#75715e">// command.go
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Run</span>()                           <span style="color:#75715e">// command.go
-</span></span></span></code></pre></div><p>c.Run() 方法即用户为命令(Command) 设置的执行逻辑。</p>
-<h3 id="解析命令行子命令">解析命令行子命令</h3>
-<p>ExecuteC() 方法中，在执行 execute() 方法前，需要先通过 Find() 方法解析命令行上的子命令：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">cmd</span>, <span style="color:#a6e22e">flags</span>, <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Find</span>(<span style="color:#a6e22e">args</span>)
-</span></span></code></pre></div><p>比如我们执行下面的命令：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./myApp mycmd1
-</span></span></code></pre></div><p>解析出的 cmd 就是 imamycmd1ge 子命令，接下来就是执行 mycmd1 子命令的执行逻辑。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> rootCmd = &amp;cobra.Command&#123;</span><br><span class="line">    Use:   <span class="string">&quot;cobrademo&quot;</span>,</span><br><span class="line">    Short: <span class="string">&quot;sparkdev&#x27;s cobra demo&quot;</span>,</span><br><span class="line">    Long: <span class="string">&quot;the demo show how to use cobra package&quot;</span>,</span><br><span class="line">    PersistentPreRun: <span class="function"><span class="keyword">func</span><span class="params">(cmd *cobra.Command, args []<span class="type">string</span>)</span></span> &#123;</span><br><span class="line">        fmt.Printf(<span class="string">&quot;Inside rootCmd PersistentPreRun with args: %v\n&quot;</span>, args)</span><br><span class="line">    &#125;,</span><br><span class="line">    PreRun: <span class="function"><span class="keyword">func</span><span class="params">(cmd *cobra.Command, args []<span class="type">string</span>)</span></span> &#123;</span><br><span class="line">        fmt.Printf(<span class="string">&quot;Inside rootCmd PreRun with args: %v\n&quot;</span>, args)</span><br><span class="line">    &#125;,</span><br><span class="line">    Run: <span class="function"><span class="keyword">func</span><span class="params">(cmd *cobra.Command, args []<span class="type">string</span>)</span></span> &#123;</span><br><span class="line">        fmt.Printf(<span class="string">&quot;cobra demo program, with args: %v\n&quot;</span>, args)</span><br><span class="line">    &#125;,</span><br><span class="line">    PostRun: <span class="function"><span class="keyword">func</span><span class="params">(cmd *cobra.Command, args []<span class="type">string</span>)</span></span> &#123;</span><br><span class="line">        fmt.Printf(<span class="string">&quot;Inside rootCmd PostRun with args: %v\n&quot;</span>, args)</span><br><span class="line">    &#125;,</span><br><span class="line">    PersistentPostRun: <span class="function"><span class="keyword">func</span><span class="params">(cmd *cobra.Command, args []<span class="type">string</span>)</span></span> &#123;</span><br><span class="line">        fmt.Printf(<span class="string">&quot;Inside rootCmd PersistentPostRun with args: %v\n&quot;</span>, args)</span><br><span class="line">    &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2><span id="代码解析">代码解析</span></h2><h3><span id="command-结构体">Command 结构体</span></h3><p>Command 结构体是 cobra 抽象出来的核心概念，它的实例表示一个命令或者是一个命令的子命令。下面的代码仅展示 Command 结构体中一些比较重要的字段：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Command <span class="keyword">struct</span> &#123;    </span><br><span class="line">    <span class="comment">// 用户通过指定 Run 函数来完成命令</span></span><br><span class="line">    <span class="comment">// PreRun 和 PostRun 则允许用户在 Run 运行的前后时机执行自定义代码</span></span><br><span class="line">    PersistentPreRun <span class="function"><span class="keyword">func</span><span class="params">(cmd *Command, args []<span class="type">string</span>)</span></span></span><br><span class="line">    PreRun <span class="function"><span class="keyword">func</span><span class="params">(cmd *Command, args []<span class="type">string</span>)</span></span></span><br><span class="line">    Run <span class="function"><span class="keyword">func</span><span class="params">(cmd *Command, args []<span class="type">string</span>)</span></span></span><br><span class="line">    PostRun <span class="function"><span class="keyword">func</span><span class="params">(cmd *Command, args []<span class="type">string</span>)</span></span></span><br><span class="line">    PersistentPostRun <span class="function"><span class="keyword">func</span><span class="params">(cmd *Command, args []<span class="type">string</span>)</span></span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// commands 字段包含了该命令的所有子命令</span></span><br><span class="line">    commands []*Command</span><br><span class="line">    <span class="comment">// parent 字段记录了该命令的父命令</span></span><br><span class="line">    parent *Command</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 该命令的 help 子命令</span></span><br><span class="line">    helpCommand *Command</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3><span id="执行命令的逻辑">执行命令的逻辑</span></h3><p>cobra 包启动程序执行的代码一般为：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cmd.Execute()</span><br></pre></td></tr></table></figure>
+
+<p>Execute() 函数会调用我们定义的 rootCmd(Command 的一个实例)的 Execute() 方法。<br>在 Command 的 Execute() 方法中又调用了 Command 的 ExecuteC() 方法，我们可以通过下面的调用堆栈看到执行命令逻辑的调用过程：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">cmd.Execute() -&gt;                  <span class="comment">// main.go</span></span><br><span class="line">rootCmd.Execute() -&gt;              <span class="comment">// root.go</span></span><br><span class="line">c.ExecuteC() -&gt;                   <span class="comment">// command.go</span></span><br><span class="line">cmd.execute(flags) -&gt;             <span class="comment">// command.go</span></span><br><span class="line">c.Run()                           <span class="comment">// command.go</span></span><br></pre></td></tr></table></figure>
+
+<p>c.Run() 方法即用户为命令(Command) 设置的执行逻辑。</p>
+<h3><span id="解析命令行子命令">解析命令行子命令</span></h3><p>ExecuteC() 方法中，在执行 execute() 方法前，需要先通过 Find() 方法解析命令行上的子命令：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cmd, flags, err = c.Find(args)</span><br></pre></td></tr></table></figure>
+
+<p>比如我们执行下面的命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ ./myApp mycmd1</span><br></pre></td></tr></table></figure>
+
+<p>解析出的 cmd 就是 imamycmd1ge 子命令，接下来就是执行 mycmd1 子命令的执行逻辑。</p>
 <p>Find() 方法的逻辑如下：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./myApp help mycmd1
-</span></span></code></pre></div><p>这里的 myApp 对应代码中的 rootCmd，Find() 方法中定义了一个名称为 innerfind 的函数，innerfind 从参数中解析出下一个名称，这里是 help，然后从 rootCmd 开始查找解析出的名称 help 是不是当前命令的子命令，如果 help 是 rootCmd 的子命令，继续查找。接下来查找名称 mycmd1，发现 mycmd1 不是 help 的子命令，innerfind 函数就返回 help 命令。execute() 方法中就执行这个找到的 help 子命令。</p>
-<h3 id="为根命令添加-help-子命令">为根命令添加 help 子命令</h3>
-<p>在执行 ExecuteC() 方法时，cobra 会为根命令添加一个 help 子命令，这个子命令主要用来提供子命令的帮助信息。因为任何一个程序都需要提供输出帮助信息的方式，所以 cobra 就为它实现了一套默认的逻辑。help 子命令是通过 InitDefaultHelpCmd() 方法添加的，其实现代码如下：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// InitDefaultHelpCmd adds default help command to c.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// It is called automatically by executing the c or by calling help and usage.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// If c already has help command or c has no subcommands, it will do nothing.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">c</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Command</span>) <span style="color:#a6e22e">InitDefaultHelpCmd</span>() {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">HasSubCommands</span>() {
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">helpCommand</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">helpCommand</span> = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Command</span>{
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">Use</span>:   <span style="color:#e6db74">&#34;help [command]&#34;</span>,
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">Short</span>: <span style="color:#e6db74">&#34;Help about any command&#34;</span>,
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">Long</span>: <span style="color:#e6db74">`Help provides help for any command in the application.
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Simply type `</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Name</span>() <span style="color:#f92672">+</span> <span style="color:#e6db74">` help [path to command] for full details.`</span>,
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">Run</span>: <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">c</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Command</span>, <span style="color:#a6e22e">args</span> []<span style="color:#66d9ef">string</span>) {
-</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">cmd</span>, <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">e</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Root</span>().<span style="color:#a6e22e">Find</span>(<span style="color:#a6e22e">args</span>)
-</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">cmd</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">e</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Unknown help topic %#q\n&#34;</span>, <span style="color:#a6e22e">args</span>)
-</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Root</span>().<span style="color:#a6e22e">Usage</span>()
-</span></span><span style="display:flex;"><span>                } <span style="color:#66d9ef">else</span> {
-</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">InitDefaultHelpFlag</span>() <span style="color:#75715e">// make possible &#39;help&#39; flag to be shown
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Help</span>()
-</span></span><span style="display:flex;"><span>                }
-</span></span><span style="display:flex;"><span>            },
-</span></span><span style="display:flex;"><span>        }
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">RemoveCommand</span>(<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">helpCommand</span>)
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">AddCommand</span>(<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">helpCommand</span>)
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p><strong>如果没有找到用户指定的子命令</strong>,就输出错误信息，并调用根命令的 Usage() 方法：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Unknown help topic %#q\n&#34;</span>, <span style="color:#a6e22e">args</span>)
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Root</span>().<span style="color:#a6e22e">Usage</span>()
-</span></span></code></pre></div><p>cobra 默认提供的 usage 模板如下：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#e6db74">`Usage:</span><span style="color:#75715e">{{</span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">.Runnable</span><span style="color:#75715e">}}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  </span><span style="color:#75715e">{{</span><span style="color:#a6e22e">.UseLine</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">end</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">.HasAvailableSubCommands</span><span style="color:#75715e">}}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  </span><span style="color:#75715e">{{</span><span style="color:#a6e22e">.CommandPath</span><span style="color:#75715e">}}</span><span style="color:#e6db74"> [command]</span><span style="color:#75715e">{{</span><span style="color:#66d9ef">end</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">if</span> <span style="color:#66d9ef">gt</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">len</span> <span style="color:#a6e22e">.Aliases</span><span style="color:#f92672">)</span> <span style="color:#ae81ff">0</span><span style="color:#75715e">}}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Aliases:
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  </span><span style="color:#75715e">{{</span><span style="color:#a6e22e">.NameAndAliases</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">end</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">.HasExample</span><span style="color:#75715e">}}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Examples:
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"></span><span style="color:#75715e">{{</span><span style="color:#a6e22e">.Example</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">end</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">.HasAvailableSubCommands</span><span style="color:#75715e">}}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Available Commands:</span><span style="color:#75715e">{{</span><span style="color:#66d9ef">range</span> <span style="color:#a6e22e">.Commands</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">or</span> <span style="color:#a6e22e">.IsAvailableCommand</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">eq</span> <span style="color:#a6e22e">.Name</span> <span style="color:#e6db74">&#34;help&#34;</span><span style="color:#f92672">))</span><span style="color:#75715e">}}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  </span><span style="color:#75715e">{{</span><span style="color:#a6e22e">rpad</span> <span style="color:#a6e22e">.Name</span> <span style="color:#a6e22e">.NamePadding</span> <span style="color:#75715e">}}</span><span style="color:#e6db74"> </span><span style="color:#75715e">{{</span><span style="color:#a6e22e">.Short</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">end</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">end</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">end</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">.HasAvailableLocalFlags</span><span style="color:#75715e">}}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Flags:
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"></span><span style="color:#75715e">{{</span><span style="color:#a6e22e">.LocalFlags.FlagUsages</span> <span style="color:#f92672">|</span> <span style="color:#a6e22e">trimTrailingWhitespaces</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">end</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">.HasAvailableInheritedFlags</span><span style="color:#75715e">}}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Global Flags:
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"></span><span style="color:#75715e">{{</span><span style="color:#a6e22e">.InheritedFlags.FlagUsages</span> <span style="color:#f92672">|</span> <span style="color:#a6e22e">trimTrailingWhitespaces</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">end</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">.HasHelpSubCommands</span><span style="color:#75715e">}}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Additional help topics:</span><span style="color:#75715e">{{</span><span style="color:#66d9ef">range</span> <span style="color:#a6e22e">.Commands</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">.IsAdditionalHelpTopicCommand</span><span style="color:#75715e">}}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  </span><span style="color:#75715e">{{</span><span style="color:#a6e22e">rpad</span> <span style="color:#a6e22e">.CommandPath</span> <span style="color:#a6e22e">.CommandPathPadding</span><span style="color:#75715e">}}</span><span style="color:#e6db74"> </span><span style="color:#75715e">{{</span><span style="color:#a6e22e">.Short</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">end</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">end</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">end</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">.HasAvailableSubCommands</span><span style="color:#75715e">}}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Use &#34;</span><span style="color:#75715e">{{</span><span style="color:#a6e22e">.CommandPath</span><span style="color:#75715e">}}</span><span style="color:#e6db74"> [command] --help&#34; for more information about a command.</span><span style="color:#75715e">{{</span><span style="color:#66d9ef">end</span><span style="color:#75715e">}}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">`</span>
-</span></span></code></pre></div><p><strong>如果找到用户指定的子命令</strong>，就为子命令添加默认的 help flag，并执行其 Help() 方法：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">InitDefaultHelpFlag</span>() <span style="color:#75715e">// make possible &#39;help&#39; flag to be shown
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Help</span>()
-</span></span></code></pre></div><p><strong>示例：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ ./myApp <span class="built_in">help</span> mycmd1</span><br></pre></td></tr></table></figure>
+
+<p>这里的 myApp 对应代码中的 rootCmd，Find() 方法中定义了一个名称为 innerfind 的函数，innerfind 从参数中解析出下一个名称，这里是 help，然后从 rootCmd 开始查找解析出的名称 help 是不是当前命令的子命令，如果 help 是 rootCmd 的子命令，继续查找。接下来查找名称 mycmd1，发现 mycmd1 不是 help 的子命令，innerfind 函数就返回 help 命令。execute() 方法中就执行这个找到的 help 子命令。</p>
+<h3><span id="为根命令添加-help-子命令">为根命令添加 help 子命令</span></h3><p>在执行 ExecuteC() 方法时，cobra 会为根命令添加一个 help 子命令，这个子命令主要用来提供子命令的帮助信息。因为任何一个程序都需要提供输出帮助信息的方式，所以 cobra 就为它实现了一套默认的逻辑。help 子命令是通过 InitDefaultHelpCmd() 方法添加的，其实现代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// InitDefaultHelpCmd adds default help command to c.</span></span><br><span class="line"><span class="comment">// It is called automatically by executing the c or by calling help and usage.</span></span><br><span class="line"><span class="comment">// If c already has help command or c has no subcommands, it will do nothing.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Command)</span></span> InitDefaultHelpCmd() &#123;</span><br><span class="line">    <span class="keyword">if</span> !c.HasSubCommands() &#123;</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> c.helpCommand == <span class="literal">nil</span> &#123;</span><br><span class="line">        c.helpCommand = &amp;Command&#123;</span><br><span class="line">            Use:   <span class="string">&quot;help [command]&quot;</span>,</span><br><span class="line">            Short: <span class="string">&quot;Help about any command&quot;</span>,</span><br><span class="line">            Long: <span class="string">`Help provides help for any command in the application.</span></span><br><span class="line"><span class="string">Simply type `</span> + c.Name() + <span class="string">` help [path to command] for full details.`</span>,</span><br><span class="line"></span><br><span class="line">            Run: <span class="function"><span class="keyword">func</span><span class="params">(c *Command, args []<span class="type">string</span>)</span></span> &#123;</span><br><span class="line">                cmd, _, e := c.Root().Find(args)</span><br><span class="line">                <span class="keyword">if</span> cmd == <span class="literal">nil</span> || e != <span class="literal">nil</span> &#123;</span><br><span class="line">                    c.Printf(<span class="string">&quot;Unknown help topic %#q\n&quot;</span>, args)</span><br><span class="line">                    c.Root().Usage()</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    cmd.InitDefaultHelpFlag() <span class="comment">// make possible &#x27;help&#x27; flag to be shown</span></span><br><span class="line">                    cmd.Help()</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    c.RemoveCommand(c.helpCommand)</span><br><span class="line">    c.AddCommand(c.helpCommand)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>如果没有找到用户指定的子命令</strong>,就输出错误信息，并调用根命令的 Usage() 方法：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">c.Printf(<span class="string">&quot;Unknown help topic %#q\n&quot;</span>, args)</span><br><span class="line">c.Root().Usage()</span><br></pre></td></tr></table></figure>
+
+<p>cobra 默认提供的 usage 模板如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">`Usage:&#123;&#123;if .Runnable&#125;&#125;</span></span><br><span class="line"><span class="string">  &#123;&#123;.UseLine&#125;&#125;&#123;&#123;end&#125;&#125;&#123;&#123;if .HasAvailableSubCommands&#125;&#125;</span></span><br><span class="line"><span class="string">  &#123;&#123;.CommandPath&#125;&#125; [command]&#123;&#123;end&#125;&#125;&#123;&#123;if gt (len .Aliases) 0&#125;&#125;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Aliases:</span></span><br><span class="line"><span class="string">  &#123;&#123;.NameAndAliases&#125;&#125;&#123;&#123;end&#125;&#125;&#123;&#123;if .HasExample&#125;&#125;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Examples:</span></span><br><span class="line"><span class="string">&#123;&#123;.Example&#125;&#125;&#123;&#123;end&#125;&#125;&#123;&#123;if .HasAvailableSubCommands&#125;&#125;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Available Commands:&#123;&#123;range .Commands&#125;&#125;&#123;&#123;if (or .IsAvailableCommand (eq .Name &quot;help&quot;))&#125;&#125;</span></span><br><span class="line"><span class="string">  &#123;&#123;rpad .Name .NamePadding &#125;&#125; &#123;&#123;.Short&#125;&#125;&#123;&#123;end&#125;&#125;&#123;&#123;end&#125;&#125;&#123;&#123;end&#125;&#125;&#123;&#123;if .HasAvailableLocalFlags&#125;&#125;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Flags:</span></span><br><span class="line"><span class="string">&#123;&#123;.LocalFlags.FlagUsages | trimTrailingWhitespaces&#125;&#125;&#123;&#123;end&#125;&#125;&#123;&#123;if .HasAvailableInheritedFlags&#125;&#125;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Global Flags:</span></span><br><span class="line"><span class="string">&#123;&#123;.InheritedFlags.FlagUsages | trimTrailingWhitespaces&#125;&#125;&#123;&#123;end&#125;&#125;&#123;&#123;if .HasHelpSubCommands&#125;&#125;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Additional help topics:&#123;&#123;range .Commands&#125;&#125;&#123;&#123;if .IsAdditionalHelpTopicCommand&#125;&#125;</span></span><br><span class="line"><span class="string">  &#123;&#123;rpad .CommandPath .CommandPathPadding&#125;&#125; &#123;&#123;.Short&#125;&#125;&#123;&#123;end&#125;&#125;&#123;&#123;end&#125;&#125;&#123;&#123;end&#125;&#125;&#123;&#123;if .HasAvailableSubCommands&#125;&#125;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Use &quot;&#123;&#123;.CommandPath&#125;&#125; [command] --help&quot; for more information about a command.&#123;&#123;end&#125;&#125;</span></span><br><span class="line"><span class="string">`</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>如果找到用户指定的子命令</strong>，就为子命令添加默认的 help flag，并执行其 Help() 方法：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cmd.InitDefaultHelpFlag() <span class="comment">// make possible &#x27;help&#x27; flag to be shown</span></span><br><span class="line">cmd.Help()</span><br></pre></td></tr></table></figure>
+
+<p><strong>示例：</strong></p>
 <p>通过 cobra 实现了一个命令行程序 myApp，它有一个子命令 image，image 也有一个子命令 times。执行下面的命令：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./myApp help mycmd1
-</span></span></code></pre></div><p>在 help 命令的 Run 方法中，c 为 help 命令， args 为 mycmd1。结果就是通过 help 查看 mycmd1 命令的帮助文档。如果 mycmd1 后面还有其他的子命令，比如：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ ./myApp help mycmd1 mysub1
-</span></span></code></pre></div><p>则 c.Root().Find(args) 逻辑会找出子命令 mysub1(此时 args 为 mycmd1 mysub1)，最终由 help 查看 mysub1 命令的帮助文档。
-注意：help 信息中包含 usage 信息。</p>
-<h3 id="为命令添加-help-flag">为命令添加 help flag</h3>
-<p>除了在 InitDefaultHelpCmd() 方法中会调用 InitDefaultHelpFlag() 方法，在 execute() 方法中执行命令逻辑前也会调用 InitDefaultHelpFlag() 方法为命令添加默认的 help flag，</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">InitDefaultHelpFlag</span>()
-</span></span></code></pre></div><p>下面是 InitDefaultHelpFlag() 方法的实现：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// InitDefaultHelpFlag adds default help flag to c.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// It is called automatically by executing the c or by calling help and usage.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// If c already has help flag, it will do nothing.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">c</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Command</span>) <span style="color:#a6e22e">InitDefaultHelpFlag</span>() {
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">mergePersistentFlags</span>()
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Flags</span>().<span style="color:#a6e22e">Lookup</span>(<span style="color:#e6db74">&#34;help&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">usage</span> <span style="color:#f92672">:=</span> <span style="color:#e6db74">&#34;help for &#34;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Name</span>() <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;&#34;</span> {
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">usage</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;this command&#34;</span>
-</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">usage</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Name</span>()
-</span></span><span style="display:flex;"><span>        }
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Flags</span>().<span style="color:#a6e22e">BoolP</span>(<span style="color:#e6db74">&#34;help&#34;</span>, <span style="color:#e6db74">&#34;h&#34;</span>, <span style="color:#66d9ef">false</span>, <span style="color:#a6e22e">usage</span>)
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>这让我们不必为命令添加 help flag 就可以直接使用</p>
-<h3 id="输出-help-信息">输出 help 信息</h3>
-<p>不管是 help 命令还是 help falg，最后都是通过 HelpFunc() 方法来获得输出 help 信息的逻辑：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// HelpFunc returns either the function set by SetHelpFunc for this command
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// or a parent, or it returns a function with default help behavior.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">c</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Command</span>) <span style="color:#a6e22e">HelpFunc</span>() <span style="color:#66d9ef">func</span>(<span style="color:#f92672">*</span><span style="color:#a6e22e">Command</span>, []<span style="color:#66d9ef">string</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">helpFunc</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">helpFunc</span>
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">HasParent</span>() {
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Parent</span>().<span style="color:#a6e22e">HelpFunc</span>()
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">c</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Command</span>, <span style="color:#a6e22e">a</span> []<span style="color:#66d9ef">string</span>) {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">mergePersistentFlags</span>()
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">tmpl</span>(<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">OutOrStdout</span>(), <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">HelpTemplate</span>(), <span style="color:#a6e22e">c</span>)
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">err</span>)
-</span></span><span style="display:flex;"><span>        }
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>如果我们没有指定自定义的逻辑，就找父命令的，再没有就用 cobra 的默认逻辑。cobra 默认设置的帮助模板如下(包含 usage)：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#e6db74">`</span><span style="color:#75715e">{{</span><span style="color:#66d9ef">with</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">or</span> <span style="color:#a6e22e">.Long</span> <span style="color:#a6e22e">.Short</span><span style="color:#f92672">)</span><span style="color:#75715e">}}{{</span><span style="color:#a6e22e">.</span> <span style="color:#f92672">|</span> <span style="color:#a6e22e">trimTrailingWhitespaces</span><span style="color:#75715e">}}</span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"></span><span style="color:#75715e">{{</span><span style="color:#66d9ef">end</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">if</span> <span style="color:#66d9ef">or</span> <span style="color:#a6e22e">.Runnable</span> <span style="color:#a6e22e">.HasSubCommands</span><span style="color:#75715e">}}{{</span><span style="color:#a6e22e">.UsageString</span><span style="color:#75715e">}}{{</span><span style="color:#66d9ef">end</span><span style="color:#75715e">}}</span><span style="color:#e6db74">`</span>
-</span></span></code></pre></div><p>参考资料：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ ./myApp <span class="built_in">help</span> mycmd1</span><br></pre></td></tr></table></figure>
+
+<p>在 help 命令的 Run 方法中，c 为 help 命令， args 为 mycmd1。结果就是通过 help 查看 mycmd1 命令的帮助文档。如果 mycmd1 后面还有其他的子命令，比如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ ./myApp <span class="built_in">help</span> mycmd1 mysub1</span><br></pre></td></tr></table></figure>
+
+<p>则 c.Root().Find(args) 逻辑会找出子命令 mysub1(此时 args 为 mycmd1 mysub1)，最终由 help 查看 mysub1 命令的帮助文档。<br>注意：help 信息中包含 usage 信息。</p>
+<h3><span id="为命令添加-help-flag">为命令添加 help flag</span></h3><p>除了在 InitDefaultHelpCmd() 方法中会调用 InitDefaultHelpFlag() 方法，在 execute() 方法中执行命令逻辑前也会调用 InitDefaultHelpFlag() 方法为命令添加默认的 help flag，</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">c.InitDefaultHelpFlag()</span><br></pre></td></tr></table></figure>
+
+<p>下面是 InitDefaultHelpFlag() 方法的实现：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// InitDefaultHelpFlag adds default help flag to c.</span></span><br><span class="line"><span class="comment">// It is called automatically by executing the c or by calling help and usage.</span></span><br><span class="line"><span class="comment">// If c already has help flag, it will do nothing.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Command)</span></span> InitDefaultHelpFlag() &#123;</span><br><span class="line">    c.mergePersistentFlags()</span><br><span class="line">    <span class="keyword">if</span> c.Flags().Lookup(<span class="string">&quot;help&quot;</span>) == <span class="literal">nil</span> &#123;</span><br><span class="line">        usage := <span class="string">&quot;help for &quot;</span></span><br><span class="line">        <span class="keyword">if</span> c.Name() == <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">            usage += <span class="string">&quot;this command&quot;</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            usage += c.Name()</span><br><span class="line">        &#125;</span><br><span class="line">        c.Flags().BoolP(<span class="string">&quot;help&quot;</span>, <span class="string">&quot;h&quot;</span>, <span class="literal">false</span>, usage)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这让我们不必为命令添加 help flag 就可以直接使用</p>
+<h3><span id="输出-help-信息">输出 help 信息</span></h3><p>不管是 help 命令还是 help falg，最后都是通过 HelpFunc() 方法来获得输出 help 信息的逻辑：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// HelpFunc returns either the function set by SetHelpFunc for this command</span></span><br><span class="line"><span class="comment">// or a parent, or it returns a function with default help behavior.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Command)</span></span> HelpFunc() <span class="function"><span class="keyword">func</span><span class="params">(*Command, []<span class="type">string</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> c.helpFunc != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> c.helpFunc</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> c.HasParent() &#123;</span><br><span class="line">        <span class="keyword">return</span> c.Parent().HelpFunc()</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(c *Command, a []<span class="type">string</span>)</span></span> &#123;</span><br><span class="line">        c.mergePersistentFlags()</span><br><span class="line">        err := tmpl(c.OutOrStdout(), c.HelpTemplate(), c)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            c.Println(err)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>如果我们没有指定自定义的逻辑，就找父命令的，再没有就用 cobra 的默认逻辑。cobra 默认设置的帮助模板如下(包含 usage)：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">`&#123;&#123;with (or .Long .Short)&#125;&#125;&#123;&#123;. | trimTrailingWhitespaces&#125;&#125;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">&#123;&#123;end&#125;&#125;&#123;&#123;if or .Runnable .HasSubCommands&#125;&#125;&#123;&#123;.UsageString&#125;&#125;&#123;&#123;end&#125;&#125;`</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>参考资料：</p>
 <ul>
-<li><a class="link" href="https://cobra.dev/"  target="_blank" rel="noopener"
-    >Cobra. Dev</a></li>
-<li><a class="link" href="https://github.com/spf13/cobra"  target="_blank" rel="noopener"
-    >https://github.com/spf13/cobra</a></li>
+<li><a target="_blank" rel="noopener" href="https://cobra.dev/">Cobra. Dev</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/spf13/cobra">https://github.com/spf13/cobra</a></li>
 </ul>
 
-</section>
-
-
-    <footer class="article-footer">
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
     
-
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/e80bf483/" title="Go命令行库cobra" target="_blank" rel="external">https://lxb.wiki/e80bf483/</a>
+    </li>
     
-    <section class="article-copyright">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
-</svg>
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="external">CC BY-NC 4.0</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
 
-
-
-        <span>Licensed under CC BY-NC-SA 4.0</span>
-    </section>
-    </footer>
-
-
+    </div>
+  </article>
+  
     
-</article>
-
+  <section id="comments">
+  	
+      
+        <section id="comments" class="comments">
+          <style>
+            .utterances{max-width: 100%;}
+          </style>
+          <script src="https://utteranc.es/client.js"
+                repo="lxbwolf/lxbwolf.github.io"
+                issue-term="title"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+          </script>
+        </section>
+      
     
+  </section>
 
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
     
+    <li class="prev">
+      <a href="/9cfe95d9/" title="Linux中sh与bash的区别"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/6316d574/" title="Jenkins的Api"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+    <li class="toggle-toc">
+      <a class="toggle-btn collapsed" data-toggle="collapse" href="#collapseToc" aria-expanded="false" title="文章目录" role="button">
+        <span>[&nbsp;</span><span>文章目录</span>
+        <i class="text-collapsed icon icon-anchor"></i>
+        <i class="text-in icon icon-close"></i>
+        <span>]</span>
+      </a>
+    </li>
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,wechat"></div>
+    
+  </div>
+  </div>
+</nav>
+  
 
-<aside class="related-content--wrapper">
-    <h2 class="section-title">相关文章</h2>
-    <div class="related-content">
-        <div class="flex article-list--tile">
-            
-                
-<article class="">
-    <a href="/8c9efcce/">
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
         
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
         
-
-        <div class="article-details">
-            <h2 class="article-title">流量复制重放工具goreplay</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/62afdbe0/">
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
         
-        
+    </ul>
 
-        <div class="article-details">
-            <h2 class="article-title">mermaid画流程图语法</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/f54357bf/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">流编辑器sed</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/dfd7f257/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】Go中的模糊测试</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/3632d5ff/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">Postman 自动填充 Header</h2>
-        </div>
-    </a>
-</article>
-
-            
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> xbl </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
         </div>
     </div>
-</aside>
 
-     
-    
-        
-    <script src="https://utteranc.es/client.js" 
-        repo="lxbwolf/lxbwolf.github.io"
-        issue-term="pathname"
-        
-        crossorigin="anonymous"
-        async
-        >
-</script>
 
-<style>
-    .utterances {
-        max-width: unset;
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
     }
-</style>
-
-<script>
-    let utterancesLoaded = false;
-
-    function setUtterancesTheme(theme) {
-        let utterances = document.querySelector('.utterances iframe');
-        if (utterances) {
-            utterances.contentWindow.postMessage(
-                {
-                    type: 'set-theme',
-                    theme: `github-${theme}`
-                },
-                'https://utteranc.es'
-            );
-        }
-    }
-
-    addEventListener('message', event => {
-        if (event.origin !== 'https://utteranc.es') return;
-
-        
-        utterancesLoaded = true;
-        setUtterancesTheme(document.documentElement.dataset.scheme)
-    });
-
-    window.addEventListener('onColorSchemeChange', (e) => {
-        if (!utterancesLoaded) return;
-        setUtterancesTheme(e.detail)
-    })
-</script>
+  </script>
 
 
-    
 
-    <footer class="site-footer">
-    <section class="copyright">
-        &copy; 
-        
-            2020 - 
-        
-        2025 Xiaobin&#39;s Notes
-    </section>
-    
-    <section class="powerby">
-        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
-        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
-    </section>
 </footer>
 
-
-    
-<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
-
-    
-    <div class="pswp__bg"></div>
-
-    
-    <div class="pswp__scroll-wrap">
-
-        
-        <div class="pswp__container">
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-        </div>
-
-        
-        <div class="pswp__ui pswp__ui--hidden">
-
-            <div class="pswp__top-bar">
-
-                
-
-                <div class="pswp__counter"></div>
-
-                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
-
-                <button class="pswp__button pswp__button--share" title="Share"></button>
-
-                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
-
-                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
-
-                
-                
-                <div class="pswp__preloader">
-                    <div class="pswp__preloader__icn">
-                        <div class="pswp__preloader__cut">
-                            <div class="pswp__preloader__donut"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-                <div class="pswp__share-tooltip"></div>
-            </div>
-
-            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
-            </button>
-
-            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
-            </button>
-
-            <div class="pswp__caption">
-                <div class="pswp__caption__center"></div>
-            </div>
-
-        </div>
-
-    </div>
-
-</div><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
-                defer
-                >
-            </script><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
-                defer
-                >
-            </script><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
-            ><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
-            >
-
-            </main>
-        </div>
-        <script 
-                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
-                
-                >
-            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
 <script>
-    (function () {
-        const customFont = document.createElement('link');
-        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
-
-        customFont.type = "text/css";
-        customFont.rel = "stylesheet";
-
-        document.head.appendChild(customFont);
-    }());
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 </script>
 
-    </body>
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
 </html>

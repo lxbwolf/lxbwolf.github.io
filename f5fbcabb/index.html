@@ -1,379 +1,407 @@
 <!DOCTYPE html>
-<html lang="zh-cn" dir="ltr">
-    <head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='对齐部署镜像和描述符是很困难的，但是某些策略可以使整个过程更高效。 在软件架构中，当两个组件之间有某些概念性或技术上的差异时会出现 阻抗失配im'>
-<title>【译】解决 CI/CD 中的仓库阻抗失配</title>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
 
-<link rel='canonical' href='https://lxb.wiki/f5fbcabb/'>
+  
+  <title>【译】解决 CI/CD 中的仓库阻抗失配 | Xiaobin&#39;s Notes</title>
+  <meta name="description" content="阻抗失配：SCM 与镜像仓库 二进制与部署描述符 解决阻抗失配 实践中的思考 结语     对齐部署镜像和描述符是很困难的，但是某些策略可以使整个过程更高效。  在软件架构中，当两个组件之间有某些概念性或技术上的差异时会出现 阻抗失配impedance mismatch。这个术语其实是从电子工程中借用的，表示电路中输入和输出的电子阻抗必须要匹配。 在软件开发中，存储在镜像仓库中的镜像与存储在">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【译】解决 CI&#x2F;CD 中的仓库阻抗失配">
+<meta property="og:url" content="https://lxb.wiki/f5fbcabb/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Notes">
+<meta property="og:description" content="阻抗失配：SCM 与镜像仓库 二进制与部署描述符 解决阻抗失配 实践中的思考 结语     对齐部署镜像和描述符是很困难的，但是某些策略可以使整个过程更高效。  在软件架构中，当两个组件之间有某些概念性或技术上的差异时会出现 阻抗失配impedance mismatch。这个术语其实是从电子工程中借用的，表示电路中输入和输出的电子阻抗必须要匹配。 在软件开发中，存储在镜像仓库中的镜像与存储在">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220326161918.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220326162117.png">
+<meta property="article:published_time" content="2022-03-26T06:32:25.000Z">
+<meta property="article:modified_time" content="2025-02-02T11:48:02.434Z">
+<meta property="article:author" content="lxb">
+<meta property="article:tag" content="翻译">
+<meta property="article:tag" content="devops">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220326161918.png">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/f5fbcabb/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Notes" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
 
-<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='【译】解决 CI/CD 中的仓库阻抗失配'>
-<meta property='og:description' content='对齐部署镜像和描述符是很困难的，但是某些策略可以使整个过程更高效。 在软件架构中，当两个组件之间有某些概念性或技术上的差异时会出现 阻抗失配im'>
-<meta property='og:url' content='https://lxb.wiki/f5fbcabb/'>
-<meta property='og:site_name' content='Xiaobin&#39;s Notes'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='devops' /><meta property='article:tag' content='翻译' /><meta property='article:published_time' content='2022-03-26T14:32:25&#43;00:00'/><meta property='article:modified_time' content='2022-03-26T14:32:25&#43;00:00'/>
-<meta name="twitter:title" content="【译】解决 CI/CD 中的仓库阻抗失配">
-<meta name="twitter:description" content="对齐部署镜像和描述符是很困难的，但是某些策略可以使整个过程更高效。 在软件架构中，当两个组件之间有某些概念性或技术上的差异时会出现 阻抗失配im">
-<link rel="shortcut icon" href="/favicon.png" />
+  
+  
+  
+  
 
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
 
-
-
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-
-    gtag('config', 'G-JZ2PWLT6JY');
-</script>
-<script>
-    var _hmt = _hmt || [];
-    (function () {
-        var hm = document.createElement("script");
-        hm.src = "https://hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-<script>
-    (function () {
-        var el = document.createElement("script");
-        el.src = "https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?f146251743600ee0672cdcc8455ce18def91cdb255ad969a2ef5c715d5ed5baecaf7cd753709c168f20e6a2e9019123fd11e31a222d3a2fe01ad05c6b8f519b2";
-        el.id = "ttzz";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(el, s);
-    })(window)
-</script>
-    </head>
-    <body class="
-    article-page
-    ">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
     <script>
-        (function() {
-            const colorSchemeKey = 'StackColorScheme';
-            if(!localStorage.getItem(colorSchemeKey)){
-                localStorage.setItem(colorSchemeKey, "auto");
-            }
-        })();
-    </script><script>
-    (function() {
-        const colorSchemeKey = 'StackColorScheme';
-        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
-        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
-            
-
-            document.documentElement.dataset.scheme = 'dark';
-        } else {
-            document.documentElement.dataset.scheme = 'light';
-        }
-    })();
-</script>
-<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
-    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
-        <span class="hamburger-box">
-            <span class="hamburger-inner"></span>
-        </span>
-    </button>
-
-    <header>
-        
-            
-            <figure class="site-avatar">
-                <a href="/">
-                
-                    
-                    
-                    
-                        
-                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
-                            height="298" class="site-logo" loading="lazy" alt="Avatar">
-                    
-                
-                </a>
-                
-                    <span class="emoji">🍥</span>
-                
-            </figure>
-            
-        
-        
-        <div class="site-meta">
-            <h1 class="site-name"><a href="/">Xiaobin&#39;s Notes</a></h1>
-            <h2 class="site-description"></h2>
-        </div>
-    </header>
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+<meta name="generator" content="Hexo 6.3.0"></head>
 
 
-    <ol class="menu" id="main-menu">
-        
-        
-        
-        <li >
-            <a href='/' >
-                
-                
-                
-                <span>首页</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/archives/' >
-                
-                
-                
-                <span>归档</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/categories/' >
-                
-                
-                
-                <span>分类</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/tags/' >
-                
-                
-                
-                <span>标签</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/links/' >
-                
-                
-                
-                <span>友链</span>
-            </a>
-        </li>
-        
-
-        <div class="menu-bottom-section"><ol class="social-menu">
-                    
-                        <li>
-                            <a 
-                                href='mailto://me@lxb.wiki'
-                                target="_blank"
-                                title="Email"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://github.com/lxbwolf'
-                                target="_blank"
-                                title="GitHub"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://lxb.wiki/atom.xml'
-                                target="_blank"
-                                title="Rss"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="5" cy="19" r="1" />
-  <path d="M4 4a16 16 0 0 1 16 16" />
-  <path d="M4 11a9 9 0 0 1 9 9" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                </ol>
-                <li id="dark-mode-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="8" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="16" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <span>暗色模式</span>
-                </li>
-            
-        </div>
-    </ol>
-</aside>
-
-    <aside class="sidebar right-sidebar sticky">
-        
-            
-                
-<section class="widget archives">
-    
-    <h2 class="widget-title section-title">目录</h2>
-
-    <div class="widget--toc">
-        <nav id="TableOfContents">
-  <ul>
-    <li>
-      <ul>
-        <li><a href="#阻抗失配scm-与镜像仓库">阻抗失配：SCM 与镜像仓库</a></li>
-        <li><a href="#二进制与部署描述符">二进制与部署描述符</a></li>
-        <li><a href="#解决阻抗失配">解决阻抗失配</a></li>
-        <li><a href="#实践中的思考">实践中的思考</a></li>
-        <li><a href="#结语">结语</a></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
-    </div>
-</section>
-
-            
-        
-    </aside>
-
-
-            <main class="main full-width">
-    <article class="main-article">
-    <header class="article-header">
-
-    <div class="article-details">
-    
-    <header class="article-category">
-        
-        <a href="/categories/Design/" >
-            Design
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
         </a>
-        
-    </header>
-    
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin&#39;s Notes</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
 
-    <div class="article-title-wrapper">
-        <h2 class="article-title">
-            <a href="/f5fbcabb/">【译】解决 CI/CD 中的仓库阻抗失配</a>
-        </h2>
-
-        
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
     </div>
-
-    
-    
-    
-    
-    <footer class="article-time">
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
-  <circle cx="18" cy="18" r="4" />
-  <path d="M15 3v4" />
-  <path d="M7 3v4" />
-  <path d="M3 11h16" />
-  <path d="M18 16.496v1.504l1 1" />
-</svg>
-            <time class="article-time--published">Mar 26, 2022</time>
-        </div>
-        
-
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <polyline points="12 7 12 12 15 15" />
-</svg>
-
-
-
-            <time class="article-time--reading">
-                阅读时长: 9 分钟
-            </time>
-        </div>
-        
-        <small>
-    <section class="article-tags">
-        
-            <a href="/tags/devops/">devops</a>
-        
-            <a href="/tags/%E7%BF%BB%E8%AF%91/">翻译</a>
-        
-    </section>
-</small>
-    </footer>
-    
-
-    
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
 </div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
 </header>
 
-    <section class="article-content">
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
     
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/FE/">FE</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">77</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Life/">Life</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">39</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">20</span></li></ul>
+    </div>
+  </div>
+
+
     
-    <!-- raw HTML omitted -->
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/GitHub/" style="font-size: 13.08px;">GitHub</a> <a href="/tags/GoogleSheets/" style="font-size: 13px;">GoogleSheets</a> <a href="/tags/STL/" style="font-size: 13.38px;">STL</a> <a href="/tags/amap/" style="font-size: 13px;">amap</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.23px;">blog</a> <a href="/tags/c/" style="font-size: 13.69px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.08px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.62px;">devops</a> <a href="/tags/docker/" style="font-size: 13.08px;">docker</a> <a href="/tags/elastic/" style="font-size: 13.38px;">elastic</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.31px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.15px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.08px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.15px;">hexo</a> <a href="/tags/hooks/" style="font-size: 13px;">hooks</a> <a href="/tags/http/" style="font-size: 13.38px;">http</a> <a href="/tags/jdk/" style="font-size: 13px;">jdk</a> <a href="/tags/joplin/" style="font-size: 13.08px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/linux/" style="font-size: 13.15px;">linux</a> <a href="/tags/lucene/" style="font-size: 13.31px;">lucene</a> <a href="/tags/mac/" style="font-size: 13.46px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.08px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.15px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.31px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.15px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.15px;">pic</a> <a href="/tags/python/" style="font-size: 13px;">python</a> <a href="/tags/qt/" style="font-size: 13.31px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/raycast/" style="font-size: 13px;">raycast</a> <a href="/tags/react/" style="font-size: 13px;">react</a> <a href="/tags/redis/" style="font-size: 13.54px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.92px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.08px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/terminal/" style="font-size: 13px;">terminal</a> <a href="/tags/vue/" style="font-size: 13px;">vue</a> <a href="/tags/zk/" style="font-size: 13.08px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%8D%8F%E8%AE%AE/" style="font-size: 13px;">协议</a> <a href="/tags/%E5%9C%B0%E5%9B%BE/" style="font-size: 13px;">地图</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.46px;">工具</a> <a href="/tags/%E5%B9%BF%E5%91%8A/" style="font-size: 13px;">广告</a> <a href="/tags/%E6%8F%92%E5%BA%A7/" style="font-size: 13px;">插座</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.77px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.38px;">树莓派</a> <a href="/tags/%E7%94%A8%E7%94%B5/" style="font-size: 13px;">用电</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.54px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91/" style="font-size: 13.08px;">编译</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.85px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.08px;">邮件</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/">2024</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">25</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">24</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">39</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">33</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/42f8026c/" class="title">React useEffect() Hook</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-18T14:16:21.000Z" itemprop="datePublished">2024-05-18</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/b7826aa4/" class="title">Vue 2.x 使用高德地图JS API 2.0加载起点终点路径轨迹</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-01T13:51:18.000Z" itemprop="datePublished">2024-05-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Life/">Life</a>
+              </p>
+              <p class="item-title">
+                <a href="/0565b4f5/" class="title">家庭用电插座</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-04-11T05:48:31.000Z" itemprop="datePublished">2024-04-11</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/a520e262/" class="title">MacOS 14.4 引发Java 应用崩溃</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-15T06:05:49.000Z" itemprop="datePublished">2024-03-15</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/cb9b2c66/" class="title">重定向广告</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-04T05:27:13.000Z" itemprop="datePublished">2024-03-04</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<aside class="sidebar sidebar-toc collapse" id="collapseToc" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    <nav id="toc" class="article-toc">
+      <h3 class="toc-title">文章目录</h3>
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.</span> <span class="toc-text">阻抗失配：SCM 与镜像仓库</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">2.</span> <span class="toc-text">二进制与部署描述符</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">3.</span> <span class="toc-text">解决阻抗失配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.</span> <span class="toc-text">实践中的思考</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">5.</span> <span class="toc-text">结语</span></a></li></ol>
+    </nav>
+  </div>
+</aside>
+
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-解决-CI-CD-中的仓库阻抗失配" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      【译】解决 CI/CD 中的仓库阻抗失配
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/f5fbcabb/" class="article-date">
+	  <time datetime="2022-03-26T06:32:25.000Z" itemprop="datePublished">2022-03-26</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Design/">Design</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/devops/" rel="tag">devops</a>, <a class="article-tag-link-link" href="/tags/%E7%BF%BB%E8%AF%91/" rel="tag">翻译</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/f5fbcabb/#comments" class="article-comment-link">评论</a></span> 
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 4k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 13(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#阻抗失配scm-与镜像仓库">阻抗失配：SCM 与镜像仓库</a></li>
+<li><a href="#二进制与部署描述符">二进制与部署描述符</a></li>
+<li><a href="#解决阻抗失配">解决阻抗失配</a></li>
+<li><a href="#实践中的思考">实践中的思考</a></li>
+<li><a href="#结语">结语</a></li>
+</ul>
+<!-- tocstop -->
+
 <blockquote>
-<p>对齐部署镜像和描述符是很困难的，但是某些策略可以使整个过程更高效。
-<img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220326161918.png"
-	
-	
-	
-	loading="lazy"
-	
-	
-></p>
+<p>对齐部署镜像和描述符是很困难的，但是某些策略可以使整个过程更高效。<br><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220326161918.png" alt></p>
 </blockquote>
-<p>在软件架构中，当两个组件之间有某些概念性或技术上的差异时会出现 <!-- raw HTML omitted -->阻抗失配<!-- raw HTML omitted -->impedance mismatch<!-- raw HTML omitted --><!-- raw HTML omitted -->。这个术语其实是从电子工程中借用的，表示电路中输入和输出的电子阻抗必须要匹配。</p>
-<p>在软件开发中，存储在镜像仓库中的镜像与存储在源码控制管理系统（LCTT 译注：SCM，Source Code Management）中它的<!-- raw HTML omitted -->部署描述符<!-- raw HTML omitted -->deployment descriptor<!-- raw HTML omitted --><!-- raw HTML omitted -->之间存在阻抗失配。你如何确定存储在 SCM 中的部署描述符表示的是正确的镜像？两个仓库追踪数据的方式并不一致，因此将一个镜像（在镜像仓库中独立存储的不可修改的二进制）和它的部署描述符（Git 中以文本文件形式存储的一系列修改记录）相匹配并不那么直观。</p>
+<p>在软件架构中，当两个组件之间有某些概念性或技术上的差异时会出现 <ruby>阻抗失配<rt>impedance mismatch</rt></ruby>。这个术语其实是从电子工程中借用的，表示电路中输入和输出的电子阻抗必须要匹配。</p>
+<p>在软件开发中，存储在镜像仓库中的镜像与存储在源码控制管理系统（LCTT 译注：SCM，Source Code Management）中它的<ruby>部署描述符<rt>deployment descriptor</rt></ruby>之间存在阻抗失配。你如何确定存储在 SCM 中的部署描述符表示的是正确的镜像？两个仓库追踪数据的方式并不一致，因此将一个镜像（在镜像仓库中独立存储的不可修改的二进制）和它的部署描述符（Git 中以文本文件形式存储的一系列修改记录）相匹配并不那么直观。</p>
 <p><strong>注意</strong>：本文假定读者已经熟悉以下概念：</p>
 <ul>
-<li><!-- raw HTML omitted -->源码控制管理<!-- raw HTML omitted -->Source Control Management<!-- raw HTML omitted --><!-- raw HTML omitted -->（SCM）系统和分支</li>
+<li><ruby>源码控制管理<rt>Source Control Management</rt></ruby>（SCM）系统和分支</li>
 <li>Docker 或符合 OCI 标准的镜像和容器</li>
-<li><!-- raw HTML omitted -->容器编排系统<!-- raw HTML omitted -->Container Orchestration Platforms<!-- raw HTML omitted --><!-- raw HTML omitted -->（COP），如 Kubernetes</li>
-<li><!-- raw HTML omitted -->持续集成/持续交付<!-- raw HTML omitted -->Continuous Integration/Continuous Delivery<!-- raw HTML omitted --><!-- raw HTML omitted -->（CI/CD）</li>
-<li><!-- raw HTML omitted -->软件开发生命周期<!-- raw HTML omitted -->Software development lifecycle<!-- raw HTML omitted --><!-- raw HTML omitted -->（SDLC）环境</li>
+<li><ruby>容器编排系统<rt>Container Orchestration Platforms</rt></ruby>（COP），如 Kubernetes</li>
+<li><ruby>持续集成/持续交付<rt>Continuous Integration/Continuous Delivery</rt></ruby>（CI/CD）</li>
+<li><ruby>软件开发生命周期<rt>Software development lifecycle</rt></ruby>（SDLC）环境</li>
 </ul>
-<h3 id="阻抗失配scm-与镜像仓库">阻抗失配：SCM 与镜像仓库</h3>
-<p>为了更好地理解阻抗失配在什么场景下会成为问题，请考虑任意项目中的软件开发生命周期环境（SDLC），如开发、测试或发布环境。</p>
+<h3><span id="阻抗失配scm-与镜像仓库">阻抗失配：SCM 与镜像仓库</span></h3><p>为了更好地理解阻抗失配在什么场景下会成为问题，请考虑任意项目中的软件开发生命周期环境（SDLC），如开发、测试或发布环境。</p>
 <p>测试环境不会有阻抗失配。现在使用 CI/CD 的最佳实践中开发分支的最新提交都会对应开发环境中的最新部署。因此，一个典型的、成功的 CI/CD 开发流程如下：</p>
 <ol>
 <li>向 SCM 的开发分支提交新的修改</li>
@@ -389,20 +417,16 @@
 <li>镜像在测试环境中被拉取和部署，（该镜像）对应从 SCM 拉取的最新部署描述符</li>
 </ol>
 <p>到目前为止,一切都没有问题，对吗？如果出现下面的场景，会有什么问题？</p>
-<p><strong>场景 A</strong>：镜像被推到下游环境，如<!-- raw HTML omitted -->用户验收测试<!-- raw HTML omitted -->user acceptance testing <!-- raw HTML omitted --><!-- raw HTML omitted -->（UAT），或者是生产环境。</p>
+<p><strong>场景 A</strong>：镜像被推到下游环境，如<ruby>用户验收测试<rt>user acceptance testing </rt></ruby>（UAT），或者是生产环境。</p>
 <p><strong>场景 B</strong>：测试环境中发现了一个破坏性的 bug，镜像需要回滚到某个确定正常的版本。</p>
 <p>在任一场景中，开发过程并没有停止，即开发分支上游有了一次或多次新的提交，而这意味着最新的部署描述符已经发生了变化，最新的镜像与之前部署在测试环境中的镜像不一致。对部署描述符的修改可能会也可能不会对之前版本的镜像起作用，但是它们一定是不可信任的。如果它们有了变化，那么它们就一定与目前为止你测试过的想要部署的镜像的部署描述符不一致。</p>
 <p>问题的关键是：<strong>如果部署的镜像不是镜像库中的最新版本，你怎么确定与部署的镜像相对应的是 SCM 中的哪个部署描述符？</strong> 一言以蔽之，无法确定。两个库直接有阻抗失配。如果要详细阐述下，那么是有方法可以解决的，但是你需要做很多工作，这部分内容就是文章接下来的主题了。请注意，下面的方案并不是解决问题的唯一办法，但是已经投入到生产环境并已经对很多项目起了作用，而且已经被构建并部署到生产环境中运行了超过一年。</p>
-<h3 id="二进制与部署描述符">二进制与部署描述符</h3>
-<p>源码通常被构建成一个 Docker 镜像或符合 OCI 标准的镜像，该镜像通常被部署到一个容器编排平台（COP）上，如 Kubernetes。部署到 COP 需要部署描述符来定义镜像被如何部署以及作为容器运行，如 <a class="link" href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/"  target="_blank" rel="noopener"
-    >Kubernetes 部署</a> 或 <a class="link" href="https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/"  target="_blank" rel="noopener"
-    >CronJobs</a>。这是因为在镜像和它的部署描述符之间有本质差异，在这里可以看到阻抗失配。在这次讨论中，我们认为镜像是存储在镜像仓库中不可修改的二进制。对源码的任何修改都不会修改镜像，而是用另一个新的镜像去替换它。</p>
+<h3><span id="二进制与部署描述符">二进制与部署描述符</span></h3><p>源码通常被构建成一个 Docker 镜像或符合 OCI 标准的镜像，该镜像通常被部署到一个容器编排平台（COP）上，如 Kubernetes。部署到 COP 需要部署描述符来定义镜像被如何部署以及作为容器运行，如 <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/">Kubernetes 部署</a> 或 <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/">CronJobs</a>。这是因为在镜像和它的部署描述符之间有本质差异，在这里可以看到阻抗失配。在这次讨论中，我们认为镜像是存储在镜像仓库中不可修改的二进制。对源码的任何修改都不会修改镜像，而是用另一个新的镜像去替换它。</p>
 <p>相比之下，部署描述符是文本文件，因而可以被认为是源码且可修改。如果遵循最佳实践，那么部署描述符是被存储在 SCM，所有修改都会提交，而这很容易回溯。</p>
-<h3 id="解决阻抗失配">解决阻抗失配</h3>
-<p>建议的解决方案的第一部分，就是提供一个能匹配镜像仓库中的镜像与对保存部署描述符的 SCM 做的代码提交的方法。最直接的解决方案是用源提交的哈希值标记镜像。这个方法可以区分不同版本的镜像、容易分辨，并且提供足够的信息来查找正确的部署描述符，以便镜像更好地部署到 COP。</p>
+<h3><span id="解决阻抗失配">解决阻抗失配</span></h3><p>建议的解决方案的第一部分，就是提供一个能匹配镜像仓库中的镜像与对保存部署描述符的 SCM 做的代码提交的方法。最直接的解决方案是用源提交的哈希值标记镜像。这个方法可以区分不同版本的镜像、容易分辨，并且提供足够的信息来查找正确的部署描述符，以便镜像更好地部署到 COP。</p>
 <p>再回顾下上面的场景：</p>
-<p><strong>场景 A</strong> <em>镜像被推到下游环境</em>： 当镜像被从测试环境推到 UAT 环境时，我们可以从镜像的标签中知道应该从 SCM 的哪一次源码提交拉取部署描述符。</p>
-<p><strong>场景 B</strong> <em>当一个镜像需要在某一环节中回滚</em>：无论我们选择回滚到那个镜像版本，我们都可以知道从 SCM 的哪一次源码提交拉取正确的部署描述符。</p>
+<p><strong>场景 A</strong> _镜像被推到下游环境_： 当镜像被从测试环境推到 UAT 环境时，我们可以从镜像的标签中知道应该从 SCM 的哪一次源码提交拉取部署描述符。</p>
+<p><strong>场景 B</strong> _当一个镜像需要在某一环节中回滚_：无论我们选择回滚到那个镜像版本，我们都可以知道从 SCM 的哪一次源码提交拉取正确的部署描述符。</p>
 <p>在每一种情景中，无论在某个镜像被部署到测试环境后开发分支有多少次提交和构建，对于每一次升级的镜像，我们都可以找到它当初部署时对应的部署描述符。</p>
 <p>然而，这并不是阻抗失配的完整解决方案。再考虑两个场景：</p>
 <p><strong>场景 C</strong> 在负载测试环境中，会尝试对不同的部署描述符进行多次部署，以此来验证某一次构建的表现。</p>
@@ -413,24 +437,14 @@
 <p><strong>注意：</strong> 在某个环境中做的修改是如何影响下一个环境的，是用可以共享数据的工具（如 Helm Charts）还是手动剪切、粘贴到其他目录，都不在本文讨论的范围内。</p>
 <p>因此，当一个镜像被从一个 SDLC 环境中推到下一环境时：</p>
 <ol>
-<li>创建一个部署分支
-<ol>
+<li>创建一个部署分支<ol>
 <li>如果镜像是从开发环境中推过来的，那么部署分支就基于构建这个镜像的源码提交哈希创建</li>
 <li>否则，<em>部署分支基于当前部署分支的最新提交创建</em></li>
 </ol>
 </li>
 <li>镜像被部署到下一个 SDLC 环境，使用的部署描述符是该环境中新创建的部署分支的部署描述符</li>
 </ol>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220326162117.png"
-	
-	
-	
-	loading="lazy"
-	
-		alt="deployment branching tree"
-	
-	
-></p>
+<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20220326162117.png" alt="deployment branching tree"></p>
 <p><em>图 1：部署分支树</em></p>
 <ol>
 <li>部署分支</li>
@@ -446,16 +460,15 @@
 <li>通过部署分支最新提交对应的部署描述符把镜像重新部署到 SLDC 环境</li>
 </ol>
 <p>这样，部署分支彻底解决了（存储着代表一次独一无二的构建的单一的、不可修改的镜像的）镜像仓库与（存储着对应一个或多个 SDLC 环境的可修改的部署描述符的）SCM 仓库之间的阻抗失配。</p>
-<h3 id="实践中的思考">实践中的思考</h3>
-<p>这看起来像是行得通的解决方案，但同时它也为开发者和运维人员带来了新的实践中的问题，比如：</p>
+<h3><span id="实践中的思考">实践中的思考</span></h3><p>这看起来像是行得通的解决方案，但同时它也为开发者和运维人员带来了新的实践中的问题，比如：</p>
 <p>A. 为了更好地管理部署分支，部署描述符作为资源应该保存在哪里，是否要与构建镜像的源码保存在同一个 SCM 仓库？</p>
 <p>到目前为止，我们都在避免谈论应该把部署描述符放在哪个仓库里。在还没有太多细节需要处理时，我们推荐把所有 SDLC 环境的部署描述符与镜像源码放在同一个 SCM 仓库。当部署分支创建后，镜像的源码可以作为方便找到部署的容器中运行的镜像的引用来使用。</p>
 <p>上面提到过，可以通过镜像的标签来关联镜像与原始的源码提交。在一个单独的仓库中查找某次提交的源码的引用，会给开发者带来更大的困难（即便借助工具），这就是没有必要把所有资源都分开存储的原因。</p>
 <p>B. 应该在部署分支上修改构建镜像的源码吗？</p>
 <p>简答：<strong>不应该</strong>。</p>
 <p>详细阐述：不应该，因为永远不要在部署分支上构建镜像，它们是在开发分支上构建的。修改部署分支上定义一个镜像的源码会破坏被部署的镜像的构建记录，而且这些修改并不会对镜像的功能生效。在对比两个部署分支的版本时这也会成为问题。这可能会导致两个版本的功能差异有错误的测试结果（这是使用部署分支的一个很小的额外好处）。</p>
-<p>C. 为什么使用镜像 <!-- raw HTML omitted -->标签<!-- raw HTML omitted -->tag<!-- raw HTML omitted --><!-- raw HTML omitted -->？<!-- raw HTML omitted -->标记<!-- raw HTML omitted -->label<!-- raw HTML omitted --><!-- raw HTML omitted --> 不可以吗？</p>
-<p>通过 <!-- raw HTML omitted -->标签<!-- raw HTML omitted -->tag<!-- raw HTML omitted --><!-- raw HTML omitted --> 可以在仓库中很容易地查找镜像，可读性也很好。在一组镜像中读取和查找 <!-- raw HTML omitted -->标记<!-- raw HTML omitted -->label<!-- raw HTML omitted --><!-- raw HTML omitted --> 的值需要拉取所有镜像的<!-- raw HTML omitted -->清单文件<!-- raw HTML omitted -->manifest<!-- raw HTML omitted --><!-- raw HTML omitted -->，而这会增加复杂度、降低性能。而且，考虑到历史记录的追踪和不同版本的查找，对不同版本的镜像添加 <!-- raw HTML omitted -->标签<!-- raw HTML omitted -->tag<!-- raw HTML omitted --><!-- raw HTML omitted --> 也很有必要，因此使用源码提交哈希是保证唯一性，以及保存能即时生效的有用信息的最简单的解决方案。</p>
+<p>C. 为什么使用镜像 <ruby>标签<rt>tag</rt></ruby>？<ruby>标记<rt>label</rt></ruby> 不可以吗？</p>
+<p>通过 <ruby>标签<rt>tag</rt></ruby> 可以在仓库中很容易地查找镜像，可读性也很好。在一组镜像中读取和查找 <ruby>标记<rt>label</rt></ruby> 的值需要拉取所有镜像的<ruby>清单文件<rt>manifest</rt></ruby>，而这会增加复杂度、降低性能。而且，考虑到历史记录的追踪和不同版本的查找，对不同版本的镜像添加 <ruby>标签<rt>tag</rt></ruby> 也很有必要，因此使用源码提交哈希是保证唯一性，以及保存能即时生效的有用信息的最简单的解决方案。</p>
 <p>D. 创建部署分支的最佳实践是怎样的？</p>
 <p>DevOps 最重要的三个原则：自动化、自动化、自动化。</p>
 <p>依赖资源来持续地强迫遵循最佳实践，充其量只是碰运气，因此在实现镜像的升级、回滚等 CI/CD 流水线时，把自动化部署分支写到脚本里。</p>
@@ -468,300 +481,205 @@
 </ul>
 <p>例如， <code>deployment-qa-asdf78s</code> 表示推到 QA 环境的部署分支， <code>deployment-stg-asdf78s</code> 表示推到 STG 环境的部署分支。</p>
 <p>F. 你怎么识别环境中运行的哪个镜像版本？</p>
-<p>我们的建议是把最新的部署分支提交哈希和源码提交哈希添加到 <a class="link" href="https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/"  target="_blank" rel="noopener"
-    >标记</a> 中。开发者和运维人员可以通过这两个独一无二的标识符查找到部署的所有东西及其来源。在诸如执行回滚或前滚操作时，使用那些不同版本的部署的选择器也能清理资源碎片。</p>
+<p>我们的建议是把最新的部署分支提交哈希和源码提交哈希添加到 <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/">标记</a> 中。开发者和运维人员可以通过这两个独一无二的标识符查找到部署的所有东西及其来源。在诸如执行回滚或前滚操作时，使用那些不同版本的部署的选择器也能清理资源碎片。</p>
 <p>G. 什么时候应该把部署分支的修改合并回开发分支？</p>
 <p>这完全取决于开发团队。</p>
 <p>如果你修改的目的是为了做负载测试，只是想验证什么情况会让程序崩溃，那么这些修改不应该被合并回开发分支。另一方面，如果你发现和修复了一个错误，或者对下游环境的部署做了调整，那么就应该把部署分支的修改合并回开发分支。</p>
 <p>H. 有现成的部署分支示例让我们试水吗？</p>
-<p><a class="link" href="https://github.com/elcicd"  target="_blank" rel="noopener"
-    >el-CICD</a> 已经在生产上使用这个策略持续一年半应用到超过一百个项目了，覆盖所有的 SDLC 环境，包括管理生产环境的部署。如果你可以访问 <a class="link" href="https://www.okd.io/"  target="_blank" rel="noopener"
-    >OKD</a>、Red Hat OpenShift lab cluster 或 <a class="link" href="https://cloud.redhat.com/openshift/create/local"  target="_blank" rel="noopener"
-    >Red Hat CodeReady Containers</a>，你可以下载<a class="link" href="https://github.com/elcicd/el-CICD-RELEASES"  target="_blank" rel="noopener"
-    >el-CICD 的最新版本</a>，参照 <a class="link" href="https://github.com/elcicd/el-CICD-docs/blob/master/tutorial.md"  target="_blank" rel="noopener"
-    >教程</a> 来学习部署分支是何时以怎样的方式创建和使用的。</p>
-<h3 id="结语">结语</h3>
-<p>通过实践上面的例子可以帮助你更好的理解开发过程中阻抗失配相关的问题。对齐镜像和部署描述符是成功管理部署的关键部分。</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/elcicd">el-CICD</a> 已经在生产上使用这个策略持续一年半应用到超过一百个项目了，覆盖所有的 SDLC 环境，包括管理生产环境的部署。如果你可以访问 <a target="_blank" rel="noopener" href="https://www.okd.io/">OKD</a>、Red Hat OpenShift lab cluster 或 <a target="_blank" rel="noopener" href="https://cloud.redhat.com/openshift/create/local">Red Hat CodeReady Containers</a>，你可以下载<a target="_blank" rel="noopener" href="https://github.com/elcicd/el-CICD-RELEASES">el-CICD 的最新版本</a>，参照 <a target="_blank" rel="noopener" href="https://github.com/elcicd/el-CICD-docs/blob/master/tutorial.md">教程</a> 来学习部署分支是何时以怎样的方式创建和使用的。</p>
+<h3><span id="结语">结语</span></h3><p>通过实践上面的例子可以帮助你更好的理解开发过程中阻抗失配相关的问题。对齐镜像和部署描述符是成功管理部署的关键部分。</p>
 <hr>
-<p>via: <a class="link" href="https://opensource.com/article/21/8/impedance-mismatch-cicd"  target="_blank" rel="noopener"
-    >https://opensource.com/article/21/8/impedance-mismatch-cicd</a></p>
-<p>作者：<a class="link" href="https://opensource.com/users/hippyod"  target="_blank" rel="noopener"
-    >Evan &ldquo;Hippy&rdquo; Slatis</a>
-选题：<a class="link" href="https://github.com/lujun9972"  target="_blank" rel="noopener"
-    >lujun9972</a>
-译者：<a class="link" href="https://github.com/lxbwolf"  target="_blank" rel="noopener"
-    >Xiaobin.Liu</a>
-校对：<a class="link" href="https://github.com/wxy"  target="_blank" rel="noopener"
-    >wxy</a></p>
-<p>本文由 <a class="link" href="https://github.com/LCTT/TranslateProject"  target="_blank" rel="noopener"
-    >LCTT</a> 原创编译，<a class="link" href="https://linux.cn/"  target="_blank" rel="noopener"
-    >Linux中国</a> 荣誉推出</p>
+<p>via: <a target="_blank" rel="noopener" href="https://opensource.com/article/21/8/impedance-mismatch-cicd">https://opensource.com/article/21/8/impedance-mismatch-cicd</a></p>
+<p>作者：<a target="_blank" rel="noopener" href="https://opensource.com/users/hippyod">Evan “Hippy” Slatis</a><br>选题：<a target="_blank" rel="noopener" href="https://github.com/lujun9972">lujun9972</a><br>译者：<a target="_blank" rel="noopener" href="https://github.com/lxbwolf">Xiaobin.Liu</a><br>校对：<a target="_blank" rel="noopener" href="https://github.com/wxy">wxy</a></p>
+<p>本文由 <a target="_blank" rel="noopener" href="https://github.com/LCTT/TranslateProject">LCTT</a> 原创编译，<a target="_blank" rel="noopener" href="https://linux.cn/">Linux中国</a> 荣誉推出</p>
 
-</section>
-
-
-    <footer class="article-footer">
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
     
-
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/f5fbcabb/" title="【译】解决 CI/CD 中的仓库阻抗失配" target="_blank" rel="external">https://lxb.wiki/f5fbcabb/</a>
+    </li>
     
-    <section class="article-copyright">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
-</svg>
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="external">CC BY-NC 4.0</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
 
-
-
-        <span>Licensed under CC BY-NC-SA 4.0</span>
-    </section>
-    </footer>
-
-
+    </div>
+  </article>
+  
     
-</article>
-
+  <section id="comments">
+  	
+      
+        <section id="comments" class="comments">
+          <style>
+            .utterances{max-width: 100%;}
+          </style>
+          <script src="https://utteranc.es/client.js"
+                repo="lxbwolf/lxbwolf.github.io"
+                issue-term="title"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+          </script>
+        </section>
+      
     
+  </section>
 
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
     
+    <li class="prev">
+      <a href="/f17b426c/" title="【转】Redis 分布式锁使用不当事故记录"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/3632d5ff/" title="Postman 自动填充 Header"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+    <li class="toggle-toc">
+      <a class="toggle-btn collapsed" data-toggle="collapse" href="#collapseToc" aria-expanded="false" title="文章目录" role="button">
+        <span>[&nbsp;</span><span>文章目录</span>
+        <i class="text-collapsed icon icon-anchor"></i>
+        <i class="text-in icon icon-close"></i>
+        <span>]</span>
+      </a>
+    </li>
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,wechat"></div>
+    
+  </div>
+  </div>
+</nav>
+  
 
-<aside class="related-content--wrapper">
-    <h2 class="section-title">相关文章</h2>
-    <div class="related-content">
-        <div class="flex article-list--tile">
-            
-                
-<article class="">
-    <a href="/331c3227/">
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
         
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
         
-
-        <div class="article-details">
-            <h2 class="article-title">【译】使用子模块和子树来管理 Git 项目</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/ace0b2ab/">
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
         
-        
+    </ul>
 
-        <div class="article-details">
-            <h2 class="article-title">【译】Go 1.14 中接口的菱形组合</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/27d7ea27/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】通过禁止比较让 Go 二进制文件变小</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/5698ca18/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】Go：异步抢占</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/6ce34c49/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】Inlining Optimisations in Go</h2>
-        </div>
-    </a>
-</article>
-
-            
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> xbl </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
         </div>
     </div>
-</aside>
 
-     
-    
-        
-    <script src="https://utteranc.es/client.js" 
-        repo="lxbwolf/lxbwolf.github.io"
-        issue-term="pathname"
-        
-        crossorigin="anonymous"
-        async
-        >
-</script>
 
-<style>
-    .utterances {
-        max-width: unset;
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
     }
-</style>
-
-<script>
-    let utterancesLoaded = false;
-
-    function setUtterancesTheme(theme) {
-        let utterances = document.querySelector('.utterances iframe');
-        if (utterances) {
-            utterances.contentWindow.postMessage(
-                {
-                    type: 'set-theme',
-                    theme: `github-${theme}`
-                },
-                'https://utteranc.es'
-            );
-        }
-    }
-
-    addEventListener('message', event => {
-        if (event.origin !== 'https://utteranc.es') return;
-
-        
-        utterancesLoaded = true;
-        setUtterancesTheme(document.documentElement.dataset.scheme)
-    });
-
-    window.addEventListener('onColorSchemeChange', (e) => {
-        if (!utterancesLoaded) return;
-        setUtterancesTheme(e.detail)
-    })
-</script>
+  </script>
 
 
-    
 
-    <footer class="site-footer">
-    <section class="copyright">
-        &copy; 
-        
-            2020 - 
-        
-        2025 Xiaobin&#39;s Notes
-    </section>
-    
-    <section class="powerby">
-        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
-        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
-    </section>
 </footer>
 
-
-    
-<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
-
-    
-    <div class="pswp__bg"></div>
-
-    
-    <div class="pswp__scroll-wrap">
-
-        
-        <div class="pswp__container">
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-        </div>
-
-        
-        <div class="pswp__ui pswp__ui--hidden">
-
-            <div class="pswp__top-bar">
-
-                
-
-                <div class="pswp__counter"></div>
-
-                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
-
-                <button class="pswp__button pswp__button--share" title="Share"></button>
-
-                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
-
-                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
-
-                
-                
-                <div class="pswp__preloader">
-                    <div class="pswp__preloader__icn">
-                        <div class="pswp__preloader__cut">
-                            <div class="pswp__preloader__donut"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-                <div class="pswp__share-tooltip"></div>
-            </div>
-
-            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
-            </button>
-
-            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
-            </button>
-
-            <div class="pswp__caption">
-                <div class="pswp__caption__center"></div>
-            </div>
-
-        </div>
-
-    </div>
-
-</div><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
-                defer
-                >
-            </script><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
-                defer
-                >
-            </script><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
-            ><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
-            >
-
-            </main>
-        </div>
-        <script 
-                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
-                
-                >
-            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
 <script>
-    (function () {
-        const customFont = document.createElement('link');
-        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
-
-        customFont.type = "text/css";
-        customFont.rel = "stylesheet";
-
-        document.head.appendChild(customFont);
-    }());
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 </script>
 
-    </body>
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
 </html>

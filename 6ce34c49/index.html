@@ -1,788 +1,624 @@
 <!DOCTYPE html>
-<html lang="zh-cn" dir="ltr">
-    <head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Go 中的内联优化 本文讨论 Go 编译器是如何实现内联的，以及这种优化方法如何影响你的 Go 代码。 *请注意：*本文重点讨论 gc，这是来自 golang.org 的事实标准的 Go 编'>
-<title>【译】Inlining Optimisations in Go</title>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
 
-<link rel='canonical' href='https://lxb.wiki/6ce34c49/'>
+  
+  <title>【译】Inlining Optimisations in Go | Xiaobin&#39;s Notes</title>
+  <meta name="description" content="Go 中的内联优化 本文讨论 Go 编译器是如何实现内联的，以及这种优化方法如何影响你的 Go 代码。  请注意：本文重点讨论 gc，这是来自 golang.org 的事实标准的 Go 编译器。讨论到的概念可以广泛适用于其它 Go 编译器，如 gccgo 和 llgo，但它们在实现方式和功效上可能有所差异。 内联是什么？内联inlining就是把简短的函数在调用它的地方展开。在计算机发展历程的早期">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【译】Inlining Optimisations in Go">
+<meta property="og:url" content="https://lxb.wiki/6ce34c49/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Notes">
+<meta property="og:description" content="Go 中的内联优化 本文讨论 Go 编译器是如何实现内联的，以及这种优化方法如何影响你的 Go 代码。  请注意：本文重点讨论 gc，这是来自 golang.org 的事实标准的 Go 编译器。讨论到的概念可以广泛适用于其它 Go 编译器，如 gccgo 和 llgo，但它们在实现方式和功效上可能有所差异。 内联是什么？内联inlining就是把简短的函数在调用它的地方展开。在计算机发展历程的早期">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-04-29T13:05:10.000Z">
+<meta property="article:modified_time" content="2025-02-02T11:48:02.463Z">
+<meta property="article:author" content="lxb">
+<meta property="article:tag" content="翻译">
+<meta property="article:tag" content="go">
+<meta name="twitter:card" content="summary">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/6ce34c49/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Notes" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
 
-<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='【译】Inlining Optimisations in Go'>
-<meta property='og:description' content='Go 中的内联优化 本文讨论 Go 编译器是如何实现内联的，以及这种优化方法如何影响你的 Go 代码。 *请注意：*本文重点讨论 gc，这是来自 golang.org 的事实标准的 Go 编'>
-<meta property='og:url' content='https://lxb.wiki/6ce34c49/'>
-<meta property='og:site_name' content='Xiaobin&#39;s Notes'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='go' /><meta property='article:tag' content='翻译' /><meta property='article:published_time' content='2020-04-29T21:05:10&#43;00:00'/><meta property='article:modified_time' content='2020-04-29T21:05:10&#43;00:00'/>
-<meta name="twitter:title" content="【译】Inlining Optimisations in Go">
-<meta name="twitter:description" content="Go 中的内联优化 本文讨论 Go 编译器是如何实现内联的，以及这种优化方法如何影响你的 Go 代码。 *请注意：*本文重点讨论 gc，这是来自 golang.org 的事实标准的 Go 编">
-<link rel="shortcut icon" href="/favicon.png" />
+  
+  
+  
+  
 
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
 
-
-
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-
-    gtag('config', 'G-JZ2PWLT6JY');
-</script>
-<script>
-    var _hmt = _hmt || [];
-    (function () {
-        var hm = document.createElement("script");
-        hm.src = "https://hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-<script>
-    (function () {
-        var el = document.createElement("script");
-        el.src = "https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?f146251743600ee0672cdcc8455ce18def91cdb255ad969a2ef5c715d5ed5baecaf7cd753709c168f20e6a2e9019123fd11e31a222d3a2fe01ad05c6b8f519b2";
-        el.id = "ttzz";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(el, s);
-    })(window)
-</script>
-    </head>
-    <body class="
-    article-page
-    ">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
     <script>
-        (function() {
-            const colorSchemeKey = 'StackColorScheme';
-            if(!localStorage.getItem(colorSchemeKey)){
-                localStorage.setItem(colorSchemeKey, "auto");
-            }
-        })();
-    </script><script>
-    (function() {
-        const colorSchemeKey = 'StackColorScheme';
-        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
-        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
-            
-
-            document.documentElement.dataset.scheme = 'dark';
-        } else {
-            document.documentElement.dataset.scheme = 'light';
-        }
-    })();
-</script>
-<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
-    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
-        <span class="hamburger-box">
-            <span class="hamburger-inner"></span>
-        </span>
-    </button>
-
-    <header>
-        
-            
-            <figure class="site-avatar">
-                <a href="/">
-                
-                    
-                    
-                    
-                        
-                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
-                            height="298" class="site-logo" loading="lazy" alt="Avatar">
-                    
-                
-                </a>
-                
-                    <span class="emoji">🍥</span>
-                
-            </figure>
-            
-        
-        
-        <div class="site-meta">
-            <h1 class="site-name"><a href="/">Xiaobin&#39;s Notes</a></h1>
-            <h2 class="site-description"></h2>
-        </div>
-    </header>
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+<meta name="generator" content="Hexo 6.3.0"></head>
 
 
-    <ol class="menu" id="main-menu">
-        
-        
-        
-        <li >
-            <a href='/' >
-                
-                
-                
-                <span>首页</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/archives/' >
-                
-                
-                
-                <span>归档</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/categories/' >
-                
-                
-                
-                <span>分类</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/tags/' >
-                
-                
-                
-                <span>标签</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/links/' >
-                
-                
-                
-                <span>友链</span>
-            </a>
-        </li>
-        
-
-        <div class="menu-bottom-section"><ol class="social-menu">
-                    
-                        <li>
-                            <a 
-                                href='mailto://me@lxb.wiki'
-                                target="_blank"
-                                title="Email"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://github.com/lxbwolf'
-                                target="_blank"
-                                title="GitHub"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://lxb.wiki/atom.xml'
-                                target="_blank"
-                                title="Rss"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="5" cy="19" r="1" />
-  <path d="M4 4a16 16 0 0 1 16 16" />
-  <path d="M4 11a9 9 0 0 1 9 9" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                </ol>
-                <li id="dark-mode-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="8" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="16" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <span>暗色模式</span>
-                </li>
-            
-        </div>
-    </ol>
-</aside>
-
-    <aside class="sidebar right-sidebar sticky">
-        
-            
-                
-<section class="widget archives">
-    
-    <h2 class="widget-title section-title">目录</h2>
-
-    <div class="widget--toc">
-        <nav id="TableOfContents">
-  <ul>
-    <li>
-      <ul>
-        <li><a href="#内联是什么">内联是什么？</a></li>
-        <li><a href="#为什么内联很重要">为什么内联很重要？</a></li>
-        <li><a href="#实践中的内联">实践中的内联</a></li>
-        <li><a href="#内联的限制">内联的限制</a></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
-    </div>
-</section>
-
-            
-        
-    </aside>
-
-
-            <main class="main full-width">
-    <article class="main-article">
-    <header class="article-header">
-
-    <div class="article-details">
-    
-    <header class="article-category">
-        
-        <a href="/categories/Lang/" >
-            Lang
+<body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
         </a>
-        
-    </header>
-    
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin&#39;s Notes</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
 
-    <div class="article-title-wrapper">
-        <h2 class="article-title">
-            <a href="/6ce34c49/">【译】Inlining Optimisations in Go</a>
-        </h2>
-
-        
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
     </div>
-
-    
-    
-    
-    
-    <footer class="article-time">
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
-  <circle cx="18" cy="18" r="4" />
-  <path d="M15 3v4" />
-  <path d="M7 3v4" />
-  <path d="M3 11h16" />
-  <path d="M18 16.496v1.504l1 1" />
-</svg>
-            <time class="article-time--published">Apr 29, 2020</time>
-        </div>
-        
-
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <polyline points="12 7 12 12 15 15" />
-</svg>
-
-
-
-            <time class="article-time--reading">
-                阅读时长: 7 分钟
-            </time>
-        </div>
-        
-        <small>
-    <section class="article-tags">
-        
-            <a href="/tags/go/">go</a>
-        
-            <a href="/tags/%E7%BF%BB%E8%AF%91/">翻译</a>
-        
-    </section>
-</small>
-    </footer>
-    
-
-    
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
 </div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
 </header>
 
-    <section class="article-content">
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
     
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/FE/">FE</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">77</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Life/">Life</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">39</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">20</span></li></ul>
+    </div>
+  </div>
+
+
     
-    <h1 id="go-中的内联优化">Go 中的内联优化</h1>
-<blockquote>
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/GitHub/" style="font-size: 13.08px;">GitHub</a> <a href="/tags/GoogleSheets/" style="font-size: 13px;">GoogleSheets</a> <a href="/tags/STL/" style="font-size: 13.38px;">STL</a> <a href="/tags/amap/" style="font-size: 13px;">amap</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.23px;">blog</a> <a href="/tags/c/" style="font-size: 13.69px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.08px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.62px;">devops</a> <a href="/tags/docker/" style="font-size: 13.08px;">docker</a> <a href="/tags/elastic/" style="font-size: 13.38px;">elastic</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.31px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.15px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.08px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.15px;">hexo</a> <a href="/tags/hooks/" style="font-size: 13px;">hooks</a> <a href="/tags/http/" style="font-size: 13.38px;">http</a> <a href="/tags/jdk/" style="font-size: 13px;">jdk</a> <a href="/tags/joplin/" style="font-size: 13.08px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/linux/" style="font-size: 13.15px;">linux</a> <a href="/tags/lucene/" style="font-size: 13.31px;">lucene</a> <a href="/tags/mac/" style="font-size: 13.46px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.08px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.15px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.31px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.15px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.15px;">pic</a> <a href="/tags/python/" style="font-size: 13px;">python</a> <a href="/tags/qt/" style="font-size: 13.31px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/raycast/" style="font-size: 13px;">raycast</a> <a href="/tags/react/" style="font-size: 13px;">react</a> <a href="/tags/redis/" style="font-size: 13.54px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.92px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.08px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/terminal/" style="font-size: 13px;">terminal</a> <a href="/tags/vue/" style="font-size: 13px;">vue</a> <a href="/tags/zk/" style="font-size: 13.08px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%8D%8F%E8%AE%AE/" style="font-size: 13px;">协议</a> <a href="/tags/%E5%9C%B0%E5%9B%BE/" style="font-size: 13px;">地图</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.46px;">工具</a> <a href="/tags/%E5%B9%BF%E5%91%8A/" style="font-size: 13px;">广告</a> <a href="/tags/%E6%8F%92%E5%BA%A7/" style="font-size: 13px;">插座</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.77px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.38px;">树莓派</a> <a href="/tags/%E7%94%A8%E7%94%B5/" style="font-size: 13px;">用电</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.54px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91/" style="font-size: 13.08px;">编译</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.85px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.08px;">邮件</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/">2024</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">25</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">24</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">39</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">33</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/42f8026c/" class="title">React useEffect() Hook</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-18T14:16:21.000Z" itemprop="datePublished">2024-05-18</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/b7826aa4/" class="title">Vue 2.x 使用高德地图JS API 2.0加载起点终点路径轨迹</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-01T13:51:18.000Z" itemprop="datePublished">2024-05-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Life/">Life</a>
+              </p>
+              <p class="item-title">
+                <a href="/0565b4f5/" class="title">家庭用电插座</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-04-11T05:48:31.000Z" itemprop="datePublished">2024-04-11</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/a520e262/" class="title">MacOS 14.4 引发Java 应用崩溃</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-15T06:05:49.000Z" itemprop="datePublished">2024-03-15</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/cb9b2c66/" class="title">重定向广告</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-04T05:27:13.000Z" itemprop="datePublished">2024-03-04</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<aside class="sidebar sidebar-toc collapse" id="collapseToc" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    <nav id="toc" class="article-toc">
+      <h3 class="toc-title">文章目录</h3>
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-number">1.</span> <span class="toc-text">Go 中的内联优化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.0.1.</span> <span class="toc-text">内联是什么？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.0.2.</span> <span class="toc-text">为什么内联很重要？</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">1.0.2.1.</span> <span class="toc-text">函数调用的开销</span></a></li><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">1.0.2.2.</span> <span class="toc-text">改进的优化机会</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.0.3.</span> <span class="toc-text">实践中的内联</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.0.4.</span> <span class="toc-text">内联的限制</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">1.0.4.1.</span> <span class="toc-text">相关文章：</span></a></li></ol></li></ol></li></ol></li></ol>
+    </nav>
+  </div>
+</aside>
+
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Inlining-optimisations-Go" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      【译】Inlining Optimisations in Go
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/6ce34c49/" class="article-date">
+	  <time datetime="2020-04-29T13:05:10.000Z" itemprop="datePublished">2020-04-29</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Lang/">Lang</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/go/" rel="tag">go</a>, <a class="article-tag-link-link" href="/tags/%E7%BF%BB%E8%AF%91/" rel="tag">翻译</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/6ce34c49/#comments" class="article-comment-link">评论</a></span> 
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 2.7k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 11(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h1><span id="go-中的内联优化">Go 中的内联优化</span></h1><blockquote>
 <p>本文讨论 Go 编译器是如何实现内联的，以及这种优化方法如何影响你的 Go 代码。</p>
 </blockquote>
-<p>*请注意：*本文重点讨论 <em>gc</em>，这是来自 <a class="link" href="https://github.com/golang/go"  target="_blank" rel="noopener"
-    >golang.org</a> 的事实标准的 Go 编译器。讨论到的概念可以广泛适用于其它 Go 编译器，如 gccgo 和 llgo，但它们在实现方式和功效上可能有所差异。</p>
-<h3 id="内联是什么">内联是什么？</h3>
-<p><!-- raw HTML omitted -->内联<!-- raw HTML omitted -->inlining<!-- raw HTML omitted --><!-- raw HTML omitted -->就是把简短的函数在调用它的地方展开。在计算机发展历程的早期，这个优化是由程序员手动实现的。现在，内联已经成为编译过程中自动实现的基本优化过程的其中一步。</p>
-<h3 id="为什么内联很重要">为什么内联很重要？</h3>
-<p>有两个原因。第一个是它消除了函数调用本身的开销。第二个是它使得编译器能更高效地执行其他的优化策略。</p>
-<h4 id="函数调用的开销">函数调用的开销</h4>
-<p>在任何语言中，调用一个函数 <sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup> 都会有消耗。把参数编组进寄存器或放入栈中（取决于 ABI），在返回结果时的逆反过程都会有开销。引入一次函数调用会导致程序计数器从指令流的一点跳到另一点，这可能导致管道滞后。函数内部通常有<!-- raw HTML omitted -->前置处理<!-- raw HTML omitted -->preamble<!-- raw HTML omitted --><!-- raw HTML omitted -->，需要为函数执行准备新的栈帧，还有与前置相似的<!-- raw HTML omitted -->后续处理<!-- raw HTML omitted -->epilogue<!-- raw HTML omitted --><!-- raw HTML omitted -->，需要在返回给调用方之前释放栈帧空间。</p>
-<p>在 Go 中函数调用会消耗额外的资源来支持栈的动态增长。在进入函数时，goroutine 可用的栈空间与函数需要的空间大小进行比较。如果可用空间不同，前置处理就会跳到<!-- raw HTML omitted -->运行时<!-- raw HTML omitted -->runtime<!-- raw HTML omitted --><!-- raw HTML omitted -->的逻辑中，通过把数据复制到一块新的、更大的空间的来增长栈空间。当这个复制完成后，运行时就会跳回到原来的函数入口，再执行栈空间检查，现在通过了检查，函数调用继续执行。这种方式下，goroutine 开始时可以申请很小的栈空间，在有需要时再申请更大的空间。<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup></p>
+<p><em>请注意：</em>本文重点讨论 <em>gc</em>，这是来自 <a target="_blank" rel="noopener" href="https://github.com/golang/go">golang.org</a> 的事实标准的 Go 编译器。讨论到的概念可以广泛适用于其它 Go 编译器，如 gccgo 和 llgo，但它们在实现方式和功效上可能有所差异。</p>
+<h3><span id="内联是什么">内联是什么？</span></h3><p><ruby>内联<rt>inlining</rt></ruby>就是把简短的函数在调用它的地方展开。在计算机发展历程的早期，这个优化是由程序员手动实现的。现在，内联已经成为编译过程中自动实现的基本优化过程的其中一步。</p>
+<h3><span id="为什么内联很重要">为什么内联很重要？</span></h3><p>有两个原因。第一个是它消除了函数调用本身的开销。第二个是它使得编译器能更高效地执行其他的优化策略。</p>
+<h4><span id="函数调用的开销">函数调用的开销</span></h4><p>在任何语言中，调用一个函数 [^1] 都会有消耗。把参数编组进寄存器或放入栈中（取决于 ABI），在返回结果时的逆反过程都会有开销。引入一次函数调用会导致程序计数器从指令流的一点跳到另一点，这可能导致管道滞后。函数内部通常有<ruby>前置处理<rt>preamble</rt></ruby>，需要为函数执行准备新的栈帧，还有与前置相似的<ruby>后续处理<rt>epilogue</rt></ruby>，需要在返回给调用方之前释放栈帧空间。</p>
+<p>在 Go 中函数调用会消耗额外的资源来支持栈的动态增长。在进入函数时，goroutine 可用的栈空间与函数需要的空间大小进行比较。如果可用空间不同，前置处理就会跳到<ruby>运行时<rt>runtime</rt></ruby>的逻辑中，通过把数据复制到一块新的、更大的空间的来增长栈空间。当这个复制完成后，运行时就会跳回到原来的函数入口，再执行栈空间检查，现在通过了检查，函数调用继续执行。这种方式下，goroutine 开始时可以申请很小的栈空间，在有需要时再申请更大的空间。[^2]</p>
 <p>这个检查消耗很小，只有几个指令，而且由于 goroutine 的栈是成几何级数增长的，因此这个检查很少失败。这样，现代处理器的分支预测单元可以通过假定检查肯定会成功来隐藏栈空间检查的消耗。当处理器预测错了栈空间检查，不得不放弃它在推测性执行所做的操作时，与为了增加 goroutine 的栈空间运行时所需的操作消耗的资源相比，管道滞后的代价更小。</p>
 <p>虽然现代处理器可以用预测性执行技术优化每次函数调用中的泛型和 Go 特定的元素的开销，但那些开销不能被完全消除，因此在每次函数调用执行必要的工作过程中都会有性能消耗。一次函数调用本身的开销是固定的，与更大的函数相比，调用小函数的代价更大，因为在每次调用过程中它们做的有用的工作更少。</p>
 <p>因此，消除这些开销的方法必须是要消除函数调用本身，Go 的编译器就是这么做的，在某些条件下通过用函数的内容来替换函数调用来实现。这个过程被称为<em>内联</em>，因为它在函数调用处把函数体展开了。</p>
-<h4 id="改进的优化机会">改进的优化机会</h4>
-<p>Cliff Click 博士把内联描述为现代编译器做的优化措施，像常量传播（LCTT 译注：此处作者笔误，原文为 constant proportion，修正为 constant propagation）和死代码消除一样，都是编译器的基本优化方法。实际上，内联可以让编译器看得更深，使编译器可以观察调用的特定函数的上下文内容，可以看到能继续简化或彻底消除的逻辑。由于可以递归地执行内联，因此不仅可以在每个独立的函数上下文处进行这种优化决策，也可以在整个函数调用链中进行。</p>
-<h3 id="实践中的内联">实践中的内联</h3>
-<p>下面这个例子可以演示内联的影响：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;testing&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">//go:noinline
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">max</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">int</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">a</span> &gt; <span style="color:#a6e22e">b</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">a</span>
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">b</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">Result</span> <span style="color:#66d9ef">int</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">BenchmarkMax</span>(<span style="color:#a6e22e">b</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">B</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">r</span> <span style="color:#66d9ef">int</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">N</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">r</span> = <span style="color:#a6e22e">max</span>(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#a6e22e">i</span>)
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Result</span> = <span style="color:#a6e22e">r</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>运行这个基准，会得到如下结果：<sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>% go test -bench<span style="color:#f92672">=</span>. 
-</span></span><span style="display:flex;"><span>BenchmarkMax-4   <span style="color:#ae81ff">530687617</span>         2.24 ns/op
-</span></span></code></pre></div><p>在我的 2015 MacBook Air 上 <code>max(-1, i)</code> 的耗时约为 2.24 纳秒。现在去掉 <code>//go:noinline</code> 编译指令，再看下结果：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>% go test -bench<span style="color:#f92672">=</span>. 
-</span></span><span style="display:flex;"><span>BenchmarkMax-4   <span style="color:#ae81ff">1000000000</span>         0.514 ns/op
-</span></span></code></pre></div><p>从 2.24 纳秒降到了 0.51 纳秒，或者从 <code>benchstat</code> 的结果可以看出，有 78% 的提升。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>% benchstat <span style="color:#f92672">{</span>old,new<span style="color:#f92672">}</span>.txt
-</span></span><span style="display:flex;"><span>name   old time/op  new time/op  delta
-</span></span><span style="display:flex;"><span>Max-4  2.21ns ± 1%  0.49ns ± 6%  -77.96%  <span style="color:#f92672">(</span>p<span style="color:#f92672">=</span>0.000 n<span style="color:#f92672">=</span>18+19<span style="color:#f92672">)</span>
-</span></span></code></pre></div><p>这个提升是从哪儿来的呢？</p>
-<p>首先，移除掉函数调用以及与之关联的前置处理 <sup id="fnref:4"><a href="#fn:4" class="footnote-ref" role="doc-noteref">4</a></sup> 是主要因素。把 <code>max</code> 函数的函数体在调用处展开，减少了处理器执行的指令数量并且消除了一些分支。</p>
+<h4><span id="改进的优化机会">改进的优化机会</span></h4><p>Cliff Click 博士把内联描述为现代编译器做的优化措施，像常量传播（LCTT 译注：此处作者笔误，原文为 constant proportion，修正为 constant propagation）和死代码消除一样，都是编译器的基本优化方法。实际上，内联可以让编译器看得更深，使编译器可以观察调用的特定函数的上下文内容，可以看到能继续简化或彻底消除的逻辑。由于可以递归地执行内联，因此不仅可以在每个独立的函数上下文处进行这种优化决策，也可以在整个函数调用链中进行。</p>
+<h3><span id="实践中的内联">实践中的内联</span></h3><p>下面这个例子可以演示内联的影响：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;testing&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//go:noinline</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> Result <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">BenchmarkMax</span><span class="params">(b *testing.B)</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> r <span class="type">int</span></span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; b.N; i++ &#123;</span><br><span class="line">        r = max(<span class="number">-1</span>, i)</span><br><span class="line">    &#125;</span><br><span class="line">    Result = r</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行这个基准，会得到如下结果：[^3]</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">% go <span class="built_in">test</span> -bench=. </span><br><span class="line">BenchmarkMax-4   530687617         2.24 ns/op</span><br></pre></td></tr></table></figure>
+
+<p>在我的 2015 MacBook Air 上 <code>max(-1, i)</code> 的耗时约为 2.24 纳秒。现在去掉 <code>//go:noinline</code> 编译指令，再看下结果：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">% go <span class="built_in">test</span> -bench=. </span><br><span class="line">BenchmarkMax-4   1000000000         0.514 ns/op</span><br></pre></td></tr></table></figure>
+
+<p>从 2.24 纳秒降到了 0.51 纳秒，或者从 <code>benchstat</code> 的结果可以看出，有 78% 的提升。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">% benchstat &#123;old,new&#125;.txt</span><br><span class="line">name   old <span class="keyword">time</span>/op  new <span class="keyword">time</span>/op  delta</span><br><span class="line">Max-4  2.21ns ± 1%  0.49ns ± 6%  -77.96%  (p=0.000 n=18+19)</span><br></pre></td></tr></table></figure>
+
+<p>这个提升是从哪儿来的呢？</p>
+<p>首先，移除掉函数调用以及与之关联的前置处理 [^4] 是主要因素。把 <code>max</code> 函数的函数体在调用处展开，减少了处理器执行的指令数量并且消除了一些分支。</p>
 <p>现在由于编译器优化了 <code>BenchmarkMax</code>，因此它可以看到 <code>max</code> 函数的内容，进而可以做更多的提升。当 <code>max</code> 被内联后，<code>BenchmarkMax</code> 呈现给编译器的样子，看起来是这样的：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">BenchmarkMax</span>(<span style="color:#a6e22e">b</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">B</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">r</span> <span style="color:#66d9ef">int</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">N</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span> &gt; <span style="color:#a6e22e">i</span> {
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">r</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">r</span> = <span style="color:#a6e22e">i</span>
-</span></span><span style="display:flex;"><span>        }
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Result</span> = <span style="color:#a6e22e">r</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>再运行一次基准，我们看一下手动内联的版本和编译器内联的版本的表现：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>% benchstat <span style="color:#f92672">{</span>old,new<span style="color:#f92672">}</span>.txt
-</span></span><span style="display:flex;"><span>name   old time/op  new time/op  delta
-</span></span><span style="display:flex;"><span>Max-4  2.21ns ± 1%  0.48ns ± 3%  -78.14%  <span style="color:#f92672">(</span>p<span style="color:#f92672">=</span>0.000 n<span style="color:#f92672">=</span>18+18<span style="color:#f92672">)</span>
-</span></span></code></pre></div><p>现在编译器能看到在 <code>BenchmarkMax</code> 里内联 <code>max</code> 的结果，可以执行以前不能执行的优化措施。例如，编译器注意到 <code>i</code> 初始值为 <code>0</code>，仅做自增操作，因此所有与 <code>i</code> 的比较都可以假定 <code>i</code> 不是负值。这样条件表达式 <code>-1 &gt; i</code> 永远不是 <code>true</code>。<sup id="fnref:5"><a href="#fn:5" class="footnote-ref" role="doc-noteref">5</a></sup></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">BenchmarkMax</span><span class="params">(b *testing.B)</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> r <span class="type">int</span></span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; b.N; i++ &#123;</span><br><span class="line">        <span class="keyword">if</span> <span class="number">-1</span> &gt; i &#123;</span><br><span class="line">            r = <span class="number">-1</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            r = i</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    Result = r</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>再运行一次基准，我们看一下手动内联的版本和编译器内联的版本的表现：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">% benchstat &#123;old,new&#125;.txt</span><br><span class="line">name   old <span class="keyword">time</span>/op  new <span class="keyword">time</span>/op  delta</span><br><span class="line">Max-4  2.21ns ± 1%  0.48ns ± 3%  -78.14%  (p=0.000 n=18+18)</span><br></pre></td></tr></table></figure>
+
+<p>现在编译器能看到在 <code>BenchmarkMax</code> 里内联 <code>max</code> 的结果，可以执行以前不能执行的优化措施。例如，编译器注意到 <code>i</code> 初始值为 <code>0</code>，仅做自增操作，因此所有与 <code>i</code> 的比较都可以假定 <code>i</code> 不是负值。这样条件表达式 <code>-1 &gt; i</code> 永远不是 <code>true</code>。[^5]</p>
 <p>证明了 <code>-1 &gt; i</code> 永远不为 true 后，编译器可以把代码简化为：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">BenchmarkMax</span>(<span style="color:#a6e22e">b</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">B</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">r</span> <span style="color:#66d9ef">int</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">N</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#66d9ef">false</span> {
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">r</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">r</span> = <span style="color:#a6e22e">i</span>
-</span></span><span style="display:flex;"><span>        }
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Result</span> = <span style="color:#a6e22e">r</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>并且因为分支里是个常量，编译器可以通过下面的方式移除不会走到的分支：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">BenchmarkMax</span>(<span style="color:#a6e22e">b</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">B</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">r</span> <span style="color:#66d9ef">int</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">N</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">r</span> = <span style="color:#a6e22e">i</span>
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Result</span> = <span style="color:#a6e22e">r</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>这样，通过内联和由内联解锁的优化过程，编译器把表达式 <code>r = max(-1, i))</code> 简化为 <code>r = i</code>。</p>
-<h3 id="内联的限制">内联的限制</h3>
-<p>本文中我论述的内联称作<!-- raw HTML omitted -->叶子内联<!-- raw HTML omitted -->leaf inlining<!-- raw HTML omitted --><!-- raw HTML omitted -->：把函数调用栈中最底层的函数在调用它的函数处展开的行为。内联是个递归的过程，当把函数内联到调用它的函数 A 处后，编译器会把内联后的结果代码再内联到 A 的调用方，这样持续内联下去。例如，下面的代码：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">BenchmarkMaxMaxMax</span>(<span style="color:#a6e22e">b</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">B</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">r</span> <span style="color:#66d9ef">int</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">N</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">r</span> = <span style="color:#a6e22e">max</span>(<span style="color:#a6e22e">max</span>(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#a6e22e">i</span>), <span style="color:#a6e22e">max</span>(<span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">i</span>))
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Result</span> = <span style="color:#a6e22e">r</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>与之前的例子中的代码运行速度一样快，因为编译器可以对上面的代码重复地进行内联，也把代码简化到 <code>r = i</code> 表达式。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">BenchmarkMax</span><span class="params">(b *testing.B)</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> r <span class="type">int</span></span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; b.N; i++ &#123;</span><br><span class="line">        <span class="keyword">if</span> <span class="literal">false</span> &#123;</span><br><span class="line">            r = <span class="number">-1</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            r = i</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    Result = r</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>并且因为分支里是个常量，编译器可以通过下面的方式移除不会走到的分支：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">BenchmarkMax</span><span class="params">(b *testing.B)</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> r <span class="type">int</span></span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; b.N; i++ &#123;</span><br><span class="line">        r = i</span><br><span class="line">    &#125;</span><br><span class="line">    Result = r</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样，通过内联和由内联解锁的优化过程，编译器把表达式 <code>r = max(-1, i))</code> 简化为 <code>r = i</code>。</p>
+<h3><span id="内联的限制">内联的限制</span></h3><p>本文中我论述的内联称作<ruby>叶子内联<rt>leaf inlining</rt></ruby>：把函数调用栈中最底层的函数在调用它的函数处展开的行为。内联是个递归的过程，当把函数内联到调用它的函数 A 处后，编译器会把内联后的结果代码再内联到 A 的调用方，这样持续内联下去。例如，下面的代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">BenchmarkMaxMaxMax</span><span class="params">(b *testing.B)</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> r <span class="type">int</span></span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; b.N; i++ &#123;</span><br><span class="line">        r = max(max(<span class="number">-1</span>, i), max(<span class="number">0</span>, i))</span><br><span class="line">    &#125;</span><br><span class="line">    Result = r</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>与之前的例子中的代码运行速度一样快，因为编译器可以对上面的代码重复地进行内联，也把代码简化到 <code>r = i</code> 表达式。</p>
 <p>下一篇文章中，我会论述当 Go 编译器想要内联函数调用栈中间的某个函数时选用的另一种内联策略。最后我会论述编译器为了内联代码准备好要达到的极限，这个极限 Go 现在的能力还达不到。</p>
-<h4 id="相关文章">相关文章：</h4>
-<ol>
-<li><a class="link" href="https://dave.cheney.net/2014/06/07/five-things-that-make-go-fast"  target="_blank" rel="noopener"
-    >使 Go 变快的 5 件事</a></li>
-<li><a class="link" href="https://dave.cheney.net/2013/06/02/why-is-a-goroutines-stack-infinite"  target="_blank" rel="noopener"
-    >为什么 Goroutine 的栈空间会无限增长？</a></li>
-<li><a class="link" href="https://dave.cheney.net/2013/06/30/how-to-write-benchmarks-in-go"  target="_blank" rel="noopener"
-    >Go 中怎么写基准测试</a></li>
-<li><a class="link" href="https://dave.cheney.net/2018/01/08/gos-hidden-pragmas"  target="_blank" rel="noopener"
-    >Go 中隐藏的编译指令</a></li>
+<p>[^1]: 在 Go 中，一个方法就是一个有预先定义的形参和接受者的函数。假设这个方法不是通过接口调用的，调用一个无消耗的函数所消耗的代价与引入一个方法是相同的。<br>[^2]: 在 Go 1.14 以前，栈检查的前置处理也被垃圾回收器用于 STW，通过把所有活跃的 goroutine 栈空间设为 0，来强制它们切换为下一次函数调用时的运行时状态。这个机制[最近被替换][8]为一种新机制，新机制下运行时可以不用等 goroutine 进行函数调用就可以暂停 goroutine。<br>[^3]: 我用 <code>//go:noinline</code> 编译指令来阻止编译器内联 <code>max</code>。这是因为我想把内联 <code>max</code> 的影响与其他影响隔离开，而不是用 <code>-gcflags=&#39;-l -N&#39;</code> 选项在全局范围内禁止优化。关于 <code>//go:</code> 注释在[这篇文章][10]中详细论述。<br>[^4]: 你可以自己通过比较 <code>go test -bench=. -gcflags=-S</code> 有无 <code>//go:noinline</code> 注释时的不同结果来验证一下。<br>[^5]: 你可以用 <code>-gcflags=-d=ssa/prove/debug=on</code> 选项来自己验证一下。</p>
+<h4><span id="相关文章">相关文章：</span></h4><ol>
+<li><a target="_blank" rel="noopener" href="https://dave.cheney.net/2014/06/07/five-things-that-make-go-fast">使 Go 变快的 5 件事</a></li>
+<li><a target="_blank" rel="noopener" href="https://dave.cheney.net/2013/06/02/why-is-a-goroutines-stack-infinite">为什么 Goroutine 的栈空间会无限增长？</a></li>
+<li><a target="_blank" rel="noopener" href="https://dave.cheney.net/2013/06/30/how-to-write-benchmarks-in-go">Go 中怎么写基准测试</a></li>
+<li><a target="_blank" rel="noopener" href="https://dave.cheney.net/2018/01/08/gos-hidden-pragmas">Go 中隐藏的编译指令</a></li>
 </ol>
 <hr>
-<p>via: <a class="link" href="https://dave.cheney.net/2020/04/25/inlining-optimisations-in-go"  target="_blank" rel="noopener"
-    >https://dave.cheney.net/2020/04/25/inlining-optimisations-in-go</a></p>
-<p>作者：<a class="link" href="https://dave.cheney.net/author/davecheney"  target="_blank" rel="noopener"
-    >Dave Cheney</a>
-选题：<a class="link" href="https://github.com/lujun9972"  target="_blank" rel="noopener"
-    >lujun9972</a>
-译者：<a class="link" href="https://github.com/lxbwolf"  target="_blank" rel="noopener"
-    >Xiaobin.Liu</a>
-校对：<a class="link" href="https://github.com/wxy"  target="_blank" rel="noopener"
-    >wxy</a></p>
-<p>本文由 <a class="link" href="https://github.com/LCTT/TranslateProject"  target="_blank" rel="noopener"
-    >LCTT</a> 原创编译，<a class="link" href="https://linux.cn/"  target="_blank" rel="noopener"
-    >Linux中国</a> 荣誉推出</p>
-<p>[3]: tmp.gBQ2tEtMHc#easy-footnote-bottom-2-4053 &ldquo;Up until Go 1.14 the stack check preamble was also used by the garbage collector to stop the world by setting all active goroutine’s stacks to zero, forcing them to trap into the runtime the next time they made a function call. This system was <!-- raw HTML omitted -->recently replaced<!-- raw HTML omitted --> with a mechanism which allowed the runtime to pause an goroutine without waiting for it to make a function call.&rdquo;
-[4]: tmp.gBQ2tEtMHc#easy-footnote-bottom-3-4053 &ldquo;I’m using the <!-- raw HTML omitted -->//go:noinline<!-- raw HTML omitted --> pragma to prevent the compiler from inlining <!-- raw HTML omitted -->max<!-- raw HTML omitted -->. This is because I want to isolate the effects of inlining on <!-- raw HTML omitted -->max<!-- raw HTML omitted --> rather than disabling optimisations globally with <!-- raw HTML omitted -->-gcflags=&rsquo;-l -N&rsquo;<!-- raw HTML omitted -->. I go into detail about the <!-- raw HTML omitted -->//go:<!-- raw HTML omitted --> comments in <!-- raw HTML omitted -->this presentation<!-- raw HTML omitted -->.&rdquo;
-[5]: tmp.gBQ2tEtMHc#easy-footnote-bottom-4-4053 &ldquo;You can check this for yourself by comparing the output of <!-- raw HTML omitted -->go test -bench=. -gcflags=-S<!-- raw HTML omitted --> with and without the <!-- raw HTML omitted -->//go:noinline<!-- raw HTML omitted --> annotation.&rdquo;
-[6]: tmp.gBQ2tEtMHc#easy-footnote-bottom-5-4053 &ldquo;You can check this yourself with the <!-- raw HTML omitted -->-gcflags=-d=ssa/prove/debug=on<!-- raw HTML omitted --> flag.&rdquo;
-[7]: tmp.gBQ2tEtMHc#easy-footnote-1-4053
-[8]: <a class="link" href="https://github.com/golang/proposal/blob/master/design/24543-non-cooperative-preemption.md"  target="_blank" rel="noopener"
-    >https://github.com/golang/proposal/blob/master/design/24543-non-cooperative-preemption.md</a>
-[9]: tmp.gBQ2tEtMHc#easy-footnote-2-4053
-[10]: <a class="link" href="https://dave.cheney.net/2018/01/08/gos-hidden-pragmas"  target="_blank" rel="noopener"
-    >https://dave.cheney.net/2018/01/08/gos-hidden-pragmas</a>
-[11]: tmp.gBQ2tEtMHc#easy-footnote-3-4053
-[12]: tmp.gBQ2tEtMHc#easy-footnote-4-4053
-[13]: tmp.gBQ2tEtMHc#easy-footnote-5-4053
-[14]: <a class="link" href="https://dave.cheney.net/2014/06/07/five-things-that-make-go-fast"  target="_blank" rel="noopener"
-    >https://dave.cheney.net/2014/06/07/five-things-that-make-go-fast</a> &ldquo;Five things that make Go fast&rdquo;
-[15]: <a class="link" href="https://dave.cheney.net/2013/06/02/why-is-a-goroutines-stack-infinite"  target="_blank" rel="noopener"
-    >https://dave.cheney.net/2013/06/02/why-is-a-goroutines-stack-infinite</a> &ldquo;Why is a Goroutine’s stack infinite ?&rdquo;
-[16]: <a class="link" href="https://dave.cheney.net/2013/06/30/how-to-write-benchmarks-in-go"  target="_blank" rel="noopener"
-    >https://dave.cheney.net/2013/06/30/how-to-write-benchmarks-in-go</a> &ldquo;How to write benchmarks in Go&rdquo;
-[17]: <a class="link" href="https://dave.cheney.net/2018/01/08/gos-hidden-pragmas"  target="_blank" rel="noopener"
-    >https://dave.cheney.net/2018/01/08/gos-hidden-pragmas</a> &ldquo;Go’s hidden #pragmas&rdquo;</p>
-<div class="footnotes" role="doc-endnotes">
-<hr>
-<ol>
-<li id="fn:1">
-<p>在 Go 中，一个方法就是一个有预先定义的形参和接受者的函数。假设这个方法不是通过接口调用的，调用一个无消耗的函数所消耗的代价与引入一个方法是相同的。&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
-</li>
-<li id="fn:2">
-<p>在 Go 1.14 以前，栈检查的前置处理也被垃圾回收器用于 STW，通过把所有活跃的 goroutine 栈空间设为 0，来强制它们切换为下一次函数调用时的运行时状态。这个机制[最近被替换][8]为一种新机制，新机制下运行时可以不用等 goroutine 进行函数调用就可以暂停 goroutine。&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
-</li>
-<li id="fn:3">
-<p>我用 <code>//go:noinline</code> 编译指令来阻止编译器内联 <code>max</code>。这是因为我想把内联 <code>max</code> 的影响与其他影响隔离开，而不是用 <code>-gcflags='-l -N'</code> 选项在全局范围内禁止优化。关于 <code>//go:</code> 注释在[这篇文章][10]中详细论述。&#160;<a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
-</li>
-<li id="fn:4">
-<p>你可以自己通过比较 <code>go test -bench=. -gcflags=-S</code> 有无 <code>//go:noinline</code> 注释时的不同结果来验证一下。&#160;<a href="#fnref:4" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
-</li>
-<li id="fn:5">
-<p>你可以用 <code>-gcflags=-d=ssa/prove/debug=on</code> 选项来自己验证一下。&#160;<a href="#fnref:5" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
-</li>
-</ol>
+<p>via: <a target="_blank" rel="noopener" href="https://dave.cheney.net/2020/04/25/inlining-optimisations-in-go">https://dave.cheney.net/2020/04/25/inlining-optimisations-in-go</a></p>
+<p>作者：<a target="_blank" rel="noopener" href="https://dave.cheney.net/author/davecheney">Dave Cheney</a><br>选题：<a target="_blank" rel="noopener" href="https://github.com/lujun9972">lujun9972</a><br>译者：<a target="_blank" rel="noopener" href="https://github.com/lxbwolf">Xiaobin.Liu</a><br>校对：<a target="_blank" rel="noopener" href="https://github.com/wxy">wxy</a></p>
+<p>本文由 <a target="_blank" rel="noopener" href="https://github.com/LCTT/TranslateProject">LCTT</a> 原创编译，<a target="_blank" rel="noopener" href="https://linux.cn/">Linux中国</a> 荣誉推出</p>
+<p>[3]: tmp.gBQ2tEtMHc#easy-footnote-bottom-2-4053 “Up until Go 1.14 the stack check preamble was also used by the garbage collector to stop the world by setting all active goroutine’s stacks to zero, forcing them to trap into the runtime the next time they made a function call. This system was <a target="_blank" rel="noopener" href="https://github.com/golang/proposal/blob/master/design/24543-non-cooperative-preemption.md">recently replaced</a> with a mechanism which allowed the runtime to pause an goroutine without waiting for it to make a function call.”<br>[4]: tmp.gBQ2tEtMHc#easy-footnote-bottom-3-4053 “I’m using the <code>//go:noinline</code> pragma to prevent the compiler from inlining <code>max</code>. This is because I want to isolate the effects of inlining on <code>max</code> rather than disabling optimisations globally with <code>-gcflags='-l -N'</code>. I go into detail about the <code>//go:</code> comments in <a target="_blank" rel="noopener" href="https://dave.cheney.net/2018/01/08/gos-hidden-pragmas">this presentation</a>.”<br>[5]: tmp.gBQ2tEtMHc#easy-footnote-bottom-4-4053 “You can check this for yourself by comparing the output of <code>go test -bench=. -gcflags=-S</code> with and without the <code>//go:noinline</code> annotation.”<br>[6]: tmp.gBQ2tEtMHc#easy-footnote-bottom-5-4053 “You can check this yourself with the <code>-gcflags=-d=ssa/prove/debug=on</code> flag.”<br>[7]: tmp.gBQ2tEtMHc#easy-footnote-1-4053<br>[8]: <a target="_blank" rel="noopener" href="https://github.com/golang/proposal/blob/master/design/24543-non-cooperative-preemption.md">https://github.com/golang/proposal/blob/master/design/24543-non-cooperative-preemption.md</a><br>[9]: tmp.gBQ2tEtMHc#easy-footnote-2-4053<br>[10]: <a target="_blank" rel="noopener" href="https://dave.cheney.net/2018/01/08/gos-hidden-pragmas">https://dave.cheney.net/2018/01/08/gos-hidden-pragmas</a><br>[11]: tmp.gBQ2tEtMHc#easy-footnote-3-4053<br>[12]: tmp.gBQ2tEtMHc#easy-footnote-4-4053<br>[13]: tmp.gBQ2tEtMHc#easy-footnote-5-4053<br>[14]: <a target="_blank" rel="noopener" href="https://dave.cheney.net/2014/06/07/five-things-that-make-go-fast">https://dave.cheney.net/2014/06/07/five-things-that-make-go-fast</a> “Five things that make Go fast”<br>[15]: <a target="_blank" rel="noopener" href="https://dave.cheney.net/2013/06/02/why-is-a-goroutines-stack-infinite">https://dave.cheney.net/2013/06/02/why-is-a-goroutines-stack-infinite</a> “Why is a Goroutine’s stack infinite ?”<br>[16]: <a target="_blank" rel="noopener" href="https://dave.cheney.net/2013/06/30/how-to-write-benchmarks-in-go">https://dave.cheney.net/2013/06/30/how-to-write-benchmarks-in-go</a> “How to write benchmarks in Go”<br>[17]: <a target="_blank" rel="noopener" href="https://dave.cheney.net/2018/01/08/gos-hidden-pragmas">https://dave.cheney.net/2018/01/08/gos-hidden-pragmas</a> “Go’s hidden #pragmas”</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/6ce34c49/" title="【译】Inlining Optimisations in Go" target="_blank" rel="external">https://lxb.wiki/6ce34c49/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="external">CC BY-NC 4.0</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      
+        <section id="comments" class="comments">
+          <style>
+            .utterances{max-width: 100%;}
+          </style>
+          <script src="https://utteranc.es/client.js"
+                repo="lxbwolf/lxbwolf.github.io"
+                issue-term="title"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+          </script>
+        </section>
+      
+    
+  </section>
+
+
+  
 </div>
 
-</section>
-
-
-    <footer class="article-footer">
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
     
-
+    <li class="prev">
+      <a href="/5698ca18/" title="【译】Go：异步抢占"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
     
-    <section class="article-copyright">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
-</svg>
-
-
-
-        <span>Licensed under CC BY-NC-SA 4.0</span>
-    </section>
-    </footer>
-
-
     
-</article>
-
+    <li class="next">
+      <a href="/fb1d9193/" title="树莓派做BT下载器"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
     
-
     
+    <li class="toggle-toc">
+      <a class="toggle-btn collapsed" data-toggle="collapse" href="#collapseToc" aria-expanded="false" title="文章目录" role="button">
+        <span>[&nbsp;</span><span>文章目录</span>
+        <i class="text-collapsed icon icon-anchor"></i>
+        <i class="text-in icon icon-close"></i>
+        <span>]</span>
+      </a>
+    </li>
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,wechat"></div>
+    
+  </div>
+  </div>
+</nav>
+  
 
-<aside class="related-content--wrapper">
-    <h2 class="section-title">相关文章</h2>
-    <div class="related-content">
-        <div class="flex article-list--tile">
-            
-                
-<article class="">
-    <a href="/8c45788a/">
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
         
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
         
-
-        <div class="article-details">
-            <h2 class="article-title">【译】关于 CGo 的字符串函数的解释</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/10e5e8ba/">
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
         
-        
+    </ul>
 
-        <div class="article-details">
-            <h2 class="article-title">【译】Go 字符串中的潜在问题</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/c9399f4/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】微服务中的熔断器和重试</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/4e717bb5/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】协程，操作系统线程和 CPU 管理</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/b3baee92/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">[译]Go GC 怎么标记内存</h2>
-        </div>
-    </a>
-</article>
-
-            
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> xbl </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
         </div>
     </div>
-</aside>
 
-     
-    
-        
-    <script src="https://utteranc.es/client.js" 
-        repo="lxbwolf/lxbwolf.github.io"
-        issue-term="pathname"
-        
-        crossorigin="anonymous"
-        async
-        >
-</script>
 
-<style>
-    .utterances {
-        max-width: unset;
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
     }
-</style>
-
-<script>
-    let utterancesLoaded = false;
-
-    function setUtterancesTheme(theme) {
-        let utterances = document.querySelector('.utterances iframe');
-        if (utterances) {
-            utterances.contentWindow.postMessage(
-                {
-                    type: 'set-theme',
-                    theme: `github-${theme}`
-                },
-                'https://utteranc.es'
-            );
-        }
-    }
-
-    addEventListener('message', event => {
-        if (event.origin !== 'https://utteranc.es') return;
-
-        
-        utterancesLoaded = true;
-        setUtterancesTheme(document.documentElement.dataset.scheme)
-    });
-
-    window.addEventListener('onColorSchemeChange', (e) => {
-        if (!utterancesLoaded) return;
-        setUtterancesTheme(e.detail)
-    })
-</script>
+  </script>
 
 
-    
 
-    <footer class="site-footer">
-    <section class="copyright">
-        &copy; 
-        
-            2020 - 
-        
-        2025 Xiaobin&#39;s Notes
-    </section>
-    
-    <section class="powerby">
-        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
-        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
-    </section>
 </footer>
 
-
-    
-<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
-
-    
-    <div class="pswp__bg"></div>
-
-    
-    <div class="pswp__scroll-wrap">
-
-        
-        <div class="pswp__container">
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-        </div>
-
-        
-        <div class="pswp__ui pswp__ui--hidden">
-
-            <div class="pswp__top-bar">
-
-                
-
-                <div class="pswp__counter"></div>
-
-                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
-
-                <button class="pswp__button pswp__button--share" title="Share"></button>
-
-                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
-
-                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
-
-                
-                
-                <div class="pswp__preloader">
-                    <div class="pswp__preloader__icn">
-                        <div class="pswp__preloader__cut">
-                            <div class="pswp__preloader__donut"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-                <div class="pswp__share-tooltip"></div>
-            </div>
-
-            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
-            </button>
-
-            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
-            </button>
-
-            <div class="pswp__caption">
-                <div class="pswp__caption__center"></div>
-            </div>
-
-        </div>
-
-    </div>
-
-</div><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
-                defer
-                >
-            </script><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
-                defer
-                >
-            </script><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
-            ><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
-            >
-
-            </main>
-        </div>
-        <script 
-                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
-                
-                >
-            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
 <script>
-    (function () {
-        const customFont = document.createElement('link');
-        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
-
-        customFont.type = "text/css";
-        customFont.rel = "stylesheet";
-
-        document.head.appendChild(customFont);
-    }());
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 </script>
 
-    </body>
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
 </html>

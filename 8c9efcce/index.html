@@ -1,844 +1,587 @@
 <!DOCTYPE html>
-<html lang="zh-cn" dir="ltr">
-    <head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='goreplay简介 https://github.com/buger/goreplay https://goreplay.org GoReplay是一个开源工具，用于捕获实时HTTP流量并将其重放到测试环境中，以便使用真实数据持续测试系统。 GoR'>
-<title>流量复制重放工具goreplay</title>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
 
-<link rel='canonical' href='https://lxb.wiki/8c9efcce/'>
+  
+  <title>流量复制重放工具goreplay | Xiaobin&#39;s Notes</title>
+  <meta name="description" content="goreplay简介 goreplay工作原理 goreplay常见用法 gor参数    goreplay简介https:&#x2F;&#x2F;github.com&#x2F;buger&#x2F;goreplay https:&#x2F;&#x2F;goreplay.org GoReplay是一个开源工具，用于捕获实时HTTP流量并将其重放到测试环境中，以便使用真实数据持续测试系统。GoReplay不是代理，而是监听网络接口上的流量，不需要更改">
+<meta property="og:type" content="article">
+<meta property="og:title" content="流量复制重放工具goreplay">
+<meta property="og:url" content="https://lxb.wiki/8c9efcce/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Notes">
+<meta property="og:description" content="goreplay简介 goreplay工作原理 goreplay常见用法 gor参数    goreplay简介https:&#x2F;&#x2F;github.com&#x2F;buger&#x2F;goreplay https:&#x2F;&#x2F;goreplay.org GoReplay是一个开源工具，用于捕获实时HTTP流量并将其重放到测试环境中，以便使用真实数据持续测试系统。GoReplay不是代理，而是监听网络接口上的流量，不需要更改">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206205553.png">
+<meta property="article:published_time" content="2020-10-04T15:17:17.000Z">
+<meta property="article:modified_time" content="2025-02-02T11:48:02.446Z">
+<meta property="article:author" content="lxb">
+<meta property="article:tag" content="工具">
+<meta property="article:tag" content="go">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206205553.png">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/8c9efcce/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Notes" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
 
-<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='流量复制重放工具goreplay'>
-<meta property='og:description' content='goreplay简介 https://github.com/buger/goreplay https://goreplay.org GoReplay是一个开源工具，用于捕获实时HTTP流量并将其重放到测试环境中，以便使用真实数据持续测试系统。 GoR'>
-<meta property='og:url' content='https://lxb.wiki/8c9efcce/'>
-<meta property='og:site_name' content='Xiaobin&#39;s Notes'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='工具' /><meta property='article:tag' content='go' /><meta property='article:published_time' content='2020-10-04T23:17:17&#43;00:00'/><meta property='article:modified_time' content='2020-10-04T23:17:17&#43;00:00'/>
-<meta name="twitter:title" content="流量复制重放工具goreplay">
-<meta name="twitter:description" content="goreplay简介 https://github.com/buger/goreplay https://goreplay.org GoReplay是一个开源工具，用于捕获实时HTTP流量并将其重放到测试环境中，以便使用真实数据持续测试系统。 GoR">
-<link rel="shortcut icon" href="/favicon.png" />
+  
+  
+  
+  
 
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
 
-
-
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-
-    gtag('config', 'G-JZ2PWLT6JY');
-</script>
-<script>
-    var _hmt = _hmt || [];
-    (function () {
-        var hm = document.createElement("script");
-        hm.src = "https://hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-<script>
-    (function () {
-        var el = document.createElement("script");
-        el.src = "https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?f146251743600ee0672cdcc8455ce18def91cdb255ad969a2ef5c715d5ed5baecaf7cd753709c168f20e6a2e9019123fd11e31a222d3a2fe01ad05c6b8f519b2";
-        el.id = "ttzz";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(el, s);
-    })(window)
-</script>
-    </head>
-    <body class="
-    article-page
-    ">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
     <script>
-        (function() {
-            const colorSchemeKey = 'StackColorScheme';
-            if(!localStorage.getItem(colorSchemeKey)){
-                localStorage.setItem(colorSchemeKey, "auto");
-            }
-        })();
-    </script><script>
-    (function() {
-        const colorSchemeKey = 'StackColorScheme';
-        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
-        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
-            
-
-            document.documentElement.dataset.scheme = 'dark';
-        } else {
-            document.documentElement.dataset.scheme = 'light';
-        }
-    })();
-</script>
-<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
-    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
-        <span class="hamburger-box">
-            <span class="hamburger-inner"></span>
-        </span>
-    </button>
-
-    <header>
-        
-            
-            <figure class="site-avatar">
-                <a href="/">
-                
-                    
-                    
-                    
-                        
-                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
-                            height="298" class="site-logo" loading="lazy" alt="Avatar">
-                    
-                
-                </a>
-                
-                    <span class="emoji">🍥</span>
-                
-            </figure>
-            
-        
-        
-        <div class="site-meta">
-            <h1 class="site-name"><a href="/">Xiaobin&#39;s Notes</a></h1>
-            <h2 class="site-description"></h2>
-        </div>
-    </header>
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+<meta name="generator" content="Hexo 6.3.0"></head>
 
 
-    <ol class="menu" id="main-menu">
-        
-        
-        
-        <li >
-            <a href='/' >
-                
-                
-                
-                <span>首页</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/archives/' >
-                
-                
-                
-                <span>归档</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/categories/' >
-                
-                
-                
-                <span>分类</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/tags/' >
-                
-                
-                
-                <span>标签</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/links/' >
-                
-                
-                
-                <span>友链</span>
-            </a>
-        </li>
-        
-
-        <div class="menu-bottom-section"><ol class="social-menu">
-                    
-                        <li>
-                            <a 
-                                href='mailto://me@lxb.wiki'
-                                target="_blank"
-                                title="Email"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://github.com/lxbwolf'
-                                target="_blank"
-                                title="GitHub"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://lxb.wiki/atom.xml'
-                                target="_blank"
-                                title="Rss"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="5" cy="19" r="1" />
-  <path d="M4 4a16 16 0 0 1 16 16" />
-  <path d="M4 11a9 9 0 0 1 9 9" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                </ol>
-                <li id="dark-mode-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="8" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="16" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <span>暗色模式</span>
-                </li>
-            
-        </div>
-    </ol>
-</aside>
-
-    <aside class="sidebar right-sidebar sticky">
-        
-            
-                
-<section class="widget archives">
-    
-    <h2 class="widget-title section-title">目录</h2>
-
-    <div class="widget--toc">
-        <nav id="TableOfContents">
-  <ul>
-    <li><a href="#goreplay简介">goreplay简介</a></li>
-    <li><a href="#goreplay工作原理">goreplay工作原理</a></li>
-    <li><a href="#goreplay常见用法">goreplay常见用法</a></li>
-    <li><a href="#gor参数">gor参数</a></li>
-  </ul>
-</nav>
-    </div>
-</section>
-
-            
-        
-    </aside>
-
-
-            <main class="main full-width">
-    <article class="main-article">
-    <header class="article-header">
-
-    <div class="article-details">
-    
-    <header class="article-category">
-        
-        <a href="/categories/Tools/" >
-            Tools
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
         </a>
-        
-    </header>
-    
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin&#39;s Notes</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
 
-    <div class="article-title-wrapper">
-        <h2 class="article-title">
-            <a href="/8c9efcce/">流量复制重放工具goreplay</a>
-        </h2>
-
-        
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
     </div>
-
-    
-    
-    
-    
-    <footer class="article-time">
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
-  <circle cx="18" cy="18" r="4" />
-  <path d="M15 3v4" />
-  <path d="M7 3v4" />
-  <path d="M3 11h16" />
-  <path d="M18 16.496v1.504l1 1" />
-</svg>
-            <time class="article-time--published">Oct 04, 2020</time>
-        </div>
-        
-
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <polyline points="12 7 12 12 15 15" />
-</svg>
-
-
-
-            <time class="article-time--reading">
-                阅读时长: 5 分钟
-            </time>
-        </div>
-        
-        <small>
-    <section class="article-tags">
-        
-            <a href="/tags/%E5%B7%A5%E5%85%B7/">工具</a>
-        
-            <a href="/tags/go/">go</a>
-        
-    </section>
-</small>
-    </footer>
-    
-
-    
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
 </div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
 </header>
 
-    <section class="article-content">
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
     
-    
-    <!-- raw HTML omitted -->
-<h2 id="goreplay简介">goreplay简介</h2>
-<p><a class="link" href="https://github.com/buger/goreplay"  target="_blank" rel="noopener"
-    >https://github.com/buger/goreplay</a></p>
-<p><a class="link" href="https://goreplay.org/"  target="_blank" rel="noopener"
-    >https://goreplay.org</a></p>
-<p>GoReplay是一个开源工具，用于捕获实时HTTP流量并将其重放到测试环境中，以便使用真实数据持续测试系统。
-GoReplay不是代理，而是监听网络接口上的流量，不需要更改生产基础架构，而是在与服务相同的计算机上运行GoReplay守护程序。</p>
-<h2 id="goreplay工作原理">goreplay工作原理</h2>
-<p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206205553.png"
-	
-	
-	
-	loading="lazy"
-	
-	
-></p>
-<h2 id="goreplay常见用法">goreplay常见用法</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>1. 简单的 HTTP 流量复制：
-</span></span><span style="display:flex;"><span>gor –input-raw :80 –output-http “http://staging.com”
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>2.HTTP 流量复制频率控制：
-</span></span><span style="display:flex;"><span>gor –input-tcp :28020 –output-http “http://staging.com|10″
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>3.HTTP 流量复制缩小：
-</span></span><span style="display:flex;"><span>gor –input-raw :80 –output-tcp “replay.local:28020|10%”
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>4.HTTP 流量记录到本地文件：
-</span></span><span style="display:flex;"><span>gor –input-raw :80 –output-file requests.gor
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>5.HTTP 流量回放和压测：
-</span></span><span style="display:flex;"><span>gor –input-file “requests.gor|200%” –output-http “staging.com”
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>6.HTTP 流量过滤复制：
-</span></span><span style="display:flex;"><span>gor –input-raw :8080 –output-http staging.com –output-http-url-regexp ^www.
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>7.HTTP指定接口流量复制：
-</span></span><span style="display:flex;"><span>gor --input-raw :80 --http-allow-url <span style="color:#e6db74">&#39;/api/v1&#39;</span> --output-stdout      //--output-stdout表示直接在控制台输出
-</span></span></code></pre></div><h2 id="gor参数">gor参数</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>root@~<span style="color:#f92672">]</span><span style="color:#75715e"># gor --help</span>
-</span></span><span style="display:flex;"><span>Gor is a simple http traffic replication tool written in Go. Its main goal is to replay traffic from production servers to staging and dev environments.
-</span></span><span style="display:flex;"><span>Project page: https://github.com/buger/gor
-</span></span><span style="display:flex;"><span>Author: &lt;Leonid Bugaev&gt; leonsbox@gmail.com
-</span></span><span style="display:flex;"><span>Current Version: 1.0.0
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  -copy-buffer-size int
-</span></span><span style="display:flex;"><span>    	Set the buffer size <span style="color:#66d9ef">for</span> an individual request <span style="color:#f92672">(</span>default 5M<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>default 5242880<span style="color:#f92672">)</span>
-</span></span><span style="display:flex;"><span>  -cpuprofile string
-</span></span><span style="display:flex;"><span>    	write cpu profile to file
-</span></span><span style="display:flex;"><span>  -debug verbose		//打开debug模式，显示所有接口的流量 
-</span></span><span style="display:flex;"><span>    	Turn on debug output, shows all intercepted traffic. Works only when with verbose flag
-</span></span><span style="display:flex;"><span>  -exit-after duration
-</span></span><span style="display:flex;"><span>    	exit after specified duration
-</span></span><span style="display:flex;"><span>  -http-allow-header value      //用一个正则表达式来匹配http头部，如果请求的头部没有匹配上，则被拒绝
-</span></span><span style="display:flex;"><span>    	A regexp to match a specific header against. Requests with non-matching headers will be dropped:
-</span></span><span style="display:flex;"><span>    		 gor --input-raw :8080 --output-http staging.com --http-allow-header api-version:^v1
-</span></span><span style="display:flex;"><span>  -http-allow-method value      // 类似于一个白名单机制来允许通过的http请求方法，除此之外的方法都被拒绝.
-</span></span><span style="display:flex;"><span>    	Whitelist of HTTP methods to replay. Anything <span style="color:#66d9ef">else</span> will be dropped:
-</span></span><span style="display:flex;"><span>    		gor --input-raw :8080 --output-http staging.com --http-allow-method GET --http-allow-method OPTIONS
-</span></span><span style="display:flex;"><span>  -http-allow-url value             //一个正则表达式用来匹配url， 用来过滤完全匹配的的url，在此之外的都被过滤掉
-</span></span><span style="display:flex;"><span>    	A regexp to match requests against. Filter get matched against full url with domain. Anything <span style="color:#66d9ef">else</span> will be dropped:
-</span></span><span style="display:flex;"><span>    		 gor --input-raw :8080 --output-http staging.com --http-allow-url ^www.
-</span></span><span style="display:flex;"><span>  -http-basic-auth-filter value         //匹配认证头重放
-</span></span><span style="display:flex;"><span>    	A regexp to match the decoded basic auth string against. Requests with non-matching headers will be dropped:
-</span></span><span style="display:flex;"><span>    		 gor --input-raw :8080 --output-http staging.com --http-basic-auth-filter <span style="color:#e6db74">&#34;^customer[0-9].*&#34;</span>
-</span></span><span style="display:flex;"><span>  -http-disallow-header value       //用一个正则表达式来匹配http头部，匹配到的请求会被拒绝掉
-</span></span><span style="display:flex;"><span>    	A regexp to match a specific header against. Requests with matching headers will be dropped:
-</span></span><span style="display:flex;"><span>    		 gor --input-raw :8080 --output-http staging.com --http-disallow-header <span style="color:#e6db74">&#34;User-Agent: Replayed by Gor&#34;</span>
-</span></span><span style="display:flex;"><span>  -http-disallow-url value      //用一个正则表达式来匹配url，如果请求匹配上了，则会被拒绝
-</span></span><span style="display:flex;"><span>    	A regexp to match requests against. Filter get matched against full url with domain. Anything <span style="color:#66d9ef">else</span> will be forwarded:
-</span></span><span style="display:flex;"><span>    		 gor --input-raw :8080 --output-http staging.com --http-disallow-url ^www.
-</span></span><span style="display:flex;"><span>  -http-header-limiter value	//读取请求，基于FNV32-1A散列来拒绝一定比例的特殊请求 
-</span></span><span style="display:flex;"><span>    	Takes a fraction of requests, consistently taking or rejecting a request based on the FNV32-1A hash of a specific header:
-</span></span><span style="display:flex;"><span>    		 gor --input-raw :8080 --output-http staging.com --http-header-limiter user-id:25%
-</span></span><span style="display:flex;"><span>  -http-original-host       //在--output-http的输出中，通常gor会使用取代请求的http头，所以应该禁用该选项，保留原始的主机头
-</span></span><span style="display:flex;"><span>    	Normally gor replaces the Host http header with the host supplied with --output-http.  This option disables that behavior, preserving the original Host header.
-</span></span><span style="display:flex;"><span>  -http-param-limiter value
-</span></span><span style="display:flex;"><span>    	Takes a fraction of requests, consistently taking or rejecting a request based on the FNV32-1A hash of a specific GET param:
-</span></span><span style="display:flex;"><span>    		 gor --input-raw :8080 --output-http staging.com --http-param-limiter user_id:25%
-</span></span><span style="display:flex;"><span>  -http-pprof :8181
-</span></span><span style="display:flex;"><span>    	Enable profiling. Starts  http server on specified port, exposing special /debug/pprof endpoint. Example: :8181
-</span></span><span style="display:flex;"><span>  -http-rewrite-header value
-</span></span><span style="display:flex;"><span>    	Rewrite the request header based on a mapping:
-</span></span><span style="display:flex;"><span>    		gor --input-raw :8080 --output-http staging.com --http-rewrite-header Host: <span style="color:#f92672">(</span>.*<span style="color:#f92672">)</span>.example.com,$1.beta.example.com
-</span></span><span style="display:flex;"><span>  -http-rewrite-url value
-</span></span><span style="display:flex;"><span>    	Rewrite the request url based on a mapping:
-</span></span><span style="display:flex;"><span>    		gor --input-raw :8080 --output-http staging.com --http-rewrite-url /v1/user/<span style="color:#f92672">([</span>^<span style="color:#ae81ff">\/</span><span style="color:#f92672">]</span>+<span style="color:#f92672">)</span>/ping:/v2/user/$1/ping
-</span></span><span style="display:flex;"><span>  -http-set-header value
-</span></span><span style="display:flex;"><span>    	Inject additional headers to http reqest:
-</span></span><span style="display:flex;"><span>    		gor --input-raw :8080 --output-http staging.com --http-set-header <span style="color:#e6db74">&#39;User-Agent: Gor&#39;</span>
-</span></span><span style="display:flex;"><span>  -http-set-param value
-</span></span><span style="display:flex;"><span>    	Set request url param, <span style="color:#66d9ef">if</span> param already exists it will be overwritten:
-</span></span><span style="display:flex;"><span>    		gor --input-raw :8080 --output-http staging.com --http-set-param api_key<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>  -input-dummy value
-</span></span><span style="display:flex;"><span>    	Used <span style="color:#66d9ef">for</span> testing outputs. Emits <span style="color:#e6db74">&#39;Get /&#39;</span> request every 1s
-</span></span><span style="display:flex;"><span>  -input-file value		//从一个文件中读取请求
-</span></span><span style="display:flex;"><span>    	Read requests from file: 
-</span></span><span style="display:flex;"><span>    		gor --input-file ./requests.gor --output-http staging.com
-</span></span><span style="display:flex;"><span>  -input-file-loop
-</span></span><span style="display:flex;"><span>    	Loop input files, useful <span style="color:#66d9ef">for</span> performance testing.
-</span></span><span style="display:flex;"><span>  -input-kafka-host string
-</span></span><span style="display:flex;"><span>    	Send request and response stats to Kafka:
-</span></span><span style="display:flex;"><span>    		gor --output-stdout --input-kafka-host <span style="color:#e6db74">&#39;192.168.0.1:9092,192.168.0.2:9092&#39;</span>
-</span></span><span style="display:flex;"><span>  -input-kafka-json-format
-</span></span><span style="display:flex;"><span>    	If turned on, it will assume that messages coming in JSON format rather than  GoReplay text format.
-</span></span><span style="display:flex;"><span>  -input-kafka-topic string
-</span></span><span style="display:flex;"><span>    	Send request and response stats to Kafka:
-</span></span><span style="display:flex;"><span>    		gor --output-stdout --input-kafka-topic <span style="color:#e6db74">&#39;kafka-log&#39;</span>
-</span></span><span style="display:flex;"><span>  -input-raw value
-</span></span><span style="display:flex;"><span>    	Capture traffic from given port <span style="color:#f92672">(</span>use RAW sockets and require *sudo* access<span style="color:#f92672">)</span>:
-</span></span><span style="display:flex;"><span>    		<span style="color:#75715e"># Capture traffic from 8080 port</span>
-</span></span><span style="display:flex;"><span>    		gor --input-raw :8080 --output-http staging.com
-</span></span><span style="display:flex;"><span>  -input-raw-bpf-filter string
-</span></span><span style="display:flex;"><span>    	BPF filter to write custom expressions. Can be useful in <span style="color:#66d9ef">case</span> of non standard network interfaces like tunneling or SPAN port. Example: --input-raw-bpf-filter <span style="color:#e6db74">&#39;dst port 80&#39;</span>
-</span></span><span style="display:flex;"><span>  -input-raw-buffer-size int
-</span></span><span style="display:flex;"><span>    	Controls size of the OS buffer <span style="color:#f92672">(</span>in bytes<span style="color:#f92672">)</span> which holds packets <span style="color:#66d9ef">until</span> they dispatched. Default value depends by system: in Linux around 2MB. If you see big package drop, increase this value.
-</span></span><span style="display:flex;"><span>  -input-raw-engine libpcap
-</span></span><span style="display:flex;"><span>    	Intercept traffic using libpcap <span style="color:#f92672">(</span>default<span style="color:#f92672">)</span>, and <span style="color:#e6db74">`</span>raw_socket<span style="color:#e6db74">`</span> <span style="color:#f92672">(</span>default <span style="color:#e6db74">&#34;libpcap&#34;</span><span style="color:#f92672">)</span>
-</span></span><span style="display:flex;"><span>  -input-raw-expire duration
-</span></span><span style="display:flex;"><span>    	How much it should wait <span style="color:#66d9ef">for</span> the last TCP packet, till consider that TCP message complete. <span style="color:#f92672">(</span>default 2s<span style="color:#f92672">)</span>
-</span></span><span style="display:flex;"><span>  -input-raw-immediate-mode
-</span></span><span style="display:flex;"><span>    	Set pcap interface to immediate mode.
-</span></span><span style="display:flex;"><span>  -input-raw-override-snaplen
-</span></span><span style="display:flex;"><span>    	Override the capture snaplen to be 64k. Required <span style="color:#66d9ef">for</span> some Virtualized environments
-</span></span><span style="display:flex;"><span>  -input-raw-realip-header string
-</span></span><span style="display:flex;"><span>    	If not blank, injects header with given name and real IP value to the request payload. Usually this header should be named: X-Real-IP
-</span></span><span style="display:flex;"><span>  -input-raw-timestamp-type string
-</span></span><span style="display:flex;"><span>    	Possible values: PCAP_TSTAMP_HOST, PCAP_TSTAMP_HOST_LOWPREC, PCAP_TSTAMP_HOST_HIPREC, PCAP_TSTAMP_ADAPTER, PCAP_TSTAMP_ADAPTER_UNSYNCED. This values not supported on all systems, GoReplay will tell you available values of you put wrong one.
-</span></span><span style="display:flex;"><span>  -input-raw-track-response
-</span></span><span style="display:flex;"><span>    	If turned on Gor will track responses in addition to requests, and they will be available to middleware and file output.
-</span></span><span style="display:flex;"><span>  -input-tcp value		// 用来在多个gor之间流转流量
-</span></span><span style="display:flex;"><span>    	Used <span style="color:#66d9ef">for</span> internal communication between Gor instances. Example: 
-</span></span><span style="display:flex;"><span>    		<span style="color:#75715e"># Receive requests from other Gor instances on 28020 port, and redirect output to staging</span>
-</span></span><span style="display:flex;"><span>    		gor --input-tcp :28020 --output-http staging.com
-</span></span><span style="display:flex;"><span>  -input-tcp-certificate string
-</span></span><span style="display:flex;"><span>    	Path to PEM encoded certificate file. Used when TLS turned on.
-</span></span><span style="display:flex;"><span>  -input-tcp-certificate-key string
-</span></span><span style="display:flex;"><span>    	Path to PEM encoded certificate key file. Used when TLS turned on.
-</span></span><span style="display:flex;"><span>  -input-tcp-secure
-</span></span><span style="display:flex;"><span>    	Turn on TLS security. Do not forget to specify certificate and key files.
-</span></span><span style="display:flex;"><span>  -memprofile string
-</span></span><span style="display:flex;"><span>    	write memory profile to this file
-</span></span><span style="display:flex;"><span>  -middleware string
-</span></span><span style="display:flex;"><span>    	Used <span style="color:#66d9ef">for</span> modifying traffic using external command
-</span></span><span style="display:flex;"><span>  -output-dummy value		//用来测试输入，打印出接收的数据.
-</span></span><span style="display:flex;"><span>    	DEPRECATED: use --output-stdout instead
-</span></span><span style="display:flex;"><span>  -output-file value		//把进入的请求写入一个文件中 
-</span></span><span style="display:flex;"><span>    	Write incoming requests to file: 
-</span></span><span style="display:flex;"><span>    		gor --input-raw :80 --output-file ./requests.gor
-</span></span><span style="display:flex;"><span>  -output-file-append
-</span></span><span style="display:flex;"><span>    	The flushed chunk is appended to existence file or not. 
-</span></span><span style="display:flex;"><span>  -output-file-flush-interval duration
-</span></span><span style="display:flex;"><span>    	Interval <span style="color:#66d9ef">for</span> forcing buffer flush to the file, default: 1s. <span style="color:#f92672">(</span>default 1s<span style="color:#f92672">)</span>
-</span></span><span style="display:flex;"><span>  -output-file-max-size-limit value
-</span></span><span style="display:flex;"><span>    	Max size of output file, Default: 1TB <span style="color:#f92672">(</span>default -1<span style="color:#f92672">)</span>
-</span></span><span style="display:flex;"><span>  -output-file-queue-limit int
-</span></span><span style="display:flex;"><span>    	The length of the chunk queue. Default: <span style="color:#ae81ff">256</span> <span style="color:#f92672">(</span>default 256<span style="color:#f92672">)</span>
-</span></span><span style="display:flex;"><span>  -output-file-size-limit value
-</span></span><span style="display:flex;"><span>    	Size of each chunk. Default: 32mb <span style="color:#f92672">(</span>default 33554432<span style="color:#f92672">)</span>
-</span></span><span style="display:flex;"><span>  -output-http value		//转发进入的请求到一个http地址上
-</span></span><span style="display:flex;"><span>    	Forwards incoming requests to given http address.
-</span></span><span style="display:flex;"><span>    		<span style="color:#75715e"># Redirect all incoming requests to staging.com address </span>
-</span></span><span style="display:flex;"><span>    		gor --input-raw :80 --output-http http://staging.com
-</span></span><span style="display:flex;"><span>  -output-http-compatibility-mode
-</span></span><span style="display:flex;"><span>    	Use standard Go client, instead of built-in implementation. Can be slower, but more compatible.
-</span></span><span style="display:flex;"><span>  -output-http-debug
-</span></span><span style="display:flex;"><span>    	Enables http debug output.
-</span></span><span style="display:flex;"><span>  -output-http-elasticsearch string		//把请求和响应状态发送到ElasticSearch
-</span></span><span style="display:flex;"><span>    	Send request and response stats to ElasticSearch:
-</span></span><span style="display:flex;"><span>    		gor --input-raw :8080 --output-http staging.com --output-http-elasticsearch <span style="color:#e6db74">&#39;es_host:api_port/index_name&#39;</span>
-</span></span><span style="display:flex;"><span>  -output-http-header --output-http-header
-</span></span><span style="display:flex;"><span>    	WARNING: --output-http-header DEPRECATED, use <span style="color:#e6db74">`</span>--http-set-header<span style="color:#e6db74">`</span> instead
-</span></span><span style="display:flex;"><span>  -output-http-header-filter --output-http-header-filter
-</span></span><span style="display:flex;"><span>    	WARNING: --output-http-header-filter DEPRECATED, use <span style="color:#e6db74">`</span>--http-allow-header<span style="color:#e6db74">`</span> instead
-</span></span><span style="display:flex;"><span>  -output-http-header-hash-filter output-http-header-hash-filter
-</span></span><span style="display:flex;"><span>    	WARNING: output-http-header-hash-filter DEPRECATED, use <span style="color:#e6db74">`</span>--http-header-hash-limiter<span style="color:#e6db74">`</span> instead
-</span></span><span style="display:flex;"><span>  -output-http-method --output-http-method
-</span></span><span style="display:flex;"><span>    	WARNING: --output-http-method DEPRECATED, use <span style="color:#e6db74">`</span>--http-allow-method<span style="color:#e6db74">`</span> instead
-</span></span><span style="display:flex;"><span>  -output-http-queue-len int
-</span></span><span style="display:flex;"><span>    	Number of requests that can be queued <span style="color:#66d9ef">for</span> output, <span style="color:#66d9ef">if</span> all workers are busy. default <span style="color:#f92672">=</span> <span style="color:#ae81ff">1000</span> <span style="color:#f92672">(</span>default 1000<span style="color:#f92672">)</span>
-</span></span><span style="display:flex;"><span>  -output-http-redirects int		//设置多少次重定向被允许
-</span></span><span style="display:flex;"><span>    	Enable how often redirects should be followed.
-</span></span><span style="display:flex;"><span>  -output-http-response-buffer int
-</span></span><span style="display:flex;"><span>    	HTTP response buffer size, all data after this size will be discarded.
-</span></span><span style="display:flex;"><span>  -output-http-rewrite-url --output-http-rewrite-url
-</span></span><span style="display:flex;"><span>    	WARNING: --output-http-rewrite-url DEPRECATED, use <span style="color:#e6db74">`</span>--http-rewrite-url<span style="color:#e6db74">`</span> instead
-</span></span><span style="display:flex;"><span>  -output-http-stats		//每5秒钟输出一次输出队列的状态
-</span></span><span style="display:flex;"><span>    	Report http output queue stats to console every N milliseconds. See output-http-stats-ms
-</span></span><span style="display:flex;"><span>  -output-http-stats-ms int
-</span></span><span style="display:flex;"><span>    	Report http output queue stats to console every N milliseconds. default: <span style="color:#ae81ff">5000</span> <span style="color:#f92672">(</span>default 5000<span style="color:#f92672">)</span>
-</span></span><span style="display:flex;"><span>  -output-http-timeout duration		//指定http的request/response超时时间，默认是5秒 
-</span></span><span style="display:flex;"><span>    	Specify HTTP request/response timeout. By default 5s. Example: --output-http-timeout 30s <span style="color:#f92672">(</span>default 5s<span style="color:#f92672">)</span>
-</span></span><span style="display:flex;"><span>  -output-http-track-response
-</span></span><span style="display:flex;"><span>    	If turned on, HTTP output responses will be set to all outputs like stdout, file and etc.
-</span></span><span style="display:flex;"><span>  -output-http-url-regexp --output-http-url-regexp
-</span></span><span style="display:flex;"><span>    	WARNING: --output-http-url-regexp DEPRECATED, use <span style="color:#e6db74">`</span>--http-allow-url<span style="color:#e6db74">`</span> instead
-</span></span><span style="display:flex;"><span>  -output-http-workers int		// gor默认是动态的扩展工作者数量，你也可以指定固定数量的工作者
-</span></span><span style="display:flex;"><span>    	Gor uses dynamic worker scaling. Enter a number to set a maximum number of workers. default <span style="color:#f92672">=</span> 0 <span style="color:#f92672">=</span> unlimited.
-</span></span><span style="display:flex;"><span>  -output-http-workers-min int
-</span></span><span style="display:flex;"><span>    	Gor uses dynamic worker scaling. Enter a number to set a minimum number of workers. default <span style="color:#f92672">=</span> 1.
-</span></span><span style="display:flex;"><span>  -output-kafka-host string
-</span></span><span style="display:flex;"><span>    	Read request and response stats from Kafka:
-</span></span><span style="display:flex;"><span>    		gor --input-raw :8080 --output-kafka-host <span style="color:#e6db74">&#39;192.168.0.1:9092,192.168.0.2:9092&#39;</span>
-</span></span><span style="display:flex;"><span>  -output-kafka-json-format
-</span></span><span style="display:flex;"><span>    	If turned on, it will serialize messages from GoReplay text format to JSON.
-</span></span><span style="display:flex;"><span>  -output-kafka-topic string
-</span></span><span style="display:flex;"><span>    	Read request and response stats from Kafka:
-</span></span><span style="display:flex;"><span>    		gor --input-raw :8080 --output-kafka-topic <span style="color:#e6db74">&#39;kafka-log&#39;</span>
-</span></span><span style="display:flex;"><span>  -output-null
-</span></span><span style="display:flex;"><span>    	Used <span style="color:#66d9ef">for</span> testing inputs. Drops all requests.
-</span></span><span style="display:flex;"><span>  -output-stdout
-</span></span><span style="display:flex;"><span>    	Used <span style="color:#66d9ef">for</span> testing inputs. Just prints to console data coming from inputs.
-</span></span><span style="display:flex;"><span>  -output-tcp value		//用来在多个gor之间流转流量
-</span></span><span style="display:flex;"><span>    	Used <span style="color:#66d9ef">for</span> internal communication between Gor instances. Example: 
-</span></span><span style="display:flex;"><span>    		<span style="color:#75715e"># Listen for requests on 80 port and forward them to other Gor instance on 28020 port</span>
-</span></span><span style="display:flex;"><span>    		gor --input-raw :80 --output-tcp replay.local:28020
-</span></span><span style="display:flex;"><span>  -output-tcp-secure
-</span></span><span style="display:flex;"><span>    	Use TLS secure connection. --input-file on another end should have TLS turned on as well.
-</span></span><span style="display:flex;"><span>  -output-tcp-stats		//每5秒钟报告一次tcp输出队列的状态
-</span></span><span style="display:flex;"><span>    	Report TCP output queue stats to console every <span style="color:#ae81ff">5</span> seconds.
-</span></span><span style="display:flex;"><span>  -prettify-http
-</span></span><span style="display:flex;"><span>    	If enabled, will automatically decode requests and responses with: Content-Encodning: gzip and Transfer-Encoding: chunked. Useful <span style="color:#66d9ef">for</span> debugging, in conjuction with --output-stdout
-</span></span><span style="display:flex;"><span>  -split-output true
-</span></span><span style="display:flex;"><span>    	By default each output gets same traffic. If set to true it splits traffic equally among all outputs.
-</span></span><span style="display:flex;"><span>  -stats		//打开输出队列的状态
-</span></span><span style="display:flex;"><span>    	Turn on queue stats output
-</span></span><span style="display:flex;"><span>  -verbose
-</span></span><span style="display:flex;"><span>    	Turn on more verbose output
-</span></span></code></pre></div>
-</section>
-
-
-    <footer class="article-footer">
-    
-
-    
-    <section class="article-copyright">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
-</svg>
-
-
-
-        <span>Licensed under CC BY-NC-SA 4.0</span>
-    </section>
-    </footer>
-
-
-    
-</article>
-
-    
-
-    
-
-<aside class="related-content--wrapper">
-    <h2 class="section-title">相关文章</h2>
-    <div class="related-content">
-        <div class="flex article-list--tile">
-            
-                
-<article class="">
-    <a href="/ace0b2ab/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】Go 1.14 中接口的菱形组合</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/27d7ea27/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】通过禁止比较让 Go 二进制文件变小</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/5698ca18/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】Go：异步抢占</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/6ce34c49/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】Inlining Optimisations in Go</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/8c45788a/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】关于 CGo 的字符串函数的解释</h2>
-        </div>
-    </a>
-</article>
-
-            
-        </div>
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/FE/">FE</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">77</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Life/">Life</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">39</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">20</span></li></ul>
     </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/GitHub/" style="font-size: 13.08px;">GitHub</a> <a href="/tags/GoogleSheets/" style="font-size: 13px;">GoogleSheets</a> <a href="/tags/STL/" style="font-size: 13.38px;">STL</a> <a href="/tags/amap/" style="font-size: 13px;">amap</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.23px;">blog</a> <a href="/tags/c/" style="font-size: 13.69px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.08px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.62px;">devops</a> <a href="/tags/docker/" style="font-size: 13.08px;">docker</a> <a href="/tags/elastic/" style="font-size: 13.38px;">elastic</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.31px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.15px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.08px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.15px;">hexo</a> <a href="/tags/hooks/" style="font-size: 13px;">hooks</a> <a href="/tags/http/" style="font-size: 13.38px;">http</a> <a href="/tags/jdk/" style="font-size: 13px;">jdk</a> <a href="/tags/joplin/" style="font-size: 13.08px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/linux/" style="font-size: 13.15px;">linux</a> <a href="/tags/lucene/" style="font-size: 13.31px;">lucene</a> <a href="/tags/mac/" style="font-size: 13.46px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.08px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.15px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.31px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.15px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.15px;">pic</a> <a href="/tags/python/" style="font-size: 13px;">python</a> <a href="/tags/qt/" style="font-size: 13.31px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/raycast/" style="font-size: 13px;">raycast</a> <a href="/tags/react/" style="font-size: 13px;">react</a> <a href="/tags/redis/" style="font-size: 13.54px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.92px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.08px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/terminal/" style="font-size: 13px;">terminal</a> <a href="/tags/vue/" style="font-size: 13px;">vue</a> <a href="/tags/zk/" style="font-size: 13.08px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%8D%8F%E8%AE%AE/" style="font-size: 13px;">协议</a> <a href="/tags/%E5%9C%B0%E5%9B%BE/" style="font-size: 13px;">地图</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.46px;">工具</a> <a href="/tags/%E5%B9%BF%E5%91%8A/" style="font-size: 13px;">广告</a> <a href="/tags/%E6%8F%92%E5%BA%A7/" style="font-size: 13px;">插座</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.77px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.38px;">树莓派</a> <a href="/tags/%E7%94%A8%E7%94%B5/" style="font-size: 13px;">用电</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.54px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91/" style="font-size: 13.08px;">编译</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.85px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.08px;">邮件</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/">2024</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">25</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">24</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">39</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">33</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/42f8026c/" class="title">React useEffect() Hook</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-18T14:16:21.000Z" itemprop="datePublished">2024-05-18</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/b7826aa4/" class="title">Vue 2.x 使用高德地图JS API 2.0加载起点终点路径轨迹</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-01T13:51:18.000Z" itemprop="datePublished">2024-05-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Life/">Life</a>
+              </p>
+              <p class="item-title">
+                <a href="/0565b4f5/" class="title">家庭用电插座</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-04-11T05:48:31.000Z" itemprop="datePublished">2024-04-11</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/a520e262/" class="title">MacOS 14.4 引发Java 应用崩溃</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-15T06:05:49.000Z" itemprop="datePublished">2024-03-15</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/cb9b2c66/" class="title">重定向广告</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-04T05:27:13.000Z" itemprop="datePublished">2024-03-04</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
 </aside>
 
-     
+  
+  
+<aside class="sidebar sidebar-toc collapse" id="collapseToc" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    <nav id="toc" class="article-toc">
+      <h3 class="toc-title">文章目录</h3>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.</span> <span class="toc-text">goreplay简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">2.</span> <span class="toc-text">goreplay工作原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">3.</span> <span class="toc-text">goreplay常见用法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">4.</span> <span class="toc-text">gor参数</span></a></li></ol>
+    </nav>
+  </div>
+</aside>
+
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-流量复制重放工具goreplay" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
     
+    <div class="article-header">
+      
         
-    <script src="https://utteranc.es/client.js" 
-        repo="lxbwolf/lxbwolf.github.io"
-        issue-term="pathname"
+  
+    <h1 class="article-title" itemprop="name">
+      流量复制重放工具goreplay
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/8c9efcce/" class="article-date">
+	  <time datetime="2020-10-04T15:17:17.000Z" itemprop="datePublished">2020-10-04</time>
+	</a>
+</span>
         
-        crossorigin="anonymous"
-        async
-        >
-</script>
-
-<style>
-    .utterances {
-        max-width: unset;
-    }
-</style>
-
-<script>
-    let utterancesLoaded = false;
-
-    function setUtterancesTheme(theme) {
-        let utterances = document.querySelector('.utterances iframe');
-        if (utterances) {
-            utterances.contentWindow.postMessage(
-                {
-                    type: 'set-theme',
-                    theme: `github-${theme}`
-                },
-                'https://utteranc.es'
-            );
-        }
-    }
-
-    addEventListener('message', event => {
-        if (event.origin !== 'https://utteranc.es') return;
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Tools/">Tools</a>
+  </span>
 
         
-        utterancesLoaded = true;
-        setUtterancesTheme(document.documentElement.dataset.scheme)
-    });
-
-    window.addEventListener('onColorSchemeChange', (e) => {
-        if (!utterancesLoaded) return;
-        setUtterancesTheme(e.detail)
-    })
-</script>
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/go/" rel="tag">go</a>, <a class="article-tag-link-link" href="/tags/%E5%B7%A5%E5%85%B7/" rel="tag">工具</a>
+  </span>
 
 
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/8c9efcce/#comments" class="article-comment-link">评论</a></span> 
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 2.4k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 13(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#goreplay简介">goreplay简介</a></li>
+<li><a href="#goreplay工作原理">goreplay工作原理</a></li>
+<li><a href="#goreplay常见用法">goreplay常见用法</a></li>
+<li><a href="#gor参数">gor参数</a></li>
+</ul>
+<!-- tocstop -->
+
+<h2><span id="goreplay简介">goreplay简介</span></h2><p><a target="_blank" rel="noopener" href="https://github.com/buger/goreplay">https://github.com/buger/goreplay</a></p>
+<p><a target="_blank" rel="noopener" href="https://goreplay.org/">https://goreplay.org</a></p>
+<p>GoReplay是一个开源工具，用于捕获实时HTTP流量并将其重放到测试环境中，以便使用真实数据持续测试系统。<br>GoReplay不是代理，而是监听网络接口上的流量，不需要更改生产基础架构，而是在与服务相同的计算机上运行GoReplay守护程序。</p>
+<h2><span id="goreplay工作原理">goreplay工作原理</span></h2><p><img src="https://cdn.jsdelivr.net/gh/lxbwolf/blog_source_image@main/20201206205553.png" alt></p>
+<h2><span id="goreplay常见用法">goreplay常见用法</span></h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">1. 简单的 HTTP 流量复制：</span><br><span class="line">gor –input-raw :80 –output-http “http://staging.com”</span><br><span class="line"></span><br><span class="line">2.HTTP 流量复制频率控制：</span><br><span class="line">gor –input-tcp :28020 –output-http “http://staging.com|10″</span><br><span class="line"></span><br><span class="line">3.HTTP 流量复制缩小：</span><br><span class="line">gor –input-raw :80 –output-tcp “replay.local:28020|10%”</span><br><span class="line"></span><br><span class="line">4.HTTP 流量记录到本地文件：</span><br><span class="line">gor –input-raw :80 –output-file requests.gor</span><br><span class="line"></span><br><span class="line">5.HTTP 流量回放和压测：</span><br><span class="line">gor –input-file “requests.gor|200%” –output-http “staging.com”</span><br><span class="line"></span><br><span class="line">6.HTTP 流量过滤复制：</span><br><span class="line">gor –input-raw :8080 –output-http staging.com –output-http-url-regexp ^www.</span><br><span class="line"></span><br><span class="line">7.HTTP指定接口流量复制：</span><br><span class="line">gor --input-raw :80 --http-allow-url <span class="string">&#x27;/api/v1&#x27;</span> --output-stdout      //--output-stdout表示直接在控制台输出</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2><span id="gor参数">gor参数</span></h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br></pre></td><td class="code"><pre><span class="line">[root@~]# gor --<span class="built_in">help</span></span><br><span class="line">Gor is a simple http traffic replication tool written <span class="keyword">in</span> Go. Its main goal is to replay traffic from production servers to staging and dev environments.</span><br><span class="line">Project page: https://github.com/buger/gor</span><br><span class="line">Author: &lt;Leonid Bugaev&gt; leonsbox@gmail.com</span><br><span class="line">Current Version: 1.0.0</span><br><span class="line"></span><br><span class="line">  -copy-buffer-size int</span><br><span class="line">    	Set the buffer size <span class="keyword">for</span> an individual request (default 5M) (default 5242880)</span><br><span class="line">  -cpuprofile string</span><br><span class="line">    	write cpu profile to file</span><br><span class="line">  -debug verbose		//打开debug模式，显示所有接口的流量 </span><br><span class="line">    	Turn on debug output, shows all intercepted traffic. Works only when with verbose flag</span><br><span class="line">  -exit-after duration</span><br><span class="line">    	<span class="built_in">exit</span> after specified duration</span><br><span class="line">  -http-allow-header value      //用一个正则表达式来匹配http头部，如果请求的头部没有匹配上，则被拒绝</span><br><span class="line">    	A regexp to match a specific header against. Requests with non-matching headers will be dropped:</span><br><span class="line">    		 gor --input-raw :8080 --output-http staging.com --http-allow-header api-version:^v1</span><br><span class="line">  -http-allow-method value      // 类似于一个白名单机制来允许通过的http请求方法，除此之外的方法都被拒绝.</span><br><span class="line">    	Whitelist of HTTP methods to replay. Anything <span class="keyword">else</span> will be dropped:</span><br><span class="line">    		gor --input-raw :8080 --output-http staging.com --http-allow-method GET --http-allow-method OPTIONS</span><br><span class="line">  -http-allow-url value             //一个正则表达式用来匹配url， 用来过滤完全匹配的的url，在此之外的都被过滤掉</span><br><span class="line">    	A regexp to match requests against. Filter get matched against full url with domain. Anything <span class="keyword">else</span> will be dropped:</span><br><span class="line">    		 gor --input-raw :8080 --output-http staging.com --http-allow-url ^www.</span><br><span class="line">  -http-basic-auth-filter value         //匹配认证头重放</span><br><span class="line">    	A regexp to match the decoded basic auth string against. Requests with non-matching headers will be dropped:</span><br><span class="line">    		 gor --input-raw :8080 --output-http staging.com --http-basic-auth-filter <span class="string">&quot;^customer[0-9].*&quot;</span></span><br><span class="line">  -http-disallow-header value       //用一个正则表达式来匹配http头部，匹配到的请求会被拒绝掉</span><br><span class="line">    	A regexp to match a specific header against. Requests with matching headers will be dropped:</span><br><span class="line">    		 gor --input-raw :8080 --output-http staging.com --http-disallow-header <span class="string">&quot;User-Agent: Replayed by Gor&quot;</span></span><br><span class="line">  -http-disallow-url value      //用一个正则表达式来匹配url，如果请求匹配上了，则会被拒绝</span><br><span class="line">    	A regexp to match requests against. Filter get matched against full url with domain. Anything <span class="keyword">else</span> will be forwarded:</span><br><span class="line">    		 gor --input-raw :8080 --output-http staging.com --http-disallow-url ^www.</span><br><span class="line">  -http-header-limiter value	//读取请求，基于FNV32-1A散列来拒绝一定比例的特殊请求 </span><br><span class="line">    	Takes a fraction of requests, consistently taking or rejecting a request based on the FNV32-1A <span class="built_in">hash</span> of a specific header:</span><br><span class="line">    		 gor --input-raw :8080 --output-http staging.com --http-header-limiter user-id:25%</span><br><span class="line">  -http-original-host       //在--output-http的输出中，通常gor会使用取代请求的http头，所以应该禁用该选项，保留原始的主机头</span><br><span class="line">    	Normally gor replaces the Host http header with the host supplied with --output-http.  This option disables that behavior, preserving the original Host header.</span><br><span class="line">  -http-param-limiter value</span><br><span class="line">    	Takes a fraction of requests, consistently taking or rejecting a request based on the FNV32-1A <span class="built_in">hash</span> of a specific GET param:</span><br><span class="line">    		 gor --input-raw :8080 --output-http staging.com --http-param-limiter user_id:25%</span><br><span class="line">  -http-pprof :8181</span><br><span class="line">    	Enable profiling. Starts  http server on specified port, exposing special /debug/pprof endpoint. Example: :8181</span><br><span class="line">  -http-rewrite-header value</span><br><span class="line">    	Rewrite the request header based on a mapping:</span><br><span class="line">    		gor --input-raw :8080 --output-http staging.com --http-rewrite-header Host: (.*).example.com,<span class="variable">$1</span>.beta.example.com</span><br><span class="line">  -http-rewrite-url value</span><br><span class="line">    	Rewrite the request url based on a mapping:</span><br><span class="line">    		gor --input-raw :8080 --output-http staging.com --http-rewrite-url /v1/user/([^\/]+)/ping:/v2/user/<span class="variable">$1</span>/ping</span><br><span class="line">  -http-set-header value</span><br><span class="line">    	Inject additional headers to http reqest:</span><br><span class="line">    		gor --input-raw :8080 --output-http staging.com --http-set-header <span class="string">&#x27;User-Agent: Gor&#x27;</span></span><br><span class="line">  -http-set-param value</span><br><span class="line">    	Set request url param, <span class="keyword">if</span> param already exists it will be overwritten:</span><br><span class="line">    		gor --input-raw :8080 --output-http staging.com --http-set-param api_key=1</span><br><span class="line">  -input-dummy value</span><br><span class="line">    	Used <span class="keyword">for</span> testing outputs. Emits <span class="string">&#x27;Get /&#x27;</span> request every 1s</span><br><span class="line">  -input-file value		//从一个文件中读取请求</span><br><span class="line">    	Read requests from file: </span><br><span class="line">    		gor --input-file ./requests.gor --output-http staging.com</span><br><span class="line">  -input-file-loop</span><br><span class="line">    	Loop input files, useful <span class="keyword">for</span> performance testing.</span><br><span class="line">  -input-kafka-host string</span><br><span class="line">    	Send request and response stats to Kafka:</span><br><span class="line">    		gor --output-stdout --input-kafka-host <span class="string">&#x27;192.168.0.1:9092,192.168.0.2:9092&#x27;</span></span><br><span class="line">  -input-kafka-json-format</span><br><span class="line">    	If turned on, it will assume that messages coming <span class="keyword">in</span> JSON format rather than  GoReplay text format.</span><br><span class="line">  -input-kafka-topic string</span><br><span class="line">    	Send request and response stats to Kafka:</span><br><span class="line">    		gor --output-stdout --input-kafka-topic <span class="string">&#x27;kafka-log&#x27;</span></span><br><span class="line">  -input-raw value</span><br><span class="line">    	Capture traffic from given port (use RAW sockets and require *<span class="built_in">sudo</span>* access):</span><br><span class="line">    		<span class="comment"># Capture traffic from 8080 port</span></span><br><span class="line">    		gor --input-raw :8080 --output-http staging.com</span><br><span class="line">  -input-raw-bpf-filter string</span><br><span class="line">    	BPF filter to write custom expressions. Can be useful <span class="keyword">in</span> <span class="keyword">case</span> of non standard network interfaces like tunneling or SPAN port. Example: --input-raw-bpf-filter <span class="string">&#x27;dst port 80&#x27;</span></span><br><span class="line">  -input-raw-buffer-size int</span><br><span class="line">    	Controls size of the OS buffer (<span class="keyword">in</span> bytes) <span class="built_in">which</span> holds packets <span class="keyword">until</span> they dispatched. Default value depends by system: <span class="keyword">in</span> Linux around 2MB. If you see big package drop, increase this value.</span><br><span class="line">  -input-raw-engine libpcap</span><br><span class="line">    	Intercept traffic using libpcap (default), and `raw_socket` (default <span class="string">&quot;libpcap&quot;</span>)</span><br><span class="line">  -input-raw-expire duration</span><br><span class="line">    	How much it should <span class="built_in">wait</span> <span class="keyword">for</span> the last TCP packet, till consider that TCP message complete. (default 2s)</span><br><span class="line">  -input-raw-immediate-mode</span><br><span class="line">    	Set pcap interface to immediate mode.</span><br><span class="line">  -input-raw-override-snaplen</span><br><span class="line">    	Override the capture snaplen to be 64k. Required <span class="keyword">for</span> some Virtualized environments</span><br><span class="line">  -input-raw-realip-header string</span><br><span class="line">    	If not blank, injects header with given name and real IP value to the request payload. Usually this header should be named: X-Real-IP</span><br><span class="line">  -input-raw-timestamp-type string</span><br><span class="line">    	Possible values: PCAP_TSTAMP_HOST, PCAP_TSTAMP_HOST_LOWPREC, PCAP_TSTAMP_HOST_HIPREC, PCAP_TSTAMP_ADAPTER, PCAP_TSTAMP_ADAPTER_UNSYNCED. This values not supported on all systems, GoReplay will tell you available values of you put wrong one.</span><br><span class="line">  -input-raw-track-response</span><br><span class="line">    	If turned on Gor will track responses <span class="keyword">in</span> addition to requests, and they will be available to middleware and file output.</span><br><span class="line">  -input-tcp value		// 用来在多个gor之间流转流量</span><br><span class="line">    	Used <span class="keyword">for</span> internal communication between Gor instances. Example: </span><br><span class="line">    		<span class="comment"># Receive requests from other Gor instances on 28020 port, and redirect output to staging</span></span><br><span class="line">    		gor --input-tcp :28020 --output-http staging.com</span><br><span class="line">  -input-tcp-certificate string</span><br><span class="line">    	Path to PEM encoded certificate file. Used when TLS turned on.</span><br><span class="line">  -input-tcp-certificate-key string</span><br><span class="line">    	Path to PEM encoded certificate key file. Used when TLS turned on.</span><br><span class="line">  -input-tcp-secure</span><br><span class="line">    	Turn on TLS security. Do not forget to specify certificate and key files.</span><br><span class="line">  -memprofile string</span><br><span class="line">    	write memory profile to this file</span><br><span class="line">  -middleware string</span><br><span class="line">    	Used <span class="keyword">for</span> modifying traffic using external <span class="built_in">command</span></span><br><span class="line">  -output-dummy value		//用来测试输入，打印出接收的数据.</span><br><span class="line">    	DEPRECATED: use --output-stdout instead</span><br><span class="line">  -output-file value		//把进入的请求写入一个文件中 </span><br><span class="line">    	Write incoming requests to file: </span><br><span class="line">    		gor --input-raw :80 --output-file ./requests.gor</span><br><span class="line">  -output-file-append</span><br><span class="line">    	The flushed chunk is appended to existence file or not. </span><br><span class="line">  -output-file-flush-interval duration</span><br><span class="line">    	Interval <span class="keyword">for</span> forcing buffer flush to the file, default: 1s. (default 1s)</span><br><span class="line">  -output-file-max-size-limit value</span><br><span class="line">    	Max size of output file, Default: 1TB (default -1)</span><br><span class="line">  -output-file-queue-limit int</span><br><span class="line">    	The length of the chunk queue. Default: 256 (default 256)</span><br><span class="line">  -output-file-size-limit value</span><br><span class="line">    	Size of each chunk. Default: 32mb (default 33554432)</span><br><span class="line">  -output-http value		//转发进入的请求到一个http地址上</span><br><span class="line">    	Forwards incoming requests to given http address.</span><br><span class="line">    		<span class="comment"># Redirect all incoming requests to staging.com address </span></span><br><span class="line">    		gor --input-raw :80 --output-http http://staging.com</span><br><span class="line">  -output-http-compatibility-mode</span><br><span class="line">    	Use standard Go client, instead of built-in implementation. Can be slower, but more compatible.</span><br><span class="line">  -output-http-debug</span><br><span class="line">    	Enables http debug output.</span><br><span class="line">  -output-http-elasticsearch string		//把请求和响应状态发送到ElasticSearch</span><br><span class="line">    	Send request and response stats to ElasticSearch:</span><br><span class="line">    		gor --input-raw :8080 --output-http staging.com --output-http-elasticsearch <span class="string">&#x27;es_host:api_port/index_name&#x27;</span></span><br><span class="line">  -output-http-header --output-http-header</span><br><span class="line">    	WARNING: --output-http-header DEPRECATED, use `--http-set-header` instead</span><br><span class="line">  -output-http-header-filter --output-http-header-filter</span><br><span class="line">    	WARNING: --output-http-header-filter DEPRECATED, use `--http-allow-header` instead</span><br><span class="line">  -output-http-header-hash-filter output-http-header-hash-filter</span><br><span class="line">    	WARNING: output-http-header-hash-filter DEPRECATED, use `--http-header-hash-limiter` instead</span><br><span class="line">  -output-http-method --output-http-method</span><br><span class="line">    	WARNING: --output-http-method DEPRECATED, use `--http-allow-method` instead</span><br><span class="line">  -output-http-queue-len int</span><br><span class="line">    	Number of requests that can be queued <span class="keyword">for</span> output, <span class="keyword">if</span> all workers are busy. default = 1000 (default 1000)</span><br><span class="line">  -output-http-redirects int		//设置多少次重定向被允许</span><br><span class="line">    	Enable how often redirects should be followed.</span><br><span class="line">  -output-http-response-buffer int</span><br><span class="line">    	HTTP response buffer size, all data after this size will be discarded.</span><br><span class="line">  -output-http-rewrite-url --output-http-rewrite-url</span><br><span class="line">    	WARNING: --output-http-rewrite-url DEPRECATED, use `--http-rewrite-url` instead</span><br><span class="line">  -output-http-stats		//每5秒钟输出一次输出队列的状态</span><br><span class="line">    	Report http output queue stats to console every N milliseconds. See output-http-stats-ms</span><br><span class="line">  -output-http-stats-ms int</span><br><span class="line">    	Report http output queue stats to console every N milliseconds. default: 5000 (default 5000)</span><br><span class="line">  -output-http-timeout duration		//指定http的request/response超时时间，默认是5秒 </span><br><span class="line">    	Specify HTTP request/response <span class="built_in">timeout</span>. By default 5s. Example: --output-http-timeout 30s (default 5s)</span><br><span class="line">  -output-http-track-response</span><br><span class="line">    	If turned on, HTTP output responses will be <span class="built_in">set</span> to all outputs like stdout, file and etc.</span><br><span class="line">  -output-http-url-regexp --output-http-url-regexp</span><br><span class="line">    	WARNING: --output-http-url-regexp DEPRECATED, use `--http-allow-url` instead</span><br><span class="line">  -output-http-workers int		// gor默认是动态的扩展工作者数量，你也可以指定固定数量的工作者</span><br><span class="line">    	Gor uses dynamic worker scaling. Enter a number to <span class="built_in">set</span> a maximum number of workers. default = 0 = unlimited.</span><br><span class="line">  -output-http-workers-min int</span><br><span class="line">    	Gor uses dynamic worker scaling. Enter a number to <span class="built_in">set</span> a minimum number of workers. default = 1.</span><br><span class="line">  -output-kafka-host string</span><br><span class="line">    	Read request and response stats from Kafka:</span><br><span class="line">    		gor --input-raw :8080 --output-kafka-host <span class="string">&#x27;192.168.0.1:9092,192.168.0.2:9092&#x27;</span></span><br><span class="line">  -output-kafka-json-format</span><br><span class="line">    	If turned on, it will serialize messages from GoReplay text format to JSON.</span><br><span class="line">  -output-kafka-topic string</span><br><span class="line">    	Read request and response stats from Kafka:</span><br><span class="line">    		gor --input-raw :8080 --output-kafka-topic <span class="string">&#x27;kafka-log&#x27;</span></span><br><span class="line">  -output-null</span><br><span class="line">    	Used <span class="keyword">for</span> testing inputs. Drops all requests.</span><br><span class="line">  -output-stdout</span><br><span class="line">    	Used <span class="keyword">for</span> testing inputs. Just prints to console data coming from inputs.</span><br><span class="line">  -output-tcp value		//用来在多个gor之间流转流量</span><br><span class="line">    	Used <span class="keyword">for</span> internal communication between Gor instances. Example: </span><br><span class="line">    		<span class="comment"># Listen for requests on 80 port and forward them to other Gor instance on 28020 port</span></span><br><span class="line">    		gor --input-raw :80 --output-tcp replay.local:28020</span><br><span class="line">  -output-tcp-secure</span><br><span class="line">    	Use TLS secure connection. --input-file on another end should have TLS turned on as well.</span><br><span class="line">  -output-tcp-stats		//每5秒钟报告一次tcp输出队列的状态</span><br><span class="line">    	Report TCP output queue stats to console every 5 seconds.</span><br><span class="line">  -prettify-http</span><br><span class="line">    	If enabled, will automatically decode requests and responses with: Content-Encodning: gzip and Transfer-Encoding: chunked. Useful <span class="keyword">for</span> debugging, <span class="keyword">in</span> conjuction with --output-stdout</span><br><span class="line">  -split-output <span class="literal">true</span></span><br><span class="line">    	By default each output gets same traffic. If <span class="built_in">set</span> to <span class="literal">true</span> it splits traffic equally among all outputs.</span><br><span class="line">  -stats		//打开输出队列的状态</span><br><span class="line">    	Turn on queue stats output</span><br><span class="line">  -verbose</span><br><span class="line">    	Turn on more verbose output</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
     
-
-    <footer class="site-footer">
-    <section class="copyright">
-        &copy; 
-        
-            2020 - 
-        
-        2025 Xiaobin&#39;s Notes
-    </section>
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/8c9efcce/" title="流量复制重放工具goreplay" target="_blank" rel="external">https://lxb.wiki/8c9efcce/</a>
+    </li>
     
-    <section class="powerby">
-        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
-        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
-    </section>
-</footer>
-
-
-    
-<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
-
-    
-    <div class="pswp__bg"></div>
-
-    
-    <div class="pswp__scroll-wrap">
-
-        
-        <div class="pswp__container">
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-        </div>
-
-        
-        <div class="pswp__ui pswp__ui--hidden">
-
-            <div class="pswp__top-bar">
-
-                
-
-                <div class="pswp__counter"></div>
-
-                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
-
-                <button class="pswp__button pswp__button--share" title="Share"></button>
-
-                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
-
-                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
-
-                
-                
-                <div class="pswp__preloader">
-                    <div class="pswp__preloader__icn">
-                        <div class="pswp__preloader__cut">
-                            <div class="pswp__preloader__donut"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-                <div class="pswp__share-tooltip"></div>
-            </div>
-
-            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
-            </button>
-
-            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
-            </button>
-
-            <div class="pswp__caption">
-                <div class="pswp__caption__center"></div>
-            </div>
-
-        </div>
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="external">CC BY-NC 4.0</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
 
     </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      
+        <section id="comments" class="comments">
+          <style>
+            .utterances{max-width: 100%;}
+          </style>
+          <script src="https://utteranc.es/client.js"
+                repo="lxbwolf/lxbwolf.github.io"
+                issue-term="title"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+          </script>
+        </section>
+      
+    
+  </section>
 
-</div><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
-                defer
-                >
-            </script><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
-                defer
-                >
-            </script><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
-            ><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
-            >
 
-            </main>
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/9a49b652/" title="PHP检测图片是否有木马"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/e4c7cf89/" title="sed替换含有路径的字符串"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+    <li class="toggle-toc">
+      <a class="toggle-btn collapsed" data-toggle="collapse" href="#collapseToc" aria-expanded="false" title="文章目录" role="button">
+        <span>[&nbsp;</span><span>文章目录</span>
+        <i class="text-collapsed icon icon-anchor"></i>
+        <i class="text-in icon icon-close"></i>
+        <span>]</span>
+      </a>
+    </li>
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,wechat"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> xbl </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
         </div>
-        <script 
-                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
-                
-                >
-            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+    </div>
+
+
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
 <script>
-    (function () {
-        const customFont = document.createElement('link');
-        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
-
-        customFont.type = "text/css";
-        customFont.rel = "stylesheet";
-
-        document.head.appendChild(customFont);
-    }());
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 </script>
 
-    </body>
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
 </html>

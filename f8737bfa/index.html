@@ -1,378 +1,380 @@
 <!DOCTYPE html>
-<html lang="zh-cn" dir="ltr">
-    <head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Lucene 查询语法'>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
 
-<meta name="keywords" content="lucene , 查询语法"><title>【译】Lucene 查询语法</title>
+  
+  <title>【译】Lucene 查询语法 | Xiaobin&#39;s Notes</title>
+  <meta name="description" content="Lucene 查询语法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【译】Lucene 查询语法">
+<meta property="og:url" content="https://lxb.wiki/f8737bfa/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Notes">
+<meta property="og:description" content="Lucene 查询语法">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-06-28T07:02:47.000Z">
+<meta property="article:modified_time" content="2025-02-02T11:48:02.446Z">
+<meta property="article:author" content="lxb">
+<meta property="article:tag" content="lucene">
+<meta name="twitter:card" content="summary">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/f8737bfa/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Notes" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
 
-<link rel='canonical' href='https://lxb.wiki/f8737bfa/'>
+  
+  
+  
+  
 
-<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='【译】Lucene 查询语法'>
-<meta property='og:description' content='Lucene 查询语法'>
-<meta property='og:url' content='https://lxb.wiki/f8737bfa/'>
-<meta property='og:site_name' content='Xiaobin&#39;s Notes'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='lucene' /><meta property='article:published_time' content='2023-06-28T23:02:47&#43;08:00'/><meta property='article:modified_time' content='2023-06-28T23:02:47&#43;08:00'/>
-<meta name="twitter:title" content="【译】Lucene 查询语法">
-<meta name="twitter:description" content="Lucene 查询语法">
-<link rel="shortcut icon" href="/favicon.png" />
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
 
-
-
-
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-
-    gtag('config', 'G-JZ2PWLT6JY');
-</script>
-<script>
-    var _hmt = _hmt || [];
-    (function () {
-        var hm = document.createElement("script");
-        hm.src = "https://hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-<script>
-    (function () {
-        var el = document.createElement("script");
-        el.src = "https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?f146251743600ee0672cdcc8455ce18def91cdb255ad969a2ef5c715d5ed5baecaf7cd753709c168f20e6a2e9019123fd11e31a222d3a2fe01ad05c6b8f519b2";
-        el.id = "ttzz";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(el, s);
-    })(window)
-</script>
-    </head>
-    <body class="
-    article-page
-    ">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
     <script>
-        (function() {
-            const colorSchemeKey = 'StackColorScheme';
-            if(!localStorage.getItem(colorSchemeKey)){
-                localStorage.setItem(colorSchemeKey, "auto");
-            }
-        })();
-    </script><script>
-    (function() {
-        const colorSchemeKey = 'StackColorScheme';
-        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
-        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
-            
-
-            document.documentElement.dataset.scheme = 'dark';
-        } else {
-            document.documentElement.dataset.scheme = 'light';
-        }
-    })();
-</script>
-<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
-    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
-        <span class="hamburger-box">
-            <span class="hamburger-inner"></span>
-        </span>
-    </button>
-
-    <header>
-        
-            
-            <figure class="site-avatar">
-                <a href="/">
-                
-                    
-                    
-                    
-                        
-                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
-                            height="298" class="site-logo" loading="lazy" alt="Avatar">
-                    
-                
-                </a>
-                
-                    <span class="emoji">🍥</span>
-                
-            </figure>
-            
-        
-        
-        <div class="site-meta">
-            <h1 class="site-name"><a href="/">Xiaobin&#39;s Notes</a></h1>
-            <h2 class="site-description"></h2>
-        </div>
-    </header>
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+<meta name="generator" content="Hexo 6.3.0"></head>
 
 
-    <ol class="menu" id="main-menu">
-        
-        
-        
-        <li >
-            <a href='/' >
-                
-                
-                
-                <span>首页</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/archives/' >
-                
-                
-                
-                <span>归档</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/categories/' >
-                
-                
-                
-                <span>分类</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/tags/' >
-                
-                
-                
-                <span>标签</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/links/' >
-                
-                
-                
-                <span>友链</span>
-            </a>
-        </li>
-        
-
-        <div class="menu-bottom-section"><ol class="social-menu">
-                    
-                        <li>
-                            <a 
-                                href='mailto://me@lxb.wiki'
-                                target="_blank"
-                                title="Email"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://github.com/lxbwolf'
-                                target="_blank"
-                                title="GitHub"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://lxb.wiki/atom.xml'
-                                target="_blank"
-                                title="Rss"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="5" cy="19" r="1" />
-  <path d="M4 4a16 16 0 0 1 16 16" />
-  <path d="M4 11a9 9 0 0 1 9 9" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                </ol>
-                <li id="dark-mode-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="8" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="16" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <span>暗色模式</span>
-                </li>
-            
-        </div>
-    </ol>
-</aside>
-
-    <aside class="sidebar right-sidebar sticky">
-        
-            
-                
-<section class="widget archives">
-    
-    <h2 class="widget-title section-title">目录</h2>
-
-    <div class="widget--toc">
-        <nav id="TableOfContents">
-  <ul>
-    <li><a href="#概览">概览</a></li>
-    <li><a href="#词terms">词（Terms）</a></li>
-    <li><a href="#域fields">域（Fields）</a></li>
-    <li><a href="#词修饰语term-modifiers">词修饰语（Term Modifiers）</a>
-      <ul>
-        <li><a href="#通配符搜索"><em>通配符搜索</em></a></li>
-        <li><a href="#正则表达式搜索"><em>正则表达式搜索</em></a></li>
-        <li><a href="#模糊搜索"><em>模糊搜索</em></a></li>
-        <li><a href="#邻近搜索"><em>邻近搜索</em></a></li>
-        <li><a href="#范围搜索"><em>范围搜索</em></a></li>
-        <li><a href="#相关性查询boosting-a-term"><em>相关性查询（Boosting a term）</em></a></li>
-      </ul>
-    </li>
-    <li><a href="#布尔操作符">布尔操作符</a>
-      <ul>
-        <li><a href="#or"><em>OR</em></a></li>
-        <li><a href="#and">AND</a></li>
-        <li><a href="#heading">+</a></li>
-        <li><a href="#not">NOT</a></li>
-        <li><a href="#-">-</a></li>
-      </ul>
-    </li>
-    <li><a href="#分组">分组</a></li>
-    <li><a href="#域分组">域分组</a></li>
-    <li><a href="#特殊字符转义">特殊字符转义</a></li>
-  </ul>
-</nav>
-    </div>
-</section>
-
-            
-        
-    </aside>
-
-
-            <main class="main full-width">
-    <article class="main-article">
-    <header class="article-header">
-
-    <div class="article-details">
-    
-    <header class="article-category">
-        
-        <a href="/categories/Lang/" >
-            Lang
+<body class="main-center theme-blue" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
         </a>
-        
-    </header>
-    
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin&#39;s Notes</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
 
-    <div class="article-title-wrapper">
-        <h2 class="article-title">
-            <a href="/f8737bfa/">【译】Lucene 查询语法</a>
-        </h2>
-
-        
-        <h3 class="article-subtitle">
-            Lucene 查询语法
-        </h3>
-        
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
     </div>
-
-    
-    
-    
-    
-    <footer class="article-time">
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
-  <circle cx="18" cy="18" r="4" />
-  <path d="M15 3v4" />
-  <path d="M7 3v4" />
-  <path d="M3 11h16" />
-  <path d="M18 16.496v1.504l1 1" />
-</svg>
-            <time class="article-time--published">Jun 28, 2023</time>
-        </div>
-        
-
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <polyline points="12 7 12 12 15 15" />
-</svg>
-
-
-
-            <time class="article-time--reading">
-                阅读时长: 7 分钟
-            </time>
-        </div>
-        
-        <small>
-    <section class="article-tags">
-        
-            <a href="/tags/lucene/">lucene</a>
-        
-    </section>
-</small>
-    </footer>
-    
-
-    
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
 </div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
 </header>
 
-    <section class="article-content">
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
     
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/FE/">FE</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">77</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Life/">Life</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">39</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">20</span></li></ul>
+    </div>
+  </div>
+
+
     
-    <p>原文：<a class="link" href="http://lucene.apache.org/core/8_2_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description"  target="_blank" rel="noopener"
-    >Query Parser Syntax</a></p>
-<h2 id="概览">概览</h2>
-<p>Lucene 除了提供 API 方便开发者创建查询请求，还通过一个查询解析器（词法分析器，使用 JavaCC 将字符串翻译成 Lucene 查询语句）提供一种功能丰富的查询语言。</p>
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/GitHub/" style="font-size: 13.08px;">GitHub</a> <a href="/tags/GoogleSheets/" style="font-size: 13px;">GoogleSheets</a> <a href="/tags/STL/" style="font-size: 13.38px;">STL</a> <a href="/tags/amap/" style="font-size: 13px;">amap</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.23px;">blog</a> <a href="/tags/c/" style="font-size: 13.69px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.08px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.62px;">devops</a> <a href="/tags/docker/" style="font-size: 13.08px;">docker</a> <a href="/tags/elastic/" style="font-size: 13.38px;">elastic</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.31px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.15px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.08px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.15px;">hexo</a> <a href="/tags/hooks/" style="font-size: 13px;">hooks</a> <a href="/tags/http/" style="font-size: 13.38px;">http</a> <a href="/tags/jdk/" style="font-size: 13px;">jdk</a> <a href="/tags/joplin/" style="font-size: 13.08px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/linux/" style="font-size: 13.15px;">linux</a> <a href="/tags/lucene/" style="font-size: 13.31px;">lucene</a> <a href="/tags/mac/" style="font-size: 13.46px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.08px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.15px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.31px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.15px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.15px;">pic</a> <a href="/tags/python/" style="font-size: 13px;">python</a> <a href="/tags/qt/" style="font-size: 13.31px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/raycast/" style="font-size: 13px;">raycast</a> <a href="/tags/react/" style="font-size: 13px;">react</a> <a href="/tags/redis/" style="font-size: 13.54px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.92px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.08px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/terminal/" style="font-size: 13px;">terminal</a> <a href="/tags/vue/" style="font-size: 13px;">vue</a> <a href="/tags/zk/" style="font-size: 13.08px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%8D%8F%E8%AE%AE/" style="font-size: 13px;">协议</a> <a href="/tags/%E5%9C%B0%E5%9B%BE/" style="font-size: 13px;">地图</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.46px;">工具</a> <a href="/tags/%E5%B9%BF%E5%91%8A/" style="font-size: 13px;">广告</a> <a href="/tags/%E6%8F%92%E5%BA%A7/" style="font-size: 13px;">插座</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.77px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.38px;">树莓派</a> <a href="/tags/%E7%94%A8%E7%94%B5/" style="font-size: 13px;">用电</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.54px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91/" style="font-size: 13.08px;">编译</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.85px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.08px;">邮件</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/">2024</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">25</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">24</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">39</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">33</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/42f8026c/" class="title">React useEffect() Hook</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-18T14:16:21.000Z" itemprop="datePublished">2024-05-18</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/b7826aa4/" class="title">Vue 2.x 使用高德地图JS API 2.0加载起点终点路径轨迹</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-01T13:51:18.000Z" itemprop="datePublished">2024-05-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Life/">Life</a>
+              </p>
+              <p class="item-title">
+                <a href="/0565b4f5/" class="title">家庭用电插座</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-04-11T05:48:31.000Z" itemprop="datePublished">2024-04-11</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/a520e262/" class="title">MacOS 14.4 引发Java 应用崩溃</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-15T06:05:49.000Z" itemprop="datePublished">2024-03-15</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/cb9b2c66/" class="title">重定向广告</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-04T05:27:13.000Z" itemprop="datePublished">2024-03-04</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<aside class="sidebar sidebar-toc collapse" id="collapseToc" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    <nav id="toc" class="article-toc">
+      <h3 class="toc-title">文章目录</h3>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.</span> <span class="toc-text">概览</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">2.</span> <span class="toc-text">词（Terms）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">3.</span> <span class="toc-text">域（Fields）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">4.</span> <span class="toc-text">词修饰语（Term Modifiers）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.1.</span> <span class="toc-text">通配符搜索</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.2.</span> <span class="toc-text">正则表达式搜索</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.3.</span> <span class="toc-text">模糊搜索</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.4.</span> <span class="toc-text">邻近搜索</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.5.</span> <span class="toc-text">范围搜索</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.6.</span> <span class="toc-text">相关性查询（Boosting a term）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">5.</span> <span class="toc-text">布尔操作符</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">5.1.</span> <span class="toc-text">OR</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">5.2.</span> <span class="toc-text">AND</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">5.3.</span> <span class="toc-text">+</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">5.4.</span> <span class="toc-text">NOT</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">5.5.</span> <span class="toc-text">-</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">6.</span> <span class="toc-text">分组</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">7.</span> <span class="toc-text">域分组</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">8.</span> <span class="toc-text">特殊字符转义</span></a></li></ol>
+    </nav>
+  </div>
+</aside>
+
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Lucene 查询语法" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      【译】Lucene 查询语法
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/f8737bfa/" class="article-date">
+	  <time datetime="2023-06-28T07:02:47.000Z" itemprop="datePublished">2023-06-28</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Lang/">Lang</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/lucene/" rel="tag">lucene</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/f8737bfa/#comments" class="article-comment-link">评论</a></span> 
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 2.6k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 9(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>原文：<a target="_blank" rel="noopener" href="http://lucene.apache.org/core/8_2_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description">Query Parser Syntax</a></p>
+<h2><span id="概览">概览</span></h2><p>Lucene 除了提供 API 方便开发者创建查询请求，还通过一个查询解析器（词法分析器，使用 JavaCC 将字符串翻译成 Lucene 查询语句）提供一种功能丰富的查询语言。</p>
 <p>一般来说，查询解析器支持的语法在不同发布版本之间可能会有变化。本文档描述的是当前版本的语法。如果你正在使用一个不同版本的 Lucene，请参考该版本自带的 <code>docs/queryparsersyntax.html</code> 文档。</p>
 <p>在选择使用这个查询解析器之前，请考虑以下 3 点：</p>
 <ol>
@@ -380,322 +382,332 @@
 <li>没有被识别为token的域最好直接添加到查询中，而不是通过查询解析器来解析。如果一个域的值是通过应用自动生成的，那么应该为这个域自动生成查询子句。查询解析器所使用的分析器是专门用于将人类输入的文本转换成词（terms）的。由程序生成的值，如日期、关键字等等，也应该由程序添加到查询中。</li>
 <li>从查询形式来看，如果域的值是普通文本，则应该使用查询解析器。所有其它值类型，比如：日期范围、关键字等等，最好通过查询 API 直接添加。如果一个域的值仅限于一个有限的集合（可以通过一个下拉菜单指定），则不应该添加到查询字符串（后续会被解析）中，而是应该作为一个 TermQuery 子句添加到查询中。</li>
 </ol>
-<h2 id="词terms">词（Terms）</h2>
-<p>一个查询语句可以拆解成 词（terms） 和 操作符（operators）。词又分为两种：单个词（single Terms）和短语（Phrases）。</p>
+<h2><span id="词terms">词（Terms）</span></h2><p>一个查询语句可以拆解成 词（terms） 和 操作符（operators）。词又分为两种：单个词（single Terms）和短语（Phrases）。</p>
 <p>单个词是指 ”test“ 或 ”Hello“ 这类单词。</p>
 <p>短语是指以双引号包围起来的一组单词，比如：”hello dolly“。</p>
 <p>多个词（Multiple terms）可以使用布尔操作符组合在一起，实现一个更加复杂的查询（如下文所示）。</p>
 <p>备注：用于创建索引的解析器也会用于解析查询字符串中的词和短语。因此，选择合适的解析器很重要，否则解析器可能会被查询字符串中的词干扰。</p>
-<h2 id="域fields">域（Fields）</h2>
-<p>Lucene 支持分多个字段/域的数据。搜索时，可以指定一个域，也可以使用默认域。域的名称以及默认域与具体实现相关。</p>
+<h2><span id="域fields">域（Fields）</span></h2><p>Lucene 支持分多个字段/域的数据。搜索时，可以指定一个域，也可以使用默认域。域的名称以及默认域与具体实现相关。</p>
 <p>输入域的名称，后跟一个冒号（:），再跟目标搜索词，即可对任意一个域进行搜索。</p>
-<p>举例来说，假设一个 Lucene 索引包含 2 个域：title 和 text，text 是默认域。若想查找标题为 ”The Right Way“ 且文本内容包含 ”don&rsquo;t go this way“ 的文档，可以输入：</p>
-<pre tabindex="0"><code>title:&#34;The Right Way&#34; AND text:go
-</code></pre><p>或者：</p>
-<pre tabindex="0"><code>title:&#34;The Right Way&#34; AND go
-</code></pre><p>因为 text 是默认域，所以域标识符可以省略。</p>
+<p>举例来说，假设一个 Lucene 索引包含 2 个域：title 和 text，text 是默认域。若想查找标题为 ”The Right Way“ 且文本内容包含 ”don’t go this way“ 的文档，可以输入：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">title:&quot;The Right Way&quot; AND text:go</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>或者：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">title:&quot;The Right Way&quot; AND go</span><br></pre></td></tr></table></figure>
+
+<p>因为 text 是默认域，所以域标识符可以省略。</p>
 <p>注意：指定的域仅对紧跟其后的词生效，因此，如下查询：</p>
-<pre tabindex="0"><code>title:The Right Way
-</code></pre><p>将对 title 域仅查找 ”The“，并对默认域（当前这个例子中是指 text 域）查找 ”Right“ 和 ”Way“。</p>
-<h2 id="词修饰语term-modifiers">词修饰语（Term Modifiers）</h2>
-<p>Lucene 支持修饰查询词（modifying query terms）来提供多种搜索方式。</p>
-<h3 id="通配符搜索"><em>通配符搜索</em></h3>
-<p>Lucene 支持对单个词(single terms)（不是短语查询 phrase queries）进行单个字符和多个字符的通配搜索。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">title:The Right Way</span><br></pre></td></tr></table></figure>
+
+
+
+<p>将对 title 域仅查找 ”The“，并对默认域（当前这个例子中是指 text 域）查找 ”Right“ 和 ”Way“。</p>
+<h2><span id="词修饰语term-modifiers">词修饰语（Term Modifiers）</span></h2><p>Lucene 支持修饰查询词（modifying query terms）来提供多种搜索方式。</p>
+<h3><span id="通配符搜索"><em>通配符搜索</em></span></h3><p>Lucene 支持对单个词(single terms)（不是短语查询 phrase queries）进行单个字符和多个字符的通配搜索。</p>
 <p>使用 <code>?</code> 符号进行单个字符的通配搜索。</p>
 <p>使用 <code>*</code> 符号进行多个字符的通配搜索。</p>
 <p>单字符通配搜索用于查找替换单个字符即可匹配的词。举例来说，若要搜索 ”text“ 或 ”test“，可以如下查询：</p>
-<pre tabindex="0"><code>te?t
-</code></pre><p>多字符通配搜索用于查找替换0个或多个字符即可匹配的词。举例来说，若要搜索 ”test“、”tests“ 或 ”tester“，可以如下查询：</p>
-<pre tabindex="0"><code>test*
-</code></pre><p>也可以对词的中间部分进行通配搜索：</p>
-<pre tabindex="0"><code>te*t
-</code></pre><p><strong>备注： <code>*</code> 或 <code>?</code> 符号不能用作搜索语句的第一个字符。</strong></p>
-<h3 id="正则表达式搜索"><em>正则表达式搜索</em></h3>
-<p>Lucene 支持正则表达式搜索，匹配斜杠（<code>/</code>） 之间的模式。正则表达式的语法在不同的发布版本之间可能会有差异，目前支持的语法在 <a class="link" href="http://lucene.apache.org/core/8_2_0/core/org/apache/lucene/util/automaton/RegExp.html?is-external=true"  target="_blank" rel="noopener"
-    >RegExp</a> 类文档中有说明。举例来说，查找包含 ”moat“ 或 ”boat“ 的文档：</p>
-<pre tabindex="0"><code>/[mb]oat/
-</code></pre><h3 id="模糊搜索"><em>模糊搜索</em></h3>
-<p>Lucene 支持基于 Damerau-Levenshtein 编辑距离的模糊搜索。在单个词的最后添加波浪符（~）即可进行模糊搜索。举例来说，使用模糊搜索查找在拼写上与 ”roam“ 近似的词：</p>
-<pre tabindex="0"><code>roam~
-</code></pre><p>这个查询语句会找到 foam 和 roams 这类词。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">te?t</span><br></pre></td></tr></table></figure>
+
+
+
+<p>多字符通配搜索用于查找替换0个或多个字符即可匹配的词。举例来说，若要搜索 ”test“、”tests“ 或 ”tester“，可以如下查询：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">test*</span><br></pre></td></tr></table></figure>
+
+
+
+<p>也可以对词的中间部分进行通配搜索：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">te*t</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>备注： <code>*</code> 或 <code>?</code> 符号不能用作搜索语句的第一个字符。</strong></p>
+<h3><span id="正则表达式搜索"><em>正则表达式搜索</em></span></h3><p>Lucene 支持正则表达式搜索，匹配斜杠（<code>/</code>） 之间的模式。正则表达式的语法在不同的发布版本之间可能会有差异，目前支持的语法在 <a target="_blank" rel="noopener" href="http://lucene.apache.org/core/8_2_0/core/org/apache/lucene/util/automaton/RegExp.html?is-external=true">RegExp</a> 类文档中有说明。举例来说，查找包含 ”moat“ 或 ”boat“ 的文档：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/[mb]oat/</span><br></pre></td></tr></table></figure>
+
+
+
+<h3><span id="模糊搜索"><em>模糊搜索</em></span></h3><p>Lucene 支持基于 Damerau-Levenshtein 编辑距离的模糊搜索。在单个词的最后添加波浪符（~）即可进行模糊搜索。举例来说，使用模糊搜索查找在拼写上与 ”roam“ 近似的词：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">roam~</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这个查询语句会找到 foam 和 roams 这类词。</p>
 <p>模糊搜索可以通过一个额外（可选）的参数来指定允许的最大编辑次数。这个参数值界于 0 和 2 之间，例如：</p>
-<pre tabindex="0"><code>roam~1
-</code></pre><p>如果未指定该参数，则默认使用 2 个编辑距离。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">roam~1</span><br></pre></td></tr></table></figure>
+
+
+
+<p>如果未指定该参数，则默认使用 2 个编辑距离。</p>
 <p><strong>以前，这里还允许使用浮点数。现在这个语法已被考虑弃用，将于 Lucene 5.0 中移除。</strong></p>
-<h3 id="邻近搜索"><em>邻近搜索</em></h3>
-<p>Lucene 支持查找指定距离的邻近词。在短语的最后添加拨浪符（~）即可进行邻近搜索。举例来说，在文档中搜索 ”apache“ 和 ”jakarta“ 相距 10 个词的模式：</p>
-<pre tabindex="0"><code>&#34;jakarta apache&#34;~10
-</code></pre><h3 id="范围搜索"><em>范围搜索</em></h3>
-<p>范围查询可以匹配到域的值在范围查询语句指定的上下界之间的所有文档。对于上下界的值，范围查询可以包含也可以不包含。排序是按照字典序进行的。</p>
-<pre tabindex="0"><code>mod_date:[20020101 TO 20030101]
-</code></pre><p>这个查询语句会查找 mod_date 域的值在 20020101 和 20030101 （包含上下界） 之间的文档。注意：范围查询对非日期的域也可以使用：</p>
-<pre tabindex="0"><code>title:{Aida TO Carmen}
-</code></pre><p>这个查询语句能查找到 title 域的值在 Aida 和 Carmen （不包含上下界）之间的所有文档。</p>
+<h3><span id="邻近搜索"><em>邻近搜索</em></span></h3><p>Lucene 支持查找指定距离的邻近词。在短语的最后添加拨浪符（~）即可进行邻近搜索。举例来说，在文档中搜索 ”apache“ 和 ”jakarta“ 相距 10 个词的模式：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;jakarta apache&quot;~10</span><br></pre></td></tr></table></figure>
+
+
+
+<h3><span id="范围搜索"><em>范围搜索</em></span></h3><p>范围查询可以匹配到域的值在范围查询语句指定的上下界之间的所有文档。对于上下界的值，范围查询可以包含也可以不包含。排序是按照字典序进行的。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mod_date:[20020101 TO 20030101]</span><br></pre></td></tr></table></figure>
+
+<p>这个查询语句会查找 mod_date 域的值在 20020101 和 20030101 （包含上下界） 之间的文档。注意：范围查询对非日期的域也可以使用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">title:&#123;Aida TO Carmen&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这个查询语句能查找到 title 域的值在 Aida 和 Carmen （不包含上下界）之间的所有文档。</p>
 <p>中括号表示范围查询包含上下界，花括号表示范围查询不包含上下界。</p>
-<h3 id="相关性查询boosting-a-term"><em>相关性查询（Boosting a term）</em></h3>
-<p>Lucene 会基于文档中找到的词对匹配到的文档设置相关性的级别。可以在目标搜索词之后紧接一个脱字符 “^”，后跟一个加权系数（一个数字）来提升该搜索词的相关性权重。加权系数越高，查询命中的文档与该词的相关性越强。</p>
+<h3><span id="相关性查询boosting-a-term"><em>相关性查询（Boosting a term）</em></span></h3><p>Lucene 会基于文档中找到的词对匹配到的文档设置相关性的级别。可以在目标搜索词之后紧接一个脱字符 “^”，后跟一个加权系数（一个数字）来提升该搜索词的相关性权重。加权系数越高，查询命中的文档与该词的相关性越强。</p>
 <p>你可以通过对某词进行加权来控制文档的相关性。例如，假设你正在搜索：</p>
-<pre tabindex="0"><code>jakarta apache
-</code></pre><p>然后希望搜索结果和词 ”jakarta“ 的相关性更强一些，则可以使用 ”^“ 符号后跟一个加权系数对这个词进行加权，即如下这样查询：</p>
-<pre tabindex="0"><code>jakarta^4 apache
-</code></pre><p>这会使得查找到的文档和词 ”jakarta“ 看起来相关性更强一些。你也可以对短语进行加权，如下所示：</p>
-<pre tabindex="0"><code>&#34;jakarta apache&#34;^4 &#34;Apache Lucene&#34;
-</code></pre><p>默认加权系数是 1。加权系统可以小于 1（比如：0.2），但必须大于 0。</p>
-<h2 id="布尔操作符">布尔操作符</h2>
-<p>布尔操作符允许使用逻辑操作符组合多个词。Lucene 支持的布尔操作符包含 <code>AND</code>、<code>+</code>、<code>OR</code>、<code>NOT</code> 及 <code>-</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jakarta apache</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后希望搜索结果和词 ”jakarta“ 的相关性更强一些，则可以使用 ”^“ 符号后跟一个加权系数对这个词进行加权，即如下这样查询：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jakarta^4 apache</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这会使得查找到的文档和词 ”jakarta“ 看起来相关性更强一些。你也可以对短语进行加权，如下所示：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;jakarta apache&quot;^4 &quot;Apache Lucene&quot;</span><br></pre></td></tr></table></figure>
+
+<p>默认加权系数是 1。加权系统可以小于 1（比如：0.2），但必须大于 0。</p>
+<h2><span id="布尔操作符">布尔操作符</span></h2><p>布尔操作符允许使用逻辑操作符组合多个词。Lucene 支持的布尔操作符包含 <code>AND</code>、<code>+</code>、<code>OR</code>、<code>NOT</code> 及 <code>-</code></p>
 <p><strong>（备注：布尔操作符必须全部是大写字母）。</strong></p>
-<h3 id="or"><em>OR</em></h3>
-<p>“OR” 操作符是默认的连接操作符。这意味着如果两个词之间没有布尔操作符，则lucene会使用 “OR” 操作符。OR 操作符链接两个词，并匹配包含其中任意一个词的文档。这相当于集合的并集操作。“||” 符合可用于替代单词 “OR”。</p>
+<h3><span id="or"><em>OR</em></span></h3><p>“OR” 操作符是默认的连接操作符。这意味着如果两个词之间没有布尔操作符，则lucene会使用 “OR” 操作符。OR 操作符链接两个词，并匹配包含其中任意一个词的文档。这相当于集合的并集操作。“||” 符合可用于替代单词 “OR”。</p>
 <p>比如，使用如下查询语句来搜索包含 “jakarta apache” 或仅是 “jakarta” 的文档：</p>
-<pre tabindex="0"><code>&#34;jakarta apache&#34; jakarta
-</code></pre><p>或：</p>
-<pre tabindex="0"><code>&#34;jakarta apache&#34; OR jakarta
-</code></pre><h3 id="and">AND</h3>
-<p>&ldquo;AND&rdquo; 操作符会匹配文本内容中同时存在两个要查询的词（因为 AND 是二元操作符）的文档。这相当于集合的交集操作。“&amp;&amp;” 符号可用于替代单词 “AND”。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;jakarta apache&quot; jakarta</span><br></pre></td></tr></table></figure>
+
+
+
+<p>或：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&quot;jakarta apache&quot; OR jakarta</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3><span id="and">AND</span></h3><p>“AND” 操作符会匹配文本内容中同时存在两个要查询的词（因为 AND 是二元操作符）的文档。这相当于集合的交集操作。“&amp;&amp;” 符号可用于替代单词 “AND”。</p>
 <p>比如，使用如下查询语句来搜索包含 “jakarta apache” 和 “Apache Lucene” 的文档：</p>
-<pre tabindex="0"><code>&#34;jakarta apache&#34; AND “Apache Lucene”
-</code></pre><h3 id="heading">+</h3>
-<p>“+”（必需）操作符要求文档的某个域中包含 “+” 符号之后的词。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;jakarta apache&quot; AND “Apache Lucene”</span><br></pre></td></tr></table></figure>
+
+<h3><span id>+</span></h3><p>“+”（必需）操作符要求文档的某个域中包含 “+” 符号之后的词。</p>
 <p>比如，使用如下查询语句来搜索（必须）包含 “jakarta” 以及可能包含 “lucene”（包不包含都可以）的文档：</p>
-<pre tabindex="0"><code>+jakarta lucene
-</code></pre><h3 id="not">NOT</h3>
-<p>”NOT“ 操作符会排除包含”NOT“之后的词的文档。这相当于集合的差集操作。也可以用”!“ 符号代替 ”NOT“。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">+jakarta lucene</span><br></pre></td></tr></table></figure>
+
+
+
+<h3><span id="not">NOT</span></h3><p>”NOT“ 操作符会排除包含”NOT“之后的词的文档。这相当于集合的差集操作。也可以用”!“ 符号代替 ”NOT“。</p>
 <p>比如，使用如下查询语句搜索包含 ”jakarta apache“ 但不包含 ”Apache Lucene“ 的文档”：</p>
-<pre tabindex="0"><code>&#34;jakarta apache&#34; NOT &#34;Apache Lucene&#34;
-</code></pre><p><strong>备注：“NOT” 操作符不可以用于单个词。例如，如下搜索不会返回任何结果：</strong></p>
-<pre tabindex="0"><code>NOT &#34;jakarta apache&#34;
-</code></pre><h3 id="-">-</h3>
-<p>”-“（禁止）操作符会排除包含”-“符号之后的词的文档。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;jakarta apache&quot; NOT &quot;Apache Lucene&quot;</span><br></pre></td></tr></table></figure>
+
+<p><strong>备注：“NOT” 操作符不可以用于单个词。例如，如下搜索不会返回任何结果：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NOT &quot;jakarta apache&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3><span id="-">-</span></h3><p>”-“（禁止）操作符会排除包含”-“符号之后的词的文档。</p>
 <p>比如，使用如下查询语句来查询包含 ”jakarta apache“ 但不包含 ”Apache Lucene“ 的文档：</p>
-<pre tabindex="0"><code>&#34;jakarta apache&#34; -&#34;Apache Lucene&#34;
-</code></pre><h2 id="分组">分组</h2>
-<p>Lucene 支持使用圆括号对子句进行分组，构成子查询。这对于控制一个查询语句的布尔逻辑非常有用。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;jakarta apache&quot; -&quot;Apache Lucene&quot;</span><br></pre></td></tr></table></figure>
+
+<h2><span id="分组">分组</span></h2><p>Lucene 支持使用圆括号对子句进行分组，构成子查询。这对于控制一个查询语句的布尔逻辑非常有用。</p>
 <p>比如，使用如下查询语句来搜索包含 “jakarta” 或 “apache”，同时包含 “website” 的文档：</p>
-<pre tabindex="0"><code>(jakarta OR apache) AND website
-</code></pre><p>这样查询语句就没有了歧义：必须包含 ”website“，同时包含“jakarta” 或 ”apache“其中之一。</p>
-<h2 id="域分组">域分组</h2>
-<p>Lucene 支持使用圆括号对单个域的多个子句进行分组。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(jakarta OR apache) AND website</span><br></pre></td></tr></table></figure>
+
+<p>这样查询语句就没有了歧义：必须包含 ”website“，同时包含“jakarta” 或 ”apache“其中之一。</p>
+<h2><span id="域分组">域分组</span></h2><p>Lucene 支持使用圆括号对单个域的多个子句进行分组。</p>
 <p>例如，若想搜索一个 title 中包含单词“return”同时包含短语“pink panther”，可以使用如下查询：</p>
-<pre tabindex="0"><code>title:(+return +&#34;pink panther&#34;)
-</code></pre><h2 id="特殊字符转义">特殊字符转义</h2>
-<p>Lucene 支持对查询语法使用的特殊字符进行转义。目前这些特殊字符如下列表所示：</p>
-<pre tabindex="0"><code>+ - &amp;&amp; || ! ( ) { } [ ] ^ &#34; ~ * ? : \ /
-</code></pre><p>在特殊字符之前加 <code>\</code> 来转义。例如，使用如下查询语句来搜索 <code>(1+1):2</code>：</p>
-<pre tabindex="0"><code>\(1\+1\)\:2
-</code></pre>
-</section>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">title:(+return +&quot;pink panther&quot;)</span><br></pre></td></tr></table></figure>
+
+<h2><span id="特殊字符转义">特殊字符转义</span></h2><p>Lucene 支持对查询语法使用的特殊字符进行转义。目前这些特殊字符如下列表所示：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">+ - &amp;&amp; || ! ( ) &#123; &#125; [ ] ^ &quot; ~ * ? : \ /</span><br></pre></td></tr></table></figure>
+
+<p>在特殊字符之前加 <code>\</code> 来转义。例如，使用如下查询语句来搜索 <code>(1+1):2</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">\(1\+1\)\:2</span><br></pre></td></tr></table></figure>
 
 
-    <footer class="article-footer">
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
     
-
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/f8737bfa/" title="【译】Lucene 查询语法" target="_blank" rel="external">https://lxb.wiki/f8737bfa/</a>
+    </li>
     
-    <section class="article-copyright">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
-</svg>
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="external">CC BY-NC 4.0</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
 
-
-
-        <span>Licensed under CC BY-NC-SA 4.0</span>
-    </section>
-    </footer>
-
-
+    </div>
+  </article>
+  
     
-</article>
-
+  <section id="comments">
+  	
+      
+        <section id="comments" class="comments">
+          <style>
+            .utterances{max-width: 100%;}
+          </style>
+          <script src="https://utteranc.es/client.js"
+                repo="lxbwolf/lxbwolf.github.io"
+                issue-term="title"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+          </script>
+        </section>
+      
     
+  </section>
 
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
     
+    <li class="prev">
+      <a href="/e28c7f9c/" title="【译】Linux 中退出码的含义"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/5380c2ad/" title="jq命令"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+    <li class="toggle-toc">
+      <a class="toggle-btn collapsed" data-toggle="collapse" href="#collapseToc" aria-expanded="false" title="文章目录" role="button">
+        <span>[&nbsp;</span><span>文章目录</span>
+        <i class="text-collapsed icon icon-anchor"></i>
+        <i class="text-in icon icon-close"></i>
+        <span>]</span>
+      </a>
+    </li>
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,wechat"></div>
+    
+  </div>
+  </div>
+</nav>
+  
 
-<aside class="related-content--wrapper">
-    <h2 class="section-title">相关文章</h2>
-    <div class="related-content">
-        <div class="flex article-list--tile">
-            
-                
-<article class="">
-    <a href="/6ddc4d41/">
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
         
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
         
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
 
-        <div class="article-details">
-            <h2 class="article-title">Lucene 概述</h2>
-        </div>
-    </a>
-</article>
-
-            
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> xbl </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
         </div>
     </div>
-</aside>
 
-     
-    
-        
-    <script src="https://utteranc.es/client.js" 
-        repo="lxbwolf/lxbwolf.github.io"
-        issue-term="pathname"
-        
-        crossorigin="anonymous"
-        async
-        >
-</script>
 
-<style>
-    .utterances {
-        max-width: unset;
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
     }
-</style>
-
-<script>
-    let utterancesLoaded = false;
-
-    function setUtterancesTheme(theme) {
-        let utterances = document.querySelector('.utterances iframe');
-        if (utterances) {
-            utterances.contentWindow.postMessage(
-                {
-                    type: 'set-theme',
-                    theme: `github-${theme}`
-                },
-                'https://utteranc.es'
-            );
-        }
-    }
-
-    addEventListener('message', event => {
-        if (event.origin !== 'https://utteranc.es') return;
-
-        
-        utterancesLoaded = true;
-        setUtterancesTheme(document.documentElement.dataset.scheme)
-    });
-
-    window.addEventListener('onColorSchemeChange', (e) => {
-        if (!utterancesLoaded) return;
-        setUtterancesTheme(e.detail)
-    })
-</script>
+  </script>
 
 
-    
 
-    <footer class="site-footer">
-    <section class="copyright">
-        &copy; 
-        
-            2020 - 
-        
-        2025 Xiaobin&#39;s Notes
-    </section>
-    
-    <section class="powerby">
-        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
-        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
-    </section>
 </footer>
 
-
-    
-<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
-
-    
-    <div class="pswp__bg"></div>
-
-    
-    <div class="pswp__scroll-wrap">
-
-        
-        <div class="pswp__container">
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-        </div>
-
-        
-        <div class="pswp__ui pswp__ui--hidden">
-
-            <div class="pswp__top-bar">
-
-                
-
-                <div class="pswp__counter"></div>
-
-                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
-
-                <button class="pswp__button pswp__button--share" title="Share"></button>
-
-                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
-
-                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
-
-                
-                
-                <div class="pswp__preloader">
-                    <div class="pswp__preloader__icn">
-                        <div class="pswp__preloader__cut">
-                            <div class="pswp__preloader__donut"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-                <div class="pswp__share-tooltip"></div>
-            </div>
-
-            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
-            </button>
-
-            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
-            </button>
-
-            <div class="pswp__caption">
-                <div class="pswp__caption__center"></div>
-            </div>
-
-        </div>
-
-    </div>
-
-</div><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
-                defer
-                >
-            </script><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
-                defer
-                >
-            </script><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
-            ><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
-            >
-
-            </main>
-        </div>
-        <script 
-                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
-                
-                >
-            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
 <script>
-    (function () {
-        const customFont = document.createElement('link');
-        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
-
-        customFont.type = "text/css";
-        customFont.rel = "stylesheet";
-
-        document.head.appendChild(customFont);
-    }());
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 </script>
 
-    </body>
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
 </html>

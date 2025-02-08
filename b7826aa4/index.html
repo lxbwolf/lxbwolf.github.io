@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+
+  
+  <title>Vue 2.x 使用高德地图JS API 2.0加载起点终点路径轨迹 | Xiaobin&#39;s Notes</title>
+  <meta name="description" content="使用高德地图 API 加载起点终点路径轨迹">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vue 2.x 使用高德地图JS API 2.0加载起点终点路径轨迹">
+<meta property="og:url" content="https://lxb.wiki/b7826aa4/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Notes">
+<meta property="og:description" content="使用高德地图 API 加载起点终点路径轨迹">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-05-01T13:51:18.000Z">
+<meta property="article:modified_time" content="2025-02-08T07:22:42.710Z">
+<meta property="article:author" content="lxb">
+<meta property="article:tag" content="vue">
+<meta property="article:tag" content="amap">
+<meta property="article:tag" content="地图">
+<meta name="twitter:card" content="summary">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/b7826aa4/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Notes" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin&#39;s Notes</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/FE/">FE</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">77</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Life/">Life</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">39</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">20</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/GitHub/" style="font-size: 13.08px;">GitHub</a> <a href="/tags/GoogleSheets/" style="font-size: 13px;">GoogleSheets</a> <a href="/tags/STL/" style="font-size: 13.38px;">STL</a> <a href="/tags/amap/" style="font-size: 13px;">amap</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.23px;">blog</a> <a href="/tags/c/" style="font-size: 13.69px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.08px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.62px;">devops</a> <a href="/tags/docker/" style="font-size: 13.08px;">docker</a> <a href="/tags/elastic/" style="font-size: 13.38px;">elastic</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.31px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.15px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.08px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.15px;">hexo</a> <a href="/tags/hooks/" style="font-size: 13px;">hooks</a> <a href="/tags/http/" style="font-size: 13.38px;">http</a> <a href="/tags/jdk/" style="font-size: 13px;">jdk</a> <a href="/tags/joplin/" style="font-size: 13.08px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/linux/" style="font-size: 13.15px;">linux</a> <a href="/tags/lucene/" style="font-size: 13.31px;">lucene</a> <a href="/tags/mac/" style="font-size: 13.46px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.08px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.15px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.31px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.15px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.15px;">pic</a> <a href="/tags/python/" style="font-size: 13px;">python</a> <a href="/tags/qt/" style="font-size: 13.31px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/raycast/" style="font-size: 13px;">raycast</a> <a href="/tags/react/" style="font-size: 13px;">react</a> <a href="/tags/redis/" style="font-size: 13.54px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.92px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.08px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/terminal/" style="font-size: 13px;">terminal</a> <a href="/tags/vue/" style="font-size: 13px;">vue</a> <a href="/tags/zk/" style="font-size: 13.08px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%8D%8F%E8%AE%AE/" style="font-size: 13px;">协议</a> <a href="/tags/%E5%9C%B0%E5%9B%BE/" style="font-size: 13px;">地图</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.46px;">工具</a> <a href="/tags/%E5%B9%BF%E5%91%8A/" style="font-size: 13px;">广告</a> <a href="/tags/%E6%8F%92%E5%BA%A7/" style="font-size: 13px;">插座</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.77px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.38px;">树莓派</a> <a href="/tags/%E7%94%A8%E7%94%B5/" style="font-size: 13px;">用电</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.54px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91/" style="font-size: 13.08px;">编译</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.85px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.08px;">邮件</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/">2024</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">25</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">24</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">39</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">33</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/42f8026c/" class="title">React useEffect() Hook</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-18T14:16:21.000Z" itemprop="datePublished">2024-05-18</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/b7826aa4/" class="title">Vue 2.x 使用高德地图JS API 2.0加载起点终点路径轨迹</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-01T13:51:18.000Z" itemprop="datePublished">2024-05-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Life/">Life</a>
+              </p>
+              <p class="item-title">
+                <a href="/0565b4f5/" class="title">家庭用电插座</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-04-11T05:48:31.000Z" itemprop="datePublished">2024-04-11</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/a520e262/" class="title">MacOS 14.4 引发Java 应用崩溃</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-15T06:05:49.000Z" itemprop="datePublished">2024-03-15</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/cb9b2c66/" class="title">重定向广告</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-04T05:27:13.000Z" itemprop="datePublished">2024-03-04</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Vue-2-x-使用高德地图JS-API-2-0加载起点终点路径轨迹" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Vue 2.x 使用高德地图JS API 2.0加载起点终点路径轨迹
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/b7826aa4/" class="article-date">
+	  <time datetime="2024-05-01T13:51:18.000Z" itemprop="datePublished">2024-05-01</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/FE/">FE</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/amap/" rel="tag">amap</a>, <a class="article-tag-link-link" href="/tags/vue/" rel="tag">vue</a>, <a class="article-tag-link-link" href="/tags/%E5%9C%B0%E5%9B%BE/" rel="tag">地图</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/b7826aa4/#comments" class="article-comment-link">评论</a></span> 
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 1.7k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 9(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#需求">需求</a></li>
+<li><a href="#在-html-文件中引入地图-js">在 html 文件中引入地图 js</a></li>
+<li><a href="#主页面">主页面</a></li>
+<li><a href="#地图组件">地图组件</a></li>
+<li><a href="#代码解析">代码解析</a></li>
+<li><a href="#调起地图h5-组件">调起地图H5 组件</a></li>
+</ul>
+<!-- tocstop -->
+
+<h2><span id="需求">需求</span></h2><ol>
+<li><p>在地图中显示行驶轨迹，自定义标记点图标<br>地图厂商使用高德地图，使用目前最新的高德地图JSAPI 2.0</p>
+</li>
+<li><p>在自己的 H5 中调起多个地图app，显示标记点位置<br>由于地图 APP 并不支持在自己的网页中直接打开，因此需要通过地图 URI API 调用厂商H5地图，在厂商H5地图调起地图app</p>
+</li>
+</ol>
+<h2><span id="在-html-文件中引入地图-js">在 html 文件中引入地图 js</span></h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;script src=<span class="string">&quot;https://webapi.amap.com/maps?v=2.0&amp;key=申请的key值&amp;plugin=AMap.Driving&quot;</span>&gt;&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+
+<h2><span id="主页面">主页面</span></h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">// index.vue</span><br><span class="line">&lt;template&gt;</span><br><span class="line">  &lt;div class=&quot;index&quot;&gt;</span><br><span class="line">    &lt;template &gt;</span><br><span class="line">      &lt;v-map :data=&quot;dataList&quot;&gt;&lt;/v-map&gt;</span><br><span class="line">      &lt;v-detail :statrLocation=&quot;statrLocation&quot; :endLocation=&quot;endLocation&quot;/&gt;</span><br><span class="line">    &lt;/template&gt;</span><br><span class="line">  &lt;/div&gt;</span><br><span class="line">&lt;/template&gt;</span><br><span class="line"></span><br><span class="line">&lt;script&gt;</span><br><span class="line">import Map from &#x27;./mMap.vue&#x27;  // 地图</span><br><span class="line">import Detail from &#x27;./detail.vue&#x27;</span><br><span class="line"></span><br><span class="line">export default &#123;</span><br><span class="line">  name: &#x27;index&#x27;,</span><br><span class="line">  data() &#123;</span><br><span class="line">    return &#123;</span><br><span class="line">      dataList: [],</span><br><span class="line">      statrLocation: &#123;&#125;,</span><br><span class="line">      endLocation: &#123;&#125;,</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  components: &#123;</span><br><span class="line">    &quot;v-map&quot;: Map,</span><br><span class="line">    &quot;v-detail&quot;: Detail</span><br><span class="line">  &#125;,</span><br><span class="line">  mounted() &#123;</span><br><span class="line">  this.dataList = [</span><br><span class="line">      &#123;</span><br><span class="line">        longitude: 116.478346,</span><br><span class="line">        latitude: 39.997361</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        longitude: 116.402796,</span><br><span class="line">        latitude: 39.936915</span><br><span class="line">      &#125;</span><br><span class="line">    ]</span><br><span class="line">    this.statrLocation = this.dataList[0]</span><br><span class="line">    this.endLocation = this.dataList[this.dataList.length-1]</span><br><span class="line">  &#125;,</span><br><span class="line">  methods: &#123;</span><br><span class="line">    </span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line">&lt;/script&gt;</span><br><span class="line">&lt;style scoped lang=&quot;scss&quot;&gt;</span><br><span class="line">.index &#123;</span><br><span class="line">  position: relative;</span><br><span class="line">  width: 100%;</span><br><span class="line">  height: 100%;</span><br><span class="line">  background: #fcf9f2;</span><br><span class="line">&#125;</span><br><span class="line">&lt;/style&gt;</span><br></pre></td></tr></table></figure>
+
+<h2><span id="地图组件">地图组件</span></h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br></pre></td><td class="code"><pre><span class="line">// mMap.vue</span><br><span class="line">&lt;template&gt;</span><br><span class="line">  &lt;div class=&quot;m-map&quot;&gt;</span><br><span class="line">    &lt;div id=&quot;map-box&quot;&gt;&lt;/div&gt;</span><br><span class="line">  &lt;/div&gt;</span><br><span class="line">&lt;/template&gt;</span><br><span class="line">&lt;script&gt;</span><br><span class="line"></span><br><span class="line">export default &#123;</span><br><span class="line">  props: [&#x27;data&#x27;],</span><br><span class="line">  data() &#123;</span><br><span class="line">    return &#123;</span><br><span class="line">      map: &#123;&#125;,</span><br><span class="line">      lineArr: [],</span><br><span class="line">    &#125;;</span><br><span class="line">  &#125;,</span><br><span class="line">  created() &#123;</span><br><span class="line">    this.initMap()</span><br><span class="line">  &#125;,</span><br><span class="line">  methods: &#123;</span><br><span class="line">    initMap() &#123;</span><br><span class="line">      this.$nextTick(() =&gt; &#123;</span><br><span class="line">        this.map = new AMap.Map(&#x27;map-box&#x27;, &#123;</span><br><span class="line">          resizeEnable: true, //是否监控地图容器尺寸变化</span><br><span class="line">          zoom: 14, //初始化地图层级</span><br><span class="line">          center: [116.397428, 39.90923], //初始化地图中心点</span><br><span class="line">          animateEnable: true// 地图平移过程中是否使用动画</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        if(this.lineArr.length) &#123;</span><br><span class="line">          this.drawLine()  //绘制路线</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;);</span><br><span class="line">    &#125;,</span><br><span class="line">    drawLine()&#123;</span><br><span class="line">      AMap.convertFrom(this.lineArr, &#x27;gps&#x27;, (status, result) =&gt; &#123;</span><br><span class="line">        if (result.info === &#x27;ok&#x27;) &#123;</span><br><span class="line">          const paths = result.locations;</span><br><span class="line"></span><br><span class="line">          this.map.clearMap()</span><br><span class="line"></span><br><span class="line">          this.startMarker = new AMap.Marker(&#123;</span><br><span class="line">            map: this.map,</span><br><span class="line">            position: paths[0],  //起点经纬度</span><br><span class="line">            icon: new AMap.Icon(&#123;            </span><br><span class="line">              image: require(&#x27;@/assets/img/icon/icon-start.png&#x27;),</span><br><span class="line">              size: new AMap.Size(120, 120),  //图标所处区域大小</span><br><span class="line">              imageSize: new AMap.Size(120,120) //图标大小</span><br><span class="line">            &#125;),   //起点ico</span><br><span class="line">            offset: new AMap.Pixel(-60, -60),</span><br><span class="line">            autoRotation: true,</span><br><span class="line">            // angle:-90,</span><br><span class="line">          &#125;);</span><br><span class="line">          </span><br><span class="line">          this.endMarker = new AMap.Marker(&#123;</span><br><span class="line">            map: this.map,</span><br><span class="line">            position: paths[paths.length-1], //终点经纬度</span><br><span class="line">            icon: new AMap.Icon(&#123;            </span><br><span class="line">              image: require(&#x27;@/assets/img/icon/icon-end.png&#x27;),</span><br><span class="line">              size: new AMap.Size(60, 60),  //图标所处区域大小</span><br><span class="line">              imageSize: new AMap.Size(60,60) //图标大小</span><br><span class="line">            &#125;),   //终点ico</span><br><span class="line">            offset: new AMap.Pixel(-30, -30),</span><br><span class="line">            autoRotation: true,</span><br><span class="line">          &#125;);</span><br><span class="line"></span><br><span class="line">          // 绘制轨迹</span><br><span class="line">          var polyline = new AMap.Polyline(&#123;</span><br><span class="line">            map: this.map,</span><br><span class="line">            path: paths,</span><br><span class="line">            showDir: true,</span><br><span class="line">            strokeColor: &#x27;#28F&#x27;, //线颜色</span><br><span class="line">            // strokeOpacity: 1,     //线透明度</span><br><span class="line">            strokeWeight: 6, //线宽</span><br><span class="line">            // strokeStyle: &quot;solid&quot;  //线样式</span><br><span class="line">          &#125;);</span><br><span class="line">          this.map.add([this.startMarker, this.endMarker]);</span><br><span class="line">          this.map.setFitView();  //自适应缩放级别</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;)</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  watch: &#123;</span><br><span class="line">    data: &#123;</span><br><span class="line">      handler(newValue, oldValue) &#123;</span><br><span class="line">        this.lineArr = [];</span><br><span class="line">        if(newValue.length) &#123;</span><br><span class="line">          newValue.map((item, index) =&gt; &#123;</span><br><span class="line">            if( item.longitude != null &amp;&amp; item.latitude != null ) &#123;</span><br><span class="line">              this.lineArr.push(new AMap.LngLat(item.longitude,item.latitude));</span><br><span class="line">            &#125;</span><br><span class="line">          &#125;);</span><br><span class="line">          this.drawLine();</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      immediate: true</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;;</span><br><span class="line">&lt;/script&gt;</span><br><span class="line">&lt;style scoped lang =&quot;scss&quot;&gt;</span><br><span class="line">@import &#x27;@/assets/scss/mixin.scss&#x27;;</span><br><span class="line">.m-map &#123;</span><br><span class="line">  width: 100%;</span><br><span class="line">  height: 100vh;</span><br><span class="line">  #map-box &#123;</span><br><span class="line">    width: 100%;</span><br><span class="line">    height: 100%;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">&lt;/style&gt;</span><br></pre></td></tr></table></figure>
+
+<h2><span id="代码解析">代码解析</span></h2><p>在使用中发现标记点位置显示不对，存在一定的偏移，需要将其他坐标转为高德坐标方法. 在绘制轨迹之前先转换为高德坐标，然后再删除地图上所有的覆盖物，</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">AMap</span>.<span class="title function_">convertFrom</span>(<span class="variable language_">this</span>.<span class="property">lineArr</span>, <span class="string">&#x27;gps&#x27;</span>, <span class="function">(<span class="params">status, result</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (result.<span class="property">info</span> === <span class="string">&#x27;ok&#x27;</span>) &#123;</span><br><span class="line"><span class="keyword">const</span> paths = result.<span class="property">locations</span>;</span><br><span class="line"></span><br><span class="line"><span class="variable language_">this</span>.<span class="property">map</span>.<span class="title function_">clearMap</span>()</span><br><span class="line"></span><br><span class="line"><span class="comment">// ...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>也可以使用专门处理地理坐标系的js库<a target="_blank" rel="noopener" href="https://github.com/hujiulong/gcoord">gcoord</a>，用来修正百度地图、高德地图及其它互联网地图坐标系不统一的问题。</p>
+<h2><span id="调起地图h5-组件">调起地图H5 组件</span></h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br></pre></td><td class="code"><pre><span class="line">// detail.vue</span><br><span class="line">&lt;template&gt;</span><br><span class="line">  &lt;div class=&quot;m-detail-box&quot;&gt;</span><br><span class="line">    &lt;div class=&quot;m-btn-wrapper&quot;&gt;</span><br><span class="line">      &lt;van-button class=&quot;open-btn&quot; round  @click=&quot;openShow = true&quot;&gt;导航至车辆当前位置&lt;/van-button&gt;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">    &lt;van-action-sheet </span><br><span class="line">      class=&quot;m-sheet-box&quot;</span><br><span class="line">      v-model=&quot;openShow&quot; </span><br><span class="line">      :actions=&quot;actions&quot; </span><br><span class="line">      cancel-text=&quot;取消&quot;</span><br><span class="line">      close-on-click-action</span><br><span class="line">      @select=&quot;onSelect&quot; </span><br><span class="line">    /&gt;</span><br><span class="line">  &lt;/div&gt;</span><br><span class="line">&lt;/template&gt;</span><br><span class="line"></span><br><span class="line">&lt;script&gt;</span><br><span class="line">import &#123;</span><br><span class="line">  Toast</span><br><span class="line">&#125; from &#x27;vant&#x27;;</span><br><span class="line"></span><br><span class="line">export default &#123;</span><br><span class="line">  props: &#123;</span><br><span class="line">    statrLocation: &#123;</span><br><span class="line">      type: Object,</span><br><span class="line">      default: () =&gt; (&#123;&#125;)</span><br><span class="line">    &#125;,</span><br><span class="line">    endLocation: &#123;</span><br><span class="line">      type: Object,</span><br><span class="line">      default: () =&gt; (&#123;&#125;)</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;,</span><br><span class="line">  data() &#123;</span><br><span class="line">    return &#123;</span><br><span class="line">      openShow: false,</span><br><span class="line">      actions: [</span><br><span class="line">      &#123; name: &#x27;使用苹果地图导航&#x27;, value: &#x27;iosamap&#x27;, color: &#x27;#007AFF&#x27; &#125;, </span><br><span class="line">        &#123; name: &#x27;使用百度地图导航&#x27;, value: &#x27;bmap&#x27;, color: &#x27;#007AFF&#x27; &#125;, </span><br><span class="line">        &#123; name: &#x27;使用高德地图导航&#x27;, value: &#x27;amap&#x27;, color: &#x27;#007AFF&#x27; &#125;</span><br><span class="line">      ],</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  filters: &#123;</span><br><span class="line">    </span><br><span class="line">  &#125;,</span><br><span class="line">  mounted() &#123;</span><br><span class="line">    </span><br><span class="line">  &#125;,</span><br><span class="line">  methods: &#123;</span><br><span class="line">    onSelect(item) &#123;</span><br><span class="line">      this.openShow = false;</span><br><span class="line">      let startLocation = this.startLocation</span><br><span class="line">      let endLocation = this.endLocation</span><br><span class="line">      </span><br><span class="line">      if (endLocation.longitude &amp;&amp; endLocation.latitude) &#123;</span><br><span class="line">        let url = &#x27;&#x27;</span><br><span class="line">        switch (item.value) &#123;</span><br><span class="line">          case &#x27;iosamap&#x27;:</span><br><span class="line">            url = `iosamap://navi?sourceApplication=applicationName&amp;backScheme=applicationScheme&amp;poiname=$&#123;location&#125;&amp;poiid=BGVIS&amp;lat=$&#123;endLocation.latitude&#125;&amp;lon=$&#123;endLocation.longitude&#125;&amp;dev=1&amp;style=2`</span><br><span class="line">            break;</span><br><span class="line">          case &#x27;bmap&#x27;:</span><br><span class="line">            // 单点标注</span><br><span class="line">            url = `http://api.map.baidu.com/marker?location=$&#123;endLocation.latitude&#125;,$&#123;endLocation.longitude&#125;&amp;title=车辆位置&amp;content=实时定位&amp;output=html&amp;coord_type=wgs84&amp;src=webapp.baidu.openAPIdemo`</span><br><span class="line">            </span><br><span class="line">            // 路径规划</span><br><span class="line">            // url = `http://api.map.baidu.com/direction?origin=latlng:$&#123;startLocation.latitude&#125;,$&#123;startLocation.longitude&#125;|name:我的位置&amp;destination=latlng:$&#123;endLocation.latitude&#125;,$&#123;endLocation.longitude&#125;|name:实时定位&amp;mode=driving&amp;coord_type=wgs84&amp;src=webapp.baidu.openAPIdemo`</span><br><span class="line">            break;</span><br><span class="line">          case &#x27;amap&#x27;:</span><br><span class="line">            // 单点标注</span><br><span class="line">            url = `https://uri.amap.com/marker?position=$&#123;endLocation.longitude&#125;,$&#123;endLocation.latitude&#125;&amp;name=实时定位&amp;src=mypage&amp;coordinate=wgs84&amp;callnative=1`</span><br><span class="line"></span><br><span class="line">            // 路径规划</span><br><span class="line">            // url = `https://uri.amap.com/navigation?from=$&#123;startLocation.longitude&#125;,$&#123;startLocation.latitude&#125;,我的位置&amp;to=$&#123;endLocation.longitude&#125;,$&#123;endLocation.latitude&#125;,实时定位&amp;mode=car&amp;policy=1&amp;coordinate=wgs84&amp;callnative=1`</span><br><span class="line">            break;</span><br><span class="line">        &#125;</span><br><span class="line">        window.open(url)</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        Toast(&#123;</span><br><span class="line">          message: &#x27;暂无车辆定位&#x27;,</span><br><span class="line">          type: &#x27;fail&#x27;,</span><br><span class="line">        &#125;)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;,</span><br><span class="line">  beforeDestroy() &#123;</span><br><span class="line">    clearInterval(this.timer)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">&lt;/script&gt;</span><br><span class="line">&lt;style scoped lang=&quot;scss&quot;&gt;</span><br><span class="line">@import &quot;@/assets/scss/mixin.scss&quot;;</span><br><span class="line"></span><br><span class="line">.m-detail-box &#123;</span><br><span class="line">  position: absolute;</span><br><span class="line">  bottom: 0;</span><br><span class="line">  padding: 20px 0 0;</span><br><span class="line">  border-radius: 20px 20px 0px 0px;</span><br><span class="line">  width: 100%;</span><br><span class="line">  background: #FEFFFE;</span><br><span class="line">  box-shadow: 0 4px 40px 4px rgba(135, 119, 145, 0.36);</span><br><span class="line">  z-index: 160;</span><br><span class="line"></span><br><span class="line">  .van-cell-group &#123;</span><br><span class="line">    &amp;::after &#123;</span><br><span class="line">      border: none;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  .van-cell &#123;</span><br><span class="line">    padding: 12px 24px;</span><br><span class="line">    font-size: 16px;</span><br><span class="line">    font-weight: 600;</span><br><span class="line"></span><br><span class="line">    &amp;::after &#123;</span><br><span class="line">      left: 24px;</span><br><span class="line">      right: 24px;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    .van-cell__title &#123;</span><br><span class="line">      flex: none;</span><br><span class="line">      color: #757AB5;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    .van-cell__value &#123;</span><br><span class="line">      color: #292929;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  .m-btn-wrapper &#123;</span><br><span class="line">    border-top: 1px solid #EFF2F9;</span><br><span class="line">    background: #FFF;</span><br><span class="line"></span><br><span class="line">    .open-btn &#123;</span><br><span class="line">      display: block;</span><br><span class="line">      margin: 10px auto;</span><br><span class="line">      padding: 14px;</span><br><span class="line">      width: 90%;</span><br><span class="line">      font-size: 18px;</span><br><span class="line">      color: #FEFFFE;</span><br><span class="line">      background: #85D4D9;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  /deep/.van-overlay &#123;</span><br><span class="line">    background: rgba(33, 34, 51, 0.5);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  .m-sheet-box &#123;</span><br><span class="line">    padding: 0 8px;</span><br><span class="line">    background: transparent;</span><br><span class="line"></span><br><span class="line">    .van-action-sheet__content &#123;</span><br><span class="line">      border-radius: 14px;</span><br><span class="line">      background: rgba(255, 255, 255, 0.92);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    .van-action-sheet__gap &#123;</span><br><span class="line">      height: 20px;</span><br><span class="line">      background: transparent;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    .van-action-sheet__cancel &#123;</span><br><span class="line">      margin-bottom: 20px;</span><br><span class="line">      border-radius: 14px;</span><br><span class="line">      font-size: 20px;</span><br><span class="line">      color: #007AFF;</span><br><span class="line">      background: rgba(255, 255, 255, 0.92);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">&lt;/style&gt;</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/b7826aa4/" title="Vue 2.x 使用高德地图JS API 2.0加载起点终点路径轨迹" target="_blank" rel="external">https://lxb.wiki/b7826aa4/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="external">CC BY-NC 4.0</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      
+        <section id="comments" class="comments">
+          <style>
+            .utterances{max-width: 100%;}
+          </style>
+          <script src="https://utteranc.es/client.js"
+                repo="lxbwolf/lxbwolf.github.io"
+                issue-term="title"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+          </script>
+        </section>
+      
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/42f8026c/" title="React useEffect() Hook"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/0565b4f5/" title="家庭用电插座"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,wechat"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> xbl </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+
+
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
+</html>

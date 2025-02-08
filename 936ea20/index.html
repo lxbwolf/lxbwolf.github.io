@@ -1,545 +1,484 @@
 <!DOCTYPE html>
-<html lang="zh-cn" dir="ltr">
-    <head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='有意思的变量和不安分的常量 变量默认初始化有零值 func TestVariableZeroValue(t *testing.T) { var a int var s string // 0 t.Log(a, s) // 0 &amp;#34;&amp;#34; t.Logf(&amp;#34;%d %q&amp;#34;, a, s) } int 类型的变量初始化默认零值是零 0, string 类型的变量默认初'>
-<title>Go 基础语法</title>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
 
-<link rel='canonical' href='https://lxb.wiki/936ea20/'>
+  
+  <title>Go 基础语法 | Xiaobin&#39;s Notes</title>
+  <meta name="description" content="有意思的变量和不安分的常量  变量默认初始化有零值  12345678func TestVariableZeroValue(t *testing.T) &amp;#123;    var a int    var s string    &#x2F;&#x2F; 0    t.Log(a, s)    &#x2F;&#x2F; 0 &quot;&quot;    t.Logf(&quot;%d %q&quot;, a, s)&amp;#125;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go 基础语法">
+<meta property="og:url" content="https://lxb.wiki/936ea20/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Notes">
+<meta property="og:description" content="有意思的变量和不安分的常量  变量默认初始化有零值  12345678func TestVariableZeroValue(t *testing.T) &amp;#123;    var a int    var s string    &#x2F;&#x2F; 0    t.Log(a, s)    &#x2F;&#x2F; 0 &quot;&quot;    t.Logf(&quot;%d %q&quot;, a, s)&amp;#125;">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://note.youdao.com/src/b06096c411b66b176cfc4c48c64b44fd">
+<meta property="article:published_time" content="2019-05-03T15:19:02.000Z">
+<meta property="article:modified_time" content="2025-02-02T11:48:02.412Z">
+<meta property="article:author" content="lxb">
+<meta property="article:tag" content="go">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://note.youdao.com/src/b06096c411b66b176cfc4c48c64b44fd">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/936ea20/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Notes" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
 
-<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='Go 基础语法'>
-<meta property='og:description' content='有意思的变量和不安分的常量 变量默认初始化有零值 func TestVariableZeroValue(t *testing.T) { var a int var s string // 0 t.Log(a, s) // 0 &amp;#34;&amp;#34; t.Logf(&amp;#34;%d %q&amp;#34;, a, s) } int 类型的变量初始化默认零值是零 0, string 类型的变量默认初'>
-<meta property='og:url' content='https://lxb.wiki/936ea20/'>
-<meta property='og:site_name' content='Xiaobin&#39;s Notes'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='go' /><meta property='article:published_time' content='2019-05-03T23:19:02&#43;00:00'/><meta property='article:modified_time' content='2019-05-03T23:19:02&#43;00:00'/>
-<meta name="twitter:title" content="Go 基础语法">
-<meta name="twitter:description" content="有意思的变量和不安分的常量 变量默认初始化有零值 func TestVariableZeroValue(t *testing.T) { var a int var s string // 0 t.Log(a, s) // 0 &amp;#34;&amp;#34; t.Logf(&amp;#34;%d %q&amp;#34;, a, s) } int 类型的变量初始化默认零值是零 0, string 类型的变量默认初">
-<link rel="shortcut icon" href="/favicon.png" />
+  
+  
+  
+  
 
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
 
-
-
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-
-    gtag('config', 'G-JZ2PWLT6JY');
-</script>
-<script>
-    var _hmt = _hmt || [];
-    (function () {
-        var hm = document.createElement("script");
-        hm.src = "https://hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-<script>
-    (function () {
-        var el = document.createElement("script");
-        el.src = "https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?f146251743600ee0672cdcc8455ce18def91cdb255ad969a2ef5c715d5ed5baecaf7cd753709c168f20e6a2e9019123fd11e31a222d3a2fe01ad05c6b8f519b2";
-        el.id = "ttzz";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(el, s);
-    })(window)
-</script>
-    </head>
-    <body class="
-    article-page
-    ">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
     <script>
-        (function() {
-            const colorSchemeKey = 'StackColorScheme';
-            if(!localStorage.getItem(colorSchemeKey)){
-                localStorage.setItem(colorSchemeKey, "auto");
-            }
-        })();
-    </script><script>
-    (function() {
-        const colorSchemeKey = 'StackColorScheme';
-        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
-        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
-            
-
-            document.documentElement.dataset.scheme = 'dark';
-        } else {
-            document.documentElement.dataset.scheme = 'light';
-        }
-    })();
-</script>
-<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
-    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
-        <span class="hamburger-box">
-            <span class="hamburger-inner"></span>
-        </span>
-    </button>
-
-    <header>
-        
-            
-            <figure class="site-avatar">
-                <a href="/">
-                
-                    
-                    
-                    
-                        
-                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
-                            height="298" class="site-logo" loading="lazy" alt="Avatar">
-                    
-                
-                </a>
-                
-                    <span class="emoji">🍥</span>
-                
-            </figure>
-            
-        
-        
-        <div class="site-meta">
-            <h1 class="site-name"><a href="/">Xiaobin&#39;s Notes</a></h1>
-            <h2 class="site-description"></h2>
-        </div>
-    </header>
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+<meta name="generator" content="Hexo 6.3.0"></head>
 
 
-    <ol class="menu" id="main-menu">
-        
-        
-        
-        <li >
-            <a href='/' >
-                
-                
-                
-                <span>首页</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/archives/' >
-                
-                
-                
-                <span>归档</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/categories/' >
-                
-                
-                
-                <span>分类</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/tags/' >
-                
-                
-                
-                <span>标签</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/links/' >
-                
-                
-                
-                <span>友链</span>
-            </a>
-        </li>
-        
-
-        <div class="menu-bottom-section"><ol class="social-menu">
-                    
-                        <li>
-                            <a 
-                                href='mailto://me@lxb.wiki'
-                                target="_blank"
-                                title="Email"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://github.com/lxbwolf'
-                                target="_blank"
-                                title="GitHub"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://lxb.wiki/atom.xml'
-                                target="_blank"
-                                title="Rss"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="5" cy="19" r="1" />
-  <path d="M4 4a16 16 0 0 1 16 16" />
-  <path d="M4 11a9 9 0 0 1 9 9" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                </ol>
-                <li id="dark-mode-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="8" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="16" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <span>暗色模式</span>
-                </li>
-            
-        </div>
-    </ol>
-</aside>
-
-    
-
-            <main class="main full-width">
-    <article class="main-article">
-    <header class="article-header">
-
-    <div class="article-details">
-    
-    <header class="article-category">
-        
-        <a href="/categories/Lang/" >
-            Lang
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
         </a>
-        
-    </header>
-    
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin&#39;s Notes</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
 
-    <div class="article-title-wrapper">
-        <h2 class="article-title">
-            <a href="/936ea20/">Go 基础语法</a>
-        </h2>
-
-        
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
     </div>
-
-    
-    
-    
-    
-    <footer class="article-time">
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
-  <circle cx="18" cy="18" r="4" />
-  <path d="M15 3v4" />
-  <path d="M7 3v4" />
-  <path d="M3 11h16" />
-  <path d="M18 16.496v1.504l1 1" />
-</svg>
-            <time class="article-time--published">May 03, 2019</time>
-        </div>
-        
-
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <polyline points="12 7 12 12 15 15" />
-</svg>
-
-
-
-            <time class="article-time--reading">
-                阅读时长: 15 分钟
-            </time>
-        </div>
-        
-        <small>
-    <section class="article-tags">
-        
-            <a href="/tags/go/">go</a>
-        
-    </section>
-</small>
-    </footer>
-    
-
-    
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
 </div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
 </header>
 
-    <section class="article-content">
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
     
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/FE/">FE</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">77</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Life/">Life</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">39</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">20</span></li></ul>
+    </div>
+  </div>
+
+
     
-    <p>有意思的变量和不安分的常量</p>
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/GitHub/" style="font-size: 13.08px;">GitHub</a> <a href="/tags/GoogleSheets/" style="font-size: 13px;">GoogleSheets</a> <a href="/tags/STL/" style="font-size: 13.38px;">STL</a> <a href="/tags/amap/" style="font-size: 13px;">amap</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.23px;">blog</a> <a href="/tags/c/" style="font-size: 13.69px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.08px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.62px;">devops</a> <a href="/tags/docker/" style="font-size: 13.08px;">docker</a> <a href="/tags/elastic/" style="font-size: 13.38px;">elastic</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.31px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.15px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.08px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.15px;">hexo</a> <a href="/tags/hooks/" style="font-size: 13px;">hooks</a> <a href="/tags/http/" style="font-size: 13.38px;">http</a> <a href="/tags/jdk/" style="font-size: 13px;">jdk</a> <a href="/tags/joplin/" style="font-size: 13.08px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/linux/" style="font-size: 13.15px;">linux</a> <a href="/tags/lucene/" style="font-size: 13.31px;">lucene</a> <a href="/tags/mac/" style="font-size: 13.46px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.08px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.15px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.31px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.15px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.15px;">pic</a> <a href="/tags/python/" style="font-size: 13px;">python</a> <a href="/tags/qt/" style="font-size: 13.31px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/raycast/" style="font-size: 13px;">raycast</a> <a href="/tags/react/" style="font-size: 13px;">react</a> <a href="/tags/redis/" style="font-size: 13.54px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.92px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.08px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/terminal/" style="font-size: 13px;">terminal</a> <a href="/tags/vue/" style="font-size: 13px;">vue</a> <a href="/tags/zk/" style="font-size: 13.08px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%8D%8F%E8%AE%AE/" style="font-size: 13px;">协议</a> <a href="/tags/%E5%9C%B0%E5%9B%BE/" style="font-size: 13px;">地图</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.46px;">工具</a> <a href="/tags/%E5%B9%BF%E5%91%8A/" style="font-size: 13px;">广告</a> <a href="/tags/%E6%8F%92%E5%BA%A7/" style="font-size: 13px;">插座</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.77px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.38px;">树莓派</a> <a href="/tags/%E7%94%A8%E7%94%B5/" style="font-size: 13px;">用电</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.54px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91/" style="font-size: 13.08px;">编译</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.85px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.08px;">邮件</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/">2024</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">25</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">24</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">39</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">33</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/42f8026c/" class="title">React useEffect() Hook</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-18T14:16:21.000Z" itemprop="datePublished">2024-05-18</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/b7826aa4/" class="title">Vue 2.x 使用高德地图JS API 2.0加载起点终点路径轨迹</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-01T13:51:18.000Z" itemprop="datePublished">2024-05-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Life/">Life</a>
+              </p>
+              <p class="item-title">
+                <a href="/0565b4f5/" class="title">家庭用电插座</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-04-11T05:48:31.000Z" itemprop="datePublished">2024-04-11</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/a520e262/" class="title">MacOS 14.4 引发Java 应用崩溃</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-15T06:05:49.000Z" itemprop="datePublished">2024-03-15</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/cb9b2c66/" class="title">重定向广告</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-04T05:27:13.000Z" itemprop="datePublished">2024-03-04</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<aside class="sidebar sidebar-toc collapse" id="collapseToc" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    <nav id="toc" class="article-toc">
+      <h3 class="toc-title">文章目录</h3>
+      
+    </nav>
+  </div>
+</aside>
+
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Go-基础语法" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Go 基础语法
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/936ea20/" class="article-date">
+	  <time datetime="2019-05-03T15:19:02.000Z" itemprop="datePublished">2019-05-03</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Lang/">Lang</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/go/" rel="tag">go</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/936ea20/#comments" class="article-comment-link">评论</a></span> 
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 7k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 29(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>有意思的变量和不安分的常量</p>
 <ul>
 <li>变量默认初始化有零值</li>
 </ul>
-<pre tabindex="0"><code>func TestVariableZeroValue(t *testing.T) {
-    var a int
-    var s string
-    // 0
-    t.Log(a, s)
-    // 0 &#34;&#34;
-    t.Logf(&#34;%d %q&#34;, a, s)
-}
-</code></pre><p>int 类型的变量初始化默认零值是零 0, string 类型的变量默认初始化零值是空字符串 ,其他类型也有相应的零值.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">func TestVariableZeroValue(t *testing.T) &#123;</span><br><span class="line">    var a int</span><br><span class="line">    var s string</span><br><span class="line">    // 0</span><br><span class="line">    t.Log(a, s)</span><br><span class="line">    // 0 &quot;&quot;</span><br><span class="line">    t.Logf(&quot;%d %q&quot;, a, s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>int 类型的变量初始化默认零值是零 0, string 类型的变量默认初始化零值是空字符串 ,其他类型也有相应的零值.</p>
 <ul>
 <li>多个变量可以同时赋值</li>
 </ul>
-<pre tabindex="0"><code>func TestVariableInitialValue(t *testing.T) {
-    var a, b int = 1, 2
-    var s string = &#34;hello Go&#34;
-    // 1 2 hello Go
-    t.Log(a, b, s)
-}
-</code></pre><p>其他主要的编程语言大多支持多个变量初始化,但极少数有像 Go 语言这样,不仅支持同时初始化,还可以同时赋值.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">func TestVariableInitialValue(t *testing.T) &#123;</span><br><span class="line">    var a, b int = 1, 2</span><br><span class="line">    var s string = &quot;hello Go&quot;</span><br><span class="line">    // 1 2 hello Go</span><br><span class="line">    t.Log(a, b, s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>其他主要的编程语言大多支持多个变量初始化,但极少数有像 Go 语言这样,不仅支持同时初始化,还可以同时赋值.</p>
 <ul>
 <li>多个变量可以用小括号 () 统一定义</li>
 </ul>
-<pre tabindex="0"><code>func TestVariableShorter(t *testing.T) {
-    var (
-    a int    = 1
-    b int    = 2
-    s string = &#34;hello go&#34;
-    )
-    // 1 2 hello Go
-    t.Log(a, b, s)
-}
-</code></pre><p>用小括号 () 方式,省略了相同的 var 关键字,看起来更加统一</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">func TestVariableShorter(t *testing.T) &#123;</span><br><span class="line">    var (</span><br><span class="line">    a int    = 1</span><br><span class="line">    b int    = 2</span><br><span class="line">    s string = &quot;hello go&quot;</span><br><span class="line">    )</span><br><span class="line">    // 1 2 hello Go</span><br><span class="line">    t.Log(a, b, s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>用小括号 () 方式,省略了相同的 var 关键字,看起来更加统一</p>
 <ul>
 <li>变量类型可以被自动推断</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">TestVariableTypeDeduction</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">T</span>) {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span>, <span style="color:#a6e22e">s</span> = <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>, <span style="color:#e6db74">&#34;hello Go&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 1 2 hello Go
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Log</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span>, <span style="color:#a6e22e">s</span>)
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Go 语言可以根据变量值推测出变量类型,所以可以省略变量类型,再一次简化了变量定义,但是变量类型仍然是强类型,并不像 Js 那样的弱类型.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TestVariableTypeDeduction</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> a, b, s = <span class="number">1</span>, <span class="number">2</span>, <span class="string">&quot;hello Go&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 1 2 hello Go</span></span><br><span class="line"></span><br><span class="line">    t.Log(a, b, s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>Go 语言可以根据变量值推测出变量类型,所以可以省略变量类型,再一次简化了变量定义,但是变量类型仍然是强类型,并不像 Js 那样的弱类型.</p>
 <ul>
 <li>变量可以用 := 形式更加简化</li>
 </ul>
-<pre tabindex="0"><code>func TestVariableTypeDeductionShorter(t *testing.T) {
-    a, b, s := 1, 2, &#34;hello Go&#34;
-    // 1 2 hello Go
-    t.Log(a, b, s)
-    s = &#34;hello golang&#34;
-    // 1 2 hello golang
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">func TestVariableTypeDeductionShorter(t *testing.T) &#123;</span><br><span class="line">    a, b, s := 1, 2, &quot;hello Go&quot;</span><br><span class="line">    // 1 2 hello Go</span><br><span class="line">    t.Log(a, b, s)</span><br><span class="line">    s = &quot;hello golang&quot;</span><br><span class="line">    // 1 2 hello golang</span><br><span class="line"></span><br><span class="line">    t.Log(a, b, s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-    t.Log(a, b, s)
-}
-</code></pre><p>省略了关键字 var,转而使用 := 符号声明并初始化变量值且利用自动类型推断能力进一步就简化变量定义,再次赋值时不能再使用 := 符号.</p>
+
+
+<p>省略了关键字 var,转而使用 := 符号声明并初始化变量值且利用自动类型推断能力进一步就简化变量定义,再次赋值时不能再使用 := 符号.</p>
 <ul>
 <li>变量 var 声明作用域大于变量 := 声明</li>
 </ul>
-<pre tabindex="0"><code>1. var globalTestId = 2
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">1. var globalTestId = 2</span><br><span class="line"></span><br><span class="line">2. // globalTestName := &quot;type_test&quot; is not supported</span><br><span class="line"></span><br><span class="line">3. var globalTestName = &quot;type_test&quot;</span><br><span class="line"></span><br><span class="line">4. </span><br><span class="line"></span><br><span class="line">5. func TestVariableScope(t *testing.T) &#123;</span><br><span class="line"></span><br><span class="line">6. ```</span><br><span class="line">    // 2 type_test</span><br></pre></td></tr></table></figure>
 
-2. // globalTestName := &#34;type_test&#34; is not supported
+<ol start="7">
+<li><pre><code>t.Log(globalTestId, globalTestName)
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">8. </span><br><span class="line"></span><br><span class="line">9. ```</span><br><span class="line">    globalTestName = &quot;TestVariableScope&quot;</span><br></pre></td></tr></table></figure></code></pre></li>
+<li></li>
+<li><pre><code>// 2 TestVariableScope
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">12. ```</span><br><span class="line">    t.Log(globalTestId, globalTestName)</span><br></pre></td></tr></table></figure></code></pre></li>
+<li><p>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">var 声明的变量可以作用于函数外或函数内,而 := 声明的变量只能作用于函数内, Go 并没有全局变量的概念,变量的作用范围只是针对包而言.</span><br><span class="line"></span><br><span class="line">* 常量的使用方式和变量一致</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+<li><p>func TestConstant(t *testing.T) {</p>
+</li>
+<li><pre><code>const a, b = 3, 4
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">3. ```</span><br><span class="line">    const s = &quot;hello Go&quot;</span><br></pre></td></tr></table></figure></code></pre></li>
+<li></li>
+<li><pre><code>// 3 4 hello Go
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">6. ```</span><br><span class="line">    t.Log(a, b, s)</span><br></pre></td></tr></table></figure></code></pre></li>
+<li><p>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">常量声明关键字 const,常量和变量的使用方式一致,具备类型推断能力,也存在多种简化常量定义的形式.</span><br><span class="line"></span><br><span class="line">* 虽然没有枚举类型,但可以用 iota 配合常量来实现枚举</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+<li><p>func TestConstant2Enum(t *testing.T) {</p>
+</li>
+<li><pre><code>const (
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">3. ```</span><br><span class="line">    java = iota</span><br></pre></td></tr></table></figure></code></pre></li>
+<li><pre><code>golang
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">5. ```</span><br><span class="line">    cpp</span><br></pre></td></tr></table></figure></code></pre></li>
+<li><pre><code>python
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">7. ```</span><br><span class="line">    javascript</span><br></pre></td></tr></table></figure></code></pre></li>
+<li><pre><code>)
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">9. ```</span><br><span class="line">    // 0 1 2 3 4</span><br></pre></td></tr></table></figure></code></pre></li>
+<li><pre><code>t.Log(java, golang,cpp,python,javascript)
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">11. &#125;</span><br></pre></td></tr></table></figure>
 
-3. var globalTestName = &#34;type_test&#34;
 
-4. 
-
-5. func TestVariableScope(t *testing.T) {
-
-6. ```
-    // 2 type_test
-    ```
-
-7. ```
-    t.Log(globalTestId, globalTestName)
-    ```
-
-8. 
-
-9. ```
-    globalTestName = &#34;TestVariableScope&#34;
-    ```
-
-10. 
-
-11. ```
-    // 2 TestVariableScope
-    ```
-
-12. ```
-    t.Log(globalTestId, globalTestName)
-    ```
-
-13. }
-</code></pre><p>var 声明的变量可以作用于函数外或函数内,而 := 声明的变量只能作用于函数内, Go 并没有全局变量的概念,变量的作用范围只是针对包而言.</p>
-<ul>
-<li>常量的使用方式和变量一致</li>
-</ul>
-<pre tabindex="0"><code>1. func TestConstant(t *testing.T) {
-
-2. ```
-    const a, b = 3, 4
-    ```
-
-3. ```
-    const s = &#34;hello Go&#34;
-    ```
-
-4. 
-
-5. ```
-    // 3 4 hello Go
-    ```
-
-6. ```
-    t.Log(a, b, s)
-    ```
-
-7. }
-</code></pre><p>常量声明关键字 const,常量和变量的使用方式一致,具备类型推断能力,也存在多种简化常量定义的形式.</p>
-<ul>
-<li>虽然没有枚举类型,但可以用 iota 配合常量来实现枚举</li>
-</ul>
-<pre tabindex="0"><code>1. func TestConstant2Enum(t *testing.T) {
-
-2. ```
-    const (
-    ```
-
-3. ```
-    java = iota
-    ```
-
-4. ```
-    golang
-    ```
-
-5. ```
-    cpp
-    ```
-
-6. ```
-    python
-    ```
-
-7. ```
-    javascript
-    ```
-
-8. ```
-    )
-    ```
-
-9. ```
-    // 0 1 2 3 4
-    ```
-
-10. ```
-    t.Log(java, golang,cpp,python,javascript)
-    ```
-
-11. }
-</code></pre><p>iota 在一组常量定义中首次出现时,其值为 0,应用到下一个常量时,其值为开始自增 1,再次遇到 iota 恢复 0 .效果非常像 for 循环中的循环索引 i,明明是常量,偏偏玩出了变量的味道,也是我觉得 iota 不安分的原因.</p>
+</code></pre></li>
+</ol>
+<p>iota 在一组常量定义中首次出现时,其值为 0,应用到下一个常量时,其值为开始自增 1,再次遇到 iota 恢复 0 .效果非常像 for 循环中的循环索引 i,明明是常量,偏偏玩出了变量的味道,也是我觉得 iota 不安分的原因.</p>
 <ul>
 <li>常量 iota 有妙用,还可以进行位运算</li>
 </ul>
-<pre tabindex="0"><code>1. func TestConstantIotaBitCalculate(t *testing.T){
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1. func TestConstantIotaBitCalculate(t *testing.T)&#123;</span><br><span class="line"></span><br><span class="line">2. ```</span><br><span class="line">    const (</span><br></pre></td></tr></table></figure>
 
-2. ```
-    const (
-    ```
+<ol start="3">
+<li><pre><code>Readable = 1 &lt;&lt; iota
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">4. ```</span><br><span class="line">    Writable</span><br></pre></td></tr></table></figure></code></pre></li>
+<li><pre><code>Executable
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">6. ```</span><br><span class="line">    )</span><br></pre></td></tr></table></figure></code></pre></li>
+<li><pre><code>// 0001 0010 0100 即 1 2 4
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">8. ```</span><br><span class="line">    t.Log(Readable, Writable, Executable)</span><br></pre></td></tr></table></figure></code></pre></li>
+<li></li>
+<li><pre><code>// 0111 即 7,表示可读,可写,可执行
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">11. ```</span><br><span class="line">    accessCode := 7</span><br></pre></td></tr></table></figure></code></pre></li>
+<li><pre><code>t.Log(accessCode&amp;Readable == Readable, accessCode&amp;Writable == Writable, accessCode&amp;Executable == Executable)
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">13. &#125;</span><br></pre></td></tr></table></figure>
 
-3. ```
-    Readable = 1 &lt;&lt; iota
-    ```
 
-4. ```
-    Writable
-    ```
-
-5. ```
-    Executable
-    ```
-
-6. ```
-    )
-    ```
-
-7. ```
-    // 0001 0010 0100 即 1 2 4
-    ```
-
-8. ```
-    t.Log(Readable, Writable, Executable)
-    ```
-
-9. 
-
-10. ```
-    // 0111 即 7,表示可读,可写,可执行
-    ```
-
-11. ```
-    accessCode := 7
-    ```
-
-12. ```
-    t.Log(accessCode&amp;Readable == Readable, accessCode&amp;Writable == Writable, accessCode&amp;Executable == Executable)
-    ```
-
-13. }
-</code></pre><p>定义二进制位最低位为 1 时表示可读的,左移一位表示可写的,左移两位表示可执行的,按照按位与运算逻辑,目标权限位若拥有可读权限,此时和可读常量进行按位与运算之后的结果一定是可读的,由此可见, iota 非常适合此类操作.</p>
+</code></pre></li>
+</ol>
+<p>定义二进制位最低位为 1 时表示可读的,左移一位表示可写的,左移两位表示可执行的,按照按位与运算逻辑,目标权限位若拥有可读权限,此时和可读常量进行按位与运算之后的结果一定是可读的,由此可见, iota 非常适合此类操作.</p>
 <p>总体来说, Go 语言中的变量很有意思,常量 iota 不那么安分,从上述归纳总结中不难看出, Go 语言和其他主流的编程语言还是有很大不同的,学习时要侧重于这些特殊之处.</p>
-<p>如果想要回顾本节知识点,可以关注公众号[雪之梦技术驿站]找到<a class="link" href="https://mp.weixin.qq.com/s?__biz=MzU3NTc1MDMwOQ==&amp;mid=2247484101&amp;idx=1&amp;sn=e93944978b6b88d2594e40d8ca9527fa&amp;scene=21#wechat_redirect"  target="_blank" rel="noopener"
-    >go 学习笔记之有意思的变量和不安分的常量</a> 这篇文章进行查看.</p>
+<p>如果想要回顾本节知识点,可以关注公众号[雪之梦技术驿站]找到<a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzU3NTc1MDMwOQ==&mid=2247484101&idx=1&sn=e93944978b6b88d2594e40d8ca9527fa&scene=21#wechat_redirect">go 学习笔记之有意思的变量和不安分的常量</a> 这篇文章进行查看.</p>
 <p>简洁的类型中格外关照了复数</p>
 <p>在学习 Go 语言中的变量和常量时,虽然没有特意强调变量或常量的类型,但是大多数编程语言的类型基本都是差不多的,毕竟大家所处的现实世界是一样的嘛!</p>
 <p>光是猜测是不够的,现在我们要梳理一遍 Go 语言的类型有哪些,和其他主流的编程语言相比有什么不同?</p>
@@ -563,420 +502,123 @@
 <p>Go 的类型还是比较简单的,整数,小数,复数,字节,字符和布尔类型,相同种类的类型没有继续细分不同的名称而是直接根据类型长度进行命名的,这样是非常直观的,见名知意,根据数据大小直接选用类型,不费脑!</p>
 <p>作为一种通用的编程语言, Go 内建类型中居然格外关照了复数这种数学概念类型,是一件有意思的事情,是不是意味着 Go 在工程化项目上做得更好?就像 Go 天生支持并发一样?</p>
 <p>既然为数不多的类型中格外关照了复数类型,那我们简单使用下复数类型吧,毕竟其他类型和其他主流的编程语言相差不大.</p>
-<pre tabindex="0"><code>1. func TestComplex(t *testing.T) {
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1. func TestComplex(t *testing.T) &#123;</span><br><span class="line"></span><br><span class="line">2. ```</span><br><span class="line">    c := 3 + 4i</span><br></pre></td></tr></table></figure>
 
-2. ```
-    c := 3 + 4i
-    ```
+<ol start="3">
+<li></li>
+<li><pre><code>// 5
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">5. ```</span><br><span class="line">    t.Log(cmplx.Abs(c))</span><br></pre></td></tr></table></figure></code></pre></li>
+<li><p>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">生命苦短,直接利用变量类型推断简化变量声明,求出复数类型 c 的模(绝对值)</span><br><span class="line"></span><br><span class="line">既然学习了复数,怎么能少得了欧拉公式,毕竟是&quot;世界上最美的公式&quot;,刚好用到了复数的相关知识,那我们就简单验证一下吧!</span><br><span class="line"></span><br><span class="line">![](//note.youdao.com/src/39fd719ebc6278f7fddaf5a345fde1be)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">e&lt;sup&gt;iπ&lt;/sup&gt; + 1 = 0</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+<li><p>func TestEuler(t *testing.T) {</p>
+</li>
+<li><pre><code>// (0+1.2246467991473515e-16i)
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">3. ```</span><br><span class="line">    t.Log(cmplx.Pow(math.E, 1i*math.Pi) + 1)</span><br></pre></td></tr></table></figure></code></pre></li>
+<li></li>
+<li><pre><code>// (0+1.2246467991473515e-16i)
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">6. ```</span><br><span class="line">    t.Log(cmplx.Exp(1i*math.Pi) + 1)</span><br></pre></td></tr></table></figure></code></pre></li>
+<li></li>
+<li><pre><code>// (0.000+0.000i)
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">9. ```</span><br><span class="line">    t.Logf(&quot;%.3f&quot;, cmplx.Exp(1i*math.Pi)+1)</span><br></pre></td></tr></table></figure></code></pre></li>
+<li><p>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">由于复数 complex 是使用 float 类型表示的,而 float 类型无论是什么编程语言都是不准确的,所以欧拉公式的计算结果非常非常接近于零,当只保留小数点后三位时,计算结果便是 (0.000+0.000i) ,复数的模也就是 0,至此验证了欧拉公式.</span><br><span class="line"></span><br><span class="line">看过复数还是要研究类型特点</span><br><span class="line"></span><br><span class="line">复数很重要,但其他类型也很重要,简单了解过复数的相关知识后,我们仍然要把注意力放到研究这些内建类型的特殊之处上或者说这些类型总体来说相对于其他主流的编程语言有什么异同.</span><br><span class="line"></span><br><span class="line">* 只有显示类型转换,不存在隐式类型转换</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+<li><p>func TestExplicitTypeConvert(t *testing.T) {</p>
+</li>
+<li><pre><code>var a, b int = 3, 4
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">3. ```</span><br><span class="line">    var c int</span><br></pre></td></tr></table></figure></code></pre></li>
+<li><pre><code>c = int(math.Sqrt(float64(a*a + b*b)))
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">5. </span><br><span class="line"></span><br><span class="line">6. ```</span><br><span class="line">    // 3 4 5</span><br></pre></td></tr></table></figure></code></pre></li>
+<li><pre><code>t.Log(a, b, c)
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">8. &#125;</span><br></pre></td></tr></table></figure>
 
-3. 
 
-4. ```
-    // 5
-    ```
-
-5. ```
-    t.Log(cmplx.Abs(c))
-    ```
-
-6. }
-</code></pre><p>生命苦短,直接利用变量类型推断简化变量声明,求出复数类型 c 的模(绝对值)</p>
-<p>既然学习了复数,怎么能少得了欧拉公式,毕竟是&quot;世界上最美的公式&quot;,刚好用到了复数的相关知识,那我们就简单验证一下吧!</p>
-<p><img src="//note.youdao.com/src/39fd719ebc6278f7fddaf5a345fde1be"
-	
-	
-	
-	loading="lazy"
-	
-	
-></p>
-<p>e<!-- raw HTML omitted -->iπ<!-- raw HTML omitted --> + 1 = 0</p>
-<pre tabindex="0"><code>1. func TestEuler(t *testing.T) {
-
-2. ```
-    // (0+1.2246467991473515e-16i)
-    ```
-
-3. ```
-    t.Log(cmplx.Pow(math.E, 1i*math.Pi) + 1)
-    ```
-
-4. 
-
-5. ```
-    // (0+1.2246467991473515e-16i)
-    ```
-
-6. ```
-    t.Log(cmplx.Exp(1i*math.Pi) + 1)
-    ```
-
-7. 
-
-8. ```
-    // (0.000+0.000i)
-    ```
-
-9. ```
-    t.Logf(&#34;%.3f&#34;, cmplx.Exp(1i*math.Pi)+1)
-    ```
-
-10. }
-</code></pre><p>由于复数 complex 是使用 float 类型表示的,而 float 类型无论是什么编程语言都是不准确的,所以欧拉公式的计算结果非常非常接近于零,当只保留小数点后三位时,计算结果便是 (0.000+0.000i) ,复数的模也就是 0,至此验证了欧拉公式.</p>
-<p>看过复数还是要研究类型特点</p>
-<p>复数很重要,但其他类型也很重要,简单了解过复数的相关知识后,我们仍然要把注意力放到研究这些内建类型的特殊之处上或者说这些类型总体来说相对于其他主流的编程语言有什么异同.</p>
-<ul>
-<li>只有显示类型转换,不存在隐式类型转换</li>
-</ul>
-<pre tabindex="0"><code>1. func TestExplicitTypeConvert(t *testing.T) {
-
-2. ```
-    var a, b int = 3, 4
-    ```
-
-3. ```
-    var c int
-    ```
-
-4. ```
-    c = int(math.Sqrt(float64(a*a + b*b)))
-    ```
-
-5. 
-
-6. ```
-    // 3 4 5
-    ```
-
-7. ```
-    t.Log(a, b, c)
-    ```
-
-8. }
-</code></pre><p>已知勾股定理的两条直角边计算斜边,根据勾股定理得,直角边长度的平方和再开根号即斜边长度,然而 math.Sqrt 方法接收的 float64 类型,返回的也是 float64 类型,可实际值全是 int 类型,这种情况下并不会自动进行类型转换,只能进行强制类型转换才能得到我们的期望值,这就是显示类型转换.</p>
+</code></pre></li>
+</ol>
+<p>已知勾股定理的两条直角边计算斜边,根据勾股定理得,直角边长度的平方和再开根号即斜边长度,然而 math.Sqrt 方法接收的 float64 类型,返回的也是 float64 类型,可实际值全是 int 类型,这种情况下并不会自动进行类型转换,只能进行强制类型转换才能得到我们的期望值,这就是显示类型转换.</p>
 <ul>
 <li>别名类型和原类型也不能进行隐式类型转换</li>
 </ul>
-<pre tabindex="0"><code>1. func TestImplicitTypeConvert2(t *testing.T) {
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1. func TestImplicitTypeConvert2(t *testing.T) &#123;</span><br><span class="line"></span><br><span class="line">2. ```</span><br><span class="line">    type MyInt64 int64</span><br></pre></td></tr></table></figure>
 
-2. ```
-    type MyInt64 int64
-    ```
+<ol start="3">
+<li></li>
+<li><pre><code>var a int64 = 1
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">5. ```</span><br><span class="line">    var b MyInt64</span><br></pre></td></tr></table></figure></code></pre></li>
+<li></li>
+<li><pre><code>// b = a : cannot use a (type int64) as type MyInt64 in assignment
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">8. ```</span><br><span class="line">    b = MyInt64(a)</span><br></pre></td></tr></table></figure></code></pre></li>
+<li><pre><code>t.Log(a, b)
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">10. &#125;</span><br></pre></td></tr></table></figure>
 
-3. 
 
-4. ```
-    var a int64 = 1
-    ```
-
-5. ```
-    var b MyInt64
-    ```
-
-6. 
-
-7. ```
-    // b = a : cannot use a (type int64) as type MyInt64 in assignment
-    ```
-
-8. ```
-    b = MyInt64(a)
-    ```
-
-9. ```
-    t.Log(a, b)
-    ```
-
-10. }
-</code></pre><p>MyInt64 是 int64 的别名,别名类型的 b 和原类型的 a 也不能进行也不能进行隐式类型转换,会报错 cannotusea(type int64)astypeMyInt64inassignment,只能进行显示类型转换.</p>
+</code></pre></li>
+</ol>
+<p>MyInt64 是 int64 的别名,别名类型的 b 和原类型的 a 也不能进行也不能进行隐式类型转换,会报错 cannotusea(type int64)astypeMyInt64inassignment,只能进行显示类型转换.</p>
 <ul>
 <li>支持指针类型,但不支持任何形式的计算</li>
 </ul>
-<pre tabindex="0"><code>1. func TestPointer(t *testing.T) {
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1. func TestPointer(t *testing.T) &#123;</span><br><span class="line"></span><br><span class="line">2. ```</span><br><span class="line">    var a int = 1</span><br></pre></td></tr></table></figure>
 
-2. ```
-    var a int = 1
-    ```
-
-3. ```
-    var pa *int = &amp;a
-    ```
-
-4. 
-
-5. ```
-    // 0xc0000921d0 1 1
-    ```
-
-6. ```
-    t.Log(pa, *pa, a)
-    ```
-
-7. 
-
-8. ```
-    *pa = 2
-    ```
-
-9. 
-
-10. ```
-    // 0xc0000901d0 2 2
-    ```
-
-11. ```
-    t.Log(pa, *pa, a)
-    ```
-
-12. }
-</code></pre><p>同样的,指针类型也是其他编程语言反过来书写的,个人觉得这种反而不错,指向 int 类型的指针 *int, &amp;a是变量 a 的内存地址,所以变量 pa 存的就是变量 a 的地址, *pa 刚好也就是变量 a 的值.</p>
-<p>上例显示声明了变量类型却没有利用到 Go 的类型推断能力,摆在那的能力却不利用简直是浪费,所以提供一种更简短的方式重写上述示例,并顺便解释后半句: &ldquo;指针类型不支持任何形式的计算&rdquo;</p>
-<ol>
-<li>func TestPointerShorter(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>a := 1
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>pa := &amp;a
-</code></pre></li>
+<ol start="3">
+<li><pre><code>var pa *int = &amp;a
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">4. </span><br><span class="line"></span><br><span class="line">5. ```</span><br><span class="line">    // 0xc0000921d0 1 1</span><br></pre></td></tr></table></figure></code></pre></li>
+<li><pre><code>t.Log(pa, *pa, a)
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">7. </span><br><span class="line"></span><br><span class="line">8. ```</span><br><span class="line">    *pa = 2</span><br></pre></td></tr></table></figure></code></pre></li>
 <li></li>
-<li>
-<pre tabindex="0"><code>// 0xc0000e6010 1 1
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(pa, *pa, a)
-</code></pre></li>
+<li><pre><code>// 0xc0000901d0 2 2
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">11. ```</span><br><span class="line">    t.Log(pa, *pa, a)</span><br></pre></td></tr></table></figure></code></pre></li>
+<li><p>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">同样的,指针类型也是其他编程语言反过来书写的,个人觉得这种反而不错,指向 int 类型的指针 *int, &amp;a是变量 a 的内存地址,所以变量 pa 存的就是变量 a 的地址, *pa 刚好也就是变量 a 的值.</span><br><span class="line"></span><br><span class="line">上例显示声明了变量类型却没有利用到 Go 的类型推断能力,摆在那的能力却不利用简直是浪费,所以提供一种更简短的方式重写上述示例,并顺便解释后半句: &quot;指针类型不支持任何形式的计算&quot;</span><br><span class="line"></span><br><span class="line">1. func TestPointerShorter(t *testing.T) &#123;</span><br><span class="line">2. ```</span><br><span class="line">   a := 1</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>pa := &amp;a</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">4. </span><br><span class="line">5. ```</span><br><span class="line">   // 0xc0000e6010 1 1</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>t.Log(pa, *pa, a)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">7. </span><br><span class="line">8. ```</span><br><span class="line">   *pa = 2</span><br></pre></td></tr></table></figure></li>
 <li></li>
-<li>
-<pre tabindex="0"><code>*pa = 2
-</code></pre></li>
+<li><p>```<br>// 0xc0000e6010 2 2</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">11. ```</span><br><span class="line">   t.Log(pa, *pa, a)</span><br></pre></td></tr></table></figure></li>
 <li></li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>// 0xc0000e6010 2 2</p>
-<pre tabindex="0"><code>11. ```
-t.Log(pa, *pa, a)
-</code></pre><ol start="12">
+<li><p>```<br>// pa = pa + 1 : invalid operation: pa + 1 (mismatched types *int and int)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">14. ```</span><br><span class="line">   //pa = pa + 1</span><br></pre></td></tr></table></figure></li>
 <li></li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>// pa = pa + 1 : invalid operation: pa + 1 (mismatched types *int and int)</p>
-<pre tabindex="0"><code>14. ```
-//pa = pa + 1
-</code></pre><ol start="15">
-<li></li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>// *int int int</p>
-<pre tabindex="0"><code>17. ```
-t.Logf(&#34;%T %T %T&#34;, pa, *pa,a)
-</code></pre><ol start="18">
-<li>}</li>
+<li><p>```<br>// *int int int</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">17. ```</span><br><span class="line">   t.Logf(&quot;%T %T %T&quot;, pa, *pa,a)</span><br></pre></td></tr></table></figure></li>
+<li><p>}</p>
+</li>
 </ol>
 <p>变量 pa 是指针类型,存储的是变量的内存地址,只可远观而不可亵玩, *pa 就是指针所指向的变量的值,可以进行修改,当然没问题就像可以重新赋值变量 a 一样,但是指针 pa 是不可以进行任何形式的运算的, pa=pa+1 就会报错 invalid operation.</p>
 <p>你猜运算符操作有没有彩蛋呢</p>
 <p>变量和类型还只是孤立的声明语句,没有计算不成逻辑,并不是所有的程序都是预定义的变量, Go 的运算符是简单还是复杂呢,让我们亲自体验一下!</p>
 <ul>
-<li>算术运算符少了 ++i 和 &ndash;i</li>
+<li>算术运算符少了 ++i 和 –i</li>
 </ul>
 <ol>
 <li>func TestArithmeticOperator(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>a := 0
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>// 0
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(a)
-</code></pre></li>
+<li>```<br>a := 0<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">3. ```</span><br><span class="line">   // 0</span><br></pre></td></tr></table></figure></li>
+<li>```<br>t.Log(a)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">5. </span><br><span class="line">6. ```</span><br><span class="line">   a = a + 1</span><br></pre></td></tr></table></figure></li>
+<li>```<br>// 1<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">8. ```</span><br><span class="line">   t.Log(a)</span><br></pre></td></tr></table></figure></li>
 <li></li>
-<li>
-<pre tabindex="0"><code>a = a + 1
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>// 1
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(a)
-</code></pre></li>
+<li>```<br>a = a * 2<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">11. ```</span><br><span class="line">   // 2</span><br></pre></td></tr></table></figure></li>
+<li>```<br>t.Log(a)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">13. </span><br><span class="line">14. ```</span><br><span class="line">   a = a % 2</span><br></pre></td></tr></table></figure></li>
+<li>```<br>// 0<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">16. ```</span><br><span class="line">   t.Log(a)</span><br></pre></td></tr></table></figure></li>
 <li></li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>a = a * 2</p>
-<pre tabindex="0"><code>11. ```
-// 2
-</code></pre><ol start="12">
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>t.Log(a)</p>
-<pre tabindex="0"><code>13. 
-14. ```
-a = a % 2
-</code></pre><ol start="15">
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>// 0</p>
-<pre tabindex="0"><code>16. ```
-t.Log(a)
-</code></pre><ol start="17">
+<li>```<br>a++<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">19. ```</span><br><span class="line">   // 1</span><br></pre></td></tr></table></figure></li>
+<li>```<br>t.Log(a)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">21. &#125;</span><br><span class="line"></span><br><span class="line">支持大部分正常的运算符,不支持前置自增,前置自减,这也是好事,再也不会弄错 i++ 和 ++i 的运算结果啦,因为根本不支持 ++i !</span><br><span class="line"></span><br><span class="line">* 比较运算符是否相等有花样</span><br><span class="line"></span><br><span class="line">1. func TestComparisonOperator(t *testing.T) &#123;</span><br><span class="line">2. ```</span><br><span class="line">   a, b := 0, 1</span><br></pre></td></tr></table></figure></li>
+<li>```<br>t.Log(a, b)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">4. </span><br><span class="line">5. ```</span><br><span class="line">   // false true true</span><br></pre></td></tr></table></figure></li>
+<li>```<br>t.Log(a &gt; b, a &lt; b, a != b)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">7. &#125;</span><br><span class="line"></span><br><span class="line">大于,小于,不等于这种关系很正常, Golang 也没玩出新花样,和其他主流的编程语言逻辑一样,不用特别关心.但是关于比较数组 ==, Go 表示有话要说!</span><br><span class="line"></span><br><span class="line">Go 中的数组是可以进行比较的,当待比较的两个数组的维度和数组元素的个数相同时,两个数组元素顺序一致且相同时,则两个数组相等,而其他主流的编程语言一般而言比较的都是数组的引用,所以这一点需要特别注意.</span><br><span class="line"></span><br><span class="line">1. func TestCompareArray(t *testing.T) &#123;</span><br><span class="line">2. ```</span><br><span class="line">   a := [...]int&#123;1, 2, 3&#125;</span><br></pre></td></tr></table></figure></li>
+<li>```<br>//b := […]int{2, 4}<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">4. ```</span><br><span class="line">   c := [...]int&#123;1, 2, 3&#125;</span><br></pre></td></tr></table></figure></li>
+<li>```<br>d := […]int{1, 2, 4}<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">6. </span><br><span class="line">7. ```</span><br><span class="line">   // a == b --&gt; invalid operation: a == b (mismatched types [3]int and [2]int)</span><br></pre></td></tr></table></figure></li>
+<li>```<br>//t.Log(a == b)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">9. </span><br><span class="line">10. ```</span><br><span class="line">   // true false</span><br></pre></td></tr></table></figure></li>
+<li>```<br>t.Log(a == c,a == d)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">12. &#125;</span><br><span class="line"></span><br><span class="line">数组 a 和 c 均是一维数组且元素个数都是 3,因此两个数组可以比较且相等,若数组 a 和 b 进行比较,则报错 invalid operation,是因为两个数组的元素个数不相同,无法比较!</span><br><span class="line"></span><br><span class="line">* 逻辑运算符老实本分无异常</span><br><span class="line"></span><br><span class="line">1. func TestLogicalOperator(t *testing.T) &#123;</span><br><span class="line">2. ```</span><br><span class="line">   a, b := true, false</span><br></pre></td></tr></table></figure></li>
+<li>```<br>t.Log(a, b)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">4. </span><br><span class="line">5. ```</span><br><span class="line">   // false true false true</span><br></pre></td></tr></table></figure></li>
+<li>```<br>t.Log(a&amp;&amp;b,a||b,!a,!b)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">7. &#125;</span><br><span class="line"></span><br><span class="line">* 位运算符新增按位清零 &amp;^ 很巧妙</span><br><span class="line"></span><br><span class="line">Go 语言中定义按位清零运算符是 &amp;^,计算规律如下:</span><br><span class="line"></span><br><span class="line">当右边操作位数为 1 时,左边操作为不论是 1 还是 0 ,结果均为 0;</span><br><span class="line">当右边操作位数为 0 时,结果同左边操作位数.</span><br><span class="line"></span><br><span class="line">1. func TestClearZeroOperator(t *testing.T) &#123;</span><br><span class="line">2. ```</span><br><span class="line">   // 0 0 1 0</span><br></pre></td></tr></table></figure></li>
+<li>```<br>t.Log(1&amp;^1, 0&amp;^1, 1&amp;^0, 0&amp;^1)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">4. &#125;</span><br><span class="line"></span><br><span class="line">不知道还记不记得,在介绍常量 iota 时,曾经以文件权限为例,判断给定的权限码是否拥有特定权限,同样是给定的权限码,又该如何撤销特定权限呢?</span><br><span class="line"></span><br><span class="line">1. func TestClearZeroOperator(t *testing.T) &#123;</span><br><span class="line">2. ```</span><br><span class="line">   const (</span><br></pre></td></tr></table></figure></li>
+<li>```<br>Readable = 1 &lt;&lt; iota<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">4. ```</span><br><span class="line">   Writable</span><br></pre></td></tr></table></figure></li>
+<li>```<br>Executable<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">6. ```</span><br><span class="line">   )</span><br></pre></td></tr></table></figure></li>
+<li>```<br>// 0001 0010 0100 即 1 2 4<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">8. ```</span><br><span class="line">   t.Log(Readable, Writable, Executable)</span><br></pre></td></tr></table></figure></li>
 <li></li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>a++</p>
-<pre tabindex="0"><code>19. ```
-// 1
-</code></pre><ol start="20">
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>t.Log(a)</p>
-<pre tabindex="0"><code>21. }
-
-支持大部分正常的运算符,不支持前置自增,前置自减,这也是好事,再也不会弄错 i++ 和 ++i 的运算结果啦,因为根本不支持 ++i !
-
-* 比较运算符是否相等有花样
-
-1. func TestComparisonOperator(t *testing.T) {
-2. ```
-a, b := 0, 1
-</code></pre><ol start="3">
-<li>
-<pre tabindex="0"><code>t.Log(a, b)
-</code></pre></li>
-<li></li>
-<li>
-<pre tabindex="0"><code>// false true true
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(a &gt; b, a &lt; b, a != b)
-</code></pre></li>
-<li>}</li>
-</ol>
-<p>大于,小于,不等于这种关系很正常, Golang 也没玩出新花样,和其他主流的编程语言逻辑一样,不用特别关心.但是关于比较数组 ==, Go 表示有话要说!</p>
-<p>Go 中的数组是可以进行比较的,当待比较的两个数组的维度和数组元素的个数相同时,两个数组元素顺序一致且相同时,则两个数组相等,而其他主流的编程语言一般而言比较的都是数组的引用,所以这一点需要特别注意.</p>
-<ol>
-<li>func TestCompareArray(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>a := [...]int{1, 2, 3}
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>//b := [...]int{2, 4}
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>c := [...]int{1, 2, 3}
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>d := [...]int{1, 2, 4}
-</code></pre></li>
-<li></li>
-<li>
-<pre tabindex="0"><code>// a == b --&gt; invalid operation: a == b (mismatched types [3]int and [2]int)
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>//t.Log(a == b)
-</code></pre></li>
-<li></li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>// true false</p>
-<pre tabindex="0"><code>11. ```
-t.Log(a == c,a == d)
-</code></pre><ol start="12">
-<li>}</li>
-</ol>
-<p>数组 a 和 c 均是一维数组且元素个数都是 3,因此两个数组可以比较且相等,若数组 a 和 b 进行比较,则报错 invalid operation,是因为两个数组的元素个数不相同,无法比较!</p>
-<ul>
-<li>逻辑运算符老实本分无异常</li>
-</ul>
-<ol>
-<li>func TestLogicalOperator(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>a, b := true, false
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(a, b)
-</code></pre></li>
-<li></li>
-<li>
-<pre tabindex="0"><code>// false true false true
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(a&amp;&amp;b,a||b,!a,!b)
-</code></pre></li>
-<li>}</li>
-</ol>
-<ul>
-<li>位运算符新增按位清零 &amp;^ 很巧妙</li>
-</ul>
-<p>Go 语言中定义按位清零运算符是 &amp;^,计算规律如下:</p>
-<p>当右边操作位数为 1 时,左边操作为不论是 1 还是 0 ,结果均为 0;
-当右边操作位数为 0 时,结果同左边操作位数.</p>
-<ol>
-<li>func TestClearZeroOperator(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>// 0 0 1 0
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(1&amp;^1, 0&amp;^1, 1&amp;^0, 0&amp;^1)
-</code></pre></li>
-<li>}</li>
-</ol>
-<p>不知道还记不记得,在介绍常量 iota 时,曾经以文件权限为例,判断给定的权限码是否拥有特定权限,同样是给定的权限码,又该如何撤销特定权限呢?</p>
-<ol>
-<li>func TestClearZeroOperator(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>const (
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>Readable = 1 &lt;&lt; iota
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>Writable
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>Executable
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>)
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>// 0001 0010 0100 即 1 2 4
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(Readable, Writable, Executable)
-</code></pre></li>
-<li></li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>// 0111 即 7,表示可读,可写,可执行</p>
-<pre tabindex="0"><code>11. ```
-accessCode := 7
-</code></pre><ol start="12">
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>t.Log(accessCode&amp;Readable == Readable, accessCode&amp;Writable == Writable, accessCode&amp;Executable == Executable)</p>
-<pre tabindex="0"><code>13. 
-14. ```
-// 0111 &amp;^ 0001 = 0110 即清除可读权限
-</code></pre><ol start="15">
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>accessCode = accessCode &amp;^ Readable</p>
-<pre tabindex="0"><code>16. ```
-t.Log(accessCode&amp;Readable == Readable, accessCode&amp;Writing == Writing, accessCode&amp;Executable == Executable)
-</code></pre><ol start="17">
+<li>```<br>// 0111 即 7,表示可读,可写,可执行<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">11. ```</span><br><span class="line">   accessCode := 7</span><br></pre></td></tr></table></figure></li>
+<li>```<br>t.Log(accessCode&amp;Readable == Readable, accessCode&amp;Writable == Writable, accessCode&amp;Executable == Executable)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">13. </span><br><span class="line">14. ```</span><br><span class="line">   // 0111 &amp;^ 0001 = 0110 即清除可读权限</span><br></pre></td></tr></table></figure></li>
+<li>```<br>accessCode = accessCode &amp;^ Readable<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">16. ```</span><br><span class="line">   t.Log(accessCode&amp;Readable == Readable, accessCode&amp;Writing == Writing, accessCode&amp;Executable == Executable)</span><br></pre></td></tr></table></figure></li>
 <li>}</li>
 </ol>
 <p>accessCode=accessCode&amp;^Readable 进行按位清零操作后就失去了可读权限, accessCode&amp;Readable==Readable 再次判断时就没有可读权限了.</p>
@@ -988,308 +630,88 @@ t.Log(accessCode&amp;Readable == Readable, accessCode&amp;Writing == Writing, ac
 <li>条件表达式不需要小括号 ()</li>
 </ul>
 <ol>
-<li>func TestIfCondition(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>for i := 0; i &lt; 10; i++ {
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>if i%2 == 0 {
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(i)
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>}
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>}
-</code></pre></li>
-<li>}</li>
-</ol>
-<p>Go 语言的各种省略形式使得整体上非常简洁,但也让拥有其他主流编程语言的开发者初次接触时很不习惯,语句结束不用分号 ;,条件表达式不用小括号 () 等等细节,如果不用 IDE 的自动提示功能,这些细节肯定要耗费不少时间.</p>
-<ul>
-<li>条件表达式中可以定义变量,只要最后的表达式结果是布尔类型即可</li>
-</ul>
-<ol>
-<li>
-<p>func TestIfConditionMultiReturnValue(t *testing.T) {</p>
+<li><p>func TestIfCondition(t *testing.T) {</p>
 </li>
-<li>
-<pre tabindex="0"><code>const filename = &#34;test.txt&#34;
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>if content, err := ioutil.ReadFile(filename); err != nil {
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(err)
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>} else {
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Logf(&#34;%s
-</code></pre><p>&ldquo;, content)</p>
+<li><p>```<br>for i := 0; i &lt; 10; i++ {</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">3. ```</span><br><span class="line">   if i%2 == 0 &#123;</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>t.Log(i)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">5. ```</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">7. &#125;</span><br><span class="line"></span><br><span class="line">Go 语言的各种省略形式使得整体上非常简洁,但也让拥有其他主流编程语言的开发者初次接触时很不习惯,语句结束不用分号 ;,条件表达式不用小括号 () 等等细节,如果不用 IDE 的自动提示功能,这些细节肯定要耗费不少时间.</span><br><span class="line"></span><br><span class="line">* 条件表达式中可以定义变量,只要最后的表达式结果是布尔类型即可</span><br><span class="line"></span><br><span class="line">1. func TestIfConditionMultiReturnValue(t *testing.T) &#123;</span><br><span class="line">2. ```</span><br><span class="line">   const filename = &quot;test.txt&quot;</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>if content, err := ioutil.ReadFile(filename); err != nil {</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">4. ```</span><br><span class="line">   t.Log(err)</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>} else {</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">6. ```</span><br><span class="line">   t.Logf(&quot;%s</span><br></pre></td></tr></table></figure>
+
+<p>“, content)</p>
 </li>
-<li>
-<pre tabindex="0"><code>}
-</code></pre></li>
-<li>
-<p>}</p>
+<li><p>```<br>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">8. &#125;</span><br><span class="line"></span><br><span class="line">Go 语言的函数支持返回多个值,这一点稍后再细说, ioutil.ReadFile 函数返回文件内容和错误信息,当存在错误信息时 err!=nil,输出错误信息,否则输出文件内容.</span><br><span class="line"></span><br><span class="line">* 条件表达式中定义的变量作用域仅限于当前语句块</span><br><span class="line"></span><br><span class="line">![](//note.youdao.com/src/fd5c4b52006416939abd0b6a472d596c)</span><br><span class="line"></span><br><span class="line">如果尝试在 if 语句块外访问变量 content,则报错 undefined:content</span><br><span class="line"></span><br><span class="line">switch 不甘示弱</span><br><span class="line"></span><br><span class="line">同其他主流的编程语言相比, switch 语句最大的特点就是多个 case 不需要 break, Go 会自动进行 break,这一点很人性化.</span><br><span class="line"></span><br><span class="line">* switch 会自动 break,除非使用 fallthrough</span><br><span class="line"></span><br><span class="line">1. func TestSwitchCondition(t *testing.T) &#123;</span><br><span class="line">2. ```</span><br><span class="line">   switch os := runtime.GOOS; os &#123;</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>case “darwin”:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">4. ```</span><br><span class="line">   t.Log(&quot;Mac&quot;)</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>case “linux”:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">6. ```</span><br><span class="line">   t.Log(&quot;Linux&quot;)</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>case “windows”:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">8. ```</span><br><span class="line">   t.Log(&quot;Windows&quot;)</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>default:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">10. ```</span><br><span class="line">   t.Log(os)</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">12. &#125;</span><br><span class="line"></span><br><span class="line">* 条件表达式不限制为常量或整数</span><br><span class="line"></span><br><span class="line">其他主流的编程语言中 switch 的条件表达式仅支持有限类型,使用方式存在一定局限性, Go 语言则不同,这一点变化也是很有意思的,使用 switch 做分支控制时不用担心变量类型了!</span><br><span class="line"></span><br><span class="line">* case 语言支持多种条件,用逗号 , 分开,逻辑或</span><br><span class="line"></span><br><span class="line">1. func TestSwitchMultiCase(t *testing.T) &#123;</span><br><span class="line">2. ```</span><br><span class="line">   for i := 0; i &lt; 10; i++ &#123;</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>switch i {</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">4. ```</span><br><span class="line">   case 0, 2, 4, 6, 8, 10:</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>t.Log(“Even”, i)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">6. ```</span><br><span class="line">   case 1, 3, 5, 7, 9:</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>t.Log(“odd”, i)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">8. ```</span><br><span class="line">   default:</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>t.Log(“default”, i)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">10. ```</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">12. &#125;</span><br><span class="line"></span><br><span class="line">* 省略 switch 的条件表达式时, switch 的逻辑和多个 ifelse 逻辑相同</span><br><span class="line"></span><br><span class="line">1. func TestSwitchCaseCondition(t *testing.T) &#123;</span><br><span class="line">2. ```</span><br><span class="line">   for i := 0; i &lt; 10; i++ &#123;</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>switch {</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">4. ```</span><br><span class="line">   case i%2 == 0:</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>t.Log(“Even”, i)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">6. ```</span><br><span class="line">   case i%2 == 1:</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>t.Log(“odd”, i)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">8. ```</span><br><span class="line">   default:</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>t.Log(“default”, i)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">10. ```</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">12. &#125;</span><br><span class="line"></span><br><span class="line">for 姗姗来迟</span><br><span class="line"></span><br><span class="line">最后登场的是 for 循环,一个人完成了其他主流编程语言三个人的工作, Go 语言中既没有 while 循环也,也没有 dowhile 循环,有的只是 for 循环.</span><br><span class="line"></span><br><span class="line">* 循环条件不需要小括号 ()</span><br><span class="line"></span><br><span class="line">1. func TestForLoop(t *testing.T) &#123;</span><br><span class="line">2. ```</span><br><span class="line">   sum := 0</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>for i := 1; i &lt;= 100; i++ {</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">4. ```</span><br><span class="line">   sum += i</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">6. ```</span><br><span class="line">   // 1+2+3+...+99+100=5050</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>t.Log(sum)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">8. &#125;</span><br><span class="line"></span><br><span class="line">再一次看到条件表达式不需要小括号 () 应该不会惊讶了吧? if 的条件语句表达式也是类似的,目前为止,接触到明确需要小括号的 () 也只有变量或常量定义时省略形式了.</span><br><span class="line"></span><br><span class="line">* 可以省略初始条件</span><br><span class="line"></span><br><span class="line">1. func convert2Binary(n int) string &#123;</span><br><span class="line">2. ```</span><br><span class="line">   result := &quot;&quot;</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>for ; n &gt; 0; n /= 2 {</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">4. ```</span><br><span class="line">   lsb := n % 2</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>result = strconv.Itoa(lsb) + result</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">6. ```</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>return result</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">8. &#125;</span><br><span class="line">9. </span><br><span class="line">10. func TestConvert2Binary(t *testing.T) &#123;</span><br><span class="line">11. ```</span><br><span class="line">   // 1 100 101 1101</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>t.Log(</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">13. ```</span><br><span class="line">   convert2Binary(1),</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>convert2Binary(4),</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">15. ```</span><br><span class="line">   convert2Binary(5),</span><br></pre></td></tr></table></figure></li>
+<li><p>```<br>convert2Binary(13),</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">17. ```</span><br><span class="line">   )</span><br></pre></td></tr></table></figure></li>
+<li><p>}</p>
 </li>
 </ol>
-<p>Go 语言的函数支持返回多个值,这一点稍后再细说, ioutil.ReadFile 函数返回文件内容和错误信息,当存在错误信息时 err!=nil,输出错误信息,否则输出文件内容.</p>
+<p>利用整数相除法,不断取余相除,得到给定整数的二进制字符串,这里就省略了初始条件,只有结束条件和递增表达式.这种写法同样在其他主流的编程语言是没有的,体现了 Go 设计的简洁性,这种特性在以后的编程中会越来越多的用到,既然可以省略初始条件,相信你也能猜到可不可以省略其他两个条件呢?</p>
 <ul>
-<li>条件表达式中定义的变量作用域仅限于当前语句块</li>
-</ul>
-<p><img src="//note.youdao.com/src/fd5c4b52006416939abd0b6a472d596c"
-	
-	
-	
-	loading="lazy"
-	
-	
-></p>
-<p>如果尝试在 if 语句块外访问变量 content,则报错 undefined:content</p>
-<p>switch 不甘示弱</p>
-<p>同其他主流的编程语言相比, switch 语句最大的特点就是多个 case 不需要 break, Go 会自动进行 break,这一点很人性化.</p>
-<ul>
-<li>switch 会自动 break,除非使用 fallthrough</li>
+<li>可以省略初始条件和递增表达式</li>
 </ul>
 <ol>
-<li>func TestSwitchCondition(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>switch os := runtime.GOOS; os {
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>case &#34;darwin&#34;:
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(&#34;Mac&#34;)
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>case &#34;linux&#34;:
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(&#34;Linux&#34;)
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>case &#34;windows&#34;:
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(&#34;Windows&#34;)
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>default:
-</code></pre></li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>t.Log(os)</p>
-<pre tabindex="0"><code>11. ```
-}
-</code></pre><ol start="12">
-<li>}</li>
-</ol>
-<ul>
-<li>条件表达式不限制为常量或整数</li>
-</ul>
-<p>其他主流的编程语言中 switch 的条件表达式仅支持有限类型,使用方式存在一定局限性, Go 语言则不同,这一点变化也是很有意思的,使用 switch 做分支控制时不用担心变量类型了!</p>
-<ul>
-<li>case 语言支持多种条件,用逗号 , 分开,逻辑或</li>
-</ul>
-<ol>
-<li>func TestSwitchMultiCase(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>for i := 0; i &lt; 10; i++ {
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>switch i {
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>case 0, 2, 4, 6, 8, 10:
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(&#34;Even&#34;, i)
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>case 1, 3, 5, 7, 9:
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(&#34;odd&#34;, i)
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>default:
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(&#34;default&#34;, i)
-</code></pre></li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>}</p>
-<pre tabindex="0"><code>11. ```
-}
-</code></pre><ol start="12">
-<li>}</li>
-</ol>
-<ul>
-<li>省略 switch 的条件表达式时, switch 的逻辑和多个 ifelse 逻辑相同</li>
-</ul>
-<ol>
-<li>func TestSwitchCaseCondition(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>for i := 0; i &lt; 10; i++ {
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>switch {
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>case i%2 == 0:
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(&#34;Even&#34;, i)
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>case i%2 == 1:
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(&#34;odd&#34;, i)
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>default:
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(&#34;default&#34;, i)
-</code></pre></li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>}</p>
-<pre tabindex="0"><code>11. ```
-}
-</code></pre><ol start="12">
-<li>}</li>
-</ol>
-<p>for 姗姗来迟</p>
-<p>最后登场的是 for 循环,一个人完成了其他主流编程语言三个人的工作, Go 语言中既没有 while 循环也,也没有 dowhile 循环,有的只是 for 循环.</p>
-<ul>
-<li>循环条件不需要小括号 ()</li>
-</ul>
-<ol>
-<li>func TestForLoop(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>sum := 0
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>for i := 1; i &lt;= 100; i++ {
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>sum += i
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>}
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>// 1+2+3+...+99+100=5050
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(sum)
-</code></pre></li>
-<li>}</li>
-</ol>
-<p>再一次看到条件表达式不需要小括号 () 应该不会惊讶了吧? if 的条件语句表达式也是类似的,目前为止,接触到明确需要小括号的 () 也只有变量或常量定义时省略形式了.</p>
-<ul>
-<li>可以省略初始条件</li>
-</ul>
-<ol>
-<li>func convert2Binary(n int) string {</li>
-<li>
-<pre tabindex="0"><code>result := &#34;&#34;
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>for ; n &gt; 0; n /= 2 {
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>lsb := n % 2
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>result = strconv.Itoa(lsb) + result
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>}
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>return result
-</code></pre></li>
-<li>}</li>
-<li></li>
-<li>func TestConvert2Binary(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>// 1 100 101 1101</p>
-<pre tabindex="0"><code>12. ```
-t.Log(
-</code></pre><ol start="13">
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>convert2Binary(1),</p>
-<pre tabindex="0"><code>14. ```
-convert2Binary(4),
-</code></pre><ol start="15">
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>convert2Binary(5),</p>
-<pre tabindex="0"><code>16. ```
-convert2Binary(13),
-</code></pre><ol start="17">
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>)</p>
-<pre tabindex="0"><code>18. }
-
-利用整数相除法,不断取余相除,得到给定整数的二进制字符串,这里就省略了初始条件,只有结束条件和递增表达式.这种写法同样在其他主流的编程语言是没有的,体现了 Go 设计的简洁性,这种特性在以后的编程中会越来越多的用到,既然可以省略初始条件,相信你也能猜到可不可以省略其他两个条件呢?
-
-* 可以省略初始条件和递增表达式
-
-1. func printFile(filename string) {
-2. ```
-if file, err := os.Open(filename); err != nil {
-</code></pre><ol start="3">
-<li>
-<pre tabindex="0"><code>panic(err)
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>} else {
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>scanner := bufio.NewScanner(file)
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>for scanner.Scan() {
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>fmt.Println(scanner.Text())
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>}
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>}
-</code></pre></li>
+<li>func printFile(filename string) {</li>
+<li>```<br>if file, err := os.Open(filename); err != nil {<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">3. ```</span><br><span class="line">   panic(err)</span><br></pre></td></tr></table></figure></li>
+<li>```<br>} else {<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">5. ```</span><br><span class="line">   scanner := bufio.NewScanner(file)</span><br></pre></td></tr></table></figure></li>
+<li>```<br>for scanner.Scan() {<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">7. ```</span><br><span class="line">   fmt.Println(scanner.Text())</span><br></pre></td></tr></table></figure></li>
+<li>```<br>}<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">9. ```</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></li>
 <li>}</li>
 <li></li>
 <li>func TestPrintFile(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>const filename = &ldquo;test.txt&rdquo;</p>
-<pre tabindex="0"><code>14. ```
-printFile(filename)
-</code></pre><ol start="15">
+<li>```<br>const filename = “test.txt”<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">14. ```</span><br><span class="line">   printFile(filename)</span><br></pre></td></tr></table></figure></li>
 <li>}</li>
 </ol>
 <p>打开文件并逐行读取内容,其中 scanner.Scan() 的返回值类型是 bool,这里省略了循环的初始条件和递增表达式,只有循环的终止条件,也顺便实现了 while 循环的效果.</p>
@@ -1298,21 +720,8 @@ printFile(filename)
 </ul>
 <ol>
 <li>func forever() {</li>
-<li>
-<pre tabindex="0"><code>for {
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>fmt.Println(&#34;hello go&#34;)
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>}
-</code></pre></li>
-<li>}</li>
-<li></li>
-<li>func TestForever(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>forever()
-</code></pre></li>
+<li>```<br>for {<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">3. ```</span><br><span class="line">   fmt.Println(&quot;hello go&quot;)</span><br></pre></td></tr></table></figure></li>
+<li>```<br>}<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">5. &#125;</span><br><span class="line">6. </span><br><span class="line">7. func TestForever(t *testing.T) &#123;</span><br><span class="line">8. ```</span><br><span class="line">   forever()</span><br></pre></td></tr></table></figure></li>
 <li>}</li>
 </ol>
 <p>for 循环中没有任何表达式,意味着这是一个死循环,常用于 Web 请求中监控服务端口,是不是比 while(true) 要更加简单?</p>
@@ -1323,98 +732,24 @@ printFile(filename)
 </ul>
 <ol>
 <li>func eval(a, b int, op string) int {</li>
-<li>
-<pre tabindex="0"><code>var result int
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>switch op {
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>case &#34;+&#34;:
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>result = a + b
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>case &#34;-&#34;:
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>result = a - b
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>case &#34;*&#34;:
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>result = a * b
-</code></pre></li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>case &ldquo;/&rdquo;:</p>
-<pre tabindex="0"><code>11. ```
-result = a / b
-</code></pre><ol start="12">
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>default:</p>
-<pre tabindex="0"><code>13. ```
-panic(&#34;unsupported operator: &#34; + op)
-</code></pre><ol start="14">
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>}</p>
-<pre tabindex="0"><code>15. ```
-return result
-</code></pre><ol start="16">
+<li>```<br>var result int<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">3. ```</span><br><span class="line">   switch op &#123;</span><br></pre></td></tr></table></figure></li>
+<li>```<br>case “+”:<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">5. ```</span><br><span class="line">   result = a + b</span><br></pre></td></tr></table></figure></li>
+<li>```<br>case “-“:<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">7. ```</span><br><span class="line">   result = a - b</span><br></pre></td></tr></table></figure></li>
+<li>```<br>case “*”:<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">9. ```</span><br><span class="line">   result = a * b</span><br></pre></td></tr></table></figure></li>
+<li>```<br>case “/“:<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">11. ```</span><br><span class="line">   result = a / b</span><br></pre></td></tr></table></figure></li>
+<li>```<br>default:<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">13. ```</span><br><span class="line">   panic(&quot;unsupported operator: &quot; + op)</span><br></pre></td></tr></table></figure></li>
+<li>```<br>}<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">15. ```</span><br><span class="line">   return result</span><br></pre></td></tr></table></figure></li>
 <li>}</li>
 <li></li>
 <li>func TestEval(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>t.Log(</p>
-<pre tabindex="0"><code>20. ```
-eval(1, 2, &#34;+&#34;),
-</code></pre><ol start="21">
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>eval(1, 2, &ldquo;-&rdquo;),</p>
-<pre tabindex="0"><code>22. ```
-eval(1, 2, &#34;*&#34;),
-</code></pre><ol start="23">
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>eval(1, 2, &ldquo;/&rdquo;),</p>
-<pre tabindex="0"><code>24. ```
-//eval(1, 2, &#34;%&#34;),
-</code></pre><ol start="25">
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>)</p>
-<pre tabindex="0"><code>26. }
-
-不论是变量的定义还是函数的定义, Go 总是和其他主流的编程语言相反,个人觉得挺符合思维顺序,毕竟都是先有输入才能输出,多个输出当然要统一隔离在一块了.
-
-* 可以有零个或一个或多个返回值
-
-1. func divide(a, b int) (int, int) {
-2. ```
-return a / b, a % b
-</code></pre><ol start="3">
+<li>```<br>t.Log(<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">20. ```</span><br><span class="line">   eval(1, 2, &quot;+&quot;),</span><br></pre></td></tr></table></figure></li>
+<li>```<br>eval(1, 2, “-“),<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">22. ```</span><br><span class="line">   eval(1, 2, &quot;*&quot;),</span><br></pre></td></tr></table></figure></li>
+<li>```<br>eval(1, 2, “/“),<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">24. ```</span><br><span class="line">   //eval(1, 2, &quot;%&quot;),</span><br></pre></td></tr></table></figure></li>
+<li>```<br>)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">26. &#125;</span><br><span class="line"></span><br><span class="line">不论是变量的定义还是函数的定义, Go 总是和其他主流的编程语言相反,个人觉得挺符合思维顺序,毕竟都是先有输入才能输出,多个输出当然要统一隔离在一块了.</span><br><span class="line"></span><br><span class="line">* 可以有零个或一个或多个返回值</span><br><span class="line"></span><br><span class="line">1. func divide(a, b int) (int, int) &#123;</span><br><span class="line">2. ```</span><br><span class="line">   return a / b, a % b</span><br></pre></td></tr></table></figure></li>
 <li>}</li>
 <li></li>
 <li>func TestDivide(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>// 2 1
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(divide(5, 2))
-</code></pre></li>
+<li>```<br>// 2 1<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">7. ```</span><br><span class="line">   t.Log(divide(5, 2))</span><br></pre></td></tr></table></figure></li>
 <li>}</li>
 </ol>
 <p>小学时就知道两个整数相除,除不尽的情况下还有余数.只不过编程中商和余数都是分别计算的, Go 语言支持返回多个结果,终于可以实现小学除法了!</p>
@@ -1423,22 +758,9 @@ return a / b, a % b
 </ul>
 <ol>
 <li>func divideReturnName(a, b int) (q, r int) {</li>
-<li>
-<pre tabindex="0"><code>return a / b, a % b
-</code></pre></li>
-<li>}</li>
+<li>```<br>return a / b, a % b<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">3. &#125;</span><br><span class="line">4. </span><br><span class="line">5. func TestDivideReturnName(t *testing.T) &#123;</span><br><span class="line">6. ```</span><br><span class="line">   q, r := divideReturnName(5, 2)</span><br></pre></td></tr></table></figure></li>
 <li></li>
-<li>func TestDivideReturnName(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>q, r := divideReturnName(5, 2)
-</code></pre></li>
-<li></li>
-<li>
-<pre tabindex="0"><code>// 2 1
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(q, r)
-</code></pre></li>
+<li>```<br>// 2 1<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">9. ```</span><br><span class="line">   t.Log(q, r)</span><br></pre></td></tr></table></figure></li>
 <li>}</li>
 </ol>
 <p>还是整数除法的示例,只不过给返回值起了变量名称 (q,rint),但这并不影响调用者,某些 IDE 可能会基于次特性自动进行代码补全,调用者接收时的变量名不一定非要是 q,r .</p>
@@ -1446,91 +768,23 @@ return a / b, a % b
 <li>其他函数可以作为当前函数的参数</li>
 </ul>
 <ol>
-<li>
-<p>func apply(op func(int, int) int, a, b int) int {</p>
-</li>
-<li>
-<pre tabindex="0"><code>p := reflect.ValueOf(op).Pointer()
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>opName := runtime.FuncForPC(p).Name()
-</code></pre></li>
+<li>func apply(op func(int, int) int, a, b int) int {</li>
+<li>```<br>p := reflect.ValueOf(op).Pointer()<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">3. ```</span><br><span class="line">   opName := runtime.FuncForPC(p).Name()</span><br></pre></td></tr></table></figure></li>
 <li></li>
-<li>
-<pre tabindex="0"><code>fmt.Printf(&#34;Calling function %s with args (%d,%d)
-</code></pre><p>&ldquo;, opName, a, b)</p>
-</li>
-<li>
-<pre tabindex="0"><code>return op(a, b)
-</code></pre></li>
-<li>
-<p>}</p>
-</li>
+<li>```<br>fmt.Printf(“Calling function %s with args (%d,%d)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">   </span><br><span class="line">   &quot;, opName, a, b)</span><br><span class="line">6. ```</span><br><span class="line">   return op(a, b)</span><br></pre></td></tr></table></figure></li>
+<li>}</li>
 <li></li>
-<li>
-<p>func pow(a, b int) int {</p>
-</li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>return int(math.Pow(float64(a), float64(b)))</p>
-<pre tabindex="0"><code>11. }
-12. 
-13. func TestApply(t *testing.T) {
-14. ```
-// 1
-</code></pre><ol start="15">
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>t.Log(apply(func(a int, b int) int {</p>
-<pre tabindex="0"><code>16. ```
-return a % b
-</code></pre><ol start="17">
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>}, 5, 2))</p>
-<pre tabindex="0"><code>18. 
-19. ```
-// 25
-</code></pre><ol start="20">
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>t.Log(apply(pow, 5, 2))</p>
-<pre tabindex="0"><code>21. }
-
-apply 函数的第一个参数是 op 函数,第二,第三个参数是 int 类型的 a,b.其中 op 函数也接收两个 int参数,返回一个 int 结果,因此 apply 函数的功能就是将 a,b 参数传递给 op 函数去执行,这种方式比 switch 固定运算类型要灵活方便!
-
-* 没有默认参数,可选参数等复杂概念,只有可变参数列表
-
-1. func sum(numbers ...int) int {
-2. ```
-result := 0
-</code></pre><ol start="3">
-<li>
-<pre tabindex="0"><code>for i := range numbers {
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>result += numbers[i]
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>}
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>return result
-</code></pre></li>
+<li>func pow(a, b int) int {</li>
+<li>```<br>return int(math.Pow(float64(a), float64(b)))<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">11. &#125;</span><br><span class="line">12. </span><br><span class="line">13. func TestApply(t *testing.T) &#123;</span><br><span class="line">14. ```</span><br><span class="line">   // 1</span><br></pre></td></tr></table></figure></li>
+<li>```<br>t.Log(apply(func(a int, b int) int {<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">16. ```</span><br><span class="line">   return a % b</span><br></pre></td></tr></table></figure></li>
+<li>```<br>}, 5, 2))<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">18. </span><br><span class="line">19. ```</span><br><span class="line">   // 25</span><br></pre></td></tr></table></figure></li>
+<li>```<br>t.Log(apply(pow, 5, 2))<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">21. &#125;</span><br><span class="line"></span><br><span class="line">apply 函数的第一个参数是 op 函数,第二,第三个参数是 int 类型的 a,b.其中 op 函数也接收两个 int参数,返回一个 int 结果,因此 apply 函数的功能就是将 a,b 参数传递给 op 函数去执行,这种方式比 switch 固定运算类型要灵活方便!</span><br><span class="line"></span><br><span class="line">* 没有默认参数,可选参数等复杂概念,只有可变参数列表</span><br><span class="line"></span><br><span class="line">1. func sum(numbers ...int) int &#123;</span><br><span class="line">2. ```</span><br><span class="line">   result := 0</span><br></pre></td></tr></table></figure></li>
+<li>```<br>for i := range numbers {<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">4. ```</span><br><span class="line">   result += numbers[i]</span><br></pre></td></tr></table></figure></li>
+<li>```<br>}<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">6. ```</span><br><span class="line">   return result</span><br></pre></td></tr></table></figure></li>
 <li>}</li>
 <li></li>
 <li>func TestSum(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>// 15</p>
-<pre tabindex="0"><code>11. ```
-t.Log(sum(1, 2, 3, 4, 5))
-</code></pre><ol start="12">
+<li>```<br>// 15<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">11. ```</span><br><span class="line">   t.Log(sum(1, 2, 3, 4, 5))</span><br></pre></td></tr></table></figure></li>
 <li>}</li>
 </ol>
 <p>range 遍历方式后续再说,这里可以简单理解为其他主流编程语言中的 foreach 循环,一般包括当前循环索引和循环项.</p>
@@ -1541,133 +795,36 @@ t.Log(sum(1, 2, 3, 4, 5))
 <p>简单回忆一下指针的基本使用方法:</p>
 <ol>
 <li>func TestPointerShorter(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>a := 1
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>pa := &amp;a
-</code></pre></li>
+<li>```<br>a := 1<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">3. ```</span><br><span class="line">   pa := &amp;a</span><br></pre></td></tr></table></figure></li>
 <li></li>
-<li>
-<pre tabindex="0"><code>// 0xc0000e6010 1 1
-</code></pre></li>
-<li>
-<pre tabindex="0"><code>t.Log(pa, *pa, a)
-</code></pre></li>
+<li>```<br>// 0xc0000e6010 1 1<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">6. ```</span><br><span class="line">   t.Log(pa, *pa, a)</span><br></pre></td></tr></table></figure></li>
 <li></li>
-<li>
-<pre tabindex="0"><code>*pa = 2
-</code></pre></li>
-<li></li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>// 0xc0000e6010 2 2</p>
-<pre tabindex="0"><code>11. ```
-t.Log(pa, *pa, a)
-</code></pre><ol start="12">
-<li></li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>// pa = pa + 1 : invalid operation: pa + 1 (mismatched types *int and int)</p>
-<pre tabindex="0"><code>14. ```
-//pa = pa + 1
-</code></pre><ol start="15">
-<li></li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>// *int int int</p>
-<pre tabindex="0"><code>17. ```
-t.Logf(&#34;%T %T %T&#34;, pa, *pa,a)
-</code></pre><ol start="18">
-<li>}</li>
-</ol>
-<p>&amp; 可以获取变量的指针类型, * 指向变量,但不可以对指针进行运算,所以指针很简单!</p>
-<p>当指针类型和其他类型和函数一起发生化学反应时,我们可能更加关心参数传递问题,其他主流的编程语言可能有值传递和引用传递两种方式, Go 语言进行参数传递时又是如何表现的呢?</p>
-<ol>
-<li>func swapByVal(a, b int) {</li>
-<li>
-<pre tabindex="0"><code>a, b = b, a
-</code></pre></li>
+<li>```<br>*pa = 2<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">9. </span><br><span class="line">10. ```</span><br><span class="line">   // 0xc0000e6010 2 2</span><br></pre></td></tr></table></figure></li>
+<li>```<br>t.Log(pa, *pa, a)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">12. </span><br><span class="line">13. ```</span><br><span class="line">   // pa = pa + 1 : invalid operation: pa + 1 (mismatched types *int and int)</span><br></pre></td></tr></table></figure></li>
+<li>```<br>//pa = pa + 1<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">15. </span><br><span class="line">16. ```</span><br><span class="line">   // *int int int</span><br></pre></td></tr></table></figure></li>
+<li>```<br>t.Logf(“%T %T %T”, pa, *pa,a)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">18. &#125;</span><br><span class="line"></span><br><span class="line">&amp; 可以获取变量的指针类型, * 指向变量,但不可以对指针进行运算,所以指针很简单!</span><br><span class="line"></span><br><span class="line">当指针类型和其他类型和函数一起发生化学反应时,我们可能更加关心参数传递问题,其他主流的编程语言可能有值传递和引用传递两种方式, Go 语言进行参数传递时又是如何表现的呢?</span><br><span class="line"></span><br><span class="line">1. func swapByVal(a, b int) &#123;</span><br><span class="line">2. ```</span><br><span class="line">   a, b = b, a</span><br></pre></td></tr></table></figure></li>
 <li>}</li>
 <li></li>
 <li>func TestSwapByVal(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>a, b := 3, 4
-</code></pre></li>
+<li>```<br>a, b := 3, 4<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">7. </span><br><span class="line">8. ```</span><br><span class="line">   swapByVal(a, b)</span><br></pre></td></tr></table></figure></li>
 <li></li>
-<li>
-<pre tabindex="0"><code>swapByVal(a, b)
-</code></pre></li>
-<li></li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>// 3 4</p>
-<pre tabindex="0"><code>11. ```
-t.Log(a, b)
-</code></pre><ol start="12">
+<li>```<br>// 3 4<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">11. ```</span><br><span class="line">   t.Log(a, b)</span><br></pre></td></tr></table></figure></li>
 <li>}</li>
 </ol>
 <p>swapByVal 函数内部实现了变量交换的逻辑,但外部函数 TestSwapByVal 调用后变量 a,b 并没有改变,可见 Go 语言这种参数传递是值传递而不是引用传递.</p>
 <p>上面示例中参数传递的类型都是普通类型,如果参数是指针类型的话,结果会不会不一样呢?</p>
 <ol>
 <li>func swapByRef(a, b *int) {</li>
-<li>
-<pre tabindex="0"><code>*a, *b = *b, *a
-</code></pre></li>
-<li>}</li>
+<li>```<br>*a, *b = *b, *a<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">3. &#125;</span><br><span class="line">4. </span><br><span class="line">5. func TestSwapByRef(t *testing.T) &#123;</span><br><span class="line">6. ```</span><br><span class="line">   a, b := 3, 4</span><br></pre></td></tr></table></figure></li>
 <li></li>
-<li>func TestSwapByRef(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>a, b := 3, 4
-</code></pre></li>
-<li></li>
-<li>
-<pre tabindex="0"><code>swapByRef(&amp;a, &amp;b)
-</code></pre></li>
-<li></li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>// 4 3</p>
-<pre tabindex="0"><code>11. ```
-t.Log(a, b)
-</code></pre><ol start="12">
-<li>}</li>
-</ol>
-<p>指针类型进行参数传递时可以交换变量的值,拷贝的是内存地址,更改内存地址的指向实现了原始变量的交换,参数传递的仍然是值类型.</p>
-<p>实际上, Go 语言进行参数传递的只有值类型一种,这一点不像其他主流的编程语言那样可能既存在值类型又存在引用类型.</p>
-<p>既然是值类型进行参数传递,也就意味着参数传递时直接拷贝一份变量供函数调用,函数内部如何修改参数并不会影响到调用者的原始数据.</p>
-<p>如果只是简单类型并且不希望参数值被修改,那最好不过,如果希望参数值被修改呢?那只能像上例那样传递指针类型.</p>
-<p>简单类型不论是传递普通类型还是指针类型,变量的拷贝过程不会太耗费内存也不会影响状态.</p>
-<p>如果传递的参数本身是比较复杂的类型,仍然进行变量拷贝过程估计就不能满足特定需求了,可能会设计成出传递复杂对象的某种内部指针,不然真的要进行值传递,那还怎么玩?</p>
-<p>Go 只有值传递一种方式,虽然简单,但实际中如何使用应该有特殊技巧,以后再具体分析,现在回到交换变量的例子,换一种思路.</p>
-<ol>
-<li>func swap(a, b int) (int, int) {</li>
-<li>
-<pre tabindex="0"><code>return b, a
-</code></pre></li>
+<li>```<br>swapByRef(&amp;a, &amp;b)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">9. </span><br><span class="line">10. ```</span><br><span class="line">   // 4 3</span><br></pre></td></tr></table></figure></li>
+<li>```<br>t.Log(a, b)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">12. &#125;</span><br><span class="line"></span><br><span class="line">指针类型进行参数传递时可以交换变量的值,拷贝的是内存地址,更改内存地址的指向实现了原始变量的交换,参数传递的仍然是值类型.</span><br><span class="line"></span><br><span class="line">实际上, Go 语言进行参数传递的只有值类型一种,这一点不像其他主流的编程语言那样可能既存在值类型又存在引用类型.</span><br><span class="line"></span><br><span class="line">既然是值类型进行参数传递,也就意味着参数传递时直接拷贝一份变量供函数调用,函数内部如何修改参数并不会影响到调用者的原始数据.</span><br><span class="line"></span><br><span class="line">如果只是简单类型并且不希望参数值被修改,那最好不过,如果希望参数值被修改呢?那只能像上例那样传递指针类型.</span><br><span class="line"></span><br><span class="line">简单类型不论是传递普通类型还是指针类型,变量的拷贝过程不会太耗费内存也不会影响状态.</span><br><span class="line"></span><br><span class="line">如果传递的参数本身是比较复杂的类型,仍然进行变量拷贝过程估计就不能满足特定需求了,可能会设计成出传递复杂对象的某种内部指针,不然真的要进行值传递,那还怎么玩?</span><br><span class="line"></span><br><span class="line">Go 只有值传递一种方式,虽然简单,但实际中如何使用应该有特殊技巧,以后再具体分析,现在回到交换变量的例子,换一种思路.</span><br><span class="line"></span><br><span class="line">1. func swap(a, b int) (int, int) &#123;</span><br><span class="line">2. ```</span><br><span class="line">   return b, a</span><br></pre></td></tr></table></figure></li>
 <li>}</li>
 <li></li>
 <li>func TestSwap(t *testing.T) {</li>
-<li>
-<pre tabindex="0"><code>a, b := 3, 4
-</code></pre></li>
+<li>```<br>a, b := 3, 4<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">7. </span><br><span class="line">8. ```</span><br><span class="line">   a, b = swap(a, b)</span><br></pre></td></tr></table></figure></li>
 <li></li>
-<li>
-<pre tabindex="0"><code>a, b = swap(a, b)
-</code></pre></li>
-<li></li>
-<li>
-<pre tabindex="0"><code></code></pre></li>
-</ol>
-<p>// 4 3</p>
-<pre tabindex="0"><code>11. ```
-t.Log(a, b)
-</code></pre><ol start="12">
+<li>```<br>// 4 3<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">11. ```</span><br><span class="line">   t.Log(a, b)</span><br></pre></td></tr></table></figure></li>
 <li>}</li>
 </ol>
 <p>利用 Go 函数可以返回多个值特性,返回交换后的变量值,调用者接收时相当于重新赋值,比传递指针类型要简单不少!</p>
@@ -1681,254 +838,195 @@ t.Log(a, b)
 <p>本文主要介绍了 Go 的基本语法以及和其他主流的编程语言的异同,你 Get 到了吗?</p>
 <p>下文将开始介绍 Go 的内建容器类型,数组,切片, Map 来一遍!</p>
 <p>欢迎大家一起学习交流,如有不当之处,恳请指正,如需完整源码,请在公众号[雪之梦技术驿站]留言回复,感谢你的评论与转发!</p>
-<p><img src="//note.youdao.com/src/b06096c411b66b176cfc4c48c64b44fd"
+<p><img src="//note.youdao.com/src/b06096c411b66b176cfc4c48c64b44fd" alt></p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/936ea20/" title="Go 基础语法" target="_blank" rel="external">https://lxb.wiki/936ea20/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="external">CC BY-NC 4.0</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      
+        <section id="comments" class="comments">
+          <style>
+            .utterances{max-width: 100%;}
+          </style>
+          <script src="https://utteranc.es/client.js"
+                repo="lxbwolf/lxbwolf.github.io"
+                issue-term="title"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+          </script>
+        </section>
+      
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/3d5a1f1d/" title="分布式发号器架构设计"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/a333bc04/" title="mysqldump: Got error: 1044: Access denied for user"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+    <li class="toggle-toc">
+      <a class="toggle-btn collapsed" data-toggle="collapse" href="#collapseToc" aria-expanded="false" title="文章目录" role="button">
+        <span>[&nbsp;</span><span>文章目录</span>
+        <i class="text-collapsed icon icon-anchor"></i>
+        <i class="text-in icon icon-close"></i>
+        <span>]</span>
+      </a>
+    </li>
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,wechat"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
 	
 	
-	
-	loading="lazy"
-	
-	
-></p>
-
-</section>
-
-
-    <footer class="article-footer">
-    
-
-    
-    <section class="article-copyright">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
-</svg>
-
-
-
-        <span>Licensed under CC BY-NC-SA 4.0</span>
-    </section>
-    </footer>
-
-
-    
-</article>
-
-    
-
-    
-
-<aside class="related-content--wrapper">
-    <h2 class="section-title">相关文章</h2>
-    <div class="related-content">
-        <div class="flex article-list--tile">
-            
-                
-<article class="">
-    <a href="/c296dcc8/">
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
         
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
         
-
-        <div class="article-details">
-            <h2 class="article-title">Go 发送邮件</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/e353ee8e/">
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
         
-        
+    </ul>
 
-        <div class="article-details">
-            <h2 class="article-title">Golang select 的用法</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/2ddd6919/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">Go 环境变量</h2>
-        </div>
-    </a>
-</article>
-
-            
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> xbl </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
         </div>
     </div>
-</aside>
 
-     
-    
-        
-    <script src="https://utteranc.es/client.js" 
-        repo="lxbwolf/lxbwolf.github.io"
-        issue-term="pathname"
-        
-        crossorigin="anonymous"
-        async
-        >
-</script>
 
-<style>
-    .utterances {
-        max-width: unset;
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
     }
-</style>
-
-<script>
-    let utterancesLoaded = false;
-
-    function setUtterancesTheme(theme) {
-        let utterances = document.querySelector('.utterances iframe');
-        if (utterances) {
-            utterances.contentWindow.postMessage(
-                {
-                    type: 'set-theme',
-                    theme: `github-${theme}`
-                },
-                'https://utteranc.es'
-            );
-        }
-    }
-
-    addEventListener('message', event => {
-        if (event.origin !== 'https://utteranc.es') return;
-
-        
-        utterancesLoaded = true;
-        setUtterancesTheme(document.documentElement.dataset.scheme)
-    });
-
-    window.addEventListener('onColorSchemeChange', (e) => {
-        if (!utterancesLoaded) return;
-        setUtterancesTheme(e.detail)
-    })
-</script>
+  </script>
 
 
-    
 
-    <footer class="site-footer">
-    <section class="copyright">
-        &copy; 
-        
-            2020 - 
-        
-        2025 Xiaobin&#39;s Notes
-    </section>
-    
-    <section class="powerby">
-        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
-        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
-    </section>
 </footer>
 
-
-    
-<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
-
-    
-    <div class="pswp__bg"></div>
-
-    
-    <div class="pswp__scroll-wrap">
-
-        
-        <div class="pswp__container">
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-        </div>
-
-        
-        <div class="pswp__ui pswp__ui--hidden">
-
-            <div class="pswp__top-bar">
-
-                
-
-                <div class="pswp__counter"></div>
-
-                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
-
-                <button class="pswp__button pswp__button--share" title="Share"></button>
-
-                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
-
-                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
-
-                
-                
-                <div class="pswp__preloader">
-                    <div class="pswp__preloader__icn">
-                        <div class="pswp__preloader__cut">
-                            <div class="pswp__preloader__donut"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-                <div class="pswp__share-tooltip"></div>
-            </div>
-
-            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
-            </button>
-
-            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
-            </button>
-
-            <div class="pswp__caption">
-                <div class="pswp__caption__center"></div>
-            </div>
-
-        </div>
-
-    </div>
-
-</div><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
-                defer
-                >
-            </script><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
-                defer
-                >
-            </script><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
-            ><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
-            >
-
-            </main>
-        </div>
-        <script 
-                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
-                
-                >
-            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
 <script>
-    (function () {
-        const customFont = document.createElement('link');
-        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
-
-        customFont.type = "text/css";
-        customFont.rel = "stylesheet";
-
-        document.head.appendChild(customFont);
-    }());
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 </script>
 
-    </body>
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
 </html>

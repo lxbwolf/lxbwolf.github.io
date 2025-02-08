@@ -1,526 +1,476 @@
 <!DOCTYPE html>
-<html lang="zh-cn" dir="ltr">
-    <head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='来学习下 Go 语言的安全检查工具 gosec。 Go 语言写的代码越来越常见，尤其是在容器、Kubernetes 或云生态相关的开发中。Docker 是最早'>
-<title>【译】使用 gosec 检查 Go 代码中的安全问题</title>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
 
-<link rel='canonical' href='https://lxb.wiki/a59515fd/'>
+  
+  <title>【译】使用 gosec 检查 Go 代码中的安全问题 | Xiaobin&#39;s Notes</title>
+  <meta name="description" content="开始使用 gosec 安装 Go 和 gosec   使用默认选项运行 gosec 关于误判 高优先级问题 中优先级问题 低优先级问题   自定义 gosec 扫描 排除指定的测试 运行指定的检查 扫描测试文件 修改输出的格式   用 gosec 检查容易被发现的问题     来学习下 Go 语言的安全检查工具 gosec。   Go 语言写的代码越来越常见，尤其是在容器、Kubernete">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【译】使用 gosec 检查 Go 代码中的安全问题">
+<meta property="og:url" content="https://lxb.wiki/a59515fd/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Notes">
+<meta property="og:description" content="开始使用 gosec 安装 Go 和 gosec   使用默认选项运行 gosec 关于误判 高优先级问题 中优先级问题 低优先级问题   自定义 gosec 扫描 排除指定的测试 运行指定的检查 扫描测试文件 修改输出的格式   用 gosec 检查容易被发现的问题     来学习下 Go 语言的安全检查工具 gosec。   Go 语言写的代码越来越常见，尤其是在容器、Kubernete">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img.linux.net.cn/data/attachment/album/202010/04/125129bh4qxxsyqpvqjtx4.jpg">
+<meta property="article:published_time" content="2020-10-19T15:36:00.000Z">
+<meta property="article:modified_time" content="2025-02-02T11:48:02.419Z">
+<meta property="article:author" content="lxb">
+<meta property="article:tag" content="go">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img.linux.net.cn/data/attachment/album/202010/04/125129bh4qxxsyqpvqjtx4.jpg">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/a59515fd/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Notes" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
 
-<link rel="stylesheet" href="/scss/style.min.e5fa5972b3e81b9d9b61e2598991a71c444ca50e38b034d78f5651a82802e894.css"><meta property='og:title' content='【译】使用 gosec 检查 Go 代码中的安全问题'>
-<meta property='og:description' content='来学习下 Go 语言的安全检查工具 gosec。 Go 语言写的代码越来越常见，尤其是在容器、Kubernetes 或云生态相关的开发中。Docker 是最早'>
-<meta property='og:url' content='https://lxb.wiki/a59515fd/'>
-<meta property='og:site_name' content='Xiaobin&#39;s Notes'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='go' /><meta property='article:published_time' content='2020-10-19T23:36:00&#43;00:00'/><meta property='article:modified_time' content='2020-10-19T23:36:00&#43;00:00'/>
-<meta name="twitter:title" content="【译】使用 gosec 检查 Go 代码中的安全问题">
-<meta name="twitter:description" content="来学习下 Go 语言的安全检查工具 gosec。 Go 语言写的代码越来越常见，尤其是在容器、Kubernetes 或云生态相关的开发中。Docker 是最早">
-<link rel="shortcut icon" href="/favicon.png" />
+  
+  
+  
+  
 
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
 
-
-
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-
-    gtag('config', 'G-JZ2PWLT6JY');
-</script>
-<script>
-    var _hmt = _hmt || [];
-    (function () {
-        var hm = document.createElement("script");
-        hm.src = "https://hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(hm, s);
-    })();
-</script>
-<script>
-    (function () {
-        var el = document.createElement("script");
-        el.src = "https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?f146251743600ee0672cdcc8455ce18def91cdb255ad969a2ef5c715d5ed5baecaf7cd753709c168f20e6a2e9019123fd11e31a222d3a2fe01ad05c6b8f519b2";
-        el.id = "ttzz";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(el, s);
-    })(window)
-</script>
-    </head>
-    <body class="
-    article-page
-    ">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
     <script>
-        (function() {
-            const colorSchemeKey = 'StackColorScheme';
-            if(!localStorage.getItem(colorSchemeKey)){
-                localStorage.setItem(colorSchemeKey, "auto");
-            }
-        })();
-    </script><script>
-    (function() {
-        const colorSchemeKey = 'StackColorScheme';
-        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
-        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
-            
-
-            document.documentElement.dataset.scheme = 'dark';
-        } else {
-            document.documentElement.dataset.scheme = 'light';
-        }
-    })();
-</script>
-<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
-    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
-        <span class="hamburger-box">
-            <span class="hamburger-inner"></span>
-        </span>
-    </button>
-
-    <header>
-        
-            
-            <figure class="site-avatar">
-                <a href="/">
-                
-                    
-                    
-                    
-                        
-                        <img src="/img/avatar_hu692828361b78eaa42fdbdbbf5a7177a9_44446_300x0_resize_q75_box.jpeg" width="300"
-                            height="298" class="site-logo" loading="lazy" alt="Avatar">
-                    
-                
-                </a>
-                
-                    <span class="emoji">🍥</span>
-                
-            </figure>
-            
-        
-        
-        <div class="site-meta">
-            <h1 class="site-name"><a href="/">Xiaobin&#39;s Notes</a></h1>
-            <h2 class="site-description"></h2>
-        </div>
-    </header>
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+<meta name="generator" content="Hexo 6.3.0"></head>
 
 
-    <ol class="menu" id="main-menu">
-        
-        
-        
-        <li >
-            <a href='/' >
-                
-                
-                
-                <span>首页</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/archives/' >
-                
-                
-                
-                <span>归档</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/categories/' >
-                
-                
-                
-                <span>分类</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/tags/' >
-                
-                
-                
-                <span>标签</span>
-            </a>
-        </li>
-        
-        
-        <li >
-            <a href='/links/' >
-                
-                
-                
-                <span>友链</span>
-            </a>
-        </li>
-        
-
-        <div class="menu-bottom-section"><ol class="social-menu">
-                    
-                        <li>
-                            <a 
-                                href='mailto://me@lxb.wiki'
-                                target="_blank"
-                                title="Email"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://github.com/lxbwolf'
-                                target="_blank"
-                                title="GitHub"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                        <li>
-                            <a 
-                                href='https://lxb.wiki/atom.xml'
-                                target="_blank"
-                                title="Rss"
-                                rel="me"
-                            >
-                                
-                                
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="5" cy="19" r="1" />
-  <path d="M4 4a16 16 0 0 1 16 16" />
-  <path d="M4 11a9 9 0 0 1 9 9" />
-</svg>
-
-
-
-                                
-                            </a>
-                        </li>
-                    
-                </ol>
-                <li id="dark-mode-toggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="8" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="16" cy="12" r="2" />
-  <rect x="2" y="6" width="20" height="12" rx="6" />
-</svg>
-
-
-
-                    <span>暗色模式</span>
-                </li>
-            
-        </div>
-    </ol>
-</aside>
-
-    <aside class="sidebar right-sidebar sticky">
-        
-            
-                
-<section class="widget archives">
-    
-    <h2 class="widget-title section-title">目录</h2>
-
-    <div class="widget--toc">
-        <nav id="TableOfContents">
-  <ul>
-    <li>
-      <ul>
-        <li><a href="#开始使用-gosec">开始使用 gosec</a></li>
-        <li><a href="#使用默认选项运行-gosec">使用默认选项运行 gosec</a></li>
-        <li><a href="#自定义-gosec-扫描">自定义 gosec 扫描</a></li>
-        <li><a href="#用-gosec-检查容易被发现的问题">用 gosec 检查容易被发现的问题</a></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
-    </div>
-</section>
-
-            
-        
-    </aside>
-
-
-            <main class="main full-width">
-    <article class="main-article">
-    <header class="article-header">
-
-    <div class="article-details">
-    
-    <header class="article-category">
-        
-        <a href="/categories/Lang/" >
-            Lang
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
         </a>
-        
-    </header>
-    
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin&#39;s Notes</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
 
-    <div class="article-title-wrapper">
-        <h2 class="article-title">
-            <a href="/a59515fd/">【译】使用 gosec 检查 Go 代码中的安全问题</a>
-        </h2>
-
-        
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
     </div>
-
-    
-    
-    
-    
-    <footer class="article-time">
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
-  <circle cx="18" cy="18" r="4" />
-  <path d="M15 3v4" />
-  <path d="M7 3v4" />
-  <path d="M3 11h16" />
-  <path d="M18 16.496v1.504l1 1" />
-</svg>
-            <time class="article-time--published">Oct 19, 2020</time>
-        </div>
-        
-
-        
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <polyline points="12 7 12 12 15 15" />
-</svg>
-
-
-
-            <time class="article-time--reading">
-                阅读时长: 8 分钟
-            </time>
-        </div>
-        
-        <small>
-    <section class="article-tags">
-        
-            <a href="/tags/go/">go</a>
-        
-    </section>
-</small>
-    </footer>
-    
-
-    
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
 </div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
 </header>
 
-    <section class="article-content">
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
     
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/FE/">FE</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">77</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Life/">Life</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">39</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">20</span></li></ul>
+    </div>
+  </div>
+
+
     
-    <!-- raw HTML omitted -->
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/GitHub/" style="font-size: 13.08px;">GitHub</a> <a href="/tags/GoogleSheets/" style="font-size: 13px;">GoogleSheets</a> <a href="/tags/STL/" style="font-size: 13.38px;">STL</a> <a href="/tags/amap/" style="font-size: 13px;">amap</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.23px;">blog</a> <a href="/tags/c/" style="font-size: 13.69px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.08px;">centOS</a> <a href="/tags/devops/" style="font-size: 13.62px;">devops</a> <a href="/tags/docker/" style="font-size: 13.08px;">docker</a> <a href="/tags/elastic/" style="font-size: 13.38px;">elastic</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.31px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.15px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.08px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.15px;">hexo</a> <a href="/tags/hooks/" style="font-size: 13px;">hooks</a> <a href="/tags/http/" style="font-size: 13.38px;">http</a> <a href="/tags/jdk/" style="font-size: 13px;">jdk</a> <a href="/tags/joplin/" style="font-size: 13.08px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/linux/" style="font-size: 13.15px;">linux</a> <a href="/tags/lucene/" style="font-size: 13.31px;">lucene</a> <a href="/tags/mac/" style="font-size: 13.46px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/mermaid/" style="font-size: 13.08px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.15px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.31px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.15px;">nginx</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.15px;">pic</a> <a href="/tags/python/" style="font-size: 13px;">python</a> <a href="/tags/qt/" style="font-size: 13.31px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/raycast/" style="font-size: 13px;">raycast</a> <a href="/tags/react/" style="font-size: 13px;">react</a> <a href="/tags/redis/" style="font-size: 13.54px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.92px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.08px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/terminal/" style="font-size: 13px;">terminal</a> <a href="/tags/vue/" style="font-size: 13px;">vue</a> <a href="/tags/zk/" style="font-size: 13.08px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%8D%8F%E8%AE%AE/" style="font-size: 13px;">协议</a> <a href="/tags/%E5%9C%B0%E5%9B%BE/" style="font-size: 13px;">地图</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.46px;">工具</a> <a href="/tags/%E5%B9%BF%E5%91%8A/" style="font-size: 13px;">广告</a> <a href="/tags/%E6%8F%92%E5%BA%A7/" style="font-size: 13px;">插座</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.77px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.38px;">树莓派</a> <a href="/tags/%E7%94%A8%E7%94%B5/" style="font-size: 13px;">用电</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.54px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91/" style="font-size: 13.08px;">编译</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.85px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.08px;">邮件</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/">2024</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">25</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">24</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">39</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">33</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/42f8026c/" class="title">React useEffect() Hook</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-18T14:16:21.000Z" itemprop="datePublished">2024-05-18</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/b7826aa4/" class="title">Vue 2.x 使用高德地图JS API 2.0加载起点终点路径轨迹</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-05-01T13:51:18.000Z" itemprop="datePublished">2024-05-01</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Life/">Life</a>
+              </p>
+              <p class="item-title">
+                <a href="/0565b4f5/" class="title">家庭用电插座</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-04-11T05:48:31.000Z" itemprop="datePublished">2024-04-11</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/a520e262/" class="title">MacOS 14.4 引发Java 应用崩溃</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-15T06:05:49.000Z" itemprop="datePublished">2024-03-15</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Web/">Web</a>
+              </p>
+              <p class="item-title">
+                <a href="/cb9b2c66/" class="title">重定向广告</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-03-04T05:27:13.000Z" itemprop="datePublished">2024-03-04</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<aside class="sidebar sidebar-toc collapse" id="collapseToc" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    <nav id="toc" class="article-toc">
+      <h3 class="toc-title">文章目录</h3>
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.</span> <span class="toc-text">开始使用 gosec</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">1.1.</span> <span class="toc-text">安装 Go 和 gosec</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">2.</span> <span class="toc-text">使用默认选项运行 gosec</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">2.1.</span> <span class="toc-text">关于误判</span></a></li><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">2.2.</span> <span class="toc-text">高优先级问题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">2.3.</span> <span class="toc-text">中优先级问题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">2.4.</span> <span class="toc-text">低优先级问题</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">3.</span> <span class="toc-text">自定义 gosec 扫描</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">3.1.</span> <span class="toc-text">排除指定的测试</span></a></li><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">3.2.</span> <span class="toc-text">运行指定的检查</span></a></li><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">3.3.</span> <span class="toc-text">扫描测试文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link"><span class="toc-number">3.4.</span> <span class="toc-text">修改输出的格式</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.</span> <span class="toc-text">用 gosec 检查容易被发现的问题</span></a></li></ol>
+    </nav>
+  </div>
+</aside>
+
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-使用-gosec-检查-Go-代码中的安全问题" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      【译】使用 gosec 检查 Go 代码中的安全问题
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/a59515fd/" class="article-date">
+	  <time datetime="2020-10-19T15:36:00.000Z" itemprop="datePublished">2020-10-19</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Lang/">Lang</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/go/" rel="tag">go</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/a59515fd/#comments" class="article-comment-link">评论</a></span> 
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 3.7k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 15(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#开始使用-gosec">开始使用 gosec</a><ul>
+<li><a href="#安装-go-和-gosec">安装 Go 和 gosec</a></li>
+</ul>
+</li>
+<li><a href="#使用默认选项运行-gosec">使用默认选项运行 gosec</a><ul>
+<li><a href="#关于误判">关于误判</a></li>
+<li><a href="#高优先级问题">高优先级问题</a></li>
+<li><a href="#中优先级问题">中优先级问题</a></li>
+<li><a href="#低优先级问题">低优先级问题</a></li>
+</ul>
+</li>
+<li><a href="#自定义-gosec-扫描">自定义 gosec 扫描</a><ul>
+<li><a href="#排除指定的测试">排除指定的测试</a></li>
+<li><a href="#运行指定的检查">运行指定的检查</a></li>
+<li><a href="#扫描测试文件">扫描测试文件</a></li>
+<li><a href="#修改输出的格式">修改输出的格式</a></li>
+</ul>
+</li>
+<li><a href="#用-gosec-检查容易被发现的问题">用 gosec 检查容易被发现的问题</a></li>
+</ul>
+<!-- tocstop -->
+
 <blockquote>
 <p>来学习下 Go 语言的安全检查工具 gosec。</p>
 </blockquote>
-<p><img src="https://img.linux.net.cn/data/attachment/album/202010/04/125129bh4qxxsyqpvqjtx4.jpg"
-	
-	
-	
-	loading="lazy"
-	
-	
-></p>
-<p><a class="link" href="https://golang.org/"  target="_blank" rel="noopener"
-    >Go 语言</a>写的代码越来越常见，尤其是在容器、Kubernetes 或云生态相关的开发中。Docker 是最早采用 Golang 的项目之一，随后是 Kubernetes，之后大量的新项目在众多编程语言中选择了 Go。</p>
+<p><img src="https://img.linux.net.cn/data/attachment/album/202010/04/125129bh4qxxsyqpvqjtx4.jpg" alt></p>
+<p><a target="_blank" rel="noopener" href="https://golang.org/">Go 语言</a>写的代码越来越常见，尤其是在容器、Kubernetes 或云生态相关的开发中。Docker 是最早采用 Golang 的项目之一，随后是 Kubernetes，之后大量的新项目在众多编程语言中选择了 Go。</p>
 <p>像其他语言一样，Go 也有它的长处和短处（如安全缺陷）。这些缺陷可能会因为语言本身的缺陷加上程序员编码不当而产生，例如，C 代码中的内存安全问题。</p>
 <p>无论它们出现的原因是什么，安全问题都应该在开发过程的早期修复，以免在封装好的软件中出现。幸运的是，静态分析工具可以帮你以更可重复的方式处理这些问题。静态分析工具通过解析用某种编程语言写的代码来找到问题。</p>
-<p>这类工具中很多被称为 linter。传统意义上，linter 更注重的是检查代码中编码问题、bug、代码风格之类的问题，它们可能不会发现代码中的安全问题。例如，<a class="link" href="https://www.synopsys.com/software-integrity/security-testing/static-analysis-sast.html"  target="_blank" rel="noopener"
-    >Coverity</a> 是一个很流行的工具，它可以帮助寻找 C/C++ 代码中的问题。然而，也有一些工具专门用来检查源码中的安全问题。例如，<a class="link" href="https://pypi.org/project/bandit/"  target="_blank" rel="noopener"
-    >Bandit</a> 可以检查 Python 代码中的安全缺陷。而 <a class="link" href="https://github.com/securego/gosec"  target="_blank" rel="noopener"
-    >gosec</a> 则用来搜寻 Go 源码中的安全缺陷。<code>gosec</code> 通过扫描 Go 的 AST（抽象语法树abstract syntax tree<!-- raw HTML omitted -->抽象语法树<!-- raw HTML omitted -->abstract syntax tree<!-- raw HTML omitted --><!-- raw HTML omitted -->）来检查源码中的安全问题。</p>
-<h3 id="开始使用-gosec">开始使用 gosec</h3>
-<p>在开始学习和使用 <code>gosec</code> 之前，你需要准备一个 Go 语言写的项目。有这么多开源软件，我相信这不是问题。你可以在 GitHub 的 <a class="link" href="https://github.com/trending/go"  target="_blank" rel="noopener"
-    >热门 Golang 仓库</a>中找一个。</p>
-<p>本文中，我随机选了 <a class="link" href="https://github.com/docker/docker-ce"  target="_blank" rel="noopener"
-    >Docker CE</a> 项目，但你可以选择任意的 Go 项目。</p>
-<h4 id="安装-go-和-gosec">安装 Go 和 gosec</h4>
-<p>如果你还没安装 Go，你可以先从仓库中拉取下来。如果你用的是 Fedora 或其他基于 RPM 的 Linux 发行版本：</p>
-<pre tabindex="0"><code>$ dnf install golang.x86_64
-</code></pre><p>如果你用的是其他操作系统，请参照 <a class="link" href="https://golang.org/doc/install"  target="_blank" rel="noopener"
-    >Golang 安装</a>页面。</p>
+<p>这类工具中很多被称为 linter。传统意义上，linter 更注重的是检查代码中编码问题、bug、代码风格之类的问题，它们可能不会发现代码中的安全问题。例如，<a target="_blank" rel="noopener" href="https://www.synopsys.com/software-integrity/security-testing/static-analysis-sast.html">Coverity</a> 是一个很流行的工具，它可以帮助寻找 C/C++ 代码中的问题。然而，也有一些工具专门用来检查源码中的安全问题。例如，<a target="_blank" rel="noopener" href="https://pypi.org/project/bandit/">Bandit</a> 可以检查 Python 代码中的安全缺陷。而 <a target="_blank" rel="noopener" href="https://github.com/securego/gosec">gosec</a> 则用来搜寻 Go 源码中的安全缺陷。<code>gosec</code> 通过扫描 Go 的 AST（抽象语法树abstract syntax tree<ruby>抽象语法树<rt>abstract syntax tree</rt></ruby>）来检查源码中的安全问题。</p>
+<h3><span id="开始使用-gosec">开始使用 gosec</span></h3><p>在开始学习和使用 <code>gosec</code> 之前，你需要准备一个 Go 语言写的项目。有这么多开源软件，我相信这不是问题。你可以在 GitHub 的 <a target="_blank" rel="noopener" href="https://github.com/trending/go">热门 Golang 仓库</a>中找一个。</p>
+<p>本文中，我随机选了 <a target="_blank" rel="noopener" href="https://github.com/docker/docker-ce">Docker CE</a> 项目，但你可以选择任意的 Go 项目。</p>
+<h4><span id="安装-go-和-gosec">安装 Go 和 gosec</span></h4><p>如果你还没安装 Go，你可以先从仓库中拉取下来。如果你用的是 Fedora 或其他基于 RPM 的 Linux 发行版本：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ dnf install golang.x86_64</span><br></pre></td></tr></table></figure>
+
+<p>如果你用的是其他操作系统，请参照 <a target="_blank" rel="noopener" href="https://golang.org/doc/install">Golang 安装</a>页面。</p>
 <p>使用 <code>version</code> 参数来验证 Go 是否安装成功：</p>
-<pre tabindex="0"><code>$ go version
-go version go1.14.6 linux/amd64
-</code></pre><p>运行 <code>go get</code> 命令就可以轻松地安装 <code>gosec</code>：</p>
-<pre tabindex="0"><code>$ go get github.com/securego/gosec/cmd/gosec
-</code></pre><p>上面这行命令会从 GitHub 下载 <code>gosec</code> 的源码，编译并安装到指定位置。在仓库的 <code>README</code> 中你还可以看到<a class="link" href="https://github.com/securego/gosec#install"  target="_blank" rel="noopener"
-    >安装该工具的其他方法</a>。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ go version</span><br><span class="line">go version go1.14.6 linux/amd64</span><br></pre></td></tr></table></figure>
+
+<p>运行 <code>go get</code> 命令就可以轻松地安装 <code>gosec</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ go get github.com/securego/gosec/cmd/gosec</span><br></pre></td></tr></table></figure>
+
+<p>上面这行命令会从 GitHub 下载 <code>gosec</code> 的源码，编译并安装到指定位置。在仓库的 <code>README</code> 中你还可以看到<a target="_blank" rel="noopener" href="https://github.com/securego/gosec#install">安装该工具的其他方法</a>。</p>
 <p><code>gosec</code> 的源码会被下载到 <code>$GOPATH</code> 的位置，编译出的二进制文件会被安装到你系统上设置的 <code>bin</code> 目录下。你可以运行下面的命令来查看 <code>$GOPATH</code> 和 <code>$GOBIN</code> 目录：</p>
-<pre tabindex="0"><code>$ go env | grep GOBIN
-GOBIN=&#34;/root/go/gobin&#34;
-$ go env | grep GOPATH
-GOPATH=&#34;/root/go&#34;
-</code></pre><p>如果 <code>go get</code> 命令执行成功，那么 <code>gosec</code> 二进制应该就可以使用了：</p>
-<pre tabindex="0"><code>$ ls -l ~/go/bin/
-total 9260
--rwxr-xr-x. 1 root root 9482175 Aug 20 04:17 gosec
-</code></pre><p>你可以把 <code>$GOPATH</code> 下的 <code>bin</code> 目录添加到 <code>$PATH</code> 中。这样你就可以像使用系统上的其他命令一样来使用 <code>gosec</code> 命令行工具（CLI）了。</p>
-<pre tabindex="0"><code>$ which gosec
-/root/go/bin/gosec
-$
-</code></pre><p>使用 <code>gosec</code> 命令行工具的 <code>-help</code> 选项来看看运行是否符合预期：</p>
-<pre tabindex="0"><code>$ gosec -help
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ go env | grep GOBIN</span><br><span class="line">GOBIN=&quot;/root/go/gobin&quot;</span><br><span class="line">$ go env | grep GOPATH</span><br><span class="line">GOPATH=&quot;/root/go&quot;</span><br></pre></td></tr></table></figure>
 
-gosec - Golang security checker
+<p>如果 <code>go get</code> 命令执行成功，那么 <code>gosec</code> 二进制应该就可以使用了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ ls -l ~/go/bin/</span><br><span class="line">total 9260</span><br><span class="line">-rwxr-xr-x. 1 root root 9482175 Aug 20 04:17 gosec</span><br></pre></td></tr></table></figure>
 
-gosec analyzes Go source code to look for common programming mistakes that
-can lead to security problems.
+<p>你可以把 <code>$GOPATH</code> 下的 <code>bin</code> 目录添加到 <code>$PATH</code> 中。这样你就可以像使用系统上的其他命令一样来使用 <code>gosec</code> 命令行工具（CLI）了。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ which gosec</span><br><span class="line">/root/go/bin/gosec</span><br><span class="line">$</span><br></pre></td></tr></table></figure>
 
-VERSION: dev
-GIT TAG:
-BUILD DATE:
+<p>使用 <code>gosec</code> 命令行工具的 <code>-help</code> 选项来看看运行是否符合预期：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ gosec -help</span><br><span class="line"></span><br><span class="line">gosec - Golang security checker</span><br><span class="line"></span><br><span class="line">gosec analyzes Go source code to look for common programming mistakes that</span><br><span class="line">can lead to security problems.</span><br><span class="line"></span><br><span class="line">VERSION: dev</span><br><span class="line">GIT TAG:</span><br><span class="line">BUILD DATE:</span><br><span class="line"></span><br><span class="line">USAGE:</span><br></pre></td></tr></table></figure>
 
-USAGE:
-</code></pre><p>之后，创建一个目录，把源码下载到这个目录作为实例项目（本例中，我用的是 Docker CE）：</p>
-<pre tabindex="0"><code>$ mkdir gosec-demo
-$ cd gosec-demo/
-$ pwd
-/root/gosec-demo
-$ git clone https://github.com/docker/docker-ce.git
-Cloning into &#39;docker-ce&#39;...
-remote: Enumerating objects: 1271, done.
-remote: Counting objects: 100% (1271/1271), done.
-remote: Compressing objects: 100% (722/722), done.
-remote: Total 431003 (delta 384), reused 981 (delta 318), pack-reused 429732
-Receiving objects: 100% (431003/431003), 166.84 MiB | 28.94 MiB/s, done.
-Resolving deltas: 100% (221338/221338), done.
-Updating files: 100% (10861/10861), done.
-</code></pre><p>代码统计工具（本例中用的是 <code>cloc</code>）显示这个项目大部分是用 Go 写的，恰好迎合了 <code>gosec</code> 的功能。</p>
-<pre tabindex="0"><code>$ ./cloc /root/gosec-demo/docker-ce/
-   10771 text files.
-    8724 unique files.                                          
-    2560 files ignored.
+<p>之后，创建一个目录，把源码下载到这个目录作为实例项目（本例中，我用的是 Docker CE）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$ mkdir gosec-demo</span><br><span class="line">$ cd gosec-demo/</span><br><span class="line">$ pwd</span><br><span class="line">/root/gosec-demo</span><br><span class="line">$ git clone https://github.com/docker/docker-ce.git</span><br><span class="line">Cloning into &#x27;docker-ce&#x27;...</span><br><span class="line">remote: Enumerating objects: 1271, done.</span><br><span class="line">remote: Counting objects: 100% (1271/1271), done.</span><br><span class="line">remote: Compressing objects: 100% (722/722), done.</span><br><span class="line">remote: Total 431003 (delta 384), reused 981 (delta 318), pack-reused 429732</span><br><span class="line">Receiving objects: 100% (431003/431003), 166.84 MiB | 28.94 MiB/s, done.</span><br><span class="line">Resolving deltas: 100% (221338/221338), done.</span><br><span class="line">Updating files: 100% (10861/10861), done.</span><br></pre></td></tr></table></figure>
 
+<p>代码统计工具（本例中用的是 <code>cloc</code>）显示这个项目大部分是用 Go 写的，恰好迎合了 <code>gosec</code> 的功能。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$ ./cloc /root/gosec-demo/docker-ce/</span><br><span class="line">   10771 text files.</span><br><span class="line">    8724 unique files.                                          </span><br><span class="line">    2560 files ignored.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">-----------------------------------------------------------------------------------</span><br><span class="line">Language                         files          blank        comment           code</span><br><span class="line">-----------------------------------------------------------------------------------</span><br><span class="line">Go                                7222         190785         230478        1574580</span><br><span class="line">YAML                                37           4831            817         156762</span><br><span class="line">Markdown                           529          21422              0          67893</span><br><span class="line">Protocol Buffers                   149           5014          16562          10071</span><br></pre></td></tr></table></figure>
 
------------------------------------------------------------------------------------
-Language                         files          blank        comment           code
------------------------------------------------------------------------------------
-Go                                7222         190785         230478        1574580
-YAML                                37           4831            817         156762
-Markdown                           529          21422              0          67893
-Protocol Buffers                   149           5014          16562          10071
-</code></pre><h3 id="使用默认选项运行-gosec">使用默认选项运行 gosec</h3>
-<p>在 Docker CE 项目中使用默认选项运行 <code>gosec</code>，执行 <code>gosec ./...</code> 命令。屏幕上会有很多输出内容。在末尾你会看到一个简短的 “Summary”，列出了浏览的文件数、所有文件的总行数，以及源码中发现的问题数。</p>
-<pre tabindex="0"><code>$ pwd
-/root/gosec-demo/docker-ce
-$ time gosec ./...
-[gosec] 2020/08/20 04:44:15 Including rules: default
-[gosec] 2020/08/20 04:44:15 Excluding rules: default
-[gosec] 2020/08/20 04:44:15 Import directory: /root/gosec-demo/docker-ce/components/engine/opts
-[gosec] 2020/08/20 04:44:17 Checking package: opts
-[gosec] 2020/08/20 04:44:17 Checking file: /root/gosec-demo/docker-ce/components/engine/opts/address_pools.go
-[gosec] 2020/08/20 04:44:17 Checking file: /root/gosec-demo/docker-ce/components/engine/opts/env.go
-[gosec] 2020/08/20 04:44:17 Checking file: /root/gosec-demo/docker-ce/components/engine/opts/hosts.go
+<h3><span id="使用默认选项运行-gosec">使用默认选项运行 gosec</span></h3><p>在 Docker CE 项目中使用默认选项运行 <code>gosec</code>，执行 <code>gosec ./...</code> 命令。屏幕上会有很多输出内容。在末尾你会看到一个简短的 “Summary”，列出了浏览的文件数、所有文件的总行数，以及源码中发现的问题数。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">$ pwd</span><br><span class="line">/root/gosec-demo/docker-ce</span><br><span class="line">$ time gosec ./...</span><br><span class="line">[gosec] 2020/08/20 04:44:15 Including rules: default</span><br><span class="line">[gosec] 2020/08/20 04:44:15 Excluding rules: default</span><br><span class="line">[gosec] 2020/08/20 04:44:15 Import directory: /root/gosec-demo/docker-ce/components/engine/opts</span><br><span class="line">[gosec] 2020/08/20 04:44:17 Checking package: opts</span><br><span class="line">[gosec] 2020/08/20 04:44:17 Checking file: /root/gosec-demo/docker-ce/components/engine/opts/address_pools.go</span><br><span class="line">[gosec] 2020/08/20 04:44:17 Checking file: /root/gosec-demo/docker-ce/components/engine/opts/env.go</span><br><span class="line">[gosec] 2020/08/20 04:44:17 Checking file: /root/gosec-demo/docker-ce/components/engine/opts/hosts.go</span><br><span class="line"></span><br><span class="line"># End of gosec run</span><br><span class="line"></span><br><span class="line">Summary:</span><br><span class="line">   Files: 1278</span><br><span class="line">   Lines: 173979</span><br><span class="line">   Nosec: 4</span><br><span class="line">  Issues: 644</span><br><span class="line"></span><br><span class="line">real    0m52.019s</span><br><span class="line">user    0m37.284s</span><br><span class="line">sys     0m12.734s</span><br><span class="line">$</span><br></pre></td></tr></table></figure>
 
-# End of gosec run
-
-Summary:
-   Files: 1278
-   Lines: 173979
-   Nosec: 4
-  Issues: 644
-
-real    0m52.019s
-user    0m37.284s
-sys     0m12.734s
-$
-</code></pre><p>滚动屏幕你会看到不同颜色高亮的行：红色表示需要尽快查看的高优先级问题，黄色表示中优先级的问题。</p>
-<h4 id="关于误判">关于误判</h4>
-<p>在开始检查代码之前，我想先分享几条基本原则。默认情况下，静态检查工具会基于一系列的规则对测试代码进行分析，并报告出它们发现的<em>所有</em>问题。这是否意味着工具报出来的每一个问题都需要修复？非也。这个问题最好的解答者是设计和开发这个软件的人。他们最熟悉代码，更重要的是，他们了解软件会在什么环境下部署以及会被怎样使用。</p>
+<p>滚动屏幕你会看到不同颜色高亮的行：红色表示需要尽快查看的高优先级问题，黄色表示中优先级的问题。</p>
+<h4><span id="关于误判">关于误判</span></h4><p>在开始检查代码之前，我想先分享几条基本原则。默认情况下，静态检查工具会基于一系列的规则对测试代码进行分析，并报告出它们发现的<em>所有</em>问题。这是否意味着工具报出来的每一个问题都需要修复？非也。这个问题最好的解答者是设计和开发这个软件的人。他们最熟悉代码，更重要的是，他们了解软件会在什么环境下部署以及会被怎样使用。</p>
 <p>这个知识点对于判定工具标记出来的某段代码到底是不是安全缺陷至关重要。随着工作时间和经验的积累，你会慢慢学会怎样让静态分析工具忽略非安全缺陷，使报告内容的可执行性更高。因此，要判定 <code>gosec</code> 报出来的某个问题是否需要修复，让一名有经验的开发者对源码做人工审计会是比较好的办法。</p>
-<h4 id="高优先级问题">高优先级问题</h4>
-<p>从输出内容看，<code>gosec</code> 发现了 Docker CE 的一个高优先级问题，它使用的是低版本的 TLS（传输层安全Transport Layer Security<!-- raw HTML omitted -->传输层安全<!-- raw HTML omitted -->Transport Layer Security<!-- raw HTML omitted --><!-- raw HTML omitted -->）。无论什么时候，使用软件和库的最新版本都是确保它更新及时、没有安全问题的最好的方法。</p>
-<pre tabindex="0"><code>[/root/gosec-demo/docker-ce/components/engine/daemon/logger/splunk/splunk.go:173] - G402 (CWE-295): TLS MinVersion too low. (Confidence: HIGH, Severity: HIGH)
-    172:
-  &gt; 173:        tlsConfig := &amp;tls.Config{}
-    174:
-</code></pre><p>它还发现了一个弱随机数生成器。它是不是一个安全缺陷，取决于生成的随机数的使用方式。</p>
-<pre tabindex="0"><code>[/root/gosec-demo/docker-ce/components/engine/pkg/namesgenerator/names-generator.go:843] - G404 (CWE-338): Use of weak random number generator (math/rand instead of crypto/rand) (Confidence: MEDIUM, Severity: HIGH)
-    842: begin:
-  &gt; 843:        name := fmt.Sprintf(&#34;%s_%s&#34;, left[rand.Intn(len(left))], right[rand.Intn(len(right))])
-    844:        if name == &#34;boring_wozniak&#34; /* Steve Wozniak is not boring */ {
-</code></pre><h4 id="中优先级问题">中优先级问题</h4>
-<p>这个工具还发现了一些中优先级问题。它标记了一个通过与 <code>tar</code> 相关的解压炸弹这种方式实现的潜在的 DoS 威胁，这种方式可能会被恶意的攻击者利用。</p>
-<pre tabindex="0"><code>[/root/gosec-demo/docker-ce/components/engine/pkg/archive/copy.go:357] - G110 (CWE-409): Potential DoS vulnerability via decompression bomb (Confidence: MEDIUM, Severity: MEDIUM)
-    356:
-  &gt; 357:                        if _, err = io.Copy(rebasedTar, srcTar); err != nil {
-    358:                                w.CloseWithError(err)
-</code></pre><p>它还发现了一个通过变量访问文件的问题。如果恶意使用者能访问这个变量，那么他们就可以改变变量的值去读其他文件。</p>
-<pre tabindex="0"><code>[/root/gosec-demo/docker-ce/components/cli/cli/context/tlsdata.go:80] - G304 (CWE-22): Potential file inclusion via variable (Confidence: HIGH, Severity: MEDIUM)
-    79:         if caPath != &#34;&#34; {
-  &gt; 80:                 if ca, err = ioutil.ReadFile(caPath); err != nil {
-    81:                         return nil, err
-</code></pre><p>文件和目录通常是操作系统安全的最基础的元素。这里，<code>gosec</code> 报出了一个可能需要你检查目录的权限是否安全的问题。</p>
-<pre tabindex="0"><code>[/root/gosec-demo/docker-ce/components/engine/contrib/apparmor/main.go:41] - G301 (CWE-276): Expect directory permissions to be 0750 or less (Confidence: HIGH, Severity: MEDIUM)
-    40:         // make sure /etc/apparmor.d exists
-  &gt; 41:         if err := os.MkdirAll(path.Dir(apparmorProfilePath), 0755); err != nil {
-    42:                 log.Fatal(err)
-</code></pre><p>你经常需要在源码中启动命令行工具。Go 使用内建的 exec 库来实现。仔细地分析用来调用这些工具的变量，就能发现安全缺陷。</p>
-<pre tabindex="0"><code>[/root/gosec-demo/docker-ce/components/engine/testutil/fakestorage/fixtures.go:59] - G204 (CWE-78): Subprocess launched with variable (Confidence: HIGH, Severity: MEDIUM)
-    58:
-  &gt; 59:              cmd := exec.Command(goCmd, &#34;build&#34;, &#34;-o&#34;, filepath.Join(tmp, &#34;httpserver&#34;), &#34;github.com/docker/docker/contrib/httpserver&#34;)
-    60:                 cmd.Env = append(os.Environ(), []string{
-</code></pre><h4 id="低优先级问题">低优先级问题</h4>
-<p>在这个输出中，gosec 报出了一个 <code>unsafe</code> 调用相关的低优先级问题，这个调用会绕开 Go 提供的内存保护。再仔细分析下你调用 <code>unsafe</code> 的方式，看看是否有被别人利用的可能性。</p>
-<pre tabindex="0"><code>[/root/gosec-demo/docker-ce/components/engine/pkg/archive/changes_linux.go:264] - G103 (CWE-242): Use of unsafe calls should be audited (Confidence: HIGH, Severity: LOW)
-    263:        for len(buf) &gt; 0 {
-  &gt; 264:                dirent := (*unix.Dirent)(unsafe.Pointer(&amp;buf[0]))
-    265:                buf = buf[dirent.Reclen:]
+<h4><span id="高优先级问题">高优先级问题</span></h4><p>从输出内容看，<code>gosec</code> 发现了 Docker CE 的一个高优先级问题，它使用的是低版本的 TLS（传输层安全Transport Layer Security<ruby>传输层安全<rt>Transport Layer Security<rt></rt></rt></ruby>）。无论什么时候，使用软件和库的最新版本都是确保它更新及时、没有安全问题的最好的方法。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[/root/gosec-demo/docker-ce/components/engine/daemon/logger/splunk/splunk.go:173] - G402 (CWE-295): TLS MinVersion too low. (Confidence: HIGH, Severity: HIGH)</span><br><span class="line">    172:</span><br><span class="line">  &gt; 173:        tlsConfig := &amp;tls.Config&#123;&#125;</span><br><span class="line">    174:</span><br></pre></td></tr></table></figure>
 
+<p>它还发现了一个弱随机数生成器。它是不是一个安全缺陷，取决于生成的随机数的使用方式。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[/root/gosec-demo/docker-ce/components/engine/pkg/namesgenerator/names-generator.go:843] - G404 (CWE-338): Use of weak random number generator (math/rand instead of crypto/rand) (Confidence: MEDIUM, Severity: HIGH)</span><br><span class="line">    842: begin:</span><br><span class="line">  &gt; 843:        name := fmt.Sprintf(&quot;%s_%s&quot;, left[rand.Intn(len(left))], right[rand.Intn(len(right))])</span><br><span class="line">    844:        if name == &quot;boring_wozniak&quot; /* Steve Wozniak is not boring */ &#123;</span><br></pre></td></tr></table></figure>
 
+<h4><span id="中优先级问题">中优先级问题</span></h4><p>这个工具还发现了一些中优先级问题。它标记了一个通过与 <code>tar</code> 相关的解压炸弹这种方式实现的潜在的 DoS 威胁，这种方式可能会被恶意的攻击者利用。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[/root/gosec-demo/docker-ce/components/engine/pkg/archive/copy.go:357] - G110 (CWE-409): Potential DoS vulnerability via decompression bomb (Confidence: MEDIUM, Severity: MEDIUM)</span><br><span class="line">    356:</span><br><span class="line">  &gt; 357:                        if _, err = io.Copy(rebasedTar, srcTar); err != nil &#123;</span><br><span class="line">    358:                                w.CloseWithError(err)</span><br></pre></td></tr></table></figure>
 
-[/root/gosec-demo/docker-ce/components/engine/pkg/devicemapper/devmapper_wrapper.go:88] - G103 (CWE-242): Use of unsafe calls should be audited (Confidence: HIGH, Severity: LOW)
-    87: func free(p *C.char) {
-  &gt; 88:         C.free(unsafe.Pointer(p))
-    89: }
-</code></pre><p>它还标记了源码中未处理的错误。源码中出现的错误你都应该处理。</p>
-<pre tabindex="0"><code>[/root/gosec-demo/docker-ce/components/cli/cli/command/image/build/context.go:172] - G104 (CWE-703): Errors unhandled. (Confidence: HIGH, Severity: LOW)
-    171:                err := tar.Close()
-  &gt; 172:                os.RemoveAll(dockerfileDir)
-    173:                return err
-</code></pre><h3 id="自定义-gosec-扫描">自定义 gosec 扫描</h3>
-<p>使用 <code>gosec</code> 的默认选项会带来很多的问题。然而，经过人工审计，随着时间推移你会掌握哪些问题是不需要标记的。你可以自己指定排除和包含哪些测试。</p>
-<p>我上面提到过，<code>gosec</code> 是基于一系列的规则从 Go 源码中查找问题的。下面是它使用的完整的<a class="link" href="https://github.com/securego/gosec#available-rules"  target="_blank" rel="noopener"
-    >规则</a>列表：</p>
+<p>它还发现了一个通过变量访问文件的问题。如果恶意使用者能访问这个变量，那么他们就可以改变变量的值去读其他文件。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[/root/gosec-demo/docker-ce/components/cli/cli/context/tlsdata.go:80] - G304 (CWE-22): Potential file inclusion via variable (Confidence: HIGH, Severity: MEDIUM)</span><br><span class="line">    79:         if caPath != &quot;&quot; &#123;</span><br><span class="line">  &gt; 80:                 if ca, err = ioutil.ReadFile(caPath); err != nil &#123;</span><br><span class="line">    81:                         return nil, err</span><br></pre></td></tr></table></figure>
+
+<p>文件和目录通常是操作系统安全的最基础的元素。这里，<code>gosec</code> 报出了一个可能需要你检查目录的权限是否安全的问题。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[/root/gosec-demo/docker-ce/components/engine/contrib/apparmor/main.go:41] - G301 (CWE-276): Expect directory permissions to be 0750 or less (Confidence: HIGH, Severity: MEDIUM)</span><br><span class="line">    40:         // make sure /etc/apparmor.d exists</span><br><span class="line">  &gt; 41:         if err := os.MkdirAll(path.Dir(apparmorProfilePath), 0755); err != nil &#123;</span><br><span class="line">    42:                 log.Fatal(err)</span><br></pre></td></tr></table></figure>
+
+<p>你经常需要在源码中启动命令行工具。Go 使用内建的 exec 库来实现。仔细地分析用来调用这些工具的变量，就能发现安全缺陷。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[/root/gosec-demo/docker-ce/components/engine/testutil/fakestorage/fixtures.go:59] - G204 (CWE-78): Subprocess launched with variable (Confidence: HIGH, Severity: MEDIUM)</span><br><span class="line">    58:</span><br><span class="line">  &gt; 59:              cmd := exec.Command(goCmd, &quot;build&quot;, &quot;-o&quot;, filepath.Join(tmp, &quot;httpserver&quot;), &quot;github.com/docker/docker/contrib/httpserver&quot;)</span><br><span class="line">    60:                 cmd.Env = append(os.Environ(), []string&#123;</span><br></pre></td></tr></table></figure>
+
+<h4><span id="低优先级问题">低优先级问题</span></h4><p>在这个输出中，gosec 报出了一个 <code>unsafe</code> 调用相关的低优先级问题，这个调用会绕开 Go 提供的内存保护。再仔细分析下你调用 <code>unsafe</code> 的方式，看看是否有被别人利用的可能性。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">[/root/gosec-demo/docker-ce/components/engine/pkg/archive/changes_linux.go:264] - G103 (CWE-242): Use of unsafe calls should be audited (Confidence: HIGH, Severity: LOW)</span><br><span class="line">    263:        for len(buf) &gt; 0 &#123;</span><br><span class="line">  &gt; 264:                dirent := (*unix.Dirent)(unsafe.Pointer(&amp;buf[0]))</span><br><span class="line">    265:                buf = buf[dirent.Reclen:]</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">[/root/gosec-demo/docker-ce/components/engine/pkg/devicemapper/devmapper_wrapper.go:88] - G103 (CWE-242): Use of unsafe calls should be audited (Confidence: HIGH, Severity: LOW)</span><br><span class="line">    87: func free(p *C.char) &#123;</span><br><span class="line">  &gt; 88:         C.free(unsafe.Pointer(p))</span><br><span class="line">    89: &#125;</span><br></pre></td></tr></table></figure>
+
+<p>它还标记了源码中未处理的错误。源码中出现的错误你都应该处理。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[/root/gosec-demo/docker-ce/components/cli/cli/command/image/build/context.go:172] - G104 (CWE-703): Errors unhandled. (Confidence: HIGH, Severity: LOW)</span><br><span class="line">    171:                err := tar.Close()</span><br><span class="line">  &gt; 172:                os.RemoveAll(dockerfileDir)</span><br><span class="line">    173:                return err</span><br></pre></td></tr></table></figure>
+
+<h3><span id="自定义-gosec-扫描">自定义 gosec 扫描</span></h3><p>使用 <code>gosec</code> 的默认选项会带来很多的问题。然而，经过人工审计，随着时间推移你会掌握哪些问题是不需要标记的。你可以自己指定排除和包含哪些测试。</p>
+<p>我上面提到过，<code>gosec</code> 是基于一系列的规则从 Go 源码中查找问题的。下面是它使用的完整的<a target="_blank" rel="noopener" href="https://github.com/securego/gosec#available-rules">规则</a>列表：</p>
 <ul>
 <li>G101：查找硬编码凭证</li>
 <li>G102：绑定到所有接口</li>
@@ -553,322 +503,213 @@ $
 <li>G505：导入黑名单列表：crypto/sha1</li>
 <li>G601: 在 <code>range</code> 语句中使用隐式的元素别名</li>
 </ul>
-<h4 id="排除指定的测试">排除指定的测试</h4>
-<p>你可以自定义 <code>gosec</code> 来避免对已知为安全的问题进行扫描和报告。你可以使用 <code>-exclude</code> 选项和上面的规则编号来忽略指定的问题。</p>
+<h4><span id="排除指定的测试">排除指定的测试</span></h4><p>你可以自定义 <code>gosec</code> 来避免对已知为安全的问题进行扫描和报告。你可以使用 <code>-exclude</code> 选项和上面的规则编号来忽略指定的问题。</p>
 <p>例如，如果你不想让 <code>gosec</code> 检查源码中硬编码凭证相关的未处理的错误，那么你可以运行下面的命令来忽略这些错误：</p>
-<pre tabindex="0"><code>$ gosec -exclude=G104 ./...
-$ gosec -exclude=G104,G101 ./...
-</code></pre><p>有时候你知道某段代码是安全的，但是 <code>gosec</code> 还是会报出问题。然而，你又不想完全排除掉整个检查，因为你想让 <code>gosec</code> 检查新增的代码。通过在你已知为安全的代码块添加 <code>#nosec</code> 标记可以避免 <code>gosec</code> 扫描。这样 <code>gosec</code> 会继续扫描新增代码，而忽略掉 <code>#nosec</code> 标记的代码块。</p>
-<h4 id="运行指定的检查">运行指定的检查</h4>
-<p>另一方面，如果你只想检查指定的问题，你可以通过 <code>-include</code> 选项和规则编号来告诉 <code>gosec</code> 运行哪些检查：</p>
-<pre tabindex="0"><code>$ gosec -include=G201,G202 ./...
-</code></pre><h4 id="扫描测试文件">扫描测试文件</h4>
-<p>Go 语言自带对测试的支持，通过单元测试来检验一个元素是否符合预期。在默认模式下，<code>gosec</code> 会忽略测试文件，你可以使用 <code>-tests</code> 选项把它们包含进来：</p>
-<pre tabindex="0"><code>gosec -tests ./...
-</code></pre><h4 id="修改输出的格式">修改输出的格式</h4>
-<p>找出问题只是它的一半功能；另一半功能是把它检查到的问题以用户友好同时又方便工具处理的方式报告出来。幸运的是，<code>gosec</code> 可以用不同的方式输出。例如，如果你想看 JSON 格式的报告，那么就使用 <code>-fmt</code> 选项指定 JSON 格式并把结果保存到 <code>results.json</code> 文件中：</p>
-<pre tabindex="0"><code>$ gosec -fmt=json -out=results.json ./...
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ gosec -exclude=G104 ./...</span><br><span class="line">$ gosec -exclude=G104,G101 ./...</span><br></pre></td></tr></table></figure>
 
-$ ls -l results.json
--rw-r--r--. 1 root root 748098 Aug 20 05:06 results.json
-$
+<p>有时候你知道某段代码是安全的，但是 <code>gosec</code> 还是会报出问题。然而，你又不想完全排除掉整个检查，因为你想让 <code>gosec</code> 检查新增的代码。通过在你已知为安全的代码块添加 <code>#nosec</code> 标记可以避免 <code>gosec</code> 扫描。这样 <code>gosec</code> 会继续扫描新增代码，而忽略掉 <code>#nosec</code> 标记的代码块。</p>
+<h4><span id="运行指定的检查">运行指定的检查</span></h4><p>另一方面，如果你只想检查指定的问题，你可以通过 <code>-include</code> 选项和规则编号来告诉 <code>gosec</code> 运行哪些检查：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ gosec -include=G201,G202 ./...</span><br></pre></td></tr></table></figure>
 
-         {
-             &#34;severity&#34;: &#34;LOW&#34;,
-             &#34;confidence&#34;: &#34;HIGH&#34;,
-             &#34;cwe&#34;: {
-                 &#34;ID&#34;: &#34;242&#34;,
-                 &#34;URL&#34;: &#34;https://cwe.mitre.org/data/definitions/242.html&#34;
-             },
-             &#34;rule_id&#34;: &#34;G103&#34;,
-             &#34;details&#34;: &#34;Use of unsafe calls should be audited&#34;,
-             &#34;file&#34;: &#34;/root/gosec-demo/docker-ce/components/engine/daemon/graphdriver/graphtest/graphtest_unix.go&#34;,
-             &#34;code&#34;: &#34;304: \t// Cast to []byte\n305: \theader := *(*reflect.SliceHeader)(unsafe.Pointer(\u0026buf))\n306: \theader.      Len *= 8\n&#34;,
-             &#34;line&#34;: &#34;305&#34;,
-             &#34;column&#34;: &#34;36&#34;
-         },
-</code></pre><h3 id="用-gosec-检查容易被发现的问题">用 gosec 检查容易被发现的问题</h3>
-<p>静态检查工具不能完全代替人工代码审计。然而，当代码量变大、有众多开发者时，这样的工具往往有助于以可重复的方式找出容易被发现的问题。它对于帮助新开发者识别和在编码时避免引入这些安全缺陷很有用。</p>
+<h4><span id="扫描测试文件">扫描测试文件</span></h4><p>Go 语言自带对测试的支持，通过单元测试来检验一个元素是否符合预期。在默认模式下，<code>gosec</code> 会忽略测试文件，你可以使用 <code>-tests</code> 选项把它们包含进来：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gosec -tests ./...</span><br></pre></td></tr></table></figure>
+
+<h4><span id="修改输出的格式">修改输出的格式</span></h4><p>找出问题只是它的一半功能；另一半功能是把它检查到的问题以用户友好同时又方便工具处理的方式报告出来。幸运的是，<code>gosec</code> 可以用不同的方式输出。例如，如果你想看 JSON 格式的报告，那么就使用 <code>-fmt</code> 选项指定 JSON 格式并把结果保存到 <code>results.json</code> 文件中：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">$ gosec -fmt=json -out=results.json ./...</span><br><span class="line"></span><br><span class="line">$ ls -l results.json</span><br><span class="line">-rw-r--r--. 1 root root 748098 Aug 20 05:06 results.json</span><br><span class="line">$</span><br><span class="line"></span><br><span class="line">         &#123;</span><br><span class="line">             &quot;severity&quot;: &quot;LOW&quot;,</span><br><span class="line">             &quot;confidence&quot;: &quot;HIGH&quot;,</span><br><span class="line">             &quot;cwe&quot;: &#123;</span><br><span class="line">                 &quot;ID&quot;: &quot;242&quot;,</span><br><span class="line">                 &quot;URL&quot;: &quot;https://cwe.mitre.org/data/definitions/242.html&quot;</span><br><span class="line">             &#125;,</span><br><span class="line">             &quot;rule_id&quot;: &quot;G103&quot;,</span><br><span class="line">             &quot;details&quot;: &quot;Use of unsafe calls should be audited&quot;,</span><br><span class="line">             &quot;file&quot;: &quot;/root/gosec-demo/docker-ce/components/engine/daemon/graphdriver/graphtest/graphtest_unix.go&quot;,</span><br><span class="line">             &quot;code&quot;: &quot;304: \t// Cast to []byte\n305: \theader := *(*reflect.SliceHeader)(unsafe.Pointer(\u0026buf))\n306: \theader.      Len *= 8\n&quot;,</span><br><span class="line">             &quot;line&quot;: &quot;305&quot;,</span><br><span class="line">             &quot;column&quot;: &quot;36&quot;</span><br><span class="line">         &#125;,</span><br></pre></td></tr></table></figure>
+
+<h3><span id="用-gosec-检查容易被发现的问题">用 gosec 检查容易被发现的问题</span></h3><p>静态检查工具不能完全代替人工代码审计。然而，当代码量变大、有众多开发者时，这样的工具往往有助于以可重复的方式找出容易被发现的问题。它对于帮助新开发者识别和在编码时避免引入这些安全缺陷很有用。</p>
 <hr>
-<p>via: <a class="link" href="https://opensource.com/article/20/9/gosec"  target="_blank" rel="noopener"
-    >https://opensource.com/article/20/9/gosec</a></p>
-<p>作者：<a class="link" href="https://opensource.com/users/gkamathe"  target="_blank" rel="noopener"
-    >Gaurav Kamathe</a>
-选题：<a class="link" href="https://github.com/lujun9972"  target="_blank" rel="noopener"
-    >lujun9972</a>
-译者：<a class="link" href="https://github.com/lxbwolf"  target="_blank" rel="noopener"
-    >lxbowlf</a>
-校对：<a class="link" href="https://github.com/wxy"  target="_blank" rel="noopener"
-    >wxy</a></p>
-<p>本文由 <a class="link" href="https://github.com/LCTT/TranslateProject"  target="_blank" rel="noopener"
-    >LCTT</a> 原创编译，<a class="link" href="https://linux.cn/"  target="_blank" rel="noopener"
-    >Linux中国</a> 荣誉推出</p>
+<p>via: <a target="_blank" rel="noopener" href="https://opensource.com/article/20/9/gosec">https://opensource.com/article/20/9/gosec</a></p>
+<p>作者：<a target="_blank" rel="noopener" href="https://opensource.com/users/gkamathe">Gaurav Kamathe</a><br>选题：<a target="_blank" rel="noopener" href="https://github.com/lujun9972">lujun9972</a><br>译者：<a target="_blank" rel="noopener" href="https://github.com/lxbwolf">lxbowlf</a><br>校对：<a target="_blank" rel="noopener" href="https://github.com/wxy">wxy</a></p>
+<p>本文由 <a target="_blank" rel="noopener" href="https://github.com/LCTT/TranslateProject">LCTT</a> 原创编译，<a target="_blank" rel="noopener" href="https://linux.cn/">Linux中国</a> 荣誉推出</p>
 
-</section>
-
-
-    <footer class="article-footer">
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
     
-
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/a59515fd/" title="【译】使用 gosec 检查 Go 代码中的安全问题" target="_blank" rel="external">https://lxb.wiki/a59515fd/</a>
+    </li>
     
-    <section class="article-copyright">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <circle cx="12" cy="12" r="9" />
-  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
-</svg>
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="external">CC BY-NC 4.0</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
 
-
-
-        <span>Licensed under CC BY-NC-SA 4.0</span>
-    </section>
-    </footer>
-
-
+    </div>
+  </article>
+  
     
-</article>
-
+  <section id="comments">
+  	
+      
+        <section id="comments" class="comments">
+          <style>
+            .utterances{max-width: 100%;}
+          </style>
+          <script src="https://utteranc.es/client.js"
+                repo="lxbwolf/lxbwolf.github.io"
+                issue-term="title"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+          </script>
+        </section>
+      
     
+  </section>
 
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
     
+    <li class="prev">
+      <a href="/1ca354f7/" title="目录切换：dirs、pushd、popd命令"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/9a49b652/" title="PHP检测图片是否有木马"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+    <li class="toggle-toc">
+      <a class="toggle-btn collapsed" data-toggle="collapse" href="#collapseToc" aria-expanded="false" title="文章目录" role="button">
+        <span>[&nbsp;</span><span>文章目录</span>
+        <i class="text-collapsed icon icon-anchor"></i>
+        <i class="text-in icon icon-close"></i>
+        <span>]</span>
+      </a>
+    </li>
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,wechat"></div>
+    
+  </div>
+  </div>
+</nav>
+  
 
-<aside class="related-content--wrapper">
-    <h2 class="section-title">相关文章</h2>
-    <div class="related-content">
-        <div class="flex article-list--tile">
-            
-                
-<article class="">
-    <a href="/8c9efcce/">
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
         
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
         
-
-        <div class="article-details">
-            <h2 class="article-title">流量复制重放工具goreplay</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/ace0b2ab/">
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
         
-        
+    </ul>
 
-        <div class="article-details">
-            <h2 class="article-title">【译】Go 1.14 中接口的菱形组合</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/27d7ea27/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】通过禁止比较让 Go 二进制文件变小</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/5698ca18/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】Go：异步抢占</h2>
-        </div>
-    </a>
-</article>
-
-            
-                
-<article class="">
-    <a href="/6ce34c49/">
-        
-        
-
-        <div class="article-details">
-            <h2 class="article-title">【译】Inlining Optimisations in Go</h2>
-        </div>
-    </a>
-</article>
-
-            
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> xbl </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
         </div>
     </div>
-</aside>
 
-     
-    
-        
-    <script src="https://utteranc.es/client.js" 
-        repo="lxbwolf/lxbwolf.github.io"
-        issue-term="pathname"
-        
-        crossorigin="anonymous"
-        async
-        >
-</script>
 
-<style>
-    .utterances {
-        max-width: unset;
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
     }
-</style>
-
-<script>
-    let utterancesLoaded = false;
-
-    function setUtterancesTheme(theme) {
-        let utterances = document.querySelector('.utterances iframe');
-        if (utterances) {
-            utterances.contentWindow.postMessage(
-                {
-                    type: 'set-theme',
-                    theme: `github-${theme}`
-                },
-                'https://utteranc.es'
-            );
-        }
-    }
-
-    addEventListener('message', event => {
-        if (event.origin !== 'https://utteranc.es') return;
-
-        
-        utterancesLoaded = true;
-        setUtterancesTheme(document.documentElement.dataset.scheme)
-    });
-
-    window.addEventListener('onColorSchemeChange', (e) => {
-        if (!utterancesLoaded) return;
-        setUtterancesTheme(e.detail)
-    })
-</script>
+  </script>
 
 
-    
 
-    <footer class="site-footer">
-    <section class="copyright">
-        &copy; 
-        
-            2020 - 
-        
-        2025 Xiaobin&#39;s Notes
-    </section>
-    
-    <section class="powerby">
-        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
-        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
-    </section>
 </footer>
 
-
-    
-<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
-
-    
-    <div class="pswp__bg"></div>
-
-    
-    <div class="pswp__scroll-wrap">
-
-        
-        <div class="pswp__container">
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-            <div class="pswp__item"></div>
-        </div>
-
-        
-        <div class="pswp__ui pswp__ui--hidden">
-
-            <div class="pswp__top-bar">
-
-                
-
-                <div class="pswp__counter"></div>
-
-                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
-
-                <button class="pswp__button pswp__button--share" title="Share"></button>
-
-                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
-
-                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
-
-                
-                
-                <div class="pswp__preloader">
-                    <div class="pswp__preloader__icn">
-                        <div class="pswp__preloader__cut">
-                            <div class="pswp__preloader__donut"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-                <div class="pswp__share-tooltip"></div>
-            </div>
-
-            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
-            </button>
-
-            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
-            </button>
-
-            <div class="pswp__caption">
-                <div class="pswp__caption__center"></div>
-            </div>
-
-        </div>
-
-    </div>
-
-</div><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
-                defer
-                >
-            </script><script 
-                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
-                defer
-                >
-            </script><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
-            ><link 
-                rel="stylesheet" 
-                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
-            >
-
-            </main>
-        </div>
-        <script 
-                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
-                
-                >
-            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
 <script>
-    (function () {
-        const customFont = document.createElement('link');
-        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
-
-        customFont.type = "text/css";
-        customFont.rel = "stylesheet";
-
-        document.head.appendChild(customFont);
-    }());
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 </script>
 
-    </body>
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
 </html>
