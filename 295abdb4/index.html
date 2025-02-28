@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+
+  
+  <title>Electron的原理 | Xiaobin&#39;s Notes</title>
+  <meta name="description" content="Electron的原理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Electron的原理">
+<meta property="og:url" content="https://lxb.wiki/295abdb4/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Notes">
+<meta property="og:description" content="Electron的原理">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202502272318170.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202502272319367.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202502272320519.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202502272321463.png">
+<meta property="article:published_time" content="2024-08-28T14:33:41.000Z">
+<meta property="article:modified_time" content="2025-02-28T14:51:07.525Z">
+<meta property="article:author" content="xbl">
+<meta property="article:tag" content="electron">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202502272318170.png">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/295abdb4/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Notes" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin&#39;s Notes</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/FE/">FE</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">77</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Life/">Life</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">41</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">20</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/ECMAScript/" style="font-size: 13px;">ECMAScript</a> <a href="/tags/GitHub/" style="font-size: 13.08px;">GitHub</a> <a href="/tags/GoogleSheets/" style="font-size: 13px;">GoogleSheets</a> <a href="/tags/STL/" style="font-size: 13.38px;">STL</a> <a href="/tags/amap/" style="font-size: 13px;">amap</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.23px;">blog</a> <a href="/tags/c/" style="font-size: 13.69px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.08px;">centOS</a> <a href="/tags/css/" style="font-size: 13px;">css</a> <a href="/tags/devops/" style="font-size: 13.62px;">devops</a> <a href="/tags/docker/" style="font-size: 13.08px;">docker</a> <a href="/tags/elastic/" style="font-size: 13.38px;">elastic</a> <a href="/tags/electron/" style="font-size: 13px;">electron</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.31px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.15px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.08px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.15px;">hexo</a> <a href="/tags/hooks/" style="font-size: 13px;">hooks</a> <a href="/tags/http/" style="font-size: 13.38px;">http</a> <a href="/tags/jdk/" style="font-size: 13px;">jdk</a> <a href="/tags/joplin/" style="font-size: 13.15px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/linux/" style="font-size: 13.15px;">linux</a> <a href="/tags/lucene/" style="font-size: 13.31px;">lucene</a> <a href="/tags/mac/" style="font-size: 13.46px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/markdown/" style="font-size: 13px;">markdown</a> <a href="/tags/mermaid/" style="font-size: 13.08px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.15px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.31px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.15px;">nginx</a> <a href="/tags/npm/" style="font-size: 13px;">npm</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.15px;">pic</a> <a href="/tags/pnpm/" style="font-size: 13px;">pnpm</a> <a href="/tags/python/" style="font-size: 13px;">python</a> <a href="/tags/qt/" style="font-size: 13.31px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/raycast/" style="font-size: 13px;">raycast</a> <a href="/tags/react/" style="font-size: 13px;">react</a> <a href="/tags/redis/" style="font-size: 13.54px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.92px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.08px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/terminal/" style="font-size: 13px;">terminal</a> <a href="/tags/vue/" style="font-size: 13px;">vue</a> <a href="/tags/webstorm/" style="font-size: 13px;">webstorm</a> <a href="/tags/zk/" style="font-size: 13.08px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%8D%8F%E8%AE%AE/" style="font-size: 13px;">协议</a> <a href="/tags/%E5%9C%B0%E5%9B%BE/" style="font-size: 13px;">地图</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.46px;">工具</a> <a href="/tags/%E5%B9%BF%E5%91%8A/" style="font-size: 13px;">广告</a> <a href="/tags/%E6%8F%92%E5%BA%A7/" style="font-size: 13px;">插座</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.77px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.38px;">树莓派</a> <a href="/tags/%E7%94%A8%E7%94%B5/" style="font-size: 13px;">用电</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.54px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91/" style="font-size: 13.08px;">编译</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.85px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.08px;">邮件</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/">2024</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">25</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">24</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">39</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">33</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/295abdb4/" class="title">Electron的原理</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-08-28T14:33:41.000Z" itemprop="datePublished">2024-08-28</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/9af613a6/" class="title">webstorm 的 cpu 占用高</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-07-24T14:29:38.000Z" itemprop="datePublished">2024-07-24</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/fdd4fda9/" class="title">修改Joplin主题样式</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-07-21T14:16:41.000Z" itemprop="datePublished">2024-07-21</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/45c0b51d/" class="title">ECMAScript 历代版本</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-06-20T14:10:41.000Z" itemprop="datePublished">2024-06-20</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/a31a7c10/" class="title">新一代包管理器 PNPM</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-06-16T13:59:34.000Z" itemprop="datePublished">2024-06-16</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Electron的原理" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Electron的原理
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/295abdb4/" class="article-date">
+	  <time datetime="2024-08-28T14:33:41.000Z" itemprop="datePublished">2024-08-28</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/FE/">FE</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/electron/" rel="tag">electron</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/295abdb4/#comments" class="article-comment-link">评论</a></span> 
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 1.9k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 6(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#chromium的原理">Chromium的原理</a></li>
+<li><a href="#nodejs的原理">Node.js的原理</a></li>
+</ul>
+<!-- tocstop -->
+
+<p>Electron是一个集成项目，允许开发者使用前端技术开发桌面端应用。它做了如下几个重要的工作：</p>
+<ul>
+<li>定制 Chromium，并把定制版本的 Chromium 集成在 Electron 内部；</li>
+<li>定制 Node.js，并把定制版本的 Node.js 集成在 Electron 内部；</li>
+<li>通过消息轮询机制打通 Node.js 和 Chromium 的消息循环；</li>
+<li>通过 Electron 的内置模块向开发者提供桌面应用开发必备的 API；</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202502272318170.png" alt></p>
+<p>其中 Chromium 基础能力可以让应用渲染 HTML（CSS） 页面，可以执行页面的JavaScript脚本，让应用可以在 Cookie、LocalStorage或 IndexedDB 中存取数据。除此之外，Electron还允许开发者突破同源策略的限制：伪装请求，截获响应，修改session等。</p>
+<p>Node.js 基础能力可以让开发者读写本地磁盘的文件、通过 socket 访问网络、创建和控制子进程等。除此之外，还修改了Node的加解密机制让Chromium的BoringSSL和Node的OpenSSL兼容的更好，让Node.js可以加载asar压缩包内的文件等。</p>
+<p>Electron 内置模块可以让开发者创建操作系统的托盘图标、访问操作系统的剪切板、屏幕信息、发送系统通知等，除此之外还提供了崩溃报告收集能力、性能问题追踪能力等。</p>
+<p>另外，Electron继承了Chromium的多进程架构，也是分一个主进程多个渲染进程的。</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202502272319367.png" alt></p>
+<p>Electron 应用启动时，首先会加载主进程的逻辑，主进程会创建一个或多个窗口，我们暂时可以粗浅的认为一个窗口就代表一个渲染进程，主进程负责管理所有的渲染进程。具体的多进程概念请看Chromium的原理。</p>
+<hr>
+<h2><span id="chromium的原理">Chromium的原理</span></h2><p>Chromium是一个多进程架构的浏览器。</p>
+<p>以前（大约2008年）浏览器大都是单进程、多线程的架构模式实现的，浏览器中任何一个行为不当的网页或插件都可能让整个浏览器崩溃。</p>
+<p>Chromium为了解决这个问题，把每个页面约束在单独的进程中，以保护整个浏览器不受单个页面中的故障所影响。这极大地缓解了浏览器容易崩溃的问题。如下图所示：</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202502272320519.png" alt></p>
+<p>Chromium把管理页面、管理选项卡和插件的进程称为浏览器进程（Browser Process）。把特定于页面的进程称为渲染进程（Render Process）。</p>
+<p>渲染进程使用<a target="_blank" rel="noopener" href="https://www.chromium.org/blink">Blink布局引擎</a>来解释和渲染HTML。渲染进程与浏览器进程通过IPC管道进行通信（<a target="_blank" rel="noopener" href="https://dev.chromium.org/developers/design-documents/inter-process-communication">详细资料</a>）。</p>
+<p>通常每个新窗口或选项卡都会在新进程中打开。浏览器进程（Browser Process）负责创建这些新的进程（Render Process）。一旦渲染进程崩溃或挂起，则浏览器进程控制着界面，提示用户需要重新加载页面，当用户点击重新加载按钮后，浏览器进程则创建一个新的渲染进程来为用户服务。</p>
+<p>有的时候创建新窗口或选项卡不会创建新渲染进程。比如开发者使用window.open方法打开新窗口时，就希望这个窗口复用当前的渲染进程，因为两个窗口之间往往需要同步的数据交互。另外还有一些情况需要复用渲染进程，比如打开一个新的渲染进程时，发现系统中已经有一个同样的渲染进程可以复用的情况（<a target="_blank" rel="noopener" href="https://dev.chromium.org/developers/design-documents/process-models">详细资料</a>）。</p>
+<p>由于渲染进程运行在一个单独的进程中，所有页面脚本都在此进程中运行，当页面脚本尝试访问网络或本地资源时，当前渲染进程会发消息给浏览器进程，由浏览器进程完成相应的工作。此时浏览器进程会判断这些操作是否合法，比如跨越同源策略的请求、突破限制访问Cookie、https页面内嵌http的页面等，这些行为都是不合法的行为，浏览器进程可以拒绝提供服务，这就是浏览器的沙箱模式。</p>
+<p>多进程模式还带来了性能上的提升，对于那些不可见的渲染进程，操作系统会在用户可用内存较低时，把它们占用的内存部分或全部交换到磁盘上，以保证用户可见的进程更具响应性。相比之下，单进程浏览器架构将所有页面的数据随机分布在内存中，不可能如此干净地分离使用和未使用的数据，性能表现不佳。</p>
+<p>多进程架构模式每个进程都会包含公共基础结构的副本（例如V8引擎的执行环境）、更复杂的通信模型等，这都意味着浏览器会消耗更多的内存、CPU甚至电能。</p>
+<hr>
+<h2><span id="nodejs的原理">Node.js的原理</span></h2><p>Node.js也是一个集成项目，它允许JavaScript脱离浏览器执行，并提供了一系列的API，供JavaScript访问用户操作系统的资源。</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202502272321463.png" alt></p>
+<p>它集成的项目：</p>
+<ul>
+<li>V8：高性能JavaScript的执行引擎，同时拥有解释执行和编译执行的能力，可以将JavaScript代码编译为底层机器码，Node.js通过V8引擎提供的c++ API使V8引擎解析并执行JavaScript代码，并且通过V8引擎公开的接口和类型把自己内置的C++模块和方法转换为可被JavaScript访问的形式；（Chromium网页中解释执行JS脚本用的也是V8引擎）；</li>
+<li>libuv：高性能、跨平台事件驱动的I/O库，它提供了文件系统、网络、子进程、管道、信号处理、轮询和流的管控机制。它还包括一个线程池，用于某些不易于在操作系统级别完成的异步工作；</li>
+<li>c-ares：异步DNS解析库。用于支持Node.js的DNS模块；</li>
+<li>llhttp：一款由TypeScript和C语言编写的轻量级HTTP解析器，内存消耗非常小；</li>
+<li>OpenSSL：提供了经过严格测试的各种加密解密算法的实现，用于支持Node.js的crypto模块；</li>
+<li>zlib：提供同步的、异步或流式的压缩和解压缩能力，用于支持Node.js的zlib模块；</li>
+</ul>
+<p>JavaScript在Node.js运行环境中的执行流程</p>
+<ol>
+<li><strong>初始化自己的执行环境</strong>：在这个阶段Node.js会注册一系列的C++模块以备将来使用。</li>
+<li><strong>创建libuv的消息循环</strong>：这个消息循环会伴随着整个应用的生命周期，运行线程退出它才会退出。libuv模块内部持有一个非常复杂的结构体，当用户的代码开始读取文件或发起网络请求时，Node.js就会给这个结构体增加一个回调函数，libuv的消息循环会不断的遍历这个结构体上的回调函数，当读取文件或发起网络请求有数据可用时，就会执行用户的回调函数。</li>
+<li><strong>创建V8引擎的运行环境</strong>：这是一个拥有自己的堆栈的隔离环境。</li>
+<li><strong>绑定底层模块</strong>：Node.js会使V8引擎执行一个JavaScript脚本（node_bootstrap.js），这是Node.js内置的一个脚本，这个脚本负责绑定Node.js注册的一系列C++模块。</li>
+<li><strong>读取并执行用户脚本的内容</strong>：Node.js会把这个文件的内容交给V8引擎运行，并把运行结果返回给用户。</li>
+</ol>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/295abdb4/" title="Electron的原理" target="_blank" rel="external">https://lxb.wiki/295abdb4/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="external">CC BY-NC 4.0</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      
+        <section id="comments" class="comments">
+          <style>
+            .utterances{max-width: 100%;}
+          </style>
+          <script src="https://utteranc.es/client.js"
+                repo="lxbwolf/lxbwolf.github.io"
+                issue-term="title"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+          </script>
+        </section>
+      
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    
+    <li class="next">
+      <a href="/9af613a6/" title="webstorm 的 cpu 占用高"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,wechat"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> xbl </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+
+
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
+</html>

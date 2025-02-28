@@ -18759,4 +18759,335 @@ Connection closed by foreign host.
         <tag>symbol</tag>
       </tags>
   </entry>
+  <entry>
+    <title>新一代包管理器 PNPM</title>
+    <url>/a31a7c10/</url>
+    <content><![CDATA[<!-- toc -->
+
+<ul>
+<li><a href="#依赖管理的始末">依赖管理的始末</a><ul>
+<li><a href="#npm2">npm2</a></li>
+<li><a href="#npm3">npm3</a></li>
+<li><a href="#结论">结论</a></li>
+</ul>
+</li>
+<li><a href="#pnpm">PNPM</a><ul>
+<li><a href="#依赖安装">依赖安装</a></li>
+<li><a href="#依赖管理原理">依赖管理原理</a></li>
+<li><a href="#pnpm-机制">PNPM 机制</a><ul>
+<li><a href="#基于软链接的-node_modules">基于软链接的 node_modules</a></li>
+</ul>
+</li>
+<li><a href="#pnpm-锁文件">PNPM 锁文件</a></li>
+</ul>
+</li>
+<li><a href="#总结">总结</a></li>
+</ul>
+<!-- tocstop -->
+
+<h2><span id="依赖管理的始末">依赖管理的始末</span></h2><h3><span id="npm2">npm2</span></h3><p>使用早期的 npm1/2 安装依赖，node_modules 文件夹会以递归的形式呈现，严格按照 package.json 结构以及次级依赖的 package.json 结构将依赖安装到它们各自的 node_modules 中，直到次级依赖不再依赖其它模块。</p>
+<p>就像下面这样，tea-app 依赖 tea-component 作为次级依赖，tea-component 会安装到 tea-component 的 node_modules 里面：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">node_modules</span><br><span class="line">└─ tea-app</span><br><span class="line">   ├─ index.js</span><br><span class="line">   ├─ package.json</span><br><span class="line">   └─ node_modules</span><br><span class="line">      └─ tea-component</span><br><span class="line">         ├─ index.js</span><br><span class="line">         └─ package.json</span><br></pre></td></tr></table></figure>
+
+<p>假设项目的中的两个依赖同时依赖了相同的次级依赖，那么它们二者的次级依赖将会被重复安装：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">node_modules</span><br><span class="line">├─ tea-app</span><br><span class="line">│  ├─ index.js</span><br><span class="line">│  ├─ package.json</span><br><span class="line">│  └─ node_modules</span><br><span class="line">│      └─ tea-component</span><br><span class="line">│          ├─ index.js</span><br><span class="line">│          └─ package.json</span><br><span class="line">└─ tea-chart</span><br><span class="line">   ├─ index.js</span><br><span class="line">   ├─ package.json</span><br><span class="line">   └─ node_modules</span><br><span class="line">       └─ tea-component</span><br><span class="line">           ├─ index.js</span><br><span class="line">           └─ package.json</span><br></pre></td></tr></table></figure>
+
+<p>这只是简单的例子，那如果 tea-component 还依赖别的包，别的包又依赖另外的包…… 在真实的开发场景中其问题还会更加恶劣：</p>
+<ol>
+<li>依赖层级太深，会导致文件路径过长</li>
+<li>重复的包被安装，导致 node_modules 文件体积巨大，占用过多的磁盘空间</li>
+</ol>
+<h3><span id="npm3">npm3</span></h3><p>自 <code>npm3/yarn</code> 开始，相比 <code>npm1/2</code> 项目依赖管理的方式有了很大的改变，不再是以往的“嵌套式”而是采用了“扁平化”方式去管理项目依赖。</p>
+<p>这里继续拿上面的例子，tea-app 和 tea-chart 都依赖了 tea-component，依赖安装后呈现的是下面的这种扁平化目录：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">node_modules</span><br><span class="line">├─ tea-component</span><br><span class="line">│  ├─ index.js</span><br><span class="line">│  └─ package.json</span><br><span class="line">├─ tea-app</span><br><span class="line">│  ├─ index.js</span><br><span class="line">│  └─ package.json</span><br><span class="line">└─ tea-chart</span><br><span class="line">   ├─ index.js</span><br><span class="line">   └─ package.json</span><br></pre></td></tr></table></figure>
+
+<p>扁平化的目录的确解决了上一小节暴露的一些问题，同时也暴露了新的问题：</p>
+<ul>
+<li>Phantom dependencies</li>
+</ul>
+<p>称为<strong>幽灵依赖</strong>，指的是在项目内引用未在 package.json 中定义的包。这个问题在 npm3 展现，因为早期的树形结构导致了依赖冗余和路径过深的问题，npm3 之后采用扁平化的结构，一些第三方包的次级依赖提升到了与第三方包同级。</p>
+<p>一旦出现幽灵依赖的问题，可能会导致意想不到的错误，所以一定要正视：</p>
+<ol>
+<li><p>不兼容的版本（例如某一个 api 进行了重大更新)</p>
+</li>
+<li><p>有可能会丢失依赖（某依赖不再依赖呈现在我们项目中的幽灵依赖)</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// tea-component 就属于是幽灵依赖，因为它是属于 tea-app、tea-chart 的次级依赖。</span></span><br><span class="line"><span class="keyword">import</span> &#123; <span class="title class_">Button</span> &#125; <span class="keyword">from</span> <span class="string">&#x27;tea-component&#x27;</span>;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>NPM doppelgangers</p>
+</li>
+</ol>
+<p>称为<strong>分身依赖</strong>依赖的同名包都会被重复安装。</p>
+<p>在实际开发中也会出现这样的情景，假设 tea-app、tea-form 依赖 <code>tea-component@2.0.0</code>，tea-chart 依赖 <code>tea-component@3.0.0</code>，这时候会造成依赖冲突，解决冲突的方式会将对应的冲突包放到对应依赖目录的 node_mudules 中，类似下面结构：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">node_modules</span><br><span class="line">├─ tea-component@3.0.0</span><br><span class="line">│  ├─ index.js</span><br><span class="line">│  └─ package.json</span><br><span class="line">├─ tea-app</span><br><span class="line">│  ├─ index.js</span><br><span class="line">│  ├─ package.json</span><br><span class="line">│  └─ node_modules</span><br><span class="line">│      └─ tea-component@2.0.0</span><br><span class="line">│          ├─ index.js</span><br><span class="line">│          └─ package.json</span><br><span class="line">├─ tea-form</span><br><span class="line">│  ├─ index.js</span><br><span class="line">│  ├─ package.json</span><br><span class="line">│  └─ node_modules</span><br><span class="line">│      └─ tea-component@2.0.0</span><br><span class="line">│          ├─ index.js</span><br><span class="line">│          └─ package.json</span><br><span class="line">└─ tea-chart</span><br><span class="line">   ├─ index.js</span><br><span class="line">   └─ package.json</span><br></pre></td></tr></table></figure>
+
+<p>这时候会发现一个问题，tea-app、tea-form 的 node_modules 下都有重复且版本相同的 <code>tea-component@2.0.0</code>，这个问题就是我们正在所说的“分身依赖”的问题。这个问题就会导致 tea-app 中的 ConfigProvider 组件和 tea-form 的不是一个实例，无法生效。</p>
+<p>常见的问题：</p>
+<ol>
+<li>项目打包会将这些“重身”的依赖都进行打包，增加产物体积</li>
+<li>无法共享库实例，引用的得到的是两个独立的实例</li>
+<li>重复 TypeScript 类型，可能会造成类型冲突</li>
+</ol>
+<h3><span id="结论">结论</span></h3><ol>
+<li>扁平化的 node_modules 结构允许访问没有在 package.json 中声明的依赖。</li>
+<li>安装效率低，大量依赖被重复安装，磁盘空间占用高。</li>
+<li>多个项目之间已经安装过的的包不能共享，每次都是重新安装。</li>
+</ol>
+<h2><span id="pnpm">PNPM</span></h2><blockquote>
+<p>Fast, disk space efficient package manager (速度快、节省磁盘空间的软件包管理器)</p>
+</blockquote>
+<p>当使用 npm 或 Yarn 时，如果你有 100 个项目，并且所有项目都有一个相同的依赖包，那么， 你在硬盘上就需要保存 100 份该相同依赖包的副本。然而，如果是使用 pnpm，依赖包将被 存放在一个统一的位置，因此：</p>
+<p>如果你对同一依赖包需要使用不同的版本，则仅有 版本之间不同的文件会被存储起来。例如，如果某个依赖包包含 100 个文件，其发布了一个新 版本，并且新版本中只有一个文件有修改，则<code>pnpm update</code>只需要添加一个 新文件到存储中，而不会因为一个文件的修改而保存依赖包的 所有文件。</p>
+<p>所有文件都保存在硬盘上的统一的位置。当安装软件包时， 其包含的所有文件都会硬链接自此位置，而不会占用 额外的硬盘空间。这让你可以在项目之间方便地共享相同版本的 依赖包。</p>
+<p>最终结果就是以项目和依赖包的比例来看，你节省了大量的硬盘空间， 并且安装速度也大大提高了！</p>
+<h3><span id="依赖安装">依赖安装</span></h3><p>使用 pnpm 安装，pnpm 会将依赖存储在位于 <code>.pnpm-store</code> 目录下。只要你在同一机器下，下次安装依赖的时候 pnpm 会先检查 store 目录，如果有你需要的依赖则会通过一个硬链接到你的项目中去，而不是重新安装依赖。</p>
+<h3><span id="依赖管理原理">依赖管理原理</span></h3><p>pnpm 会将依赖存储在 <code>store</code> 目录下，通过符号链接的方式仅将项目的直接依赖项添加到 node_modules 的根目录下。</p>
+<p>当使用 npm 或 yarn 安装依赖包时，所有软件包都将被提升到 node_modules 的 根目录下。其结果是，源码可以访问 本不属于当前项目所设定的依赖包。</p>
+<h3><span id="pnpm-机制">PNPM 机制</span></h3><p>如果 store 目录里面拥有即将需要下载的依赖，下载将会跳过，会向对应项目 node_modules 中去建立硬链接，并非去重新安装它。这里就表明为什么 pnpm 性能这么突出了，最大程度节省了时间消耗和磁盘空间。</p>
+<h4><span id="基于软链接的-node_modules">基于软链接的 node_modules</span></h4><p>pnpm 输出的 node_modules 与 npm/yarn 有很大的出入，并非是先者那样的“扁平化目录”而是“非扁平化目录”。</p>
+<p>创建两个目录并分别运行 npm add express，pnpm add express。</p>
+<p>这是使用 npm 安装 node_modules 的结构：</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line">.<span class="property">bin</span></span><br><span class="line">accepts</span><br><span class="line">array-flatten</span><br><span class="line">body-parser</span><br><span class="line">bytes</span><br><span class="line">content-disposition</span><br><span class="line">cookie-signature</span><br><span class="line">cookie</span><br><span class="line">debug</span><br><span class="line">depd</span><br><span class="line">destroy</span><br><span class="line">ee-first</span><br><span class="line">encodeurl</span><br><span class="line"><span class="built_in">escape</span>-html</span><br><span class="line">etag</span><br><span class="line">express</span><br></pre></td></tr></table></figure>
+
+<p>这个则是 pnpm 安装 node_modules 的结构：</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line">.<span class="property">pnpm</span></span><br><span class="line">.<span class="property">modules</span>.<span class="property">yaml</span></span><br><span class="line">express</span><br></pre></td></tr></table></figure>
+
+<p>打开 .pnpm 目录会发现这些依赖都被“扁平化”了，每个包都携带着自己的版本号。pnpm 这样设计的目的我理解其实是为了解决“分身依赖”的问题。</p>
+<p>假设我们有这么一个情景，项目中依赖了 <code>tea-app@1.0.0</code>、<code>tea-chart@1.0.0</code> 和 <code>tea-component@2.0.0</code>。tea-chart 和 tea-app 依赖了 <code>tea-component@1.0.0</code> 那它引用关系是这样的：</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line">node_modules</span><br><span class="line">├─tea-app -&gt; ./.<span class="property">pnpm</span>/tea-app@<span class="number">1.0</span><span class="number">.0</span>/node_modules/tea-app</span><br><span class="line">├─tea-chart -&gt; ./.<span class="property">pnpm</span>/tea-chart@<span class="number">1.0</span><span class="number">.0</span>/node_modules/tea-chart</span><br><span class="line">├─tea-component -&gt; ./.<span class="property">pnpm</span>/tea-component@<span class="number">2.0</span><span class="number">.0</span>/node_modules/tea-component</span><br><span class="line">└─.<span class="property">pnpm</span></span><br><span class="line">    ├─ tea-app@<span class="number">1.0</span><span class="number">.0</span></span><br><span class="line">    │   └─ node_modules</span><br><span class="line">    │       ├─ tea-component -&gt; ../tea-component@<span class="number">1.0</span><span class="number">.0</span>/node_modules/tea-component</span><br><span class="line">    │       └─ tea-app -&gt; &lt;store&gt;/tea-app</span><br><span class="line">        ├─ tea-chart@<span class="number">1.0</span><span class="number">.0</span></span><br><span class="line">    │   └─ node_modules</span><br><span class="line">    │       ├─ tea-component -&gt; ../tea-component@<span class="number">1.0</span><span class="number">.0</span>/node_modules/tea-component</span><br><span class="line">    │       └─ tea-chart -&gt; &lt;store&gt;/tea-chart</span><br><span class="line">        ├─ tea-component@<span class="number">1.0</span><span class="number">.0</span></span><br><span class="line">    │   └─ node_modules</span><br><span class="line">    │       └─ tea-component -&gt; &lt;store&gt;/tea-component@<span class="number">1.0</span><span class="number">.0</span></span><br><span class="line">    └─ tea-component@<span class="number">2.0</span><span class="number">.0</span></span><br><span class="line">        └─ node_modules</span><br><span class="line">            └─ tea-component -&gt; &lt;store&gt;/tea-component@<span class="number">2.0</span><span class="number">.0</span></span><br></pre></td></tr></table></figure>
+
+<p>为什么需要通过软链接的方式去引用实际的依赖？</p>
+<p>这样设计的目的是解决“幽灵依赖”的问题，只有声明过的依赖才会以软链接的形式出现在 node_modules 目录中。在实际项目中引用的是软链接，软链接指向的是 .pnpm 的真实依赖，所以在日常开发中不会引用到未在 package.json 声明的包。</p>
+<h3><span id="pnpm-锁文件">PNPM 锁文件</span></h3><p>pnpm 产出的是一个 <code>pnpm-lock.yaml</code> 格式的锁文件。</p>
+<p>支持通过 <code>pnpm import</code> 从另一个包管理器的锁文件生成一个。支持的源文件：</p>
+<ul>
+<li>package-lock.json</li>
+<li>npm-shrinkwrap.json</li>
+<li>yarn.lock</li>
+</ul>
+<h2><span id="总结">总结</span></h2><p>npm2 是通过嵌套的方式管理 node_modules 的，会有同样的依赖复制多次的问题。</p>
+<p>npm3+ 和 yarn 是通过铺平的扁平化的方式来管理 node_modules，解决了嵌套方式的部分问题，但是引入了幽灵依赖的问题，并且同名的包只会提升一个版本的，其余的版本依然会复制多次。</p>
+<p>pnpm 则是用了另一种方式，不再是复制了，而是都从全局 store 硬连接到 node_modules/.pnpm，然后之间通过软链接来组织依赖关系。</p>
+<p>这样不但节省磁盘空间，也没有幽灵依赖问题，安装速度还快，从机制上来说完胜 npm 和 yarn。</p>
+]]></content>
+      <categories>
+        <category>FE</category>
+      </categories>
+      <tags>
+        <tag>pnpm</tag>
+        <tag>npm</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ECMAScript 历代版本</title>
+    <url>/45c0b51d/</url>
+    <content><![CDATA[<!-- toc -->
+
+
+
+<!-- tocstop -->
+
+<p>欧洲计算机制造商协会（European Computer Manufacturers Association）或简称 ECMA. ECMA走向全球后，在1994 年更名为：Ecma International。其商标“ECMA”由于历史原因被保留了下来，沿用至今。<br>ECMA-262是一种规范（官网中可以查到各个版本的PDF提案），自然会有满足这种规范的具体的语言被创造出来。最著名的就是JavaScript<br>（现在商标属于Oracle），在1995年由Netscape公司的Brendan Eich，在Netscape导航者浏览器上首次设计实现而成。因为Netscape与Sun合作，Netscape管理层希望它外观看起来像Java，因此取名为JavaScript。但实际上它的语法风格与Self及Scheme较为接近。其设计思路如下：</p>
+<ul>
+<li>借鉴 C 语言的基本语法。</li>
+<li>借鉴 Java 语言的数据类型和内存管理。</li>
+<li>借鉴 Scheme 语言，将函数提升到“第一等公民”（first class）的地位。</li>
+<li>借鉴 Self 语言，使用基于原型（prototype）的继承机制。</li>
+</ul>
+<p>ECMAScript 各版本</p>
+<ul>
+<li><p>ECMAScript 1.0 (1997)：第一个正式标准，规范化了 JavaScript 的核心语言。</p>
+</li>
+<li><p>ECMAScript 3.0 (1999)：该版本为语言带来了正则表达式、try/catch 异常处理以及更多的核心改进。</p>
+</li>
+<li><p>ECMAScript 5.0 (2009)：引入了 strict mode（严格模式），并添加了许多数组方法（如 forEach、map、filter 等）。这次更新被认为是 JavaScript 现代化的重要一步。</p>
+</li>
+<li><p>ECMAScript 6 (ES2015)：这是 ECMAScript 发展中的里程碑式版本，增加了 let 和 const 变量声明、类和模块系统、箭头函数、解构赋值、模板字符串、Promise、Symbol、迭代器和生成器等新特性。</p>
+</li>
+<li><p>ECMAScript 7 (ES2016)：主要是增加了两个新特性：Array.prototype.include和取幂运算符。</p>
+</li>
+<li><p>ECMAScript 8 (ES2017)：主要变化包括：Object.values/Object.entries、字符串填充、Object.getOwnPropertyDescriptor、尾随逗号、异步函数、共享内存和原子，等。</p>
+</li>
+<li><p>ECMAScript 9 (ES2018)：ECMAScript 2018 主要包含内容：</p>
+<ul>
+<li>异步迭代器：原生支持在 JavaScript 中对异步获取的数据做迭代。</li>
+<li>Object Rest/Spread Properties</li>
+<li>Promise.prototype.finally</li>
+<li>Template Literal（模板字面量）：取消 Escape-Sequenzen 限制</li>
+<li>正则表达式：<ul>
+<li>支持 s (dotAll) 模式</li>
+<li>Unicode 属性转义（Property Escape）</li>
+<li>支持后行断言（Lookbehind Assertions）</li>
+<li>命名捕获组（named capture group）</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>ECMAScript 10 (ES2019)：</p>
+<ul>
+<li>Array.prototype.flat() 和 Array.prototype.flatMap()</li>
+<li>Object.fromEntries()</li>
+<li>String.prototype.trimStart() 和 String.prototype.trimEnd()</li>
+<li>Array.prototype.sort() 改进</li>
+<li>Symbol.prototype.description</li>
+<li>Function.prototype.toString() 的改进</li>
+<li>JSON.prototype.{stringify, parse} 的改进<ul>
+<li>JSON.stringify() 现在会忽略 undefined、symbol、函数 等值。</li>
+<li>JSON.parse() 对 NaN、Infinity 和 -Infinity 的处理变得更加严格，报错而不是返回这些值。</li>
+</ul>
+</li>
+<li>RegExp.prototype.flags. <code>RegExp.prototype.flags</code> 属性返回正则表达式的标志（如 g, i, m 等），这是一个只读的属性，简化了获取正则标志的方式。</li>
+<li>Optional Catch Binding (可选的 catch 绑定). 在 ES10 中，try…catch 语句中的 catch 变量现在是可选的，可以不指定错误对象变量。</li>
+<li>Well-formed JSON.stringify() 的改进. ES10 对 JSON.stringify() 进行了改进，确保序列化结果是符合 JSON 格式的，修复了一些潜在的问题。</li>
+</ul>
+</li>
+<li><p>ECMAScript 11 (ES2020)：</p>
+<ul>
+<li>Optional Chaining（可选链操作符 ?.）</li>
+<li>Nullish Coalescing Operator（空值合并操作符 ??）</li>
+<li>BigInt</li>
+<li>Promise.allSettled()</li>
+<li>globalThis</li>
+<li>String.prototype.matchAll()</li>
+<li>Array.prototype.sort() 的稳定性</li>
+<li>模块化的顶层 await</li>
+<li>Import.meta</li>
+<li>模块内的顶层 await 和新的 import 机制</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>FE</category>
+      </categories>
+      <tags>
+        <tag>ECMAScript</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>修改Joplin主题样式</title>
+    <url>/fdd4fda9/</url>
+    <content><![CDATA[<!-- toc -->
+
+<ul>
+<li><a href="#joplin主题">Joplin主题</a><ul>
+<li><a href="#macos-theme-pluginhttpsgithubcomajilderdajoplin-macos-native-theme">macos theme plugin</a></li>
+</ul>
+</li>
+<li><a href="#markdown渲染样式">Markdown渲染样式</a><ul>
+<li><a href="#问题及解决方法">问题及解决方法</a></li>
+</ul>
+</li>
+</ul>
+<!-- tocstop -->
+
+<h2><span id="joplin主题">Joplin主题</span></h2><h3><span id="macos-theme-plugin"></span></h3><p>直接在设置中的“插件”选项中搜索 “macos theme”安装，然后重启后打开macos theme 这个插件，打开该插件对应的设置页面，将样式调成_light_模式，同时Joplin本身的外观设置也需要保持_亮色_模式。再次重启Joplin，发现全局主题已经改变。此外，该插件主题也同时支持暗色主题和自定义主题颜色。</p>
+<h2><span id="markdown渲染样式">Markdown渲染样式</span></h2><p>将源码复制至Joplin配置中的_userstyle.css_中即可，该配置文件可以从_工具_——&gt;_选项_——&gt;_外观_——&gt;_显示高级选项_——&gt;_适用于已渲染Markdown的自定义样式表_中找到。Mac 下路径为 </p>
+<p><code>~/.config/joplin-desktop/userstyle.css</code></p>
+<figure class="highlight css"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">pre, <span class="selector-tag">code</span> &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">14px</span>;</span><br><span class="line">  <span class="attribute">font-family</span>: Roboto, <span class="string">&#x27;Courier New&#x27;</span>, Consolas, Inconsolata, Courier, monospace;</span><br><span class="line">  <span class="attribute">margin</span>: auto <span class="number">5px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">code</span> &#123;</span><br><span class="line">  <span class="attribute">white-space</span>: pre-wrap;</span><br><span class="line">  <span class="attribute">border-radius</span>: <span class="number">2px</span>;</span><br><span class="line">  <span class="attribute">display</span>: inline;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">pre &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">15px</span>;</span><br><span class="line">  <span class="attribute">line-height</span>: <span class="number">1.4em</span>;</span><br><span class="line">  <span class="attribute">display</span>: block; !important;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">pre <span class="selector-tag">code</span> &#123;</span><br><span class="line">  <span class="attribute">white-space</span>: pre;</span><br><span class="line">  <span class="attribute">overflow</span>: auto;</span><br><span class="line">  <span class="attribute">border-radius</span>: <span class="number">3px</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">1px</span> <span class="number">1px</span>;</span><br><span class="line">  <span class="attribute">display</span>: block <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">strong</span>, <span class="selector-tag">b</span>&#123;</span><br><span class="line">  <span class="attribute">color</span>: <span class="number">#BF360C</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">em</span>, <span class="selector-tag">i</span> &#123;</span><br><span class="line">  <span class="attribute">color</span>: <span class="number">#009688</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">hr &#123;</span><br><span class="line">  <span class="attribute">border</span>: <span class="number">1px</span> solid <span class="number">#BF360C</span>;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">1.5em</span> auto;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">p</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">1.5em</span> <span class="number">5px</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">table</span>, pre, <span class="selector-tag">dl</span>, <span class="selector-tag">blockquote</span>, <span class="selector-tag">q</span>, <span class="selector-tag">ul</span>, <span class="selector-tag">ol</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">10px</span> <span class="number">5px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">ul</span>, <span class="selector-tag">ol</span> &#123;</span><br><span class="line">  <span class="attribute">padding-left</span>: <span class="number">15px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">li</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">10px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">li</span> <span class="selector-tag">p</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">10px</span> <span class="number">0</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">ul</span> <span class="selector-tag">ul</span>, <span class="selector-tag">ul</span> <span class="selector-tag">ol</span>, <span class="selector-tag">ol</span> <span class="selector-tag">ul</span>, <span class="selector-tag">ol</span> <span class="selector-tag">ol</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0</span>;</span><br><span class="line">  <span class="attribute">padding-left</span>: <span class="number">10px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">ul</span> &#123;</span><br><span class="line">  <span class="attribute">list-style-type</span>: circle;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">dl</span> &#123;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">dl</span> <span class="selector-tag">dt</span> &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">1em</span>;</span><br><span class="line">  <span class="attribute">font-weight</span>: bold;</span><br><span class="line">  <span class="attribute">font-style</span>: italic;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">dl</span> <span class="selector-tag">dd</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0</span> <span class="number">0</span> <span class="number">10px</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0</span> <span class="number">10px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">blockquote</span>, <span class="selector-tag">q</span> &#123;</span><br><span class="line">  <span class="attribute">border-left</span>: <span class="number">2px</span> solid <span class="number">#009688</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0</span> <span class="number">10px</span>;</span><br><span class="line">  <span class="attribute">color</span>: <span class="number">#777</span>;</span><br><span class="line">  <span class="attribute">quotes</span>: none;</span><br><span class="line">  <span class="attribute">margin-left</span>: <span class="number">1em</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">blockquote</span><span class="selector-pseudo">::before</span>, <span class="selector-tag">blockquote</span><span class="selector-pseudo">::after</span>, <span class="selector-tag">q</span><span class="selector-pseudo">::before</span>, <span class="selector-tag">q</span><span class="selector-pseudo">::after</span> &#123;</span><br><span class="line">  <span class="attribute">content</span>: none;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">h1</span>, <span class="selector-tag">h2</span>, <span class="selector-tag">h3</span>, <span class="selector-tag">h4</span>, <span class="selector-tag">h5</span>, <span class="selector-tag">h6</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">20px</span> <span class="number">0</span> <span class="number">10px</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0</span>;</span><br><span class="line">  <span class="attribute">font-style</span>: bold <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">color</span>: <span class="number">#009688</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">text-align</span>: center <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">1.5em</span> <span class="number">5px</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0.5em</span> <span class="number">1em</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">h1</span> &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">24px</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">h2</span> &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">20px</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">h3</span> &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">18px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">h4</span> &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">16px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="selector-tag">table</span> &#123;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0</span>;</span><br><span class="line">  <span class="attribute">border-collapse</span>: collapse;</span><br><span class="line">  <span class="attribute">border-spacing</span>: <span class="number">0</span>;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">1em</span>;</span><br><span class="line">  <span class="attribute">font</span>: inherit;</span><br><span class="line">  <span class="attribute">border</span>: <span class="number">0</span>;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0</span> auto;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">tbody</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0</span>;</span><br><span class="line">  <span class="attribute">border</span>: <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">table</span> <span class="selector-tag">tr</span> &#123;</span><br><span class="line">  <span class="attribute">border</span>: <span class="number">0</span>;</span><br><span class="line">  <span class="attribute">border-top</span>: <span class="number">1px</span> solid <span class="number">#CCC</span>;</span><br><span class="line">  <span class="attribute">background-color</span>: white;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">table</span> <span class="selector-tag">tr</span><span class="selector-pseudo">:nth-child</span>(<span class="number">2</span>n) &#123;</span><br><span class="line">  <span class="attribute">background-color</span>: <span class="number">#F8F8F8</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">table</span> <span class="selector-tag">tr</span> <span class="selector-tag">th</span>, <span class="selector-tag">table</span> <span class="selector-tag">tr</span> <span class="selector-tag">td</span> &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">16px</span>;</span><br><span class="line">  <span class="attribute">border</span>: <span class="number">1px</span> solid <span class="number">#CCC</span>;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">5px</span> <span class="number">10px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">table</span> <span class="selector-tag">tr</span> <span class="selector-tag">th</span> &#123;</span><br><span class="line">  <span class="attribute">font-weight</span>: bold;</span><br><span class="line">  <span class="attribute">color</span>: <span class="number">#eee</span>;</span><br><span class="line">  <span class="attribute">border</span>: <span class="number">1px</span> solid <span class="number">#009688</span>;</span><br><span class="line">  <span class="attribute">background-color</span>: <span class="number">#009688</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>复制完成后保存，重启Joplin即可。</p>
+<h3><span id="问题及解决方法">问题及解决方法</span></h3><p>当使用_macos theme_的插件主题之后，插件中的主题样式会覆盖部分的_自定义CSS样式_，可以通过在_自定义CSS样式_后添上<code>!important</code>强制使用自定义的样式。<br>对上文中的 CSS 进行更改：</p>
+<figure class="highlight css"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line">pre, <span class="selector-tag">code</span> &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">14px</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">font-family</span>: Roboto, <span class="string">&#x27;Courier New&#x27;</span>, Consolas, Inconsolata, Courier, monospace <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">margin</span>: auto <span class="number">5px</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">code</span> &#123;</span><br><span class="line">  <span class="attribute">white-space</span>: pre-wrap <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">border-radius</span>: <span class="number">2px</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">display</span>: inline <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">pre &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">15px</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">line-height</span>: <span class="number">1.4em</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">display</span>: block; !important;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">pre <span class="selector-tag">code</span> &#123;</span><br><span class="line">  <span class="attribute">white-space</span>: pre <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">overflow</span>: auto <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">border-radius</span>: <span class="number">3px</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">1px</span> <span class="number">1px</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">display</span>: block <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">strong</span>, <span class="selector-tag">b</span>&#123;</span><br><span class="line">  <span class="attribute">color</span>: <span class="number">#BF360C</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">em</span>, <span class="selector-tag">i</span> &#123;</span><br><span class="line">  <span class="attribute">color</span>: <span class="number">#009688</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">hr &#123;</span><br><span class="line">  <span class="attribute">border</span>: <span class="number">1px</span> solid <span class="number">#BF360C</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">1.5em</span> auto <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">p</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">1.5em</span> <span class="number">5px</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">table</span>, pre, <span class="selector-tag">dl</span>, <span class="selector-tag">blockquote</span>, <span class="selector-tag">q</span>, <span class="selector-tag">ul</span>, <span class="selector-tag">ol</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">10px</span> <span class="number">5px</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">ul</span>, <span class="selector-tag">ol</span> &#123;</span><br><span class="line">  <span class="attribute">padding-left</span>: <span class="number">15px</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">li</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">10px</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">li</span> <span class="selector-tag">p</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">10px</span> <span class="number">0</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">ul</span> <span class="selector-tag">ul</span>, <span class="selector-tag">ul</span> <span class="selector-tag">ol</span>, <span class="selector-tag">ol</span> <span class="selector-tag">ul</span>, <span class="selector-tag">ol</span> <span class="selector-tag">ol</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">padding-left</span>: <span class="number">10px</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">ul</span> &#123;</span><br><span class="line">  <span class="attribute">list-style-type</span>: circle <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">dl</span> &#123;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">dl</span> <span class="selector-tag">dt</span> &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">1em</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">font-weight</span>: bold <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">font-style</span>: italic <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">dl</span> <span class="selector-tag">dd</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0</span> <span class="number">0</span> <span class="number">10px</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0</span> <span class="number">10px</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">blockquote</span>, <span class="selector-tag">q</span> &#123;</span><br><span class="line">  <span class="attribute">border-left</span>: <span class="number">2px</span> solid <span class="number">#009688</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0</span> <span class="number">10px</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">color</span>: <span class="number">#777</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">quotes</span>: none <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">margin-left</span>: <span class="number">1em</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">blockquote</span><span class="selector-pseudo">::before</span>, <span class="selector-tag">blockquote</span><span class="selector-pseudo">::after</span>, <span class="selector-tag">q</span><span class="selector-pseudo">::before</span>, <span class="selector-tag">q</span><span class="selector-pseudo">::after</span> &#123;</span><br><span class="line">  <span class="attribute">content</span>: none <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">h1</span>, <span class="selector-tag">h2</span>, <span class="selector-tag">h3</span>, <span class="selector-tag">h4</span>, <span class="selector-tag">h5</span>, <span class="selector-tag">h6</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">20px</span> <span class="number">0</span> <span class="number">10px</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">font-style</span>: bold <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">color</span>: <span class="number">#009688</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">text-align</span>: center <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">1.5em</span> <span class="number">5px</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0.5em</span> <span class="number">1em</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">h1</span> &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">24px</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">border-bottom</span>: <span class="number">1px</span> solid <span class="number">#ddd</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">h2</span> &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">20px</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">border-bottom</span>: <span class="number">1px</span> solid <span class="number">#eee</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">h3</span> &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">18px</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">h4</span> &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">16px</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="selector-tag">table</span> &#123;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">border-collapse</span>: collapse <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">border-spacing</span>: <span class="number">0</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">1em</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">font</span>: inherit <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">border</span>: <span class="number">0</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0</span> auto <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">tbody</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">border</span>: <span class="number">0</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">table</span> <span class="selector-tag">tr</span> &#123;</span><br><span class="line">  <span class="attribute">border</span>: <span class="number">0</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">border-top</span>: <span class="number">1px</span> solid <span class="number">#CCC</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">background-color</span>: white <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">table</span> <span class="selector-tag">tr</span><span class="selector-pseudo">:nth-child</span>(<span class="number">2</span>n) &#123;</span><br><span class="line">  <span class="attribute">background-color</span>: <span class="number">#F8F8F8</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">table</span> <span class="selector-tag">tr</span> <span class="selector-tag">th</span>, <span class="selector-tag">table</span> <span class="selector-tag">tr</span> <span class="selector-tag">td</span> &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">16px</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">border</span>: <span class="number">1px</span> solid <span class="number">#CCC</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">5px</span> <span class="number">10px</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">table</span> <span class="selector-tag">tr</span> <span class="selector-tag">th</span> &#123;</span><br><span class="line">  <span class="attribute">font-weight</span>: bold <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">color</span>: <span class="number">#eee</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">border</span>: <span class="number">1px</span> solid <span class="number">#009688</span> <span class="meta">!important</span>;</span><br><span class="line">  <span class="attribute">background-color</span>: <span class="number">#009688</span> <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>更改后发现自定义的CSS样式不再会被插件主题样式覆盖。</p>
+]]></content>
+      <categories>
+        <category>Tools</category>
+      </categories>
+      <tags>
+        <tag>joplin</tag>
+        <tag>markdown</tag>
+        <tag>css</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>webstorm 的 cpu 占用高</title>
+    <url>/9af613a6/</url>
+    <content><![CDATA[<!-- toc -->
+
+<ul>
+<li><a href="#现象">现象</a></li>
+<li><a href="#处理">处理</a></li>
+</ul>
+<!-- tocstop -->
+
+<h2><span id="现象">现象</span></h2><p>前端项目，不管是 vue,react ，就是 cpu 占用长期 400%以上，有时候持续好多天，导致 macbook 温度一直在 70+度以上</p>
+<h2><span id="处理">处理</span></h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">/Applications/Webstorm.app/Contents/jbr/Contents/Home/conf/security</span><br><span class="line">/Applications/IntelliJ IDEA.app/Contents/jbr/Contents/Home/conf/security</span><br><span class="line">/Applications/GoLand.app/Contents/jbr/Contents/Home/conf/security</span><br><span class="line">/Applications/RustRover.app/Contents/jbr/Contents/Home/conf/security</span><br></pre></td></tr></table></figure>
+
+
+
+<p>修改以上四个文件夹里的 <code>java.security</code> 文件<br>将 <code>jdk.tls.disabledAlgorithms=SSLv3</code> 替换为 <code>jdk.tls.disabledAlgorithms=TLSv1.3, SSLv3</code></p>
+]]></content>
+      <categories>
+        <category>Tools</category>
+      </categories>
+      <tags>
+        <tag>webstorm</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Electron的原理</title>
+    <url>/295abdb4/</url>
+    <content><![CDATA[<!-- toc -->
+
+<ul>
+<li><a href="#chromium的原理">Chromium的原理</a></li>
+<li><a href="#nodejs的原理">Node.js的原理</a></li>
+</ul>
+<!-- tocstop -->
+
+<p>Electron是一个集成项目，允许开发者使用前端技术开发桌面端应用。它做了如下几个重要的工作：</p>
+<ul>
+<li>定制 Chromium，并把定制版本的 Chromium 集成在 Electron 内部；</li>
+<li>定制 Node.js，并把定制版本的 Node.js 集成在 Electron 内部；</li>
+<li>通过消息轮询机制打通 Node.js 和 Chromium 的消息循环；</li>
+<li>通过 Electron 的内置模块向开发者提供桌面应用开发必备的 API；</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202502272318170.png" alt></p>
+<p>其中 Chromium 基础能力可以让应用渲染 HTML（CSS） 页面，可以执行页面的JavaScript脚本，让应用可以在 Cookie、LocalStorage或 IndexedDB 中存取数据。除此之外，Electron还允许开发者突破同源策略的限制：伪装请求，截获响应，修改session等。</p>
+<p>Node.js 基础能力可以让开发者读写本地磁盘的文件、通过 socket 访问网络、创建和控制子进程等。除此之外，还修改了Node的加解密机制让Chromium的BoringSSL和Node的OpenSSL兼容的更好，让Node.js可以加载asar压缩包内的文件等。</p>
+<p>Electron 内置模块可以让开发者创建操作系统的托盘图标、访问操作系统的剪切板、屏幕信息、发送系统通知等，除此之外还提供了崩溃报告收集能力、性能问题追踪能力等。</p>
+<p>另外，Electron继承了Chromium的多进程架构，也是分一个主进程多个渲染进程的。</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202502272319367.png" alt></p>
+<p>Electron 应用启动时，首先会加载主进程的逻辑，主进程会创建一个或多个窗口，我们暂时可以粗浅的认为一个窗口就代表一个渲染进程，主进程负责管理所有的渲染进程。具体的多进程概念请看Chromium的原理。</p>
+<hr>
+<h2><span id="chromium的原理">Chromium的原理</span></h2><p>Chromium是一个多进程架构的浏览器。</p>
+<p>以前（大约2008年）浏览器大都是单进程、多线程的架构模式实现的，浏览器中任何一个行为不当的网页或插件都可能让整个浏览器崩溃。</p>
+<p>Chromium为了解决这个问题，把每个页面约束在单独的进程中，以保护整个浏览器不受单个页面中的故障所影响。这极大地缓解了浏览器容易崩溃的问题。如下图所示：</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202502272320519.png" alt></p>
+<p>Chromium把管理页面、管理选项卡和插件的进程称为浏览器进程（Browser Process）。把特定于页面的进程称为渲染进程（Render Process）。</p>
+<p>渲染进程使用<a href="https://www.chromium.org/blink">Blink布局引擎</a>来解释和渲染HTML。渲染进程与浏览器进程通过IPC管道进行通信（<a href="https://dev.chromium.org/developers/design-documents/inter-process-communication">详细资料</a>）。</p>
+<p>通常每个新窗口或选项卡都会在新进程中打开。浏览器进程（Browser Process）负责创建这些新的进程（Render Process）。一旦渲染进程崩溃或挂起，则浏览器进程控制着界面，提示用户需要重新加载页面，当用户点击重新加载按钮后，浏览器进程则创建一个新的渲染进程来为用户服务。</p>
+<p>有的时候创建新窗口或选项卡不会创建新渲染进程。比如开发者使用window.open方法打开新窗口时，就希望这个窗口复用当前的渲染进程，因为两个窗口之间往往需要同步的数据交互。另外还有一些情况需要复用渲染进程，比如打开一个新的渲染进程时，发现系统中已经有一个同样的渲染进程可以复用的情况（<a href="https://dev.chromium.org/developers/design-documents/process-models">详细资料</a>）。</p>
+<p>由于渲染进程运行在一个单独的进程中，所有页面脚本都在此进程中运行，当页面脚本尝试访问网络或本地资源时，当前渲染进程会发消息给浏览器进程，由浏览器进程完成相应的工作。此时浏览器进程会判断这些操作是否合法，比如跨越同源策略的请求、突破限制访问Cookie、https页面内嵌http的页面等，这些行为都是不合法的行为，浏览器进程可以拒绝提供服务，这就是浏览器的沙箱模式。</p>
+<p>多进程模式还带来了性能上的提升，对于那些不可见的渲染进程，操作系统会在用户可用内存较低时，把它们占用的内存部分或全部交换到磁盘上，以保证用户可见的进程更具响应性。相比之下，单进程浏览器架构将所有页面的数据随机分布在内存中，不可能如此干净地分离使用和未使用的数据，性能表现不佳。</p>
+<p>多进程架构模式每个进程都会包含公共基础结构的副本（例如V8引擎的执行环境）、更复杂的通信模型等，这都意味着浏览器会消耗更多的内存、CPU甚至电能。</p>
+<hr>
+<h2><span id="nodejs的原理">Node.js的原理</span></h2><p>Node.js也是一个集成项目，它允许JavaScript脱离浏览器执行，并提供了一系列的API，供JavaScript访问用户操作系统的资源。</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202502272321463.png" alt></p>
+<p>它集成的项目：</p>
+<ul>
+<li>V8：高性能JavaScript的执行引擎，同时拥有解释执行和编译执行的能力，可以将JavaScript代码编译为底层机器码，Node.js通过V8引擎提供的c++ API使V8引擎解析并执行JavaScript代码，并且通过V8引擎公开的接口和类型把自己内置的C++模块和方法转换为可被JavaScript访问的形式；（Chromium网页中解释执行JS脚本用的也是V8引擎）；</li>
+<li>libuv：高性能、跨平台事件驱动的I/O库，它提供了文件系统、网络、子进程、管道、信号处理、轮询和流的管控机制。它还包括一个线程池，用于某些不易于在操作系统级别完成的异步工作；</li>
+<li>c-ares：异步DNS解析库。用于支持Node.js的DNS模块；</li>
+<li>llhttp：一款由TypeScript和C语言编写的轻量级HTTP解析器，内存消耗非常小；</li>
+<li>OpenSSL：提供了经过严格测试的各种加密解密算法的实现，用于支持Node.js的crypto模块；</li>
+<li>zlib：提供同步的、异步或流式的压缩和解压缩能力，用于支持Node.js的zlib模块；</li>
+</ul>
+<p>JavaScript在Node.js运行环境中的执行流程</p>
+<ol>
+<li><strong>初始化自己的执行环境</strong>：在这个阶段Node.js会注册一系列的C++模块以备将来使用。</li>
+<li><strong>创建libuv的消息循环</strong>：这个消息循环会伴随着整个应用的生命周期，运行线程退出它才会退出。libuv模块内部持有一个非常复杂的结构体，当用户的代码开始读取文件或发起网络请求时，Node.js就会给这个结构体增加一个回调函数，libuv的消息循环会不断的遍历这个结构体上的回调函数，当读取文件或发起网络请求有数据可用时，就会执行用户的回调函数。</li>
+<li><strong>创建V8引擎的运行环境</strong>：这是一个拥有自己的堆栈的隔离环境。</li>
+<li><strong>绑定底层模块</strong>：Node.js会使V8引擎执行一个JavaScript脚本（node_bootstrap.js），这是Node.js内置的一个脚本，这个脚本负责绑定Node.js注册的一系列C++模块。</li>
+<li><strong>读取并执行用户脚本的内容</strong>：Node.js会把这个文件的内容交给V8引擎运行，并把运行结果返回给用户。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>FE</category>
+      </categories>
+      <tags>
+        <tag>electron</tag>
+      </tags>
+  </entry>
 </search>

@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+
+  
+  <title>新一代包管理器 PNPM | Xiaobin&#39;s Notes</title>
+  <meta name="description" content="依赖管理的始末 npm2 npm3 结论   PNPM 依赖安装 依赖管理原理 PNPM 机制 基于软链接的 node_modules   PNPM 锁文件   总结    依赖管理的始末npm2使用早期的 npm1&#x2F;2 安装依赖，node_modules 文件夹会以递归的形式呈现，严格按照 package.json 结构以及次级依赖的 package.json 结构将依赖安装到它们各自的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="新一代包管理器 PNPM">
+<meta property="og:url" content="https://lxb.wiki/a31a7c10/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Notes">
+<meta property="og:description" content="依赖管理的始末 npm2 npm3 结论   PNPM 依赖安装 依赖管理原理 PNPM 机制 基于软链接的 node_modules   PNPM 锁文件   总结    依赖管理的始末npm2使用早期的 npm1&#x2F;2 安装依赖，node_modules 文件夹会以递归的形式呈现，严格按照 package.json 结构以及次级依赖的 package.json 结构将依赖安装到它们各自的">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-06-16T13:59:34.000Z">
+<meta property="article:modified_time" content="2025-02-20T12:36:14.512Z">
+<meta property="article:author" content="xbl">
+<meta property="article:tag" content="pnpm">
+<meta property="article:tag" content="npm">
+<meta name="twitter:card" content="summary">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/a31a7c10/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Notes" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin&#39;s Notes</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/FE/">FE</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">77</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Life/">Life</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">41</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">20</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/ECMAScript/" style="font-size: 13px;">ECMAScript</a> <a href="/tags/GitHub/" style="font-size: 13.08px;">GitHub</a> <a href="/tags/GoogleSheets/" style="font-size: 13px;">GoogleSheets</a> <a href="/tags/STL/" style="font-size: 13.38px;">STL</a> <a href="/tags/amap/" style="font-size: 13px;">amap</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.23px;">blog</a> <a href="/tags/c/" style="font-size: 13.69px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.08px;">centOS</a> <a href="/tags/css/" style="font-size: 13px;">css</a> <a href="/tags/devops/" style="font-size: 13.62px;">devops</a> <a href="/tags/docker/" style="font-size: 13.08px;">docker</a> <a href="/tags/elastic/" style="font-size: 13.38px;">elastic</a> <a href="/tags/electron/" style="font-size: 13px;">electron</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.31px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.15px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.08px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.15px;">hexo</a> <a href="/tags/hooks/" style="font-size: 13px;">hooks</a> <a href="/tags/http/" style="font-size: 13.38px;">http</a> <a href="/tags/jdk/" style="font-size: 13px;">jdk</a> <a href="/tags/joplin/" style="font-size: 13.15px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/linux/" style="font-size: 13.15px;">linux</a> <a href="/tags/lucene/" style="font-size: 13.31px;">lucene</a> <a href="/tags/mac/" style="font-size: 13.46px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/markdown/" style="font-size: 13px;">markdown</a> <a href="/tags/mermaid/" style="font-size: 13.08px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.15px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.31px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.15px;">nginx</a> <a href="/tags/npm/" style="font-size: 13px;">npm</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.15px;">pic</a> <a href="/tags/pnpm/" style="font-size: 13px;">pnpm</a> <a href="/tags/python/" style="font-size: 13px;">python</a> <a href="/tags/qt/" style="font-size: 13.31px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/raycast/" style="font-size: 13px;">raycast</a> <a href="/tags/react/" style="font-size: 13px;">react</a> <a href="/tags/redis/" style="font-size: 13.54px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.92px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.08px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/terminal/" style="font-size: 13px;">terminal</a> <a href="/tags/vue/" style="font-size: 13px;">vue</a> <a href="/tags/webstorm/" style="font-size: 13px;">webstorm</a> <a href="/tags/zk/" style="font-size: 13.08px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%8D%8F%E8%AE%AE/" style="font-size: 13px;">协议</a> <a href="/tags/%E5%9C%B0%E5%9B%BE/" style="font-size: 13px;">地图</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.46px;">工具</a> <a href="/tags/%E5%B9%BF%E5%91%8A/" style="font-size: 13px;">广告</a> <a href="/tags/%E6%8F%92%E5%BA%A7/" style="font-size: 13px;">插座</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.77px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.38px;">树莓派</a> <a href="/tags/%E7%94%A8%E7%94%B5/" style="font-size: 13px;">用电</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.54px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91/" style="font-size: 13.08px;">编译</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.85px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.08px;">邮件</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/">2024</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">25</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">24</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">39</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">33</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/295abdb4/" class="title">Electron的原理</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-08-28T14:33:41.000Z" itemprop="datePublished">2024-08-28</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/9af613a6/" class="title">webstorm 的 cpu 占用高</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-07-24T14:29:38.000Z" itemprop="datePublished">2024-07-24</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/fdd4fda9/" class="title">修改Joplin主题样式</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-07-21T14:16:41.000Z" itemprop="datePublished">2024-07-21</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/45c0b51d/" class="title">ECMAScript 历代版本</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-06-20T14:10:41.000Z" itemprop="datePublished">2024-06-20</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/a31a7c10/" class="title">新一代包管理器 PNPM</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-06-16T13:59:34.000Z" itemprop="datePublished">2024-06-16</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-新一代包管理器-PNPM" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      新一代包管理器 PNPM
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/a31a7c10/" class="article-date">
+	  <time datetime="2024-06-16T13:59:34.000Z" itemprop="datePublished">2024-06-16</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/FE/">FE</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/npm/" rel="tag">npm</a>, <a class="article-tag-link-link" href="/tags/pnpm/" rel="tag">pnpm</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/a31a7c10/#comments" class="article-comment-link">评论</a></span> 
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 2.3k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 8(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#依赖管理的始末">依赖管理的始末</a><ul>
+<li><a href="#npm2">npm2</a></li>
+<li><a href="#npm3">npm3</a></li>
+<li><a href="#结论">结论</a></li>
+</ul>
+</li>
+<li><a href="#pnpm">PNPM</a><ul>
+<li><a href="#依赖安装">依赖安装</a></li>
+<li><a href="#依赖管理原理">依赖管理原理</a></li>
+<li><a href="#pnpm-机制">PNPM 机制</a><ul>
+<li><a href="#基于软链接的-node_modules">基于软链接的 node_modules</a></li>
+</ul>
+</li>
+<li><a href="#pnpm-锁文件">PNPM 锁文件</a></li>
+</ul>
+</li>
+<li><a href="#总结">总结</a></li>
+</ul>
+<!-- tocstop -->
+
+<h2><span id="依赖管理的始末">依赖管理的始末</span></h2><h3><span id="npm2">npm2</span></h3><p>使用早期的 npm1/2 安装依赖，node_modules 文件夹会以递归的形式呈现，严格按照 package.json 结构以及次级依赖的 package.json 结构将依赖安装到它们各自的 node_modules 中，直到次级依赖不再依赖其它模块。</p>
+<p>就像下面这样，tea-app 依赖 tea-component 作为次级依赖，tea-component 会安装到 tea-component 的 node_modules 里面：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">node_modules</span><br><span class="line">└─ tea-app</span><br><span class="line">   ├─ index.js</span><br><span class="line">   ├─ package.json</span><br><span class="line">   └─ node_modules</span><br><span class="line">      └─ tea-component</span><br><span class="line">         ├─ index.js</span><br><span class="line">         └─ package.json</span><br></pre></td></tr></table></figure>
+
+<p>假设项目的中的两个依赖同时依赖了相同的次级依赖，那么它们二者的次级依赖将会被重复安装：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">node_modules</span><br><span class="line">├─ tea-app</span><br><span class="line">│  ├─ index.js</span><br><span class="line">│  ├─ package.json</span><br><span class="line">│  └─ node_modules</span><br><span class="line">│      └─ tea-component</span><br><span class="line">│          ├─ index.js</span><br><span class="line">│          └─ package.json</span><br><span class="line">└─ tea-chart</span><br><span class="line">   ├─ index.js</span><br><span class="line">   ├─ package.json</span><br><span class="line">   └─ node_modules</span><br><span class="line">       └─ tea-component</span><br><span class="line">           ├─ index.js</span><br><span class="line">           └─ package.json</span><br></pre></td></tr></table></figure>
+
+<p>这只是简单的例子，那如果 tea-component 还依赖别的包，别的包又依赖另外的包…… 在真实的开发场景中其问题还会更加恶劣：</p>
+<ol>
+<li>依赖层级太深，会导致文件路径过长</li>
+<li>重复的包被安装，导致 node_modules 文件体积巨大，占用过多的磁盘空间</li>
+</ol>
+<h3><span id="npm3">npm3</span></h3><p>自 <code>npm3/yarn</code> 开始，相比 <code>npm1/2</code> 项目依赖管理的方式有了很大的改变，不再是以往的“嵌套式”而是采用了“扁平化”方式去管理项目依赖。</p>
+<p>这里继续拿上面的例子，tea-app 和 tea-chart 都依赖了 tea-component，依赖安装后呈现的是下面的这种扁平化目录：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">node_modules</span><br><span class="line">├─ tea-component</span><br><span class="line">│  ├─ index.js</span><br><span class="line">│  └─ package.json</span><br><span class="line">├─ tea-app</span><br><span class="line">│  ├─ index.js</span><br><span class="line">│  └─ package.json</span><br><span class="line">└─ tea-chart</span><br><span class="line">   ├─ index.js</span><br><span class="line">   └─ package.json</span><br></pre></td></tr></table></figure>
+
+<p>扁平化的目录的确解决了上一小节暴露的一些问题，同时也暴露了新的问题：</p>
+<ul>
+<li>Phantom dependencies</li>
+</ul>
+<p>称为<strong>幽灵依赖</strong>，指的是在项目内引用未在 package.json 中定义的包。这个问题在 npm3 展现，因为早期的树形结构导致了依赖冗余和路径过深的问题，npm3 之后采用扁平化的结构，一些第三方包的次级依赖提升到了与第三方包同级。</p>
+<p>一旦出现幽灵依赖的问题，可能会导致意想不到的错误，所以一定要正视：</p>
+<ol>
+<li><p>不兼容的版本（例如某一个 api 进行了重大更新)</p>
+</li>
+<li><p>有可能会丢失依赖（某依赖不再依赖呈现在我们项目中的幽灵依赖)</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// tea-component 就属于是幽灵依赖，因为它是属于 tea-app、tea-chart 的次级依赖。</span></span><br><span class="line"><span class="keyword">import</span> &#123; <span class="title class_">Button</span> &#125; <span class="keyword">from</span> <span class="string">&#x27;tea-component&#x27;</span>;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>NPM doppelgangers</p>
+</li>
+</ol>
+<p>称为<strong>分身依赖</strong>依赖的同名包都会被重复安装。</p>
+<p>在实际开发中也会出现这样的情景，假设 tea-app、tea-form 依赖 <code>tea-component@2.0.0</code>，tea-chart 依赖 <code>tea-component@3.0.0</code>，这时候会造成依赖冲突，解决冲突的方式会将对应的冲突包放到对应依赖目录的 node_mudules 中，类似下面结构：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">node_modules</span><br><span class="line">├─ tea-component@3.0.0</span><br><span class="line">│  ├─ index.js</span><br><span class="line">│  └─ package.json</span><br><span class="line">├─ tea-app</span><br><span class="line">│  ├─ index.js</span><br><span class="line">│  ├─ package.json</span><br><span class="line">│  └─ node_modules</span><br><span class="line">│      └─ tea-component@2.0.0</span><br><span class="line">│          ├─ index.js</span><br><span class="line">│          └─ package.json</span><br><span class="line">├─ tea-form</span><br><span class="line">│  ├─ index.js</span><br><span class="line">│  ├─ package.json</span><br><span class="line">│  └─ node_modules</span><br><span class="line">│      └─ tea-component@2.0.0</span><br><span class="line">│          ├─ index.js</span><br><span class="line">│          └─ package.json</span><br><span class="line">└─ tea-chart</span><br><span class="line">   ├─ index.js</span><br><span class="line">   └─ package.json</span><br></pre></td></tr></table></figure>
+
+<p>这时候会发现一个问题，tea-app、tea-form 的 node_modules 下都有重复且版本相同的 <code>tea-component@2.0.0</code>，这个问题就是我们正在所说的“分身依赖”的问题。这个问题就会导致 tea-app 中的 ConfigProvider 组件和 tea-form 的不是一个实例，无法生效。</p>
+<p>常见的问题：</p>
+<ol>
+<li>项目打包会将这些“重身”的依赖都进行打包，增加产物体积</li>
+<li>无法共享库实例，引用的得到的是两个独立的实例</li>
+<li>重复 TypeScript 类型，可能会造成类型冲突</li>
+</ol>
+<h3><span id="结论">结论</span></h3><ol>
+<li>扁平化的 node_modules 结构允许访问没有在 package.json 中声明的依赖。</li>
+<li>安装效率低，大量依赖被重复安装，磁盘空间占用高。</li>
+<li>多个项目之间已经安装过的的包不能共享，每次都是重新安装。</li>
+</ol>
+<h2><span id="pnpm">PNPM</span></h2><blockquote>
+<p>Fast, disk space efficient package manager (速度快、节省磁盘空间的软件包管理器)</p>
+</blockquote>
+<p>当使用 npm 或 Yarn 时，如果你有 100 个项目，并且所有项目都有一个相同的依赖包，那么， 你在硬盘上就需要保存 100 份该相同依赖包的副本。然而，如果是使用 pnpm，依赖包将被 存放在一个统一的位置，因此：</p>
+<p>如果你对同一依赖包需要使用不同的版本，则仅有 版本之间不同的文件会被存储起来。例如，如果某个依赖包包含 100 个文件，其发布了一个新 版本，并且新版本中只有一个文件有修改，则<code>pnpm update</code>只需要添加一个 新文件到存储中，而不会因为一个文件的修改而保存依赖包的 所有文件。</p>
+<p>所有文件都保存在硬盘上的统一的位置。当安装软件包时， 其包含的所有文件都会硬链接自此位置，而不会占用 额外的硬盘空间。这让你可以在项目之间方便地共享相同版本的 依赖包。</p>
+<p>最终结果就是以项目和依赖包的比例来看，你节省了大量的硬盘空间， 并且安装速度也大大提高了！</p>
+<h3><span id="依赖安装">依赖安装</span></h3><p>使用 pnpm 安装，pnpm 会将依赖存储在位于 <code>.pnpm-store</code> 目录下。只要你在同一机器下，下次安装依赖的时候 pnpm 会先检查 store 目录，如果有你需要的依赖则会通过一个硬链接到你的项目中去，而不是重新安装依赖。</p>
+<h3><span id="依赖管理原理">依赖管理原理</span></h3><p>pnpm 会将依赖存储在 <code>store</code> 目录下，通过符号链接的方式仅将项目的直接依赖项添加到 node_modules 的根目录下。</p>
+<p>当使用 npm 或 yarn 安装依赖包时，所有软件包都将被提升到 node_modules 的 根目录下。其结果是，源码可以访问 本不属于当前项目所设定的依赖包。</p>
+<h3><span id="pnpm-机制">PNPM 机制</span></h3><p>如果 store 目录里面拥有即将需要下载的依赖，下载将会跳过，会向对应项目 node_modules 中去建立硬链接，并非去重新安装它。这里就表明为什么 pnpm 性能这么突出了，最大程度节省了时间消耗和磁盘空间。</p>
+<h4><span id="基于软链接的-node_modules">基于软链接的 node_modules</span></h4><p>pnpm 输出的 node_modules 与 npm/yarn 有很大的出入，并非是先者那样的“扁平化目录”而是“非扁平化目录”。</p>
+<p>创建两个目录并分别运行 npm add express，pnpm add express。</p>
+<p>这是使用 npm 安装 node_modules 的结构：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">.<span class="property">bin</span></span><br><span class="line">accepts</span><br><span class="line">array-flatten</span><br><span class="line">body-parser</span><br><span class="line">bytes</span><br><span class="line">content-disposition</span><br><span class="line">cookie-signature</span><br><span class="line">cookie</span><br><span class="line">debug</span><br><span class="line">depd</span><br><span class="line">destroy</span><br><span class="line">ee-first</span><br><span class="line">encodeurl</span><br><span class="line"><span class="built_in">escape</span>-html</span><br><span class="line">etag</span><br><span class="line">express</span><br></pre></td></tr></table></figure>
+
+<p>这个则是 pnpm 安装 node_modules 的结构：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">.<span class="property">pnpm</span></span><br><span class="line">.<span class="property">modules</span>.<span class="property">yaml</span></span><br><span class="line">express</span><br></pre></td></tr></table></figure>
+
+<p>打开 .pnpm 目录会发现这些依赖都被“扁平化”了，每个包都携带着自己的版本号。pnpm 这样设计的目的我理解其实是为了解决“分身依赖”的问题。</p>
+<p>假设我们有这么一个情景，项目中依赖了 <code>tea-app@1.0.0</code>、<code>tea-chart@1.0.0</code> 和 <code>tea-component@2.0.0</code>。tea-chart 和 tea-app 依赖了 <code>tea-component@1.0.0</code> 那它引用关系是这样的：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">node_modules</span><br><span class="line">├─tea-app -&gt; ./.<span class="property">pnpm</span>/tea-app@<span class="number">1.0</span><span class="number">.0</span>/node_modules/tea-app</span><br><span class="line">├─tea-chart -&gt; ./.<span class="property">pnpm</span>/tea-chart@<span class="number">1.0</span><span class="number">.0</span>/node_modules/tea-chart</span><br><span class="line">├─tea-component -&gt; ./.<span class="property">pnpm</span>/tea-component@<span class="number">2.0</span><span class="number">.0</span>/node_modules/tea-component</span><br><span class="line">└─.<span class="property">pnpm</span></span><br><span class="line">    ├─ tea-app@<span class="number">1.0</span><span class="number">.0</span></span><br><span class="line">    │   └─ node_modules</span><br><span class="line">    │       ├─ tea-component -&gt; ../tea-component@<span class="number">1.0</span><span class="number">.0</span>/node_modules/tea-component</span><br><span class="line">    │       └─ tea-app -&gt; &lt;store&gt;/tea-app</span><br><span class="line">        ├─ tea-chart@<span class="number">1.0</span><span class="number">.0</span></span><br><span class="line">    │   └─ node_modules</span><br><span class="line">    │       ├─ tea-component -&gt; ../tea-component@<span class="number">1.0</span><span class="number">.0</span>/node_modules/tea-component</span><br><span class="line">    │       └─ tea-chart -&gt; &lt;store&gt;/tea-chart</span><br><span class="line">        ├─ tea-component@<span class="number">1.0</span><span class="number">.0</span></span><br><span class="line">    │   └─ node_modules</span><br><span class="line">    │       └─ tea-component -&gt; &lt;store&gt;/tea-component@<span class="number">1.0</span><span class="number">.0</span></span><br><span class="line">    └─ tea-component@<span class="number">2.0</span><span class="number">.0</span></span><br><span class="line">        └─ node_modules</span><br><span class="line">            └─ tea-component -&gt; &lt;store&gt;/tea-component@<span class="number">2.0</span><span class="number">.0</span></span><br></pre></td></tr></table></figure>
+
+<p>为什么需要通过软链接的方式去引用实际的依赖？</p>
+<p>这样设计的目的是解决“幽灵依赖”的问题，只有声明过的依赖才会以软链接的形式出现在 node_modules 目录中。在实际项目中引用的是软链接，软链接指向的是 .pnpm 的真实依赖，所以在日常开发中不会引用到未在 package.json 声明的包。</p>
+<h3><span id="pnpm-锁文件">PNPM 锁文件</span></h3><p>pnpm 产出的是一个 <code>pnpm-lock.yaml</code> 格式的锁文件。</p>
+<p>支持通过 <code>pnpm import</code> 从另一个包管理器的锁文件生成一个。支持的源文件：</p>
+<ul>
+<li>package-lock.json</li>
+<li>npm-shrinkwrap.json</li>
+<li>yarn.lock</li>
+</ul>
+<h2><span id="总结">总结</span></h2><p>npm2 是通过嵌套的方式管理 node_modules 的，会有同样的依赖复制多次的问题。</p>
+<p>npm3+ 和 yarn 是通过铺平的扁平化的方式来管理 node_modules，解决了嵌套方式的部分问题，但是引入了幽灵依赖的问题，并且同名的包只会提升一个版本的，其余的版本依然会复制多次。</p>
+<p>pnpm 则是用了另一种方式，不再是复制了，而是都从全局 store 硬连接到 node_modules/.pnpm，然后之间通过软链接来组织依赖关系。</p>
+<p>这样不但节省磁盘空间，也没有幽灵依赖问题，安装速度还快，从机制上来说完胜 npm 和 yarn。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/a31a7c10/" title="新一代包管理器 PNPM" target="_blank" rel="external">https://lxb.wiki/a31a7c10/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="external">CC BY-NC 4.0</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      
+        <section id="comments" class="comments">
+          <style>
+            .utterances{max-width: 100%;}
+          </style>
+          <script src="https://utteranc.es/client.js"
+                repo="lxbwolf/lxbwolf.github.io"
+                issue-term="title"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+          </script>
+        </section>
+      
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/45c0b51d/" title="ECMAScript 历代版本"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/42f8026c/" title="React useEffect() Hook"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,wechat"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> xbl </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+
+
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
+</html>
