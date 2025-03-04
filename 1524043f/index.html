@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <meta http-equiv="keywords" content="lxbwolf,GCTT,LCTT,个人博客,博客网站">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+
+  
+  <title>Go语言的向后兼容和toolchain规则 | Xiaobin&#39;s Notes</title>
+  <meta name="description" content="Go语言的向后兼容和toolchain规则">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go语言的向后兼容和toolchain规则">
+<meta property="og:url" content="https://lxb.wiki/1524043f/index.html">
+<meta property="og:site_name" content="Xiaobin&#39;s Notes">
+<meta property="og:description" content="Go语言的向后兼容和toolchain规则">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202503032331009.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202503032332846.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202503032334439.png">
+<meta property="article:published_time" content="2023-10-21T13:58:36.000Z">
+<meta property="article:modified_time" content="2025-03-04T14:24:57.493Z">
+<meta property="article:author" content="xbl">
+<meta property="article:tag" content="go">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202503032331009.png">
+  <!-- Canonical links  把后面的 index.html 去掉-->
+  <link rel="canonical" href="https://lxb.wiki/1524043f/">
+  
+    <link rel="alternate" href="/atom.xml" title="Xiaobin&#39;s Notes" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+
+    <!-- google adsense -->
+    <script data-ad-client="ca-pub-5708899526501350" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ2PWLT6JY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-JZ2PWLT6JY');
+    </script>
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body class="main-center theme-blue no-sidebar" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/lxbwolf" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.png" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Xiaobin&#39;s Notes</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Algorithm/">Algorithm</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DB/">DB</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Design/">Design</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/FE/">FE</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Lang/">Lang</a><span class="category-list-count">78</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Life/">Life</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">29</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Pic/">Pic</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Tools/">Tools</a><span class="category-list-count">41</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Web/">Web</a><span class="category-list-count">20</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/ECMAScript/" style="font-size: 13px;">ECMAScript</a> <a href="/tags/GitHub/" style="font-size: 13.08px;">GitHub</a> <a href="/tags/GoogleSheets/" style="font-size: 13px;">GoogleSheets</a> <a href="/tags/STL/" style="font-size: 13.38px;">STL</a> <a href="/tags/amap/" style="font-size: 13px;">amap</a> <a href="/tags/apng/" style="font-size: 13px;">apng</a> <a href="/tags/blog/" style="font-size: 13.23px;">blog</a> <a href="/tags/c/" style="font-size: 13.69px;">c++</a> <a href="/tags/centOS/" style="font-size: 13.08px;">centOS</a> <a href="/tags/css/" style="font-size: 13px;">css</a> <a href="/tags/devops/" style="font-size: 13.62px;">devops</a> <a href="/tags/docker/" style="font-size: 13.08px;">docker</a> <a href="/tags/elastic/" style="font-size: 13.38px;">elastic</a> <a href="/tags/electron/" style="font-size: 13px;">electron</a> <a href="/tags/epoll/" style="font-size: 13px;">epoll</a> <a href="/tags/ffmpeg/" style="font-size: 13.31px;">ffmpeg</a> <a href="/tags/gdb/" style="font-size: 13.15px;">gdb</a> <a href="/tags/gif/" style="font-size: 13.08px;">gif</a> <a href="/tags/go/" style="font-size: 14px;">go</a> <a href="/tags/hexo/" style="font-size: 13.15px;">hexo</a> <a href="/tags/hooks/" style="font-size: 13px;">hooks</a> <a href="/tags/http/" style="font-size: 13.38px;">http</a> <a href="/tags/jdk/" style="font-size: 13px;">jdk</a> <a href="/tags/joplin/" style="font-size: 13.15px;">joplin</a> <a href="/tags/json/" style="font-size: 13px;">json</a> <a href="/tags/linux/" style="font-size: 13.15px;">linux</a> <a href="/tags/lucene/" style="font-size: 13.31px;">lucene</a> <a href="/tags/mac/" style="font-size: 13.46px;">mac</a> <a href="/tags/makefile/" style="font-size: 13px;">makefile</a> <a href="/tags/markdown/" style="font-size: 13px;">markdown</a> <a href="/tags/mermaid/" style="font-size: 13.08px;">mermaid</a> <a href="/tags/mq/" style="font-size: 13.15px;">mq</a> <a href="/tags/mysql/" style="font-size: 13.31px;">mysql</a> <a href="/tags/nginx/" style="font-size: 13.15px;">nginx</a> <a href="/tags/npm/" style="font-size: 13px;">npm</a> <a href="/tags/pb/" style="font-size: 13px;">pb</a> <a href="/tags/pic/" style="font-size: 13.15px;">pic</a> <a href="/tags/pnpm/" style="font-size: 13px;">pnpm</a> <a href="/tags/python/" style="font-size: 13px;">python</a> <a href="/tags/qt/" style="font-size: 13.31px;">qt</a> <a href="/tags/raft/" style="font-size: 13px;">raft</a> <a href="/tags/raycast/" style="font-size: 13px;">raycast</a> <a href="/tags/react/" style="font-size: 13px;">react</a> <a href="/tags/redis/" style="font-size: 13.54px;">redis</a> <a href="/tags/samba/" style="font-size: 13px;">samba</a> <a href="/tags/shell/" style="font-size: 13.92px;">shell</a> <a href="/tags/symbol/" style="font-size: 13.08px;">symbol</a> <a href="/tags/tcp/" style="font-size: 13px;">tcp</a> <a href="/tags/terminal/" style="font-size: 13px;">terminal</a> <a href="/tags/vue/" style="font-size: 13px;">vue</a> <a href="/tags/webstorm/" style="font-size: 13px;">webstorm</a> <a href="/tags/zk/" style="font-size: 13.08px;">zk</a> <a href="/tags/%E4%BA%8B%E6%95%85/" style="font-size: 13px;">事故</a> <a href="/tags/%E5%8D%8F%E8%AE%AE/" style="font-size: 13px;">协议</a> <a href="/tags/%E5%9C%B0%E5%9B%BE/" style="font-size: 13px;">地图</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.46px;">工具</a> <a href="/tags/%E5%B9%BF%E5%91%8A/" style="font-size: 13px;">广告</a> <a href="/tags/%E6%8F%92%E5%BA%A7/" style="font-size: 13px;">插座</a> <a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 13.77px;">架构</a> <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" style="font-size: 13.38px;">树莓派</a> <a href="/tags/%E7%94%A8%E7%94%B5/" style="font-size: 13px;">用电</a> <a href="/tags/%E7%A0%B4%E8%A7%A3/" style="font-size: 13px;">破解</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.54px;">算法</a> <a href="/tags/%E7%BC%96%E8%AF%91/" style="font-size: 13.08px;">编译</a> <a href="/tags/%E7%BF%BB%E8%AF%91/" style="font-size: 13.85px;">翻译</a> <a href="/tags/%E9%82%AE%E4%BB%B6/" style="font-size: 13.08px;">邮件</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/">2024</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/">2023</a><span class="archive-list-count">26</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/">2022</a><span class="archive-list-count">24</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a><span class="archive-list-count">31</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a><span class="archive-list-count">29</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/">2019</a><span class="archive-list-count">39</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/">2018</a><span class="archive-list-count">33</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/">2017</a><span class="archive-list-count">22</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/">2016</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/295abdb4/" class="title">Electron的原理</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-08-28T14:33:41.000Z" itemprop="datePublished">2024-08-28</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/9af613a6/" class="title">webstorm 的 cpu 占用高</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-07-24T14:29:38.000Z" itemprop="datePublished">2024-07-24</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Tools/">Tools</a>
+              </p>
+              <p class="item-title">
+                <a href="/fdd4fda9/" class="title">修改Joplin主题样式</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-07-21T14:16:41.000Z" itemprop="datePublished">2024-07-21</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/45c0b51d/" class="title">ECMAScript 历代版本</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-06-20T14:10:41.000Z" itemprop="datePublished">2024-06-20</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/FE/">FE</a>
+              </p>
+              <p class="item-title">
+                <a href="/a31a7c10/" class="title">新一代包管理器 PNPM</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-06-16T13:59:34.000Z" itemprop="datePublished">2024-06-16</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Go语言的向后兼容和toolchain规则" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Go语言的向后兼容和toolchain规则
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/1524043f/" class="article-date">
+	  <time datetime="2023-10-21T13:58:36.000Z" itemprop="datePublished">2023-10-21</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Lang/">Lang</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/go/" rel="tag">go</a>
+  </span>
+
+
+<!--        
+ -->
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/1524043f/#comments" class="article-comment-link">评论</a></span> 
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 3.5k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 14(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#1-go-121版本之前的向前兼容问题">1. Go 1.21版本之前的向前兼容问题</a></li>
+<li><a href="#2-go-121版本后的向前兼容策略">2. Go 1.21版本后的向前兼容策略</a></li>
+<li><a href="#3-module依赖的go-toolchain版本的选择过程">3. module依赖的Go toolchain版本的选择过程</a></li>
+<li><a href="#4-gotoolchain环境变量与toolchain版本选择">4. GOTOOLCHAIN环境变量与toolchain版本选择</a></li>
+<li><a href="#5-小结">5. 小结</a></li>
+<li><a href="#6-参考资料">6. 参考资料</a></li>
+</ul>
+<!-- tocstop -->
+
+<p>Go语言在发展演进过程中一直十分注重向后兼容性(backward compatibility)，在<a target="_blank" rel="noopener" href="https://go.dev/blog/go1">Go 1.0版本发布</a>之初就发布了<a target="_blank" rel="noopener" href="https://go.dev/doc/go1compat">Go1兼容性承诺</a>，简单来说就是保证使用新版本Go可以正常编译和运行老版本的Go代码语法编写的go代码)，不会出现breaking change(<a target="_blank" rel="noopener" href="https://go.dev/blog/compat">其实也不是绝对的不会出现</a>)。</p>
+<p>但是在Go 1.21版本之前，Go语言在向前兼容性方面却存在一定的不确定性问题。Go 1.21版本对此进行了改进，并引入了go toolchain规则。</p>
+<h2><span id="1-go-121版本之前的向前兼容问题">1. Go 1.21版本之前的向前兼容问题</span></h2><p>在Go 1.21版本之前，Go module中的go directive用于声明建议的Go版本，但并不强制实施。例如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">// go.mod</span><br><span class="line">module demo1</span><br><span class="line"></span><br><span class="line">go 1.20</span><br></pre></td></tr></table></figure>
+
+<p>上面go.mod文件中的go directive表示建议使用<a target="_blank" rel="noopener" href="https://tonybai.com/2023/02/08/some-changes-in-go-1-20/">Go 1.20及以上版本</a>编译本module代码，但并不强制禁止使用低于1.20版本的Go对module进行编译。你也可以使用Go 1.19版本，甚至是Go 1.15版本编译这个module的代码。</p>
+<p>但Go官方对于这种使用低版本(L)编译器编译go directive为高版本(H)的Go module的结果没有作出任何承诺和保证，<strong>其结果也是不确定的</strong>。</p>
+<p>如果你在代码中没有引入高版本(&gt;=L+1)go的新语法特性，那么编译是可以通过的。</p>
+<p>如果你的代码没有用到任何高版本(&gt;=L+1)的语法行为变更、bug或安全漏洞的代码，那么编译出的可执行程序运行起来也可以是正常的。</p>
+<p>否则，可能会编译失败、运行失败, 或者运行时出现breaking change的问题。</p>
+<p>自己的代码可以避免这些问题，但如果你的module有外部依赖，就无法避免了。从Go 1.21版本开始，Go团队在向前兼容方面做了改善，以规避编译结果的不确定性。</p>
+<h2><span id="2-go-121版本后的向前兼容策略">2. Go 1.21版本后的向前兼容策略</span></h2><p>Go从Go 1.11版本引入go module，在go 1.16版本，<a target="_blank" rel="noopener" href="https://go.dev/ref/mod">go module构建模式</a>正式成为默认构建模式，替代了原先的GOPATH构建模式。</p>
+<blockquote>
+<p>注：<a target="_blank" rel="noopener" href="http://gk.link/a/10AVZ">《Go语言第一课》</a>专栏的<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/429941">第6讲</a>和<a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/431463">第7讲</a>对Go module构建模式与6类常规操作做了全面系统的讲解。</p>
+</blockquote>
+<p>通过go module，结合<a target="_blank" rel="noopener" href="https://research.swtch.com/vgo-import">语义导入版本(semantic import versioning)</a>、<a target="_blank" rel="noopener" href="https://research.swtch.com/vgo-mvs">最小版本选择(Minimal version selection)</a>等机制，go build可以实现精确的依赖管控。</p>
+<p>Go 1.21版本后的向前兼容性策略的调整就是参考了go module对依赖的管理方法：即<strong>将go版本和go toolchain版本作为一个module的“依赖”来管理</strong>。如果你真正理解了这个，那理解后面那些具体的规则就容易多了！</p>
+<p>如果Russ Cox当初设计Go module就想到了今天这个思路，估计就会直接使用go.mod文件中的require语法像管理依赖module那样来管理go version和go toolchain了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">// go.mod (假想的)</span><br><span class="line"></span><br><span class="line">module demo1</span><br><span class="line"></span><br><span class="line">require (</span><br><span class="line">    go 1.20.5</span><br><span class="line">    toolchain go1.21.1</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">require (</span><br><span class="line">    github.com/gomodule/redigo v1.8.5</span><br><span class="line">    github.com/google/gops v0.3.19</span><br><span class="line">    github.com/panjf2000/ants v1.2.1</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>但时间无法倒流，历史不能重来，Russ Cox现在只能使用go directive和toolchain directive来提供对go版本和go工具链的依赖信息：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">// go.mod</span><br><span class="line"></span><br><span class="line">module demo1</span><br><span class="line"></span><br><span class="line">go 1.20.5</span><br><span class="line">toolchain 1.21.1</span><br></pre></td></tr></table></figure>
+
+<p>同时和使用go get可以改变go.mod的require块中的依赖的版本一样，通过go get也可以修改go.mod中go和toolchain指示的版本：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$go get go@1.21.1</span><br><span class="line">$go get toolchain@go1.22.1</span><br></pre></td></tr></table></figure>
+
+<p>基于上述策略调整，为解决向前兼容不确定性的问题，Go从1.21版本开始，改变了go.mod中go directive的语义：它不再是建议，而是指定了module最小可用的Go版本。</p>
+<p>这样在仅使用本地go工具链的情况下，如果Go编译器版本低于go.mod中的go版本，将无法编译代码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">// go.mod</span><br><span class="line"></span><br><span class="line">module demo1</span><br><span class="line"></span><br><span class="line">go 1.21.1 // 指定最小可用版本为Go 1.21.1</span><br><span class="line"></span><br><span class="line">$GOTOOLCHAIN=local go build</span><br><span class="line">go: go.mod requires go &amp;gt;= 1.21.1 (running go 1.21.0; GOTOOLCHAIN=local)</span><br></pre></td></tr></table></figure>
+
+<p>这里有一个前提：“在仅使用本地go工具链的情况下(即设置了GOTOOLCHAIN=local)”，在Go 1.21版本之前，我们遇到的都属于这种情况。遇到这种情况后，我们一般的作法是手动下载对应版本的Go工具链(比如这里的go 1.21.1)，然后用新版工具链重新编译。</p>
+<p>Go团队考虑到手动管理go工具链带来的体验不佳问题，在Go 1.21版本及以后，go还提供了自动Go工具链管理，如果go发现本地工具链版本低于go module要求的最低go版本，那么go会自动下载高版本的go工具链，缓存到go module cache中(不会覆盖本地安装的go工具链)，并用新下载的go工具链对module进行编译构建：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">// go.mod</span><br><span class="line"></span><br><span class="line">module demo1</span><br><span class="line"></span><br><span class="line">go 1.21.1 // 指定最小可用版本为Go 1.21.1</span><br><span class="line"></span><br><span class="line">$go build</span><br><span class="line">go: downloading go1.21.1 (darwin/amd64)</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注：从兼容性方面考虑，如果go.mod中没有显式的用go指示go版本，那么默认go版本为1.16。</p>
+</blockquote>
+<p>对应module有依赖的情况，比如下图：</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202503032331009.png" alt></p>
+<p>这里要正确编译图中的main module，我们至少需要go 1.21.0版本，这个版本是main所有依赖中version最大的那个。</p>
+<p>当然最终选择哪个版本的go工具链对module进行编译，则有一个选择决策的过程。</p>
+<p>go module构建模式下，go工具链选择依赖module的版本时有一套机制，比如最小版本选择等，Go 1.21以后，go工具链版本的选择，也有一套类似的逻辑。接下来我们就来简单看一下。</p>
+<h2><span id="3-module依赖的go-toolchain版本的选择过程">3. module依赖的Go toolchain版本的选择过程</span></h2><p>go module中依赖module的版本选择机制：最小版本选择(mvs)</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202503032332846.png" alt></p>
+<p>上图来自<a target="_blank" rel="noopener" href="https://go.dev/ref/mod">https://go.dev/ref/mod</a></p>
+<p>以module C的版本选择为例，A依赖C 1.3，B依赖C 1.4，那么满足应用依赖需求的最小版本就是1.4。如果选择1.3，则不满足B对依赖的要求。</p>
+<p>对Go toolchain的选择过程也遵循mvs方法，我们把前面的那个例子拿过来：</p>
+<p><img src="https://raw.githubusercontent.com/lxbwolf/blog_source_image/main/202503032334439.png" alt></p>
+<p>现在我们帮这个例子选择go toolchain版本。</p>
+<blockquote>
+<p>注：如果go.mod中没有显式用toolchain指示工具链版本，那我们可以认为go.mod中有一个隐含的toolchain指示版本，该版本与go directive指示的版本一致。</p>
+</blockquote>
+<p>上面的例子中对toolchain version的最高要求为module D的go 1.21.0，当startup toolchain(执行的那个go命令的版本)得到这个信息后，就会在当前<strong>可用的toolchain版本列表</strong>中选出满足go 1.21.0的最小版本的go toolchain，然后会有一个叫Go toolchain switches(Go工具链切换)的过程，切换后，选出的新版go toolchain会继续后面的工作(编译和链接)。例如，如果可用的toolchain版本有如下三个：</p>
+<ul>
+<li>go 1.22.7</li>
+<li>go 1.21.3</li>
+<li>go 1.21.5</li>
+</ul>
+<p>那么startup toolchain会根据mvs原则选出满足go 1.21.0的最小版本，即go 1.21.3。</p>
+<p>这里大家可能会马上问：什么是可用的toolchain版本？别急！接下来我们就来回答这个问题。</p>
+<h2><span id="4-gotoolchain环境变量与toolchain版本选择">4. GOTOOLCHAIN环境变量与toolchain版本选择</span></h2><p>是否执行自动工具链下载和缓存、Go toolchain switches(Go工具链切换)以及切换的工具链的版本取决于GOTOOLCHAIN环境变量的设置、go.mod中go和toolchain指示的版本。</p>
+<p>当go命令捆绑的工具链与module的go.mod的go或工具链版本一样时或更新时，go命令会使用自己的捆绑工具链。例如，当在main module的go.mod包含有go 1.21.0时，如果go命令绑定的工具链是Go 1.21.3版本，那么将继续使用初始toolchain的版本，即Go 1.21.3。</p>
+<p>而如果go.mod中的go版本写着go 1.21.9，那么go命令捆绑的工具链版本1.21.3显然不能满足要求，那此时就要看GOTOOLCHAIN环境变量的配置。</p>
+<p>GOTOOLCHAIN的设置以及对结果的影响略复杂，下面是GOTOOLCHAIN的多种设置形式以及对toolchain选择的影响说明(以下示例中本地go命令捆绑的工具链版本为Go 1.21.0)：</p>
+<ul>
+<li><code>&lt;name&gt;</code></li>
+</ul>
+<p>例如，GOTOOLCHAIN=go1.21.0。go命令将始终运行该特定版本的go工具链。如果本地存在该版本工具链，就使用本地的。如果不存在，会下载、缓存起来并使用。如果go.mod中的工具链版本高于name版本，则停止编译：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$cat go.mod</span><br><span class="line">module demo1</span><br><span class="line"></span><br><span class="line">go 1.23.1</span><br><span class="line">toolchain go1.23.1 </span><br><span class="line"></span><br><span class="line">$GOTOOLCHAIN=go1.21.0 go build</span><br><span class="line">go: go.mod requires go &amp;gt;= 1.23.1 (running go 1.21.0; GOTOOLCHAIN=go1.21.0)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>&lt;name&gt;+auto</code></li>
+</ul>
+<p>当GOTOOLCHAIN设置为<code>&lt;name&gt;+auto</code>时，go命令会根据需要选择并运行较新的Go版本。具体来说，它会查询go.mod文件中的工具链版本和go version。如果go.mod 文件中有toolchain行，且toolchain指示的版本比默认的Go工具链(name)新，那么系统就会调用toolchain指示的工具链版本；反之会使用默认工具链。</p>
+<p>当本地不存在决策后的工具链版本时，会自动下载、缓存，并使用该缓存工具链进行后续编译。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$cat go.mod</span><br><span class="line">module demo1</span><br><span class="line"></span><br><span class="line">go 1.23.1</span><br><span class="line">toolchain go1.23.1 </span><br><span class="line"></span><br><span class="line">$GOTOOLCHAIN=go1.24.1+auto go build</span><br><span class="line">go: downloading go1.24.1 (darwin/amd64) // 使用name指定工具链，但该工具链本地不存在，于是下载。</span><br><span class="line"></span><br><span class="line">$GOTOOLCHAIN=go1.20.1+auto go build</span><br><span class="line">go: downloading go1.23.1 (darwin/amd64) // 使用go.mod中的版本的工具链</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>&lt;name&gt;+path</code></li>
+</ul>
+<p>当GOTOOLCHAIN设置为<code>&lt;name&gt;+path</code>时，go命令会根据需要选择并运行较新的Go版本。具体来说，它会查询go.mod文件中的工具链版本和go version。如果go.mod 文件中有toolchain行，且toolchain指示的版本比默认的Go工具链(name)新，那么系统就会调用toolchain指示的工具链版本；反之会使用默认工具链。当使用<code>&lt;name&gt;+path</code>时，如果决策得到的工具链版本在PATH路径下没有找到，那么go命令执行过程将终止。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$cat go.mod</span><br><span class="line">module demo1</span><br><span class="line"></span><br><span class="line">go 1.23.1</span><br><span class="line">toolchain go1.23.1 </span><br><span class="line"></span><br><span class="line">$GOTOOLCHAIN=go1.24.1+path go build // 使用name指定工具链，但该工具链本地不存在，于是编译停止</span><br><span class="line">go: cannot find &quot;go1.24.1&quot; in PATH</span><br><span class="line"></span><br><span class="line">$GOTOOLCHAIN=go1.20.1+path go build // 使用go.mod中的版本的工具链，但该工具链本地不存在，于是编译停止</span><br><span class="line">go: cannot find &quot;go1.23.1&quot; in PATH</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>auto (等价于 local+auto，这也是默认值)</li>
+</ul>
+<p>auto的语义是当go.mod中工具链版本低于go命令捆绑的工具链版本，则使用go命令运行捆绑的工具链；反之，自动下载对应的工具链版本，缓存起来并使用。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$cat go.mod</span><br><span class="line">module demo1</span><br><span class="line"></span><br><span class="line">go 1.23.1</span><br><span class="line">toolchain go1.23.1 </span><br><span class="line"></span><br><span class="line">$GOTOOLCHAIN=auto go build</span><br><span class="line">go: downloading go1.23.1 (darwin/amd64)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>path (等价于 local+path)</li>
+</ul>
+<p>path的语义是当go.mod中工具链版本低于go命令捆绑的工具链版本，则使用go命令运行捆绑的工具链；反之，在PATH中找到满足go.mod中工具链版本的go版本。如果没找到，则会停止编译过程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$cat go.mod</span><br><span class="line">module demo1</span><br><span class="line"></span><br><span class="line">go 1.23.1</span><br><span class="line">toolchain go1.23.1 </span><br><span class="line"></span><br><span class="line">$GOTOOLCHAIN=path go build</span><br><span class="line">go: cannot find &quot;go1.23.1&quot; in PATH</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>local</li>
+</ul>
+<p>当GOTOOLCHAIN设置为local时，go命令总是运行捆绑的 Go 工具链。如果go.mod中工具链版本高于local的版本，则会停止编译过程。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$cat go.mod</span><br><span class="line">module demo1</span><br><span class="line"></span><br><span class="line">go 1.23.1</span><br><span class="line">toolchain go1.23.1 </span><br><span class="line"></span><br><span class="line">$GOTOOLCHAIN=local go build</span><br><span class="line">go: go.mod requires go &amp;gt;= 1.23.1 (running go 1.21.0; GOTOOLCHAIN=local)</span><br></pre></td></tr></table></figure>
+
+<p>当Go工具在编译module依赖项时发现当前go toolchain版本无法满足要求时，会进行go toolchain switches(切换)，切换的过程就是从可用的go toolchain列表中取出一个最适合的。</p>
+<p>那么“可用的go toolchain列表”究竟是如何组成的呢？ go命令有三个候选版本(以 Go 1.21.1为例，这些版本也是Go当前承诺提供support的版本)：</p>
+<ul>
+<li>尚未发布的Go语言版本的最新候选版本（1.22rc1）</li>
+<li>最近发布的 Go 语言版本的最新补丁 (1.21.1)</li>
+<li>上一个Go语言版本的最新补丁版本(1.20.8)。</li>
+</ul>
+<p>当GOTOOLCHAIN设置为带auto形式的值的时候，Go会下载这些版本；当GOTOOLCHAIN设置为代path形式的值的时候，Go会在PATH路径搜索适合的go工具链列表。</p>
+<p>接下来，go会用mvs(最小版本选择)来确定究竟使用哪个toolchain版本。Go toolchain reference中就有这样一个例子。</p>
+<p>假设example.com/widget@v1.2.3需要Go 1.24rc1或更高版本。go命令会获取可用工具链列表，并发现两个最新Go工具链的最新补丁版本是Go 1.28.3和Go 1.27.9，候选版本Go 1.29rc2也可用。在这种情况下，go 命令会选择Go 1.27.9。</p>
+<p>如果 widget 需要 Go 1.28或更高版本，go命令会选择 Go 1.28.3，因为 Go 1.27.9 太旧了。如果widget需要Go 1.29或更高版本，go命令会选择Go 1.29rc2，因为Go 1.27.9和Go 1.28.3都太老了。</p>
+<h2><span id="5-小结">5. 小结</span></h2><p>Go 1.21通过增强go语句语义和添加工具链管理，大幅改进了Go语言的向前兼容性。开发者可以放心使用新语言特性，无需担心旧版本编译器带来的问题。go命令会自动处理不同module使用不同go版本和不同工具链版本的情况，使用Go语言变得更简单。</p>
+<h2><span id="6-参考资料">6. 参考资料</span></h2><ul>
+<li><a target="_blank" rel="noopener" href="https://go.dev/blog/toolchain">Forward Compatibility and Toolchain Management in Go 1.21</a> – <a target="_blank" rel="noopener" href="https://go.dev/blog/toolchain">https://go.dev/blog/toolchain</a></li>
+<li><a target="_blank" rel="noopener" href="https://go.dev/doc/toolchain">Go Toolchains reference</a> – <a target="_blank" rel="noopener" href="https://go.dev/doc/toolchain">https://go.dev/doc/toolchain</a></li>
+</ul>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://lxb.wiki/1524043f/" title="Go语言的向后兼容和toolchain规则" target="_blank" rel="external">https://lxb.wiki/1524043f/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="external">CC BY-NC 4.0</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      
+        <section id="comments" class="comments">
+          <style>
+            .utterances{max-width: 100%;}
+          </style>
+          <script src="https://utteranc.es/client.js"
+                repo="lxbwolf/lxbwolf.github.io"
+                issue-term="title"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+          </script>
+        </section>
+      
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/ce28e9ad/" title="Elasticsearch的数据类型"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/f002ff66/" title="Go 1.21 新增特性"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,wechat,facebook,twitter,linkedin" data-mobile-sites="weibo,wechat"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/lxbwolf" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="mailto:me@lxb.wiki" target="_blank" title="Email" data-toggle=tooltip data-placement=top><i class="icon icon-email"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/lxbwolf" target="_blank"> xbl </a>based on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+
+
+  <script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+
+</footer>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+
+
+
+
+
+    <script defer type="text/javascript">
+(function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'G-JZ2PWLT6JY', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+    <script defer>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?e710560ffa44cae2b3a6259e0171fb5f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+
+</body>
+</html>
